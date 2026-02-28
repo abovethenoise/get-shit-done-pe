@@ -896,6 +896,121 @@ function cmdInitProject(cwd, raw) {
   output(result, raw);
 }
 
+function cmdInitFramingDiscovery(cwd, lens, capability, raw) {
+  if (!lens) {
+    error('lens required for init framing-discovery (debug|new|enhance|refactor)');
+  }
+
+  const validLenses = ['debug', 'new', 'enhance', 'refactor'];
+  if (!validLenses.includes(lens)) {
+    error(`Invalid lens: ${lens}. Must be one of: ${validLenses.join(', ')}`);
+  }
+
+  const config = loadConfig(cwd);
+
+  // Resolve framing question file path
+  const gsdRoot = path.join(__dirname, '..', '..');
+  const anchorQuestionsPath = toPosixPath(path.join('get-shit-done', 'framings', lens, 'anchor-questions.md'));
+  const anchorQuestionsExists = fs.existsSync(path.join(gsdRoot, 'framings', lens, 'anchor-questions.md'));
+
+  // Framing lenses reference
+  const framingLensesPath = toPosixPath(path.join('get-shit-done', 'references', 'framing-lenses.md'));
+  const framingLensesExists = fs.existsSync(path.join(gsdRoot, 'references', 'framing-lenses.md'));
+
+  // Discovery brief template path
+  const briefTemplatePath = toPosixPath(path.join('get-shit-done', 'templates', 'discovery-brief.md'));
+
+  // Capability resolution -- if a capability slug was provided, look it up
+  let capabilityInfo = null;
+  let capabilityStatus = null;
+  let briefPath = null;
+  if (capability) {
+    const capResult = require('./core.cjs').findCapabilityInternal(cwd, capability);
+    if (capResult.found) {
+      capabilityInfo = {
+        slug: capability,
+        path: toPosixPath(path.join('.planning', 'capabilities', capability, 'CAPABILITY.md')),
+        directory: toPosixPath(path.join('.planning', 'capabilities', capability)),
+      };
+      briefPath = toPosixPath(path.join('.planning', 'capabilities', capability, 'BRIEF.md'));
+
+      // Read status from CAPABILITY.md frontmatter
+      try {
+        const capContent = fs.readFileSync(path.join(cwd, '.planning', 'capabilities', capability, 'CAPABILITY.md'), 'utf-8');
+        const statusMatch = capContent.match(/^status:\s*(.+)$/m);
+        capabilityStatus = statusMatch ? statusMatch[1].trim() : 'exploring';
+      } catch {
+        capabilityStatus = 'exploring';
+      }
+    }
+  }
+
+  // List all capabilities for fuzzy resolution
+  let capabilityList = [];
+  const capDir = path.join(cwd, '.planning', 'capabilities');
+  try {
+    const entries = fs.readdirSync(capDir, { withFileTypes: true })
+      .filter(e => e.isDirectory())
+      .map(e => e.name)
+      .sort();
+    for (const slug of entries) {
+      const capPath = path.join(capDir, slug, 'CAPABILITY.md');
+      let name = slug;
+      let status = 'exploring';
+      try {
+        const content = fs.readFileSync(capPath, 'utf-8');
+        const nameMatch = content.match(/^name:\s*["']?(.+?)["']?\s*$/m);
+        if (nameMatch) name = nameMatch[1];
+        const statusMatch = content.match(/^status:\s*(.+)$/m);
+        if (statusMatch) status = statusMatch[1].trim();
+      } catch {}
+      capabilityList.push({ slug, name, status });
+    }
+  } catch {}
+
+  // MVU slot definitions per lens
+  const mvuSlots = {
+    debug: ['symptom', 'reproduction_path', 'hypothesis'],
+    new: ['problem', 'who', 'done_criteria', 'constraints'],
+    enhance: ['current_behavior', 'desired_behavior', 'delta'],
+    refactor: ['current_design', 'target_design', 'breakage'],
+  };
+
+  const result = {
+    // Lens info
+    lens,
+    mvu_slots: mvuSlots[lens],
+
+    // Framing file paths
+    anchor_questions_path: anchorQuestionsPath,
+    anchor_questions_exists: anchorQuestionsExists,
+    framing_lenses_path: framingLensesPath,
+    framing_lenses_exists: framingLensesExists,
+    brief_template_path: briefTemplatePath,
+
+    // Capability context (null if not resolved yet)
+    capability: capabilityInfo,
+    capability_status: capabilityStatus,
+    brief_path: briefPath,
+
+    // Capability list for fuzzy resolution
+    capability_list: capabilityList,
+    capability_count: capabilityList.length,
+
+    // Config
+    commit_docs: config.commit_docs,
+
+    // File existence
+    planning_exists: pathExistsInternal(cwd, '.planning'),
+    capabilities_exist: pathExistsInternal(cwd, '.planning/capabilities'),
+
+    // File paths
+    state_path: '.planning/STATE.md',
+  };
+
+  output(result, raw);
+}
+
 function cmdInitProgress(cwd, raw) {
   const config = loadConfig(cwd);
   const milestone = getMilestoneInfo(cwd);
@@ -994,6 +1109,151 @@ function cmdInitProgress(cwd, raw) {
   output(result, raw);
 }
 
+function cmdInitDiscussCapability(cwd, raw) {
+  const config = loadConfig(cwd);
+
+  // Get capability list for fuzzy matching
+  const capabilitiesDir = path.join(cwd, '.planning', 'capabilities');
+  const capabilities = [];
+  try {
+    const entries = fs.readdirSync(capabilitiesDir, { withFileTypes: true })
+      .filter(e => e.isDirectory())
+      .map(e => e.name)
+      .sort();
+
+    for (const slug of entries) {
+      const capPath = path.join(capabilitiesDir, slug, 'CAPABILITY.md');
+      try {
+        const content = fs.readFileSync(capPath, 'utf-8');
+        const statusMatch = content.match(/^status:\s*(.+)$/m);
+        const nameMatch = content.match(/^name:\s*["']?(.+?)["']?\s*$/m);
+        capabilities.push({
+          slug,
+          name: nameMatch ? nameMatch[1] : slug,
+          status: statusMatch ? statusMatch[1].trim() : 'unknown',
+        });
+      } catch { /* skip dirs without CAPABILITY.md */ }
+    }
+  } catch { /* no capabilities dir */ }
+
+  // Documentation capabilities directory
+  const docCapDir = path.join(cwd, '.documentation', 'capabilities');
+  let docCapabilities = [];
+  try {
+    docCapabilities = fs.readdirSync(docCapDir)
+      .filter(f => f.endsWith('.md'))
+      .map(f => f.replace('.md', ''));
+  } catch { /* no doc capabilities dir */ }
+
+  const result = {
+    // Config
+    commit_docs: config.commit_docs,
+
+    // Capability inventory (for fuzzy matching)
+    capability_list: capabilities,
+    capability_count: capabilities.length,
+
+    // Documentation capabilities
+    doc_capabilities: docCapabilities,
+
+    // Paths
+    capabilities_dir: '.planning/capabilities',
+    documentation_dir: '.documentation',
+    doc_capabilities_dir: '.documentation/capabilities',
+
+    // File existence
+    planning_exists: pathExistsInternal(cwd, '.planning'),
+    documentation_exists: pathExistsInternal(cwd, '.documentation'),
+    capabilities_dir_exists: pathExistsInternal(cwd, '.planning/capabilities'),
+    doc_capabilities_dir_exists: pathExistsInternal(cwd, '.documentation/capabilities'),
+  };
+
+  output(result, raw);
+}
+
+function cmdInitDiscussFeature(cwd, raw) {
+  const config = loadConfig(cwd);
+
+  // Get capability list with nested features for fuzzy matching
+  const capabilitiesDir = path.join(cwd, '.planning', 'capabilities');
+  const capabilities = [];
+  const allFeatures = [];
+  try {
+    const entries = fs.readdirSync(capabilitiesDir, { withFileTypes: true })
+      .filter(e => e.isDirectory())
+      .map(e => e.name)
+      .sort();
+
+    for (const slug of entries) {
+      const capPath = path.join(capabilitiesDir, slug, 'CAPABILITY.md');
+      try {
+        const content = fs.readFileSync(capPath, 'utf-8');
+        const statusMatch = content.match(/^status:\s*(.+)$/m);
+        const nameMatch = content.match(/^name:\s*["']?(.+?)["']?\s*$/m);
+
+        // Get features for this capability
+        const featuresDir = path.join(capabilitiesDir, slug, 'features');
+        const features = [];
+        try {
+          const featEntries = fs.readdirSync(featuresDir, { withFileTypes: true })
+            .filter(e => e.isDirectory())
+            .map(e => e.name)
+            .sort();
+
+          for (const featSlug of featEntries) {
+            const featPath = path.join(featuresDir, featSlug, 'FEATURE.md');
+            try {
+              const featContent = fs.readFileSync(featPath, 'utf-8');
+              const featStatusMatch = featContent.match(/^status:\s*(.+)$/m);
+              const featNameMatch = featContent.match(/^name:\s*["']?(.+?)["']?\s*$/m);
+              const feat = {
+                slug: featSlug,
+                name: featNameMatch ? featNameMatch[1] : featSlug,
+                status: featStatusMatch ? featStatusMatch[1].trim() : 'unknown',
+                capability: slug,
+                full_path: `${slug}/${featSlug}`,
+              };
+              features.push(feat);
+              allFeatures.push(feat);
+            } catch { /* skip */ }
+          }
+        } catch { /* no features dir */ }
+
+        capabilities.push({
+          slug,
+          name: nameMatch ? nameMatch[1] : slug,
+          status: statusMatch ? statusMatch[1].trim() : 'unknown',
+          features,
+          feature_count: features.length,
+        });
+      } catch { /* skip */ }
+    }
+  } catch { /* no capabilities dir */ }
+
+  const result = {
+    // Config
+    commit_docs: config.commit_docs,
+
+    // Capability inventory
+    capability_list: capabilities,
+    capability_count: capabilities.length,
+
+    // Feature inventory (flattened for fuzzy matching)
+    feature_list: allFeatures,
+    feature_count: allFeatures.length,
+
+    // Paths
+    capabilities_dir: '.planning/capabilities',
+    documentation_dir: '.documentation',
+
+    // File existence
+    planning_exists: pathExistsInternal(cwd, '.planning'),
+    capabilities_dir_exists: pathExistsInternal(cwd, '.planning/capabilities'),
+  };
+
+  output(result, raw);
+}
+
 module.exports = {
   cmdInitExecutePhase,
   cmdInitPlanPhase,
@@ -1010,4 +1270,7 @@ module.exports = {
   cmdInitReviewPhase,
   cmdInitDocPhase,
   cmdInitProject,
+  cmdInitFramingDiscovery,
+  cmdInitDiscussCapability,
+  cmdInitDiscussFeature,
 };

@@ -127,6 +127,9 @@
  *   init review-phase <phase>          All context for review-phase workflow
  *   init doc-phase <phase>             All context for doc-phase workflow
  *   init project                       All context for init-project workflow (auto-detect mode)
+ *   init discuss-capability             All context for discuss-capability workflow
+ *   init discuss-feature                All context for discuss-feature workflow
+ *   init framing-discovery <lens> [cap] All context for framing-discovery workflow
  */
 
 const fs = require('fs');
@@ -558,8 +561,17 @@ async function main() {
         case 'project':
           init.cmdInitProject(cwd, raw);
           break;
+        case 'framing-discovery':
+          init.cmdInitFramingDiscovery(cwd, args[2], args[3], raw);
+          break;
+        case 'discuss-capability':
+          init.cmdInitDiscussCapability(cwd, raw);
+          break;
+        case 'discuss-feature':
+          init.cmdInitDiscussFeature(cwd, raw);
+          break;
         default:
-          error(`Unknown init workflow: ${workflow}\nAvailable: execute-phase, plan-phase, new-project, new-milestone, quick, resume, verify-work, phase-op, todos, milestone-op, map-codebase, progress, review-phase, doc-phase, project`);
+          error(`Unknown init workflow: ${workflow}\nAvailable: execute-phase, plan-phase, new-project, new-milestone, quick, resume, verify-work, phase-op, todos, milestone-op, map-codebase, progress, review-phase, doc-phase, project, framing-discovery, discuss-capability, discuss-feature`);
       }
       break;
     }
