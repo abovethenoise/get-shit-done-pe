@@ -195,9 +195,12 @@ describe('reconstructFrontmatter', () => {
     assert.strictEqual(result, 'items: []');
   });
 
-  test('serializes short string arrays inline', () => {
+  test('serializes string arrays as block style', () => {
     const result = reconstructFrontmatter({ key: ['a', 'b', 'c'] });
-    assert.strictEqual(result, 'key: [a, b, c]');
+    // js-yaml uses block style for arrays
+    assert.ok(result.includes('key:'), 'should have key header');
+    assert.ok(result.includes('  - a'), 'should have block array items');
+    assert.ok(result.includes('  - c'), 'should have last item');
   });
 
   test('serializes long arrays as block', () => {
@@ -207,12 +210,17 @@ describe('reconstructFrontmatter', () => {
     assert.ok(result.includes('  - four'), 'should have last item');
   });
 
-  test('quotes values containing colons or hashes', () => {
+  test('handles values containing colons or hashes', () => {
     const result = reconstructFrontmatter({ url: 'http://example.com' });
-    assert.ok(result.includes('"http://example.com"'), 'should quote value with colon');
+    // js-yaml leaves colon values unquoted when unambiguous
+    assert.ok(result.includes('http://example.com'), 'should include colon value');
+    // Round-trip is what matters:
+    const rt = extractFrontmatter(`---\n${result}\n---\n`);
+    assert.strictEqual(rt.url, 'http://example.com', 'colon value should round-trip');
 
     const hashResult = reconstructFrontmatter({ comment: 'value # note' });
-    assert.ok(hashResult.includes('"value # note"'), 'should quote value with hash');
+    // js-yaml quotes hash values with single quotes
+    assert.ok(hashResult.includes("'value # note'"), 'should quote value with hash');
   });
 
   test('serializes nested objects with proper indentation', () => {
@@ -227,7 +235,10 @@ describe('reconstructFrontmatter', () => {
       tech: { added: ['prisma', 'jose'] },
     });
     assert.ok(result.includes('tech:'), 'should have parent key');
-    assert.ok(result.includes('  added: [prisma, jose]'), 'should serialize nested short array inline');
+    // js-yaml uses block style for nested arrays
+    assert.ok(result.includes('  added:'), 'should have nested key');
+    assert.ok(result.includes('prisma'), 'should include first array item');
+    assert.ok(result.includes('jose'), 'should include second array item');
   });
 
   test('skips null and undefined values', () => {
