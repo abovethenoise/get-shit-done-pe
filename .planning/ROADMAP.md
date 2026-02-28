@@ -95,10 +95,12 @@ Plans:
   1. The documentation agent reads actual source files (real file paths, function names, data flows) after review is accepted -- not from memory or spec
   2. Generated docs live in `.documentation/` organized per capability/feature, with a `built-from-code-at:` git SHA timestamp for staleness detection
   3. Documentation is structured for quick lookups and mgrep searches (clear headings, consistent naming, searchable function/module references)
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 05-01: TBD
+- [ ] 05-01-PLAN.md — Doc agent definition (gsd-doc-writer.md) + gate doc scaffolding (.documentation/gate/)
+- [ ] 05-02-PLAN.md — init doc-phase CLI command + docs.md template rewrite
+- [ ] 05-03-PLAN.md — Doc-phase workflow + slash command
 
 ### Phase 6: Workflows and Commands
 **Goal**: The full pipeline is orchestrated end-to-end through framing-aware workflows (debug/new/enhance/refactor) that share a common artifact pipeline, plus initialization commands that set up new and existing projects
