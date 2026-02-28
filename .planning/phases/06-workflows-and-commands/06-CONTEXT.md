@@ -6,7 +6,7 @@
 <domain>
 ## Phase Boundary
 
-Four framing-aware entry points (/debug, /new, /enhance, /refactor) that each run distinct discovery with different thinking modes, then converge to a shared artifact pipeline (requirements → plan → execute → review → reflect). Plus project initialization (/init) for new and existing projects, and two discussion commands (discuss-capability, discuss-feature) for optional pre-work at different levels.
+Four framing-aware entry points (/debug, /new, /enhance, /refactor) that each run distinct discovery with different thinking modes, then converge to a shared artifact pipeline (requirements → plan → execute → review → docs/reflect). Plus project initialization (/init) for new and existing projects, two discussion commands (discuss-capability, discuss-feature) for optional pre-work at different levels, and supporting commands (status, resume, plan, review) to wire everything together. Full v2 command surface: 11 commands.
 
 </domain>
 
@@ -39,16 +39,76 @@ Four framing-aware entry points (/debug, /new, /enhance, /refactor) that each ru
 
 - **Primary + secondary lens model**: One lens leads, the other informs. "This is primarily /enhance with a /refactor component." Single run, layered context.
 
+### Discovery Brief (Handoff Artifact)
+
+Discovery produces a structured brief — the contract between discovery and the rest of the pipeline:
+
+```
+Discovery Brief
+├── Meta
+│   ├── capability: (name / reference to capability file)
+│   ├── primary_lens: debug | new | enhance | refactor
+│   ├── secondary_lens: (optional, for compound work)
+│   ├── completion: mvu_met | user_override | gaps_flagged
+│   └── timestamp
+│
+├── Problem Statement
+│   └── One sentence. If you can't, discovery isn't done.
+│
+├── Context
+│   ├── existing_state: (what exists today, skip for /new)
+│   ├── relevant_modules: (references to .documentation)
+│   └── prior_exploration: (link to discuss notes if they exist)
+│
+├── Specification (shape varies by lens)
+│   ├── /debug: symptom, reproduction_path, hypothesis, evidence
+│   ├── /new: capability_definition, boundaries, constraints, success_criteria
+│   ├── /enhance: current_behavior, desired_behavior, delta, invariants
+│   └── /refactor: current_design, target_design, migration_risk, behavioral_invariants
+│
+├── Unknowns & Assumptions
+│   ├── assumptions: (things treated as true but unverified)
+│   └── open_questions: (things that couldn't be resolved)
+│
+└── Scope Boundary
+    ├── in: (what this work covers)
+    ├── out: (what's explicitly deferred)
+    └── follow_ups: (surfaced during discovery, tracked for later)
+```
+
 ### Pipeline Convergence
 
-- **Handoff artifact**: Structured brief (problem statement, constraints, desired outcome, framing type, secondary lens if applicable)
-- **Always full pipeline**: Every run goes through all stages — requirements → plan → execute → review → reflect. No stage skipping.
-- **Auto-generate requirements, user reviews**: System drafts from brief, user approves or edits before planning starts.
+- **Always full pipeline**: Every run goes through all stages — research → requirements → plan → execute → review → docs/reflect. No stage skipping.
+- **Research agents still run**: After discovery produces the brief, Phase 2's research agents investigate technical feasibility. Research agents are lens-aware — they receive lens metadata and adjust focus (e.g., /debug research prioritizes reproduction environment; /refactor prioritizes dependency mapping).
+- **Auto-generate requirements, user reviews**: System drafts 3-layer requirements (end-user, functional, technical) from brief. All 3 layers always present, but weight varies by lens (/debug has thin EU and rich TC; /new has rich EU and thin TC).
 - **Lens-aware pipeline** — framing shapes behavior at every stage:
   - Plan: risk posture, decomposition strategy, scope of changes
   - Execute: solution approach, aggressiveness, what to preserve vs replace
   - Review: definition of done, validation targets, regression watchpoints
-- **Reflect stage**: End of each pipeline run, incrementally updates project model. What changed, what drifted from expectations.
+- **Review receives three inputs**:
+  1. Requirements (the contract) — "Did we build what was specified?"
+  2. Lens metadata (the disposition) — "Are we reviewing this the right way?"
+  3. Brief (the intent) — "Does this actually solve the original problem?" Catches spec-complete but problem-incomplete work.
+- **Reflect = Phase 5's doc agent**: Documentation generation after review acceptance is the reflect mechanism. Doc agent also handles capability status advancement (exploring → specified → in-progress → complete). Not a new stage — it's Phase 5 wired as the final pipeline step.
+
+### Plan-to-Execute Handoff
+
+- **Plan format carries forward from Phase 3**: 5-field task structure (REQs, Artifact, Inputs, Done, Title) with wave ordering and YAML frontmatter.
+- **Execution orchestration carries forward**: Wave-based parallelization from Phase 3. Tasks in same wave run in parallel, waves run sequentially.
+
+### Universal Escalation Protocol (Backward Flow)
+
+Every pipeline stage can push back upstream when it detects a problem:
+
+```
+Stage detects upstream problem
+    ├── Minor: flag it, continue, reflect captures it
+    ├── Moderate: pause, surface to user, propose amendment
+    └── Major: halt, recommend returning to specific stage
+```
+
+- **Universal protocol**: Same 3-tier severity model at every stage. What constitutes minor/moderate/major may differ per stage, but the mechanism is consistent.
+- **Major issue handling**: Propose and confirm. Pipeline recommends: "I suggest returning to discovery because X." User confirms, then auto-restarts from that stage.
 
 ### Project Initialization (/init)
 
@@ -69,9 +129,10 @@ Four framing-aware entry points (/debug, /new, /enhance, /refactor) that each ru
   ├── architecture.md      ← code context (modules, flows, patterns)
   ├── domain.md            ← domain context (concepts, taxonomy)
   ├── mapping.md           ← domain concept → code location links
+  ├── capabilities/        ← per-capability lifecycle files
   └── decisions/           ← ADRs
   ```
-- **Doc freshness via reflect stage**: Pipeline ends with reflect that incrementally updates project model and flags drift.
+- **Doc freshness via reflect stage**: Phase 5's doc agent runs as final pipeline step, incrementally updates project model and flags drift.
 
 ### discuss-capability
 
@@ -104,14 +165,37 @@ Four framing-aware entry points (/debug, /new, /enhance, /refactor) that each ru
 - **Can kill/defer features**: Same power as capability-level. Can route backward to replan or even back to discuss-capability if the feature reveals the capability was misconceived.
 - **Backward routing**: Usually → implementation clarity → execute. Sometimes → "this doesn't make sense" → back to plan or discuss-capability.
 
+### Command Inventory (11 commands)
+
+| Command | Role | Input |
+|---------|------|-------|
+| `/init` | Project setup (new or existing) | Auto-detects mode |
+| `/debug` | Lens: detective mode | Fuzzy capability/feature reference |
+| `/new` | Lens: architect mode | Fuzzy capability/feature reference |
+| `/enhance` | Lens: editor mode | Fuzzy capability/feature reference |
+| `/refactor` | Lens: surgeon mode | Fuzzy capability/feature reference |
+| `/discuss-capability` | Explore WHAT and WHY | Fuzzy capability reference |
+| `/discuss-feature` | Explore HOW a feature works | Fuzzy feature reference |
+| `/status` | Project-wide dashboard | None |
+| `/resume` | Pick up interrupted pipeline | None (detects state) |
+| `/plan` | Explicit plan stage trigger | Approved requirements |
+| `/review` | Manual review trigger | Completed work |
+
+### Fuzzy Resolution
+
+- All commands accept natural language: `/debug the drill timing thing`, `/enhance mistake grading`, `/discuss spaced repetition approach`
+- System resolves to capability/feature from project model
+- Multiple matches: present top 3, user picks
+- No match: ask user to clarify or create new
+
 ### Claude's Discretion
 
 - Exact anchor question wording per lens
 - Adaptive branching logic and question selection
 - MVU slot detection and saturation checking
-- How lens context metadata is structured in the brief
-- Technical implementation of the reflect stage
+- Technical implementation of the reflect stage integration
 - Automated scan agent architecture for /init existing-project
+- Escalation severity thresholds per stage
 
 </decisions>
 
@@ -124,6 +208,8 @@ Four framing-aware entry points (/debug, /new, /enhance, /refactor) that each ru
 - Init validation sections are independent — confirming tech stack doesn't block confirming architecture
 - Capability files grow progressively — sections fill in as the capability moves through the pipeline
 - discuss-feature can route backward, not just forward — it's a quality gate, not just a formality
+- Review checks the brief (intent) not just requirements (contract) — catches "built exactly what was specified but doesn't solve the problem"
+- Every stage can push back: minor (flag + continue), moderate (pause + propose), major (halt + recommend upstream return)
 
 </specifics>
 
