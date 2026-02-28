@@ -217,7 +217,35 @@ Display completion summary:
 - MVU slot status (filled/unfilled)
 - Exit signal
 - Brief location
-- Next steps: "Run the pipeline to generate requirements from this brief."
+
+## 10. Pipeline Handoff
+
+After the brief is finalized, hand off to the framing pipeline for the 6 post-discovery stages.
+
+Display:
+```
+-------------------------------------------------------
+ GSD > HANDING OFF TO PIPELINE
+-------------------------------------------------------
+
+Brief complete. Starting post-discovery pipeline:
+  research -> requirements -> plan -> execute -> review -> reflect
+```
+
+Invoke the framing-pipeline workflow with the discovery context:
+
+```
+@~/.claude/get-shit-done/workflows/framing-pipeline.md
+```
+
+Pass the following context to framing-pipeline:
+- `BRIEF_PATH`: The path where the brief was written (from Step 9)
+- `LENS`: The active lens (may have changed from pivot in Step 5a)
+- `SECONDARY_LENS`: Secondary lens if compound work was detected (from Step 5)
+- `CAPABILITY_SLUG`: The resolved capability slug (from Step 2)
+- `CAPABILITY_NAME`: The resolved capability name (from Step 2)
+
+The pipeline workflow handles all subsequent stages. Discovery is complete.
 
 </process>
 
