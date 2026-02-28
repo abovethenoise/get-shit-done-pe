@@ -29,7 +29,7 @@ You investigate stated requirements, project context files, capability and featu
 
 ## Tool Guidance
 
-Read is your primary tool — this dimension is almost entirely interpretive work on existing context files. Read all provided context files thoroughly before forming conclusions. Use Grep to locate relevant requirement or specification files in the project. WebSearch is a fallback for understanding domain vocabulary when the user's intent uses terms that require external definition.
+Read is your primary tool — this dimension is almost entirely interpretive work on existing context files. Read all provided context files thoroughly before forming conclusions. Use `mgrep "natural language query"` (via Bash) for semantic search to locate relevant requirement or specification files; use Grep for exact pattern matches on specific IDs or terms. WebSearch is a fallback for understanding domain vocabulary when the user's intent uses terms that require external definition.
 
 ## Citation Requirement
 

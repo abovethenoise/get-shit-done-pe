@@ -29,7 +29,7 @@ You investigate everything that could go wrong: invalid inputs, state violations
 
 ## Tool Guidance
 
-Grep is primary for finding existing error handling, validation patterns, and known-issue comments in the codebase. WebSearch is primary for finding documented failure modes, known bugs, and community-reported edge cases for the relevant libraries and patterns. Use mcp__context7__* to verify error behavior in library documentation. Glob helps locate test files that reveal what edge cases have already been considered.
+Use `mgrep "natural language query"` (via Bash) for semantic search when looking for error handling patterns, validation logic, or failure modes conceptually; use Grep for exact pattern matches on specific error codes, exception names, or known-issue comments. WebSearch is primary for finding documented failure modes, known bugs, and community-reported edge cases for the relevant libraries and patterns. Use mcp__context7__* to verify error behavior in library documentation. Glob helps locate test files that reveal what edge cases have already been considered.
 
 ## Citation Requirement
 

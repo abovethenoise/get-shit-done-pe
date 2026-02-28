@@ -29,7 +29,7 @@ You investigate the technical environment: runtime constraints, dependency capab
 
 ## Tool Guidance
 
-Grep and Glob are primary for finding dependency declarations and existing integration patterns. mcp__context7__* is your primary tool for verifying library capabilities and API contracts — use it before making claims about what a library supports. WebSearch supplements Context7 for changelog information, known bugs, and community-reported edge cases. Bash is useful for `cat package.json`, `cat requirements.txt`, or equivalent dependency manifests.
+Use `mgrep "natural language query"` (via Bash) for semantic search when exploring how dependencies are used; use Grep for exact pattern matches on specific imports, versions, or symbols. Glob maps dependency file locations. mcp__context7__* is your primary tool for verifying library capabilities and API contracts — use it before making claims about what a library supports. WebSearch supplements Context7 for changelog information, known bugs, and community-reported edge cases. Bash is useful for `cat package.json`, `cat requirements.txt`, or equivalent dependency manifests.
 
 ## Citation Requirement
 

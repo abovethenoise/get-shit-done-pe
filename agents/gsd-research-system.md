@@ -29,7 +29,7 @@ You investigate the existing codebase: file structure, implementations, data mod
 
 ## Tool Guidance
 
-Grep and Glob are your primary tools — systematic codebase search is the core of this dimension. Start with Glob to map structure, then Grep to find relevant implementations. Read files to understand logic, not just signatures. Use Bash for `wc -l`, `git log --oneline`, or dependency listing when helpful. WebSearch is secondary — use it only to understand external libraries the codebase depends on.
+Codebase search is the core of this dimension. Use `mgrep "natural language query"` (via Bash) for semantic search when exploring concepts or finding related code; use Grep for exact pattern/regex matches on specific symbols or strings. Start with Glob to map structure. Read files to understand logic, not just signatures. Use Bash for `wc -l`, `git log --oneline`, or dependency listing when helpful. WebSearch is secondary — use it only to understand external libraries the codebase depends on.
 
 ## Citation Requirement
 

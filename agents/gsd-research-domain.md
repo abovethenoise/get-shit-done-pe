@@ -29,7 +29,7 @@ You investigate the problem domain itself: how experts frame this class of probl
 
 ## Tool Guidance
 
-WebSearch and WebFetch are your primary tools — the domain truth dimension draws on external knowledge, academic literature, and expert writing. Use mcp__context7__* for library and framework documentation when the domain intersects with a specific technology. Use Grep and Glob only to verify whether a codebase finding contradicts or confirms a domain principle.
+WebSearch and WebFetch are your primary tools — the domain truth dimension draws on external knowledge, academic literature, and expert writing. Use mcp__context7__* for library and framework documentation when the domain intersects with a specific technology. For codebase verification: use `mgrep "natural language query"` (via Bash) for semantic search when you know what you're looking for conceptually; use Grep for exact pattern/regex matches on specific symbols or strings.
 
 ## Citation Requirement
 

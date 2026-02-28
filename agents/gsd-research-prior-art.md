@@ -29,7 +29,7 @@ You investigate the broader ecosystem: how the open-source community, establishe
 
 ## Tool Guidance
 
-WebSearch and WebFetch are your primary tools — prior art lives in the ecosystem, not in the local codebase. Search for official documentation, comparison articles, and implementation guides. mcp__context7__* is your primary tool for authoritative library API documentation when evaluating specific libraries. Use Grep to check whether any prior art patterns are already present in the codebase (avoids recommending what already exists).
+WebSearch and WebFetch are your primary tools — prior art lives in the ecosystem, not in the local codebase. Search for official documentation, comparison articles, and implementation guides. mcp__context7__* is your primary tool for authoritative library API documentation when evaluating specific libraries. Use `mgrep "natural language query"` (via Bash) for semantic search to check whether prior art patterns already exist in the codebase; use Grep for exact pattern matches on specific function names or imports.
 
 ## Citation Requirement
 
