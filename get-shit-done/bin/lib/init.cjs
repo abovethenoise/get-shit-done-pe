@@ -596,6 +596,109 @@ function cmdInitMapCodebase(cwd, raw) {
   output(result, raw);
 }
 
+function cmdInitReviewPhase(cwd, phase, raw) {
+  if (!phase) {
+    error('phase required for init review-phase');
+  }
+
+  const config = loadConfig(cwd);
+  const phaseInfo = findPhaseInternal(cwd, phase);
+
+  const roadmapPhase = getRoadmapPhaseInternal(cwd, phase);
+  const reqMatch = roadmapPhase?.section?.match(/^\*\*Requirements\*\*:[^\S\n]*([^\n]*)$/m);
+  const reqExtracted = reqMatch
+    ? reqMatch[1].replace(/[\[\]]/g, '').split(',').map(s => s.trim()).filter(Boolean).join(', ')
+    : null;
+  const phase_req_ids = (reqExtracted && reqExtracted !== 'TBD') ? reqExtracted : null;
+
+  // Reviewer agent paths (4 reviewers + 1 synthesizer)
+  const agentDir = 'get-shit-done/agents';
+  const reviewerAgents = [
+    { type: 'end-user', path: toPosixPath(path.join(agentDir, 'gsd-review-enduser.md')) },
+    { type: 'functional', path: toPosixPath(path.join(agentDir, 'gsd-review-functional.md')) },
+    { type: 'technical', path: toPosixPath(path.join(agentDir, 'gsd-review-technical.md')) },
+    { type: 'code-quality', path: toPosixPath(path.join(agentDir, 'gsd-review-quality.md')) },
+  ];
+  const synthesizerPath = toPosixPath(path.join(agentDir, 'gsd-review-synthesizer.md'));
+
+  // Resolve models for reviewer agents (all role_type: judge)
+  const reviewer_model = resolveModelInternal(cwd, 'gsd-review-enduser');
+  const synthesizer_model = resolveModelInternal(cwd, 'gsd-review-synthesizer');
+
+  // Feature/capability paths from phase directory
+  let featurePaths = [];
+  let capabilityPaths = [];
+  if (phaseInfo?.directory) {
+    const capDir = path.join(cwd, '.planning', 'capabilities');
+    try {
+      const caps = fs.readdirSync(capDir, { withFileTypes: true })
+        .filter(e => e.isDirectory())
+        .map(e => e.name);
+      for (const cap of caps) {
+        const capPath = toPosixPath(path.join('.planning', 'capabilities', cap, 'CAPABILITY.md'));
+        if (pathExistsInternal(cwd, capPath)) {
+          capabilityPaths.push(capPath);
+        }
+        const featDir = path.join(capDir, cap);
+        try {
+          const feats = fs.readdirSync(featDir, { withFileTypes: true })
+            .filter(e => e.isDirectory())
+            .map(e => e.name);
+          for (const feat of feats) {
+            const featPath = toPosixPath(path.join('.planning', 'capabilities', cap, feat, 'FEATURE.md'));
+            if (pathExistsInternal(cwd, featPath)) {
+              featurePaths.push(featPath);
+            }
+          }
+        } catch {}
+      }
+    } catch {}
+  }
+
+  const result = {
+    // Models
+    reviewer_model,
+    synthesizer_model,
+
+    // Config flags
+    commit_docs: config.commit_docs,
+    parallelization: config.parallelization,
+
+    // Phase info
+    phase_found: !!phaseInfo,
+    phase_dir: phaseInfo?.directory || null,
+    phase_number: phaseInfo?.phase_number || null,
+    phase_name: phaseInfo?.phase_name || null,
+    phase_slug: phaseInfo?.phase_slug || null,
+    phase_req_ids,
+
+    // Reviewer agents
+    reviewer_agents: reviewerAgents,
+    synthesizer_path: synthesizerPath,
+    reviewer_count: reviewerAgents.length,
+
+    // Feature/capability inventory
+    feature_paths: featurePaths,
+    capability_paths: capabilityPaths,
+    feature_count: featurePaths.length,
+    capability_count: capabilityPaths.length,
+
+    // Review config
+    max_re_review_cycles: 2,
+    failure_threshold: 2,  // >=2 of 4 reviewer failures = abort
+
+    // File existence
+    state_exists: pathExistsInternal(cwd, '.planning/STATE.md'),
+    roadmap_exists: pathExistsInternal(cwd, '.planning/ROADMAP.md'),
+
+    // File paths
+    state_path: '.planning/STATE.md',
+    roadmap_path: '.planning/ROADMAP.md',
+  };
+
+  output(result, raw);
+}
+
 function cmdInitProgress(cwd, raw) {
   const config = loadConfig(cwd);
   const milestone = getMilestoneInfo(cwd);
@@ -707,4 +810,5 @@ module.exports = {
   cmdInitMilestoneOp,
   cmdInitMapCodebase,
   cmdInitProgress,
+  cmdInitReviewPhase,
 };
