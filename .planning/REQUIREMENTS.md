@@ -49,11 +49,11 @@
 
 - [x] **REVW-01**: 4 parallel specialist reviewers: end-user, functional, technical, code quality
 - [x] **REVW-02**: Each reviewer produces trace report: per-requirement verdict (met / not met / regression)
-- [ ] **REVW-03**: End-user reviewer traces against story + acceptance criteria
-- [ ] **REVW-04**: Functional reviewer traces against behavior specs
-- [ ] **REVW-05**: Technical reviewer traces against implementation specs
-- [ ] **REVW-06**: Code quality reviewer traces for DRY, KISS, no over-complexity, no bloat, no obsolete code
-- [ ] **REVW-07**: Synthesizer consolidates 4 trace reports, verifies findings, resolves conflicts (priority: user > functional > technical > quality)
+- [x] **REVW-03**: End-user reviewer traces against story + acceptance criteria
+- [x] **REVW-04**: Functional reviewer traces against behavior specs
+- [x] **REVW-05**: Technical reviewer traces against implementation specs
+- [x] **REVW-06**: Code quality reviewer traces for DRY, KISS, no over-complexity, no bloat, no obsolete code
+- [x] **REVW-07**: Synthesizer consolidates 4 trace reports, verifies findings, resolves conflicts (priority: user > functional > technical > quality)
 - [ ] **REVW-08**: Synthesized recommendations presented to user for decision
 
 ### Documentation
@@ -135,11 +135,11 @@
 | PLAN-04 | Phase 3 | Complete |
 | REVW-01 | Phase 4 | Complete |
 | REVW-02 | Phase 4 | Complete |
-| REVW-03 | Phase 4 | Pending |
-| REVW-04 | Phase 4 | Pending |
-| REVW-05 | Phase 4 | Pending |
-| REVW-06 | Phase 4 | Pending |
-| REVW-07 | Phase 4 | Pending |
+| REVW-03 | Phase 4 | Complete |
+| REVW-04 | Phase 4 | Complete |
+| REVW-05 | Phase 4 | Complete |
+| REVW-06 | Phase 4 | Complete |
+| REVW-07 | Phase 4 | Complete |
 | REVW-08 | Phase 4 | Pending |
 | DOCS-01 | Phase 5 | Pending |
 | DOCS-02 | Phase 5 | Pending |

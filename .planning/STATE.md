@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-28)
 
 **Core value:** Every piece of executed work traces back to a specific requirement, and every requirement is verified against the actual code.
-**Current focus:** Phase 3: Planning Pipeline
+**Current focus:** Phase 4: Review Layer
 
 ## Current Position
 
-Phase: 3 of 6 (Planning Pipeline)
-Plan: 3 of 3 in current phase
-Status: In progress -- 03-01 and 03-02 complete, 03-03 pending
-Last activity: 2026-02-28 -- Completed 03-02 (planner v2 + workflow Q&A)
+Phase: 4 of 6 (Review Layer)
+Plan: 2 of 3 in current phase
+Status: In progress -- 04-01 complete, 04-02 and 04-03 pending
+Last activity: 2026-02-28 -- Completed 04-01 (review layer agents)
 
-Progress: [████████░░] 80%
+Progress: [████████░░] 82%
 
 ## Performance Metrics
 
@@ -50,6 +50,7 @@ Progress: [████████░░] 80%
 | Phase 02-agent-framework P02 | 1 | 2 tasks | 5 files |
 | Phase 03 P01 | 2min | 2 tasks | 3 files |
 | Phase 03 P02 | 5min | 2 tasks | 2 files |
+| Phase 04 P01 | 3min | 2 tasks | 5 files |
 | Phase 04 P02 | 2min | 2 tasks | 4 files |
 
 ## Current Focus
@@ -88,6 +89,10 @@ Recent decisions affecting current work:
 - [03-02]: Plan-checker scope narrowed to execution feasibility (coverage + structural handled by self-critique + CLI)
 - [Phase 04]: Review frontmatter required fields: type, feature, capability, phase, reviewer, status
 - [Phase 04]: init review-phase returns reviewer agent paths, synthesizer path, feature/capability paths, review config (max_re_review_cycles=2, failure_threshold=2)
+- [04-01]: Reviewer agents report verdicts only (met/not met/regression) -- severity assigned exclusively by synthesizer
+- [04-01]: Two-phase output format enforces internalize-then-trace pattern for accuracy improvement
+- [04-01]: Framing injection slot is HTML comment block -- zero cost when empty, Phase 6 populates
+- [04-01]: Quality reviewer allowed up to ~1700 tokens (soft budget) due to complex posture
 
 ### Pending Todos
 
@@ -101,5 +106,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 03-02-PLAN.md
+Stopped at: Completed 04-01-PLAN.md
 Resume file: None
