@@ -47,8 +47,8 @@
 
 ### Review
 
-- [ ] **REVW-01**: 4 parallel specialist reviewers: end-user, functional, technical, code quality
-- [ ] **REVW-02**: Each reviewer produces trace report: per-requirement verdict (met / not met / regression)
+- [x] **REVW-01**: 4 parallel specialist reviewers: end-user, functional, technical, code quality
+- [x] **REVW-02**: Each reviewer produces trace report: per-requirement verdict (met / not met / regression)
 - [ ] **REVW-03**: End-user reviewer traces against story + acceptance criteria
 - [ ] **REVW-04**: Functional reviewer traces against behavior specs
 - [ ] **REVW-05**: Technical reviewer traces against implementation specs
@@ -133,8 +133,8 @@
 | PLAN-02 | Phase 3 | Complete |
 | PLAN-03 | Phase 3 | Complete |
 | PLAN-04 | Phase 3 | Complete |
-| REVW-01 | Phase 4 | Pending |
-| REVW-02 | Phase 4 | Pending |
+| REVW-01 | Phase 4 | Complete |
+| REVW-02 | Phase 4 | Complete |
 | REVW-03 | Phase 4 | Pending |
 | REVW-04 | Phase 4 | Pending |
 | REVW-05 | Phase 4 | Pending |
