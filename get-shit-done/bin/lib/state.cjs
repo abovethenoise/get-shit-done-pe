@@ -529,6 +529,8 @@ function buildStateFrontmatter(bodyContent, cwd) {
   const lastActivity = extractField('Last Activity');
   const stoppedAt = extractField('Stopped At') || extractField('Stopped at');
   const pausedAt = extractField('Paused At');
+  const currentCapability = extractField('Current capability');
+  const currentFeature = extractField('Current feature');
 
   let milestone = null;
   let milestoneName = null;
@@ -606,6 +608,8 @@ function buildStateFrontmatter(bodyContent, cwd) {
   fm.status = normalizedStatus;
   if (stoppedAt) fm.stopped_at = stoppedAt;
   if (pausedAt) fm.paused_at = pausedAt;
+  if (currentCapability && currentCapability !== 'None') fm.current_capability = currentCapability;
+  if (currentFeature && currentFeature !== 'None') fm.current_feature = currentFeature;
   fm.last_updated = new Date().toISOString();
   if (lastActivity) fm.last_activity = lastActivity;
 

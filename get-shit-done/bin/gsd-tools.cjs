@@ -580,6 +580,40 @@ async function main() {
       break;
     }
 
+    // ─── Capability flat-verb commands ──────────────────────────────────────
+    case 'capability-create': {
+      const { cmdCapabilityCreate } = require('./lib/capability.cjs');
+      cmdCapabilityCreate(cwd, args[1], raw);
+      break;
+    }
+    case 'capability-list': {
+      const { cmdCapabilityList } = require('./lib/capability.cjs');
+      cmdCapabilityList(cwd, raw);
+      break;
+    }
+    case 'capability-status': {
+      const { cmdCapabilityStatus } = require('./lib/capability.cjs');
+      cmdCapabilityStatus(cwd, args[1], raw);
+      break;
+    }
+
+    // ─── Feature flat-verb commands ─────────────────────────────────────────
+    case 'feature-create': {
+      const { cmdFeatureCreate } = require('./lib/feature.cjs');
+      cmdFeatureCreate(cwd, args[1], args[2], raw);
+      break;
+    }
+    case 'feature-list': {
+      const { cmdFeatureList } = require('./lib/feature.cjs');
+      cmdFeatureList(cwd, args[1], raw);
+      break;
+    }
+    case 'feature-status': {
+      const { cmdFeatureStatus } = require('./lib/feature.cjs');
+      cmdFeatureStatus(cwd, args[1], args[2], raw);
+      break;
+    }
+
     default:
       error(`Unknown command: ${command}`);
   }

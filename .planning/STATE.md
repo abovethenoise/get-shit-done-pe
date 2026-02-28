@@ -35,6 +35,11 @@ Progress: [██░░░░░░░░] 12%
 
 *Updated after each plan completion*
 
+## Current Focus
+
+**Current capability:** None
+**Current feature:** None
+
 ## Accumulated Context
 
 ### Decisions

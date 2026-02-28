@@ -201,8 +201,49 @@ function cmdTemplateFill(cwd, templateType, options, raw) {
       fileName = `${padded}-VERIFICATION.md`;
       break;
     }
+    case 'capability': {
+      const capSlug = options.slug || generateSlugInternal(options.name || '');
+      if (!capSlug) { error('--name or --slug required for capability template'); return; }
+      const capDir = path.join(cwd, '.planning', 'capabilities', capSlug);
+      fs.mkdirSync(path.join(capDir, 'features'), { recursive: true });
+      const capContent = fillTemplate('capability', {
+        name: options.name || capSlug,
+        slug: capSlug,
+        date: today,
+      });
+      const capPath = path.join(capDir, 'CAPABILITY.md');
+      if (fs.existsSync(capPath)) {
+        output({ error: 'File already exists', path: path.relative(cwd, capPath) }, raw);
+        return;
+      }
+      fs.writeFileSync(capPath, capContent, 'utf-8');
+      output({ created: true, path: path.relative(cwd, capPath), template: 'capability' }, raw, path.relative(cwd, capPath));
+      return;
+    }
+    case 'feature': {
+      const featCapSlug = options.capability;
+      if (!featCapSlug) { error('--capability required for feature template'); return; }
+      const featSlug = options.slug || generateSlugInternal(options.name || '');
+      if (!featSlug) { error('--name or --slug required for feature template'); return; }
+      const featDir = path.join(cwd, '.planning', 'capabilities', featCapSlug, 'features', featSlug);
+      fs.mkdirSync(featDir, { recursive: true });
+      const featContent = fillTemplate('feature', {
+        name: options.name || featSlug,
+        slug: featSlug,
+        capability: featCapSlug,
+        date: today,
+      });
+      const featPath = path.join(featDir, 'FEATURE.md');
+      if (fs.existsSync(featPath)) {
+        output({ error: 'File already exists', path: path.relative(cwd, featPath) }, raw);
+        return;
+      }
+      fs.writeFileSync(featPath, featContent, 'utf-8');
+      output({ created: true, path: path.relative(cwd, featPath), template: 'feature' }, raw, path.relative(cwd, featPath));
+      return;
+    }
     default:
-      error(`Unknown template type: ${templateType}. Available: summary, plan, verification`);
+      error(`Unknown template type: ${templateType}. Available: summary, plan, verification, capability, feature`);
       return;
   }
 
