@@ -1,0 +1,64 @@
+---
+name: gsd:discuss-feature
+description: Explore HOW a specific feature works before implementation
+argument-hint: "<feature reference>"
+allowed-tools:
+  - Read
+  - Write
+  - Bash
+  - Glob
+  - Grep
+  - AskUserQuestion
+---
+
+<objective>
+Guided exploration of a feature's implementation approach, edge cases, and dependencies. Optional thinking partner between planning and execution.
+
+**How it works:**
+1. Resolve fuzzy feature reference to a specific feature within a capability
+2. Check status (killed/deferred shows reasoning, offers override)
+3. Guided Q&A exploring HOW (implementation, edge cases, dependencies, data flow)
+4. Detect backward routing needs (feature reveals capability misconception)
+5. Update feature notes that feed into requirements files (EU, FN, TC)
+6. Can kill or defer features with reasoning
+
+**Output:** Updated feature notes at `.planning/capabilities/{cap}/features/{feat}/` informing requirements generation
+</objective>
+
+<execution_context>
+@~/.claude/get-shit-done/workflows/discuss-feature.md
+</execution_context>
+
+<context>
+Feature reference: $ARGUMENTS (required — accepts fuzzy natural language like "drill timing" or "mistake-grading/auto-classify")
+
+Context resolved in-workflow using `init discuss-feature` and `feature-list` tool calls.
+</context>
+
+<process>
+1. Initialize via `init discuss-feature`
+2. Fuzzy-resolve user's reference to a feature (substring match on feature-list output)
+3. Confirm resolved feature with user (auto-select on unique, top-3 on multiple, clarify on none)
+4. Load feature file and parent capability context
+5. Check feature status (killed/deferred: show reasoning, offer override)
+6. Guided exploration: implementation approach, edge cases, dependencies, data flow
+7. Detect backward routing signals (feature reveals capability misconception)
+8. Detect kill/defer signals during discussion
+9. Update feature notes
+10. Present summary and next steps
+
+**Key behaviors:**
+- Fuzzy resolution: substring/slug matching across all features, not semantic search
+- Backward routing: can route to discuss-capability or replan when feature reveals upstream issues
+- Kill/defer: persists reasoning in feature file
+- Grounded in capability context: references parent capability's exploration notes
+</process>
+
+<success_criteria>
+- Feature resolved from fuzzy reference
+- Status checked before proceeding
+- Implementation approach, edge cases, and dependencies explored
+- Backward routing detected and handled when needed
+- Feature notes updated
+- User knows next steps
+</success_criteria>
