@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-28)
 
 **Core value:** Every piece of executed work traces back to a specific requirement, and every requirement is verified against the actual code.
-**Current focus:** Phase 1: Foundation
+**Current focus:** Phase 2: Agent Framework
 
 ## Current Position
 
-Phase: 1 of 6 (Foundation)
-Plan: 3 of 3 in current phase
-Status: Phase complete — ready for verification
-Last activity: 2026-02-28 — Completed 01-03 (capability & feature CLI commands)
+Phase: 2 of 6 (Agent Framework)
+Plan: 1 of 3 in current phase
+Status: In progress — 02-01 complete, 02-02 and 02-03 pending
+Last activity: 2026-02-28 — Completed 02-01 (research agent definitions)
 
-Progress: [███░░░░░░░] 33%
+Progress: [████░░░░░░] 40%
 
 ## Performance Metrics
 
@@ -72,6 +72,10 @@ Recent decisions affecting current work:
 - [Phase 01-03]: fillTemplate() is single content source of truth; capability/feature modules delegate, never hardcode
 - [Phase 01-03]: Flat-verb dispatch pattern (capability-create) for autocomplete discoverability per CONTEXT.md
 - [Phase 02-agent-framework]: Gather-synthesize is a workflow pattern, not code — AI orchestrators follow it; framing changes Layer 4 context not the pattern itself; no quality gate between gatherers and synthesizer (thin pipe)
+- [02-01]: v2 agent body is identity document only — role, goal, success criteria, scope, tool guidance, output format, citations; zero execution flow, zero context-gathering logic
+- [02-01]: Citation carve-out: [First principles: reasoning chain] is a valid citation format
+- [02-01]: Synthesizer section headings are locked exact strings — downstream agents reference by name
+- [02-01]: Synthesizer quality gate: gatherer output missing or < 50 words = failed; abort if > 3 of 6 fail
 
 ### Pending Todos
 
@@ -85,5 +89,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 01-03-PLAN.md
+Stopped at: Completed 02-01-PLAN.md
 Resume file: None

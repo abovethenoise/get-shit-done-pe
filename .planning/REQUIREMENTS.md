@@ -64,19 +64,19 @@
 
 ### Research
 
-- [ ] **RSRCH-01**: Research rooted in first-principles thinking: identify fundamental truths/constraints, challenge assumptions, reason from constraints upward
-- [ ] **RSRCH-02**: Research bridges from "what is true" to "how this applies to our specific goals and requirements"
+- [x] **RSRCH-01**: Research rooted in first-principles thinking: identify fundamental truths/constraints, challenge assumptions, reason from constraints upward
+- [x] **RSRCH-02**: Research bridges from "what is true" to "how this applies to our specific goals and requirements"
 - [x] **RSRCH-03**: Parallelized gather → synthesize pattern (multiple researchers, one synthesizer)
-- [ ] **RSRCH-04**: Research agents use mgrep for efficient codebase/file search
-- [ ] **RSRCH-05**: Research agents use Brave Search / WebSearch for domain knowledge and ecosystem patterns
-- [ ] **RSRCH-06**: Research agents use Context7 for library-specific documentation lookup
+- [x] **RSRCH-04**: Research agents use mgrep for efficient codebase/file search
+- [x] **RSRCH-05**: Research agents use Brave Search / WebSearch for domain knowledge and ecosystem patterns
+- [x] **RSRCH-06**: Research agents use Context7 for library-specific documentation lookup
 
 ### Agents
 
-- [ ] **AGNT-01**: Agent definitions are goal-driven with artifact awareness (know what files to read/write and how they fit the pipeline)
+- [x] **AGNT-01**: Agent definitions are goal-driven with artifact awareness (know what files to read/write and how they fit the pipeline)
 - [x] **AGNT-02**: Layered context: core (project + capability) always present, framing-specific context added on top
 - [x] **AGNT-03**: Framing changes the questions agents ask, not the agent definition itself
-- [ ] **AGNT-04**: Agent prompts are constrained to prevent scope hallucination and generic output
+- [x] **AGNT-04**: Agent prompts are constrained to prevent scope hallucination and generic output
 
 ## v2 Requirements
 
@@ -144,16 +144,16 @@
 | DOCS-01 | Phase 5 | Pending |
 | DOCS-02 | Phase 5 | Pending |
 | DOCS-03 | Phase 5 | Pending |
-| RSRCH-01 | Phase 2 | Pending |
-| RSRCH-02 | Phase 2 | Pending |
+| RSRCH-01 | Phase 2 | Complete |
+| RSRCH-02 | Phase 2 | Complete |
 | RSRCH-03 | Phase 2 | Complete |
-| RSRCH-04 | Phase 2 | Pending |
-| RSRCH-05 | Phase 2 | Pending |
-| RSRCH-06 | Phase 2 | Pending |
-| AGNT-01 | Phase 2 | Pending |
+| RSRCH-04 | Phase 2 | Complete |
+| RSRCH-05 | Phase 2 | Complete |
+| RSRCH-06 | Phase 2 | Complete |
+| AGNT-01 | Phase 2 | Complete |
 | AGNT-02 | Phase 2 | Complete |
 | AGNT-03 | Phase 2 | Complete |
-| AGNT-04 | Phase 2 | Pending |
+| AGNT-04 | Phase 2 | Complete |
 
 **Coverage:**
 - v1 requirements: 46 total
