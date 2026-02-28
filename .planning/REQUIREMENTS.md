@@ -58,9 +58,9 @@
 
 ### Documentation
 
-- [ ] **DOCS-01**: Reflect-and-write agent reads actual built code after review acceptance
-- [ ] **DOCS-02**: .documentation/ directory contains final-state reference docs per capability/feature
-- [ ] **DOCS-03**: Documentation optimized for quick lookups and mgrep searches during future research/planning
+- [x] **DOCS-01**: Reflect-and-write agent reads actual built code after review acceptance
+- [x] **DOCS-02**: .documentation/ directory contains final-state reference docs per capability/feature
+- [x] **DOCS-03**: Documentation optimized for quick lookups and mgrep searches during future research/planning
 
 ### Research
 
@@ -141,9 +141,9 @@
 | REVW-06 | Phase 4 | Complete |
 | REVW-07 | Phase 4 | Complete |
 | REVW-08 | Phase 4 | Complete |
-| DOCS-01 | Phase 5 | Pending |
-| DOCS-02 | Phase 5 | Pending |
-| DOCS-03 | Phase 5 | Pending |
+| DOCS-01 | Phase 5 | Complete |
+| DOCS-02 | Phase 5 | Complete |
+| DOCS-03 | Phase 5 | Complete |
 | RSRCH-01 | Phase 2 | Complete |
 | RSRCH-02 | Phase 2 | Complete |
 | RSRCH-03 | Phase 2 | Complete |
