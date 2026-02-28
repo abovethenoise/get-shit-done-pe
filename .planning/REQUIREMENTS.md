@@ -26,7 +26,7 @@
 
 - [x] **INIT-01**: New-project mode: Q&A about goals, tech stack opinions, architecture approach → maps out capabilities (stops at capability level)
 - [x] **INIT-02**: Existing-project mode: understands goals + opinions → parallel research discovers existing capabilities/features → Q&A to confirm/adjust → identify new capabilities/features/improvements
-- [ ] **INIT-03**: Discuss-capability command builds out features from a mapped capability
+- [x] **INIT-03**: Discuss-capability command builds out features from a mapped capability
 
 ### Workflows
 
@@ -121,7 +121,7 @@
 | REQS-04 | Phase 3 | Complete |
 | INIT-01 | Phase 6 | Complete |
 | INIT-02 | Phase 6 | Complete |
-| INIT-03 | Phase 6 | Pending |
+| INIT-03 | Phase 6 | Complete |
 | WKFL-01 | Phase 6 | Complete |
 | WKFL-02 | Phase 6 | Complete |
 | WKFL-03 | Phase 6 | Complete |
