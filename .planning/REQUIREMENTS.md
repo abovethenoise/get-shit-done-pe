@@ -9,7 +9,7 @@
 
 - [ ] **FOUND-01**: Capability/Feature directory structure replaces milestone/phase in .planning/
 - [ ] **FOUND-02**: STATE.md tracks current capability, current feature, and cross-feature state
-- [ ] **FOUND-03**: js-yaml@4.1.1 replaces hand-rolled frontmatter parser for 3-layer requirement nesting
+- [x] **FOUND-03**: js-yaml@4.1.1 replaces hand-rolled frontmatter parser for 3-layer requirement nesting
 - [ ] **FOUND-04**: CLI commands for capability lifecycle (create, list, status)
 - [ ] **FOUND-05**: CLI commands for feature lifecycle (create, list, status)
 - [ ] **FOUND-06**: Templates updated for all new artifact types (CAPABILITY.md, FEATURE.md, REVIEW.md, DOCS.md)
@@ -110,7 +110,7 @@
 |-------------|-------|--------|
 | FOUND-01 | Phase 1 | Pending |
 | FOUND-02 | Phase 1 | Pending |
-| FOUND-03 | Phase 1 | Pending |
+| FOUND-03 | Phase 1 | Complete |
 | FOUND-04 | Phase 1 | Pending |
 | FOUND-05 | Phase 1 | Pending |
 | FOUND-06 | Phase 1 | Pending |
