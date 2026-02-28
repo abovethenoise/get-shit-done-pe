@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-02-28T23:36:24.782Z"
+last_updated: 2026-02-28T23:43:14.568Z
 progress:
   total_phases: 7
   completed_phases: 5
   total_plans: 19
-  completed_plans: 16
+  completed_plans: 17
 ---
 
 # Project State
@@ -58,6 +58,7 @@ Progress: [█████████░] 95%
 | Phase 05 P03 | 2min | 2 tasks | 2 files |
 | Phase 06 P01 | 3min | 2 tasks | 7 files |
 | Phase 06 P04 | 3min | 2 tasks | 4 files |
+| Phase 06 P02 | 3min | 2 tasks | 7 files |
 
 ## Current Focus
 
@@ -117,6 +118,8 @@ Recent decisions affecting current work:
 - [Phase 06]: [06-04]: Auto-detection uses filesystem evidence only -- .planning/ existence + code file presence determines mode
 - [Phase 06]: [06-04]: init-state.json provides partial-run detection and resume (isolated from project STATE.md)
 - [Phase 06]: [06-04]: Uses init project compound command (no conflict with existing init resume)
+- [Phase 06]: v1 debug.md replaced entirely with v2 framing entry point -- shared workflow delegation pattern
+- [Phase 06]: Fuzzy capability resolution is workflow-level (in framing-discovery.md), not gsd-tools -- orchestrator controls user interaction
 
 ### Pending Todos
 
