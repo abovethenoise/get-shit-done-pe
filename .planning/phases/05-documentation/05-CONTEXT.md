@@ -37,13 +37,13 @@ After review acceptance, a documentation agent reads the actual built code and g
     glossary.md         ← domain terms, project-specific concepts
     state.md            ← what persists, where, what shape
 ```
-Gate docs are scaffolded (empty templates with correct headings) as Phase 5 infrastructure. They are human-maintained — the doc agent reads them as validation inputs (Pass 3), not generates their content.
+Gate docs are scaffolded with universal seed content as Phase 5 infrastructure. They are human-maintained — the doc agent reads them as validation inputs (Pass 3), not generates their content. All gate doc entries tagged `[manual]` to signal human ownership.
 Emergent (`emergent/`) directory exists in the full structure but is not managed by Phase 5's doc agent.
 
 ### Heading templates (strict, for grep consistency)
 Module docs: `## Module: <exact_code_name>`, `## Purpose:`, `## Exports:`, `## Depends-on:`, `## Constraints:`, `## WHY:` (only if non-obvious)
 Flow docs: `## Flow: <capability>/<flow_name>`, `## Trigger:`, `## Input:`, `## Steps:`, `## Output:`, `## Side-effects:`, `## WHY:` (inline per step, only when needed)
-Gate docs: `## Constraint: <scope>`, `## Glossary: <term>`, `## State: <store_name>`
+Gate docs: `## Constraint: <scope> [manual]`, `## Glossary: <term> [manual]`, `## State: <store_name> [manual]` — all entries tagged `[manual]` to signal human ownership
 
 ### Gate docs role
 Gate docs are validation inputs, not agent outputs:
@@ -51,7 +51,7 @@ Gate docs are validation inputs, not agent outputs:
 - `glossary.md` → agent enforces naming consistency in all generated docs
 - `state.md` → agent verifies state references in module/flow docs match
 - Output: violations surfaced as flags, not fixes
-- Phase 5 scaffolds empty gate doc templates; humans populate content
+- Phase 5 scaffolds gate doc templates pre-seeded with universal entries (see Specific Ideas below); humans add project-specific content
 
 ### Cross-referencing
 - One-way: flows reference modules in Steps. Modules don't link back to flows.
@@ -118,6 +118,66 @@ PT4 DB → reader → parser → transform → DuckDB
 ```
 - Module-level granularity in flows: reference modules, not functions
 - Ownership tags `[derived]`/`[authored]` per section — not per heading convention but explicit markers
+
+- **Gate doc seed content — constraints.md (universal):**
+```
+## Constraint: no-implicit-state [manual]
+All state must be explicit and documented in state.md. No hidden caches,
+no undocumented side effects, no global mutable state.
+
+## Constraint: no-unnecessary-deps [manual]
+Every dependency must justify its existence. If it can be done in <20
+lines of vanilla code, it should be.
+
+## Constraint: no-silent-failures [manual]
+Every error path must be handled explicitly. No empty catch blocks,
+no swallowed exceptions, no fire-and-forget.
+
+## Constraint: no-hardcoded-config [manual]
+All configuration values externalized. No magic numbers, no embedded
+URLs, no inline credentials.
+
+## Constraint: no-premature-abstraction [manual]
+Don't abstract until the second use case. No interfaces with one
+implementation, no factories that produce one type.
+
+## Constraint: single-responsibility [manual]
+One module, one job. If the description requires "and", split it.
+
+## Constraint: explicit-boundaries [manual]
+Module inputs and outputs are typed and documented. No passing
+unstructured objects across module boundaries.
+```
+
+- **Gate doc seed content — glossary.md (universal):**
+```
+## Glossary: module [manual]
+A single-purpose source file with explicit exports.
+
+## Glossary: flow [manual]
+An end-to-end data path triggered by an event or user action.
+
+## Glossary: gate doc [manual]
+Documentation authored before development that governs the project.
+Read-only to automated agents.
+
+## Glossary: derived [manual]
+Doc content regenerated from code. Agent may overwrite freely.
+
+## Glossary: authored [manual]
+Doc content written with judgment. Agent never overwrites.
+```
+
+- **Gate doc seed content — state.md (template, populated as you build):**
+```
+## State: <store_name> [manual]
+Type: database | cache | config | file
+Location: <path or connection>
+Schema: <shape of data>
+Lifecycle: <when created, when updated, when purged>
+Owned-by: <which module writes to this>
+Read-by: <which modules consume this>
+```
 
 </specifics>
 
