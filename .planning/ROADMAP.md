@@ -147,5 +147,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 3. Planning Pipeline | 0/2 | Not started | - |
 | 4. Review Layer | 0/2 | Not started | - |
 | 5. Documentation | 3/3 | Complete   | 2026-02-28 |
-| 6. Workflows and Commands | 0/5 | Not started | - |
+| 6. Workflows and Commands | 2/5 | In Progress|  |
 | 7. Cleanup | 0/1 | Not started | - |

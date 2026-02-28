@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: unknown
-last_updated: "2026-02-28T22:59:59.503Z"
+status: in-progress
+last_updated: "2026-02-28T23:34:31.000Z"
 progress:
   total_phases: 6
   completed_phases: 5
-  total_plans: 14
-  completed_plans: 14
+  total_plans: 19
+  completed_plans: 15
 ---
 
 # Project State
@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-28)
 
 **Core value:** Every piece of executed work traces back to a specific requirement, and every requirement is verified against the actual code.
-**Current focus:** Phase 5: Documentation
+**Current focus:** Phase 6: Workflows and Commands
 
 ## Current Position
 
-Phase: 5 of 6 (Documentation) -- COMPLETE
-Plan: 3 of 3 in current phase
-Status: Phase 5 complete -- all 3 plans executed
-Last activity: 2026-02-28 -- Completed 05-03 (doc-phase workflow + slash command)
+Phase: 6 of 6 (Workflows and Commands) -- IN PROGRESS
+Plan: 4 of 5 in current phase -- COMPLETE
+Status: 06-04 complete -- init-project workflow + slash command
+Last activity: 2026-02-28 -- Completed 06-04 (init-project auto-detection, Q&A, and scan flows)
 
-Progress: [█████████░] 93%
+Progress: [█████████░] 95%
 
 ## Performance Metrics
 
@@ -56,6 +56,7 @@ Progress: [█████████░] 93%
 | Phase 05 P01 | 2min | 2 tasks | 4 files |
 | Phase 05 P02 | 2min | 2 tasks | 3 files |
 | Phase 05 P03 | 2min | 2 tasks | 2 files |
+| Phase 06 P01 | 3min | 2 tasks | 7 files |
 
 ## Current Focus
 
@@ -109,6 +110,9 @@ Recent decisions affecting current work:
 - [05-03]: Single-agent pipeline (not gather-synthesize) for doc-phase -- narrow post-review scope needs one agent
 - [05-03]: Impact flags presented as separate section after Q&A loop -- informational only
 - [05-03]: 3-option Q&A (Approve/Edit/Reject) simpler than review-phase 5-option -- docs are generated content not findings
+- [06-01]: Discovery Brief Specification uses HTML comment blocks for lens variants -- all 4 variants in template, workflow uncomments active one
+- [06-01]: Anchor questions use 5 per lens with branching hints for adaptive follow-up (fixed skeleton + adaptive muscles)
+- [06-01]: Brief scaffolding path is .planning/capabilities/{slug}/BRIEF.md via cmdTemplateFill
 
 ### Pending Todos
 
@@ -122,5 +126,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 05-03-PLAN.md -- Phase 5 complete
+Stopped at: Completed 06-01-PLAN.md -- foundation artifacts for framing workflows
 Resume file: None

@@ -30,13 +30,13 @@
 
 ### Workflows
 
-- [ ] **WKFL-01**: Four framing commands as entry points: debug, new, enhance, refactor
-- [ ] **WKFL-02**: Debug framing discovery: observe current state → compare to expected → hypothesize → root cause → converge to pipeline
-- [ ] **WKFL-03**: New framing discovery: explore → brainstorm → converge to pipeline
-- [ ] **WKFL-04**: Enhance framing discovery: assess what's working → identify what needs improvement → align → converge to pipeline
-- [ ] **WKFL-05**: Refactor framing discovery: reason for change → new goal/mission → understand codebase → explore options → align → converge to pipeline
+- [x] **WKFL-01**: Four framing commands as entry points: debug, new, enhance, refactor
+- [x] **WKFL-02**: Debug framing discovery: observe current state → compare to expected → hypothesize → root cause → converge to pipeline
+- [x] **WKFL-03**: New framing discovery: explore → brainstorm → converge to pipeline
+- [x] **WKFL-04**: Enhance framing discovery: assess what's working → identify what needs improvement → align → converge to pipeline
+- [x] **WKFL-05**: Refactor framing discovery: reason for change → new goal/mission → understand codebase → explore options → align → converge to pipeline
 - [ ] **WKFL-06**: All framings converge to same artifact pipeline: requirements → plan → execute → review → documentation
-- [ ] **WKFL-07**: Framing context injection: same agents receive different question sets based on active framing
+- [x] **WKFL-07**: Framing context injection: same agents receive different question sets based on active framing
 
 ### Planning
 
@@ -122,13 +122,13 @@
 | INIT-01 | Phase 6 | Pending |
 | INIT-02 | Phase 6 | Pending |
 | INIT-03 | Phase 6 | Pending |
-| WKFL-01 | Phase 6 | Pending |
-| WKFL-02 | Phase 6 | Pending |
-| WKFL-03 | Phase 6 | Pending |
-| WKFL-04 | Phase 6 | Pending |
-| WKFL-05 | Phase 6 | Pending |
+| WKFL-01 | Phase 6 | Complete |
+| WKFL-02 | Phase 6 | Complete |
+| WKFL-03 | Phase 6 | Complete |
+| WKFL-04 | Phase 6 | Complete |
+| WKFL-05 | Phase 6 | Complete |
 | WKFL-06 | Phase 6 | Pending |
-| WKFL-07 | Phase 6 | Pending |
+| WKFL-07 | Phase 6 | Complete |
 | PLAN-01 | Phase 3 | Complete |
 | PLAN-02 | Phase 3 | Complete |
 | PLAN-03 | Phase 3 | Complete |
