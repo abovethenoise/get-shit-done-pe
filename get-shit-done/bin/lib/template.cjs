@@ -242,8 +242,29 @@ function cmdTemplateFill(cwd, templateType, options, raw) {
       output({ created: true, path: path.relative(cwd, featPath), template: 'feature' }, raw, path.relative(cwd, featPath));
       return;
     }
+    case 'discovery-brief': {
+      const briefCapSlug = options.slug || generateSlugInternal(options.name || '');
+      if (!briefCapSlug) { error('--name or --slug required for discovery-brief template'); return; }
+      const briefLens = options.lens || '';
+      const briefDir = path.join(cwd, '.planning', 'capabilities', briefCapSlug);
+      fs.mkdirSync(briefDir, { recursive: true });
+      const briefContent = fillTemplate('discovery-brief', {
+        name: options.name || briefCapSlug,
+        slug: briefCapSlug,
+        date: today,
+        lens: briefLens,
+      });
+      const briefPath = path.join(briefDir, 'BRIEF.md');
+      if (fs.existsSync(briefPath)) {
+        output({ error: 'File already exists', path: path.relative(cwd, briefPath) }, raw);
+        return;
+      }
+      fs.writeFileSync(briefPath, briefContent, 'utf-8');
+      output({ created: true, path: path.relative(cwd, briefPath), template: 'discovery-brief' }, raw, path.relative(cwd, briefPath));
+      return;
+    }
     default:
-      error(`Unknown template type: ${templateType}. Available: summary, plan, verification, capability, feature`);
+      error(`Unknown template type: ${templateType}. Available: summary, plan, verification, capability, feature, discovery-brief`);
       return;
   }
 
@@ -290,8 +311,16 @@ function fillTemplate(type, options) {
       content = content.replace(/\{slug\}/g, options.capability || slug);
       return content;
     }
+    case 'discovery-brief': {
+      const templatePath = path.join(__dirname, '..', '..', 'templates', 'discovery-brief.md');
+      let content = fs.readFileSync(templatePath, 'utf-8');
+      content = content.replace(/\{date\}/g, date);
+      content = content.replace(/\{capability\}/g, name);
+      content = content.replace(/\{lens\}/g, options.lens || '');
+      return content;
+    }
     default:
-      throw new Error(`fillTemplate: unknown type '${type}'. Available: capability, feature`);
+      throw new Error(`fillTemplate: unknown type '${type}'. Available: capability, feature, discovery-brief`);
   }
 }
 
