@@ -47,6 +47,46 @@ Orchestrators resolve model before spawning:
 4. Pass model parameter to Task call
 ```
 
+## v2 Role-Based Resolution (Executor / Judge)
+
+v2 agents declare `role_type: executor | judge` in their YAML frontmatter. The orchestrator reads this field to determine the model — no per-agent lookup table needed.
+
+### Role Mapping
+
+| Role Type | Model | Rationale |
+|-----------|-------|-----------|
+| executor | sonnet | Does the work: gathering, planning, executing, documenting |
+| judge | inherit (opus) | Validates, synthesizes, reviews, handles user Q&A |
+
+### Resolution Priority
+
+`resolveModelFromRole(cwd, agentPath)` checks:
+
+1. Read agent file frontmatter
+2. If `role_type` exists → use `ROLE_MODEL_MAP`
+3. If `role_type` absent → fall through to v1 `resolveModelInternal()`
+4. If agent file missing → fall through to v1
+
+### v2 Agent Assignments
+
+| Agent | Role Type | Model |
+|-------|-----------|-------|
+| 6x research gatherers | executor | Sonnet |
+| Research synthesizer | judge | Opus |
+| Planner (Phase 3) | executor | Sonnet |
+| Plan validator (Phase 3) | judge | Opus |
+| 4x reviewers (Phase 4) | judge | Opus |
+| Review synthesizer (Phase 4) | judge | Opus |
+| Documentation writer (Phase 5) | executor | Sonnet |
+
+### Claude Code Constraint
+
+The `model` parameter in Task/Agent calls only accepts `"sonnet"`, `"haiku"`, or `"inherit"` — `"opus"` is NOT a valid value. Therefore judges use `"inherit"` which gets Opus from the user's parent session. This requires the user to start their session on Opus. The orchestrator runs at the user's session level (Opus), executors are explicitly downgraded to Sonnet, judges inherit Opus.
+
+### Coexistence
+
+v1 `MODEL_PROFILES` table remains for v1 agents. v2 agents use `role_type`. Both systems coexist during bootstrap. Phase 7 cleanup removes v1 table.
+
 ## Per-Agent Overrides
 
 Override specific agents without changing the entire profile:
