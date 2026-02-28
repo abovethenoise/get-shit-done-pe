@@ -112,12 +112,14 @@ Plans:
   3. New-project initialization gathers goals/opinions via Q&A and maps out capabilities; existing-project initialization discovers capabilities via parallel research then confirms with user
   4. `discuss-capability` builds out features from a mapped capability through guided conversation
   5. A full end-to-end test passes: one capability, one feature, through discovery, requirements, planning, execution, review, and documentation
-**Plans**: TBD
+**Plans**: 5 plans
 
 Plans:
-- [ ] 06-01: TBD
-- [ ] 06-02: TBD
-- [ ] 06-03: TBD
+- [ ] 06-01-PLAN.md -- Foundation: Discovery Brief template, framing anchor questions, lens reference doc, fillTemplate extension
+- [ ] 06-02-PLAN.md -- Framing commands: 4 slash commands (/debug, /new, /enhance, /refactor) + shared framing-discovery workflow + init command
+- [ ] 06-03-PLAN.md -- Pipeline convergence: framing-pipeline workflow (6 post-discovery stages), escalation protocol reference
+- [ ] 06-04-PLAN.md -- Project initialization: /init command with auto-detect (new/existing), both flows, incremental writes
+- [ ] 06-05-PLAN.md -- Discussion commands: /discuss-capability + /discuss-feature workflows, slash commands, init functions
 
 ### Phase 7: Cleanup
 **Goal**: Audit everything remaining from v1 — identify what the new model relies on, what's dead weight, and remove anything that doesn't serve a v2 dependency
@@ -145,5 +147,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 3. Planning Pipeline | 0/2 | Not started | - |
 | 4. Review Layer | 0/2 | Not started | - |
 | 5. Documentation | 3/3 | Complete   | 2026-02-28 |
-| 6. Workflows and Commands | 0/3 | Not started | - |
+| 6. Workflows and Commands | 0/5 | Not started | - |
 | 7. Cleanup | 0/1 | Not started | - |
