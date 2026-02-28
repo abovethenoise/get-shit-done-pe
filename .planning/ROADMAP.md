@@ -49,12 +49,12 @@ Plans:
   3. Agent prompts include explicit scope constraints that prevent scope hallucination and generic output
   4. Research agents can be spawned in parallel (gather pattern) with a synthesizer that consolidates findings into a single summary
   5. Research agents use mgrep for codebase search and web search tools for domain knowledge
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 02-01: TBD
-- [ ] 02-02: TBD
-- [ ] 02-03: TBD
+- [ ] 02-01-PLAN.md — Research agent definitions: 6 gatherers + 1 synthesizer following v2 goal-driven schema
+- [ ] 02-02-PLAN.md — Gather-synthesize workflow (reusable orchestration primitive) and framing directory skeleton
+- [ ] 02-03-PLAN.md — Role-based model resolution (ROLE_MODEL_MAP + resolveModelFromRole) in core.cjs
 
 ### Phase 3: Planning Pipeline
 **Goal**: The planner produces plans where every task traces to specific requirement IDs, self-critiques its own draft, and presents findings for user decision before finalizing
