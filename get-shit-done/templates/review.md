@@ -2,50 +2,110 @@
 type: review
 feature: "{slug}"
 capability: "{slug}"
+phase: "{phase}"
+reviewer: "{reviewer_type}"
 status: pending
-verdict: pending
 ---
 
 # Review: {feature}
 
-## Summary
-
-**Verdict:** {PASS | PARTIAL | FAIL | BLOCKED}
-
-| Result  | Count |
-|---------|-------|
-| Pass    | 0     |
-| Partial | 0     |
-| Fail    | 0     |
-
-## Per-Requirement Trace
+## Trace Report
 
 ### {REQ ID}: {title}
 
-**Verdict:** {PASS | PARTIAL | FAIL | BLOCKED}
+**Verdict:** met | not met | regression
 
 **Evidence:**
 
-- **Code:** {Does the implementation match the spec? Reference files/lines.}
-- **Domain:** {Does the logic satisfy domain rules and invariants?}
-- **Integration:** {Does it connect correctly with upstream/downstream?}
+- **File:** `{file}:{line}`
+- **Code:** `{quoted code snippet}`
+- **Reasoning:** {Why this verdict — connect the code to the requirement}
 
-**Gap Analysis:** {What is missing or incomplete, if anything.}
+**Regression Label:** proven | suspected
+<!-- Include Regression Label only when verdict is "regression" -->
+<!-- proven: test failure, removed function, deleted behavior -->
+<!-- suspected: code analysis suggests regression but no direct proof -->
 
-**Fix Scope:** {Estimate of effort to close gaps: trivial | small | medium | large.}
+## End-User Reviewer
 
-**Blocking Assessment:** {Does this gap block other work? What is affected?}
+Traces against: story + acceptance criteria (EU-xx requirements)
 
-## Reviewer Notes
+### {REQ ID}: {title}
 
-### Domain Reviewer
+**Verdict:** met | not met | regression
 
-{Concerns about domain logic, invariant violations, edge cases not tied to specific REQs.}
+**Evidence:**
 
-### Code Reviewer
+- **File:** `{file}:{line}`
+- **Code:** `{quoted code snippet}`
+- **Reasoning:** {explanation}
 
-{Concerns about code quality, DRY/KISS violations, patterns, performance.}
+**Regression Label:** proven | suspected
 
-### Integration Reviewer
+### Cross-Layer Observations
 
-{Concerns about cross-boundary issues, API contracts, data flow between capabilities.}
+{Secondary observations outside primary layer scope, if any.}
+
+## Functional Reviewer
+
+Traces against: behavior specs (FN-xx requirements)
+
+### {REQ ID}: {title}
+
+**Verdict:** met | not met | regression
+
+**Evidence:**
+
+- **File:** `{file}:{line}`
+- **Code:** `{quoted code snippet}`
+- **Reasoning:** {explanation}
+
+**Regression Label:** proven | suspected
+
+### Cross-Layer Observations
+
+{Secondary observations outside primary layer scope, if any.}
+
+## Technical Reviewer
+
+Traces against: implementation specs (TC-xx requirements)
+
+### {REQ ID}: {title}
+
+**Verdict:** met | not met | regression
+
+**Evidence:**
+
+- **File:** `{file}:{line}`
+- **Code:** `{quoted code snippet}`
+- **Reasoning:** {explanation}
+
+**Regression Label:** proven | suspected
+
+### Spec-vs-Reality Gaps
+
+{Where the spec was wrong/infeasible and implementation had to deviate.}
+
+### Cross-Layer Observations
+
+{Secondary observations outside primary layer scope, if any.}
+
+## Code Quality Reviewer
+
+Traces against: DRY, KISS, complexity, dependencies, maintainability
+
+### {REQ ID}: {title}
+
+**Verdict:** met | not met | regression
+
+**Evidence:**
+
+- **File:** `{file}:{line}`
+- **Code:** `{quoted code snippet}`
+- **Reasoning:** {explanation}
+
+**Regression Label:** proven | suspected
+
+### Cross-Layer Observations
+
+{Secondary observations outside primary layer scope, if any.}
