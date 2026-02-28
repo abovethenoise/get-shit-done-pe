@@ -32,12 +32,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. STATE.md tracks current capability and current feature position fields
   4. `js-yaml` parses and serializes 3-layer nested requirement YAML without data loss, and the old hand-rolled parser is removed
   5. All new templates (CAPABILITY.md, FEATURE.md, REVIEW.md, DOCS.md) exist and match the canonical schemas
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 01-01: TBD
-- [ ] 01-02: TBD
-- [ ] 01-03: TBD
+- [ ] 01-01-PLAN.md — js-yaml migration: replace hand-rolled frontmatter parser with js-yaml@4.1.1
+- [ ] 01-02-PLAN.md — Templates and core helpers: create CAPABILITY/FEATURE/REVIEW/DOCS templates, add findCapabilityInternal/findFeatureInternal
+- [ ] 01-03-PLAN.md — CLI commands and state: capability/feature lifecycle commands, gsd-tools dispatch, STATE.md extensions
 
 ### Phase 2: Agent Framework
 **Goal**: Agent definitions follow a consistent goal-driven pattern with layered context injection, and research agents can gather and synthesize information using available tools
@@ -137,7 +137,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/3 | Not started | - |
+| 1. Foundation | 0/3 | Planned | - |
 | 2. Agent Framework | 0/3 | Not started | - |
 | 3. Planning Pipeline | 0/2 | Not started | - |
 | 4. Review Layer | 0/2 | Not started | - |
