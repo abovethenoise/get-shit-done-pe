@@ -382,7 +382,11 @@ function pathExistsInternal(cwd, targetPath) {
 
 function generateSlugInternal(text) {
   if (!text) return null;
-  return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  // Reject input containing path separators before slugification
+  if (text.includes('/') || text.includes('\\')) return '';
+  const slug = text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  // Return empty string (not null) when sanitization produces nothing
+  return slug;
 }
 
 function getMilestoneInfo(cwd) {
@@ -409,6 +413,55 @@ function getMilestoneInfo(cwd) {
   }
 }
 
+// ─── Capability & Feature utilities ──────────────────────────────────────────
+
+function findCapabilityInternal(cwd, capabilityInput) {
+  const slug = generateSlugInternal(capabilityInput);
+  if (!slug) return { found: false, reason: 'empty_slug' };
+
+  const directory = path.join(cwd, '.planning', 'capabilities', slug);
+
+  try {
+    const stat = fs.statSync(directory);
+    if (!stat.isDirectory()) return { found: false, slug, reason: 'not_a_directory' };
+  } catch {
+    return { found: false, slug, reason: 'directory_not_found' };
+  }
+
+  const capabilityPath = path.join(directory, 'CAPABILITY.md');
+  if (!fs.existsSync(capabilityPath)) {
+    return { found: false, slug, reason: 'no_capability_file' };
+  }
+
+  return { found: true, directory, slug, capability_path: capabilityPath };
+}
+
+function findFeatureInternal(cwd, capabilitySlug, featureInput) {
+  const capResult = findCapabilityInternal(cwd, capabilitySlug);
+  if (!capResult.found) {
+    return { found: false, reason: 'capability_not_found', capability_slug: capabilitySlug };
+  }
+
+  const featureSlug = generateSlugInternal(featureInput);
+  if (!featureSlug) return { found: false, reason: 'empty_slug', capability_slug: capabilitySlug };
+
+  const directory = path.join(capResult.directory, 'features', featureSlug);
+
+  try {
+    const stat = fs.statSync(directory);
+    if (!stat.isDirectory()) return { found: false, slug: featureSlug, reason: 'not_a_directory', capability_slug: capabilitySlug };
+  } catch {
+    return { found: false, slug: featureSlug, reason: 'directory_not_found', capability_slug: capabilitySlug };
+  }
+
+  const featurePath = path.join(directory, 'FEATURE.md');
+  if (!fs.existsSync(featurePath)) {
+    return { found: false, slug: featureSlug, reason: 'no_feature_file', capability_slug: capabilitySlug };
+  }
+
+  return { found: true, directory, slug: featureSlug, feature_path: featurePath, capability_slug: capabilitySlug };
+}
+
 module.exports = {
   MODEL_PROFILES,
   output,
@@ -429,4 +482,6 @@ module.exports = {
   generateSlugInternal,
   getMilestoneInfo,
   toPosixPath,
+  findCapabilityInternal,
+  findFeatureInternal,
 };
