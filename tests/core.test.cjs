@@ -25,6 +25,8 @@ const {
   getRoadmapPhaseInternal,
   searchPhaseInDir,
   findPhaseInternal,
+  findCapabilityInternal,
+  findFeatureInternal,
 } = require('../get-shit-done/bin/lib/core.cjs');
 
 // ─── loadConfig ────────────────────────────────────────────────────────────────
@@ -663,5 +665,149 @@ describe('getRoadmapPhaseInternal', () => {
     assert.ok(result.section.includes('Some details here'));
     // Should not include Phase 2 content
     assert.ok(!result.section.includes('Phase 2: API'));
+  });
+});
+
+// ─── generateSlugInternal (hardening) ──────────────────────────────────────────
+
+describe('generateSlugInternal (hardening)', () => {
+  test('returns empty string for unicode-only input that sanitizes to empty', () => {
+    const result = generateSlugInternal('\u{1F600}\u{1F601}');
+    assert.strictEqual(result, '');
+  });
+
+  test('returns empty string for slash-containing input', () => {
+    assert.strictEqual(generateSlugInternal('foo/bar'), '');
+    assert.strictEqual(generateSlugInternal('foo\\bar'), '');
+  });
+
+  test('returns empty string for path separator only', () => {
+    assert.strictEqual(generateSlugInternal('/'), '');
+    assert.strictEqual(generateSlugInternal('\\'), '');
+  });
+
+  test('still handles normal slugification correctly', () => {
+    assert.strictEqual(generateSlugInternal('Hello World'), 'hello-world');
+    assert.strictEqual(generateSlugInternal('my-capability'), 'my-capability');
+  });
+});
+
+// ─── findCapabilityInternal ───────────────────────────────────────────────────
+
+describe('findCapabilityInternal', () => {
+  let tmpDir;
+
+  beforeEach(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-core-test-'));
+    fs.mkdirSync(path.join(tmpDir, '.planning', 'capabilities'), { recursive: true });
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  test('returns found when CAPABILITY.md exists', () => {
+    const capDir = path.join(tmpDir, '.planning', 'capabilities', 'auth');
+    fs.mkdirSync(capDir, { recursive: true });
+    fs.writeFileSync(path.join(capDir, 'CAPABILITY.md'), '# Auth');
+    const result = findCapabilityInternal(tmpDir, 'auth');
+    assert.strictEqual(result.found, true);
+    assert.strictEqual(result.slug, 'auth');
+    assert.ok(result.directory.endsWith('auth'));
+    assert.ok(result.capability_path.endsWith('CAPABILITY.md'));
+  });
+
+  test('returns not found when capability does not exist', () => {
+    const result = findCapabilityInternal(tmpDir, 'nonexistent');
+    assert.strictEqual(result.found, false);
+  });
+
+  test('returns not found when directory exists but CAPABILITY.md is missing (partial creation)', () => {
+    const capDir = path.join(tmpDir, '.planning', 'capabilities', 'auth');
+    fs.mkdirSync(capDir, { recursive: true });
+    // No CAPABILITY.md file
+    const result = findCapabilityInternal(tmpDir, 'auth');
+    assert.strictEqual(result.found, false);
+    assert.strictEqual(result.reason, 'no_capability_file');
+  });
+
+  test('returns not found with empty_slug reason for empty-after-sanitization input', () => {
+    const result = findCapabilityInternal(tmpDir, '\u{1F600}');
+    assert.strictEqual(result.found, false);
+    assert.strictEqual(result.reason, 'empty_slug');
+  });
+
+  test('returns not found for slash-containing input', () => {
+    const result = findCapabilityInternal(tmpDir, 'foo/bar');
+    assert.strictEqual(result.found, false);
+    assert.strictEqual(result.reason, 'empty_slug');
+  });
+
+  test('slugifies input before lookup', () => {
+    const capDir = path.join(tmpDir, '.planning', 'capabilities', 'my-capability');
+    fs.mkdirSync(capDir, { recursive: true });
+    fs.writeFileSync(path.join(capDir, 'CAPABILITY.md'), '# My Capability');
+    const result = findCapabilityInternal(tmpDir, 'My Capability');
+    assert.strictEqual(result.found, true);
+    assert.strictEqual(result.slug, 'my-capability');
+  });
+});
+
+// ─── findFeatureInternal ──────────────────────────────────────────────────────
+
+describe('findFeatureInternal', () => {
+  let tmpDir;
+
+  beforeEach(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-core-test-'));
+    // Set up a valid capability with features dir
+    const capDir = path.join(tmpDir, '.planning', 'capabilities', 'auth');
+    fs.mkdirSync(path.join(capDir, 'features'), { recursive: true });
+    fs.writeFileSync(path.join(capDir, 'CAPABILITY.md'), '# Auth');
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  test('returns found when FEATURE.md exists', () => {
+    const featDir = path.join(tmpDir, '.planning', 'capabilities', 'auth', 'features', 'login');
+    fs.mkdirSync(featDir, { recursive: true });
+    fs.writeFileSync(path.join(featDir, 'FEATURE.md'), '# Login');
+    const result = findFeatureInternal(tmpDir, 'auth', 'login');
+    assert.strictEqual(result.found, true);
+    assert.strictEqual(result.slug, 'login');
+    assert.strictEqual(result.capability_slug, 'auth');
+    assert.ok(result.feature_path.endsWith('FEATURE.md'));
+  });
+
+  test('returns not found for missing feature', () => {
+    const result = findFeatureInternal(tmpDir, 'auth', 'nonexistent');
+    assert.strictEqual(result.found, false);
+  });
+
+  test('returns not found for missing parent capability', () => {
+    const result = findFeatureInternal(tmpDir, 'nonexistent-cap', 'login');
+    assert.strictEqual(result.found, false);
+    assert.strictEqual(result.reason, 'capability_not_found');
+    assert.strictEqual(result.capability_slug, 'nonexistent-cap');
+  });
+
+  test('returns not found when feature dir exists but FEATURE.md is missing', () => {
+    const featDir = path.join(tmpDir, '.planning', 'capabilities', 'auth', 'features', 'login');
+    fs.mkdirSync(featDir, { recursive: true });
+    // No FEATURE.md
+    const result = findFeatureInternal(tmpDir, 'auth', 'login');
+    assert.strictEqual(result.found, false);
+    assert.strictEqual(result.reason, 'no_feature_file');
+  });
+
+  test('slugifies feature input before lookup', () => {
+    const featDir = path.join(tmpDir, '.planning', 'capabilities', 'auth', 'features', 'user-login');
+    fs.mkdirSync(featDir, { recursive: true });
+    fs.writeFileSync(path.join(featDir, 'FEATURE.md'), '# User Login');
+    const result = findFeatureInternal(tmpDir, 'auth', 'User Login');
+    assert.strictEqual(result.found, true);
+    assert.strictEqual(result.slug, 'user-login');
   });
 });
