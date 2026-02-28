@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: in-progress
-last_updated: "2026-02-28T23:34:31.000Z"
+status: unknown
+last_updated: "2026-02-28T23:36:24.782Z"
 progress:
-  total_phases: 6
+  total_phases: 7
   completed_phases: 5
   total_plans: 19
-  completed_plans: 15
+  completed_plans: 16
 ---
 
 # Project State
@@ -57,6 +57,7 @@ Progress: [█████████░] 95%
 | Phase 05 P02 | 2min | 2 tasks | 3 files |
 | Phase 05 P03 | 2min | 2 tasks | 2 files |
 | Phase 06 P01 | 3min | 2 tasks | 7 files |
+| Phase 06 P04 | 3min | 2 tasks | 4 files |
 
 ## Current Focus
 
@@ -113,6 +114,9 @@ Recent decisions affecting current work:
 - [06-01]: Discovery Brief Specification uses HTML comment blocks for lens variants -- all 4 variants in template, workflow uncomments active one
 - [06-01]: Anchor questions use 5 per lens with branching hints for adaptive follow-up (fixed skeleton + adaptive muscles)
 - [06-01]: Brief scaffolding path is .planning/capabilities/{slug}/BRIEF.md via cmdTemplateFill
+- [Phase 06]: [06-04]: Auto-detection uses filesystem evidence only -- .planning/ existence + code file presence determines mode
+- [Phase 06]: [06-04]: init-state.json provides partial-run detection and resume (isolated from project STATE.md)
+- [Phase 06]: [06-04]: Uses init project compound command (no conflict with existing init resume)
 
 ### Pending Todos
 
