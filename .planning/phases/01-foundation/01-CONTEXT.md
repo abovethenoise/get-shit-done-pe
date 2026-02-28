@@ -66,11 +66,31 @@ The structural backbone exists — directory hierarchy, templates, CLI tooling, 
 - Features[] — list + status (planning/building/complete)
 - Decisions Log — captured context, tradeoffs, "we chose X because Y"
 
+### 3-Layer Requirement Format
+Each feature defines requirements across three layers. Each layer has structured fields (not freeform).
+
+**Layer 1 — End-User (EU-xx):** What the user experiences
+- Story: As a [who], I want [what], so that [why]
+- Acceptance Criteria: checklist of observable outcomes
+- Out of Scope: what this feature explicitly does NOT do
+
+**Layer 2 — Functional (FN-xx):** Contract-style behavior spec
+- Receives: inputs, triggers, data the feature consumes
+- Returns: outputs, side effects, data the feature produces
+- Behavior: rules, logic, edge cases, error conditions
+
+**Layer 3 — Technical (TC-xx):** Implementation context
+- Intent: why this approach (not just what)
+- Upstream: what feeds into this feature
+- Downstream: what consumes this feature's output
+- Constraints: hard limits (language, libs, patterns, perf)
+- Example: concrete illustration of the spec in action
+
 ### Template Design — FEATURE.md
 - Trace Table at the TOP — agents read this first
-- End-User Requirements: Story + Acceptance criteria + Out of scope
-- Functional Requirements: Contract style — Receives + Returns + Behavior
-- Technical Specs: Intent + Upstream + Downstream + Constraints + An Example
+- End-User Requirements (EU layer)
+- Functional Requirements (FN layer)
+- Technical Specs (TC layer)
 - Decisions/Notes section at bottom
 
 ### Template Design — REVIEW.md
