@@ -29,6 +29,13 @@ const MODEL_PROFILES = {
   'gsd-integration-checker':  { quality: 'sonnet', balanced: 'sonnet', budget: 'haiku' },
 };
 
+// ─── v2 Role-Based Model Resolution ──────────────────────────────────────────
+
+const ROLE_MODEL_MAP = {
+  executor: 'sonnet',
+  judge: 'inherit',    // inherit = gets Opus from user's session (Claude Code constraint: cannot specify "opus" directly, only "sonnet"/"haiku"/"inherit")
+};
+
 // ─── Output helpers ───────────────────────────────────────────────────────────
 
 function output(result, raw, rawValue) {
@@ -368,6 +375,35 @@ function resolveModelInternal(cwd, agentType) {
   return resolved === 'opus' ? 'inherit' : resolved;
 }
 
+function resolveModelFromRole(cwd, agentPath) {
+  // Read agent file and parse frontmatter to get role_type
+  // Inline require to avoid circular dependency: frontmatter.cjs requires core.cjs
+  const { extractFrontmatter } = require('./frontmatter.cjs');
+  const content = safeReadFile(agentPath);
+  if (!content) {
+    // Agent file not found — fall through to v1
+    const agentName = path.basename(agentPath, '.md');
+    return resolveModelInternal(cwd, agentName);
+  }
+
+  const fm = extractFrontmatter(content);
+  const roleType = fm.role_type;
+
+  if (!roleType) {
+    // No role_type in frontmatter — v1 agent, use v1 resolution
+    const agentName = fm.name || path.basename(agentPath, '.md');
+    return resolveModelInternal(cwd, agentName);
+  }
+
+  // v2 agent — resolve from role
+  const model = ROLE_MODEL_MAP[roleType];
+  if (!model) {
+    // Unknown role_type — default to sonnet
+    return 'sonnet';
+  }
+  return model;
+}
+
 // ─── Misc utilities ───────────────────────────────────────────────────────────
 
 function pathExistsInternal(cwd, targetPath) {
@@ -464,6 +500,7 @@ function findFeatureInternal(cwd, capabilitySlug, featureInput) {
 
 module.exports = {
   MODEL_PROFILES,
+  ROLE_MODEL_MAP,
   output,
   error,
   safeReadFile,
@@ -478,6 +515,7 @@ module.exports = {
   getArchivedPhaseDirs,
   getRoadmapPhaseInternal,
   resolveModelInternal,
+  resolveModelFromRole,
   pathExistsInternal,
   generateSlugInternal,
   getMilestoneInfo,
