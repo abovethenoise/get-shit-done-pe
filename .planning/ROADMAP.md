@@ -12,7 +12,7 @@ GSD v2 replaces the milestone/phase hierarchy with project/capability/feature, a
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation** - Directory structure, templates, CLI commands, YAML migration, and requirement schema
+- [x] **Phase 1: Foundation** - Directory structure, templates, CLI commands, YAML migration, and requirement schema (completed 2026-02-28)
 - [ ] **Phase 2: Agent Framework** - Goal-driven agent definitions with layered context and research agents
 - [ ] **Phase 3: Planning Pipeline** - Planner with self-critique, traceability enforcement, and plan finalization loop
 - [ ] **Phase 4: Review Layer** - 4 parallel specialist reviewers and review synthesizer
@@ -137,7 +137,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 2/3 | In Progress|  |
+| 1. Foundation | 3/3 | Complete   | 2026-02-28 |
 | 2. Agent Framework | 0/3 | Not started | - |
 | 3. Planning Pipeline | 0/2 | Not started | - |
 | 4. Review Layer | 0/2 | Not started | - |

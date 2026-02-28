@@ -8,10 +8,10 @@
 ### Foundation
 
 - [x] **FOUND-01**: Capability/Feature directory structure replaces milestone/phase in .planning/
-- [ ] **FOUND-02**: STATE.md tracks current capability, current feature, and cross-feature state
+- [x] **FOUND-02**: STATE.md tracks current capability, current feature, and cross-feature state
 - [x] **FOUND-03**: js-yaml@4.1.1 replaces hand-rolled frontmatter parser for 3-layer requirement nesting
-- [ ] **FOUND-04**: CLI commands for capability lifecycle (create, list, status)
-- [ ] **FOUND-05**: CLI commands for feature lifecycle (create, list, status)
+- [x] **FOUND-04**: CLI commands for capability lifecycle (create, list, status)
+- [x] **FOUND-05**: CLI commands for feature lifecycle (create, list, status)
 - [x] **FOUND-06**: Templates updated for all new artifact types (CAPABILITY.md, FEATURE.md, REVIEW.md, DOCS.md)
 - [ ] **FOUND-07**: Existing bloat, dead features, and artifacts that don't fit the new model are removed
 
@@ -109,10 +109,10 @@
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | FOUND-01 | Phase 1 | Complete |
-| FOUND-02 | Phase 1 | Pending |
+| FOUND-02 | Phase 1 | Complete |
 | FOUND-03 | Phase 1 | Complete |
-| FOUND-04 | Phase 1 | Pending |
-| FOUND-05 | Phase 1 | Pending |
+| FOUND-04 | Phase 1 | Complete |
+| FOUND-05 | Phase 1 | Complete |
 | FOUND-06 | Phase 1 | Complete |
 | FOUND-07 | Phase 7 | Pending |
 | REQS-01 | Phase 1 | Complete |
