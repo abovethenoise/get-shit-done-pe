@@ -8,7 +8,7 @@ progress:
   total_phases: 7
   completed_phases: 5
   total_plans: 19
-  completed_plans: 18
+  completed_plans: 19
 ---
 
 # Project State
@@ -24,8 +24,8 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 
 Phase: 6 of 6 (Workflows and Commands) -- IN PROGRESS
 Plan: 5 of 5 in current phase -- COMPLETE
-Status: 06-05 complete -- discuss-capability and discuss-feature commands
-Last activity: 2026-02-28 -- Completed 06-05 (discussion commands with fuzzy resolution and backward routing)
+Status: 06-03 complete -- pipeline convergence and escalation protocol
+Last activity: 2026-02-28 -- Completed 06-03 (framing-pipeline workflow with 6 stages + escalation protocol)
 
 Progress: [██████████] 100%
 
@@ -60,6 +60,7 @@ Progress: [██████████] 100%
 | Phase 06 P04 | 3min | 2 tasks | 4 files |
 | Phase 06 P02 | 3min | 2 tasks | 7 files |
 | Phase 06 P05 | 5min | 2 tasks | 6 files |
+| Phase 06 P03 | 3min | 2 tasks | 3 files |
 
 ## Current Focus
 
@@ -122,6 +123,9 @@ Recent decisions affecting current work:
 - [Phase 06]: v1 debug.md replaced entirely with v2 framing entry point -- shared workflow delegation pattern
 - [Phase 06]: Fuzzy capability resolution is workflow-level (in framing-discovery.md), not gsd-tools -- orchestrator controls user interaction
 - [Phase 06]: Fuzzy resolution at workflow level using capability-list/feature-list output, not in gsd-tools
+- [06-03]: Requirements generation always produces all 3 layers (EU/FN/TC) with lens-specific weighting (debug: thin EU rich TC, new: rich EU thin TC)
+- [06-03]: Maximum 1 backward reset per pipeline run -- prevents infinite escalation loops
+- [06-03]: Major issues use propose-and-confirm -- pipeline never auto-returns to upstream stage
 
 ### Pending Todos
 
@@ -135,5 +139,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 06-05-PLAN.md -- discuss-capability and discuss-feature commands
+Stopped at: Completed 06-03-PLAN.md -- pipeline convergence and escalation protocol
 Resume file: None

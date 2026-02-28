@@ -35,7 +35,7 @@
 - [x] **WKFL-03**: New framing discovery: explore → brainstorm → converge to pipeline
 - [x] **WKFL-04**: Enhance framing discovery: assess what's working → identify what needs improvement → align → converge to pipeline
 - [x] **WKFL-05**: Refactor framing discovery: reason for change → new goal/mission → understand codebase → explore options → align → converge to pipeline
-- [ ] **WKFL-06**: All framings converge to same artifact pipeline: requirements → plan → execute → review → documentation
+- [x] **WKFL-06**: All framings converge to same artifact pipeline: requirements → plan → execute → review → documentation
 - [x] **WKFL-07**: Framing context injection: same agents receive different question sets based on active framing
 
 ### Planning
@@ -127,7 +127,7 @@
 | WKFL-03 | Phase 6 | Complete |
 | WKFL-04 | Phase 6 | Complete |
 | WKFL-05 | Phase 6 | Complete |
-| WKFL-06 | Phase 6 | Pending |
+| WKFL-06 | Phase 6 | Complete |
 | WKFL-07 | Phase 6 | Complete |
 | PLAN-01 | Phase 3 | Complete |
 | PLAN-02 | Phase 3 | Complete |
