@@ -612,7 +612,7 @@ function cmdInitReviewPhase(cwd, phase, raw) {
   const phase_req_ids = (reqExtracted && reqExtracted !== 'TBD') ? reqExtracted : null;
 
   // Reviewer agent paths (4 reviewers + 1 synthesizer)
-  const agentDir = 'get-shit-done/agents';
+  const agentDir = 'agents';
   const reviewerAgents = [
     { type: 'end-user', path: toPosixPath(path.join(agentDir, 'gsd-review-enduser.md')) },
     { type: 'functional', path: toPosixPath(path.join(agentDir, 'gsd-review-functional.md')) },
