@@ -52,6 +52,22 @@ Define the agent framework pattern (goal-driven definitions with layered context
 - Review (Phase 4) and potentially planning will use the same pattern
 - Failure handling: retry failed agent once, then proceed with partial results; synthesizer notes the gap
 
+### Model allocation: Executor / Judge pattern
+- Framework-level concept — agent definitions declare their role (Executor or Judge)
+- **Executor = Sonnet** — does the work: research gathering, planning, execution, doc writing
+- **Judge = Opus** — validates, synthesizes, reviews, handles user Q&A
+- Hardcoded mapping, not configurable
+- Orchestrator runs on Sonnet, escalates to Opus only for judgment steps
+- Applied across the full pipeline:
+  ```
+  Orchestration:  Sonnet (Executor)
+  Chat/Q&A:       Opus (Judge)
+  Research:       6x Sonnet (Executor) → Opus (Judge: synthesize)
+  Plan:           Sonnet (Executor) → Validate (CLI) → Q&A Opus (Judge)
+  Execute:        Sonnet (Executor) → Review Opus (Judge)
+  Docs:           Sonnet (Executor) → Review Opus (Judge)
+  ```
+
 ### Scope constraints
 - Agents constrained through positive framing: role, goal, success criteria — not negative "don't do X" lists
 - Mandatory citations: every claim must reference specific file paths, code snippets, URLs, or artifacts
