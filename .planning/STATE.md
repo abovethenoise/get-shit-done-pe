@@ -8,7 +8,7 @@ progress:
   total_phases: 3
   completed_phases: 2
   total_plans: 8
-  completed_plans: 7
+  completed_plans: 8
 ---
 
 # Project State
@@ -23,9 +23,9 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 3 of 6 (Planning Pipeline)
-Plan: 2 of 3 in current phase
-Status: In progress — 03-01 complete, 03-02 and 03-03 pending
-Last activity: 2026-02-28 — Completed 03-01 (plan validation engine)
+Plan: 3 of 3 in current phase
+Status: In progress -- 03-01 and 03-02 complete, 03-03 pending
+Last activity: 2026-02-28 -- Completed 03-02 (planner v2 + workflow Q&A)
 
 Progress: [████████░░] 80%
 
@@ -49,6 +49,7 @@ Progress: [████████░░] 80%
 *Updated after each plan completion*
 | Phase 02-agent-framework P02 | 1 | 2 tasks | 5 files |
 | Phase 03 P01 | 2min | 2 tasks | 3 files |
+| Phase 03 P02 | 5min | 2 tasks | 2 files |
 
 ## Current Focus
 
@@ -80,6 +81,10 @@ Recent decisions affecting current work:
 - [Phase 03]: Validator is pure reporting — no blocking or finalization logic (workflow owns that)
 - [Phase 03]: Cross-layer check exempts project-level IDs (PLAN-xx, REQS-xx); only EU/FN/TC are layered
 - [Phase 03]: Uncovered REQs are warnings not errors — coverage gaps surface in self-critique, not hard blocks
+- [03-02]: v2 task schema: 5 fields (title/reqs/artifact/inputs/done) replacing v1's name/files/action/verify/done
+- [03-02]: Self-critique is internal to planner (2 rounds max, hard stop) -- not a separate agent
+- [03-02]: Plan finalized only after explicit user confirmation -- no auto-finalize path
+- [03-02]: Plan-checker scope narrowed to execution feasibility (coverage + structural handled by self-critique + CLI)
 
 ### Pending Todos
 
@@ -93,5 +98,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 03-01-PLAN.md
+Stopped at: Completed 03-02-PLAN.md
 Resume file: None

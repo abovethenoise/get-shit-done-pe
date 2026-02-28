@@ -40,10 +40,10 @@
 
 ### Planning
 
-- [ ] **PLAN-01**: Planner drafts plan with tasks referencing REQ IDs across all 3 requirement layers
-- [ ] **PLAN-02**: System self-critique challenges draft on: requirement coverage, approach validity, execution feasibility, and surfaces assumptions needing human guidance
-- [ ] **PLAN-03**: Self-critique findings presented to user as Q&A — user provides feedback/guidance before finalization
-- [ ] **PLAN-04**: Plan finalized only after user confirms — no auto-finalize
+- [x] **PLAN-01**: Planner drafts plan with tasks referencing REQ IDs across all 3 requirement layers
+- [x] **PLAN-02**: System self-critique challenges draft on: requirement coverage, approach validity, execution feasibility, and surfaces assumptions needing human guidance
+- [x] **PLAN-03**: Self-critique findings presented to user as Q&A — user provides feedback/guidance before finalization
+- [x] **PLAN-04**: Plan finalized only after user confirms — no auto-finalize
 
 ### Review
 
@@ -129,10 +129,10 @@
 | WKFL-05 | Phase 6 | Pending |
 | WKFL-06 | Phase 6 | Pending |
 | WKFL-07 | Phase 6 | Pending |
-| PLAN-01 | Phase 3 | Pending |
-| PLAN-02 | Phase 3 | Pending |
-| PLAN-03 | Phase 3 | Pending |
-| PLAN-04 | Phase 3 | Pending |
+| PLAN-01 | Phase 3 | Complete |
+| PLAN-02 | Phase 3 | Complete |
+| PLAN-03 | Phase 3 | Complete |
+| PLAN-04 | Phase 3 | Complete |
 | REVW-01 | Phase 4 | Pending |
 | REVW-02 | Phase 4 | Pending |
 | REVW-03 | Phase 4 | Pending |
