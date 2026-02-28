@@ -264,6 +264,12 @@ RESEARCH_PATH=$(echo "$INIT" | jq -r '.research_path // empty')
 VERIFICATION_PATH=$(echo "$INIT" | jq -r '.verification_path // empty')
 UAT_PATH=$(echo "$INIT" | jq -r '.uat_path // empty')
 CONTEXT_PATH=$(echo "$INIT" | jq -r '.context_path // empty')
+
+# Determine requirement source for plan-validate
+# Feature-level: FEATURE.md has EU/FN/TC trace table
+# Phase-level: REQUIREMENTS.md has project-level REQ IDs
+FEATURE_PATH=$(echo "$INIT" | jq -r '.feature_path // empty')
+REQ_SOURCE="${FEATURE_PATH:-$REQUIREMENTS_PATH}"
 ```
 
 ## 8. Spawn gsd-planner Agent
@@ -329,11 +335,106 @@ Task(
 
 ## 9. Handle Planner Return
 
-- **`## PLANNING COMPLETE`:** Display plan count. If `--skip-verify` or `plan_checker_enabled` is false (from init): skip to step 13. Otherwise: step 10.
+- **`## PLANNING COMPLETE`:** Extract plan file paths and findings list from planner output.
+
+  **If findings exist:** Proceed to step 9.5 (Q&A loop).
+  **If no findings:** Proceed to step 9.7 (CLI validation).
+
 - **`## CHECKPOINT REACHED`:** Present to user, get response, spawn continuation (step 12)
 - **`## PLANNING INCONCLUSIVE`:** Show attempts, offer: Add context / Retry / Manual
 
+## 9.5. Present Findings to User
+
+Display banner:
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ GSD ► PLANNER FINDINGS ({count} items)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+For each finding (one at a time):
+
+Display:
+```
+Finding {N}/{total}: [{category}]
+{description}
+
+Suggestion: {suggestion}
+Affected REQs: {reqs_affected}
+
+Options:
+  1. Accept -- planner's suggestion is good
+  2. Provide feedback -- tell the planner what to change
+  3. Research guidance -- point to what needs investigating
+```
+
+**If Accept:** Mark finding resolved. Next finding.
+
+**If Feedback:** Record user feedback. After all findings processed, re-spawn planner in revision mode with feedback applied. Re-run self-critique. If new findings emerge, add to queue and continue.
+
+**If Research Guidance:** Spawn researcher with guidance. Read result. Revise affected plan tasks. If finding resolved, next. If new findings/assumptions surface, add to queue.
+
+After all findings resolved: proceed to step 9.7.
+
+## 9.7. Run CLI Validation
+
+```bash
+VALIDATE=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" plan-validate "${REQ_SOURCE}" ${PLAN_FILES} --raw)
+```
+
+Parse JSON result.
+
+**If `passed` is true and warnings exist:**
+Display warnings. These are informational -- uncovered REQs surface as planner awareness, not blockers.
+
+**If `passed` is false (errors exist):**
+Display errors with fix guidance:
+```
+VALIDATION ERRORS (must fix before finalizing):
+
+  ERROR: orphan_task -- Task "{title}" in {plan} has no REQ references
+    Fix: Add <reqs> with at least one requirement ID
+
+  ERROR: phantom_reference -- REQ {id} in Task "{title}" not found in {source}
+    Fix: Remove invalid REQ reference or add REQ to source file
+
+  ERROR: cross_layer_mixing -- Task "{title}" mixes EU and TC layers
+    Fix: Split task or bridge through FN-layer REQ
+```
+
+Re-spawn planner in revision mode with validation errors. Loop until validation passes (max 2 attempts). If still failing after 2 attempts, present errors to user for manual resolution.
+
+**If `passed` is true and no warnings:** Proceed to step 9.9.
+
+## 9.9. Finalize Plans
+
+Display plan summary:
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ GSD ► PLAN SUMMARY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Phase {X}: {name}
+Plans: {count}
+Tasks: {total across all plans}
+Waves: {wave count}
+
+Plan 01: {objective} ({task_count} tasks, wave {wave})
+Plan 02: {objective} ({task_count} tasks, wave {wave})
+...
+
+Validation: PASSED
+Findings resolved: {count}
+```
+
+Ask user: "Finalize this plan?"
+
+**If user confirms:** Proceed to step 10 (plan-checker) if `plan_checker_enabled`, otherwise step 13.
+**If user does not confirm:** Ask what needs changing. Re-spawn planner with feedback. Return to step 9.
+
 ## 10. Spawn gsd-plan-checker Agent
+
+**Scope note:** With v2 self-critique handling coverage and CLI validation handling structural rules, the plan-checker focuses on execution feasibility: Can an executor actually implement these tasks? Are the artifact paths valid? Are the input data shapes realistic?
 
 Display banner:
 ```
@@ -562,7 +663,10 @@ Verification: {Passed | Passed with override | Skipped}
 - [ ] Existing plans checked
 - [ ] gsd-planner spawned with CONTEXT.md + RESEARCH.md
 - [ ] Plans created (PLANNING COMPLETE or CHECKPOINT handled)
-- [ ] gsd-plan-checker spawned with CONTEXT.md
+- [ ] Planner findings presented one-at-a-time with 3 response options (step 9.5)
+- [ ] CLI validation passed via plan-validate (step 9.7)
+- [ ] User explicitly confirmed "Finalize this plan?" (step 9.9) -- no auto-finalize
+- [ ] gsd-plan-checker spawned with CONTEXT.md (feasibility focus)
 - [ ] Verification passed OR user override OR max iterations with user decision
 - [ ] User sees status between agent spawns
 - [ ] User knows next steps
