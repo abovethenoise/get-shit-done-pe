@@ -1,58 +1,184 @@
 ---
-type: docs
-capability: "{slug}"
-built_from_code_at: "{git-sha}"
+type: docs-template
+version: 2
+structure: modules-flows-gate
 ---
 
-# Documentation: {capability}
+# Documentation Template (v2)
 
-Generate three output files for this capability, targeting `.documentation/{capability}/`.
+Template for `.documentation/` directory structure. Replaces v1 design/features/lessons per-capability layout with v2 modules/flows/gate structure per CONTEXT.md decisions.
 
-All output files must have YAML frontmatter. Optimize content for mgrep searches and the four framings: new (building something that depends on this), extend (adding to this capability), debug (fixing something broken), refactor (restructuring this code).
+## Directory Structure
 
-## Output Files
+```
+.documentation/
+  modules/              <- flat, 1:1 with code files, AI agent primary lookup
+    reader.md
+    parser.md
+    transform.md
+  flows/                <- capability-grouped, cross-module narratives
+    hand-import/
+      import-flow.md
+    planning/
+      validate-flow.md
+  gate/                 <- scaffolded by agent, human-maintained content
+    constraints.md      <- banned patterns, invariants, boundaries
+    glossary.md         <- domain terms, project-specific concepts
+    state.md            <- what persists, where, what shape
+```
 
-### design.md
+## Module Doc Template
 
-Architecture decisions, data flow, and why things are structured this way.
+Each module doc is a flat file in `.documentation/modules/`, named 1:1 with the source code file.
 
-Target: `.documentation/{capability}/design.md`
+### Frontmatter
 
-Frontmatter: `type: design`, `capability: {slug}`, `generated: {date}`
+```yaml
+---
+type: module
+module: <exact_code_filename>
+built-from-code-at: <git-sha>
+last-verified: <YYYY-MM-DD>
+---
+```
 
-Content guidance:
-- Architecture decisions with rationale (not just what, but why)
-- Data flow diagrams (ASCII)
-- Layer responsibilities and boundaries
-- Key tradeoffs and alternatives considered
-- Invariants and constraints that shaped the design
+### Heading Template (strict, for grep consistency)
 
-### features.md
+```markdown
+## Module: <exact_code_name> [derived]
 
-Per-feature reference: what it does, how to use it, key functions/modules.
+## Purpose: [derived]
+<What this module does, one paragraph>
 
-Target: `.documentation/{capability}/features.md`
+## Exports: [derived]
+- `functionName(params)` - description
+- `anotherExport` - description
 
-Frontmatter: `type: features`, `capability: {slug}`, `generated: {date}`
+## Depends-on: [derived]
+- `module-name` - what it provides to this module
 
-Content guidance:
-- One section per feature
-- What it does (behavior summary)
-- How to use it (entry points, parameters, return values)
-- Key functions and modules with file paths
-- Edge cases and error handling
+## Constraints: [authored]
+<Invariants, boundaries, things that must not change>
 
-### lessons.md
+## WHY: [authored]
+<Non-obvious rationale — only if needed, only from cited review findings>
+```
 
-Things learned, gotchas, patterns that worked or did not.
+### Rules
 
-Target: `.documentation/{capability}/lessons.md`
+- Every section tagged `[derived]` or `[authored]`
+- `[derived]` sections: regenerated from code, agent may overwrite freely
+- `[authored]` sections: written with judgment, agent preserves and flags conflicts
+- Untagged sections default to `[authored]` (safe default — never overwrite uncertain content)
+- Module names must be case-sensitive exact matches to code filenames
+- One-way cross-referencing: modules do NOT link back to flows
 
-Frontmatter: `type: lessons`, `capability: {slug}`, `generated: {date}`
+## Flow Doc Template
 
-Content guidance:
-- Patterns that worked well (reuse these)
-- Patterns that failed or were abandoned (avoid these)
-- Gotchas and non-obvious behavior
-- Performance insights
-- Testing lessons
+Each flow doc lives in `.documentation/flows/<capability>/`, grouped by capability.
+
+### Frontmatter
+
+```yaml
+---
+type: flow
+flow: <capability>/<flow_name>
+built-from-code-at: <git-sha>
+last-verified: <YYYY-MM-DD>
+---
+```
+
+### Heading Template (strict, for grep consistency)
+
+```markdown
+## Flow: <capability>/<flow_name> [derived]
+
+<ASCII diagram of the flow>
+
+## Trigger: [derived]
+<What initiates this flow>
+
+## Input: [derived]
+<What data/state is required>
+
+## Steps: [derived]
+1. <module_name> -> <what it does in this flow>
+2. <module_name> -> <what it does in this flow>
+
+## Output: [derived]
+<What this flow produces>
+
+## Side-effects: [derived]
+<State changes, logs, external calls>
+
+## WHY: [authored]
+<Non-obvious rationale — only if needed, inline per step when appropriate>
+```
+
+### Rules
+
+- Flow steps reference modules by name, not individual functions
+- ASCII diagram first (visual overview), then structured steps
+- One-way: flows reference modules in Steps. Modules don't link back.
+- Each step identifies the owning module
+
+## Gate Doc Templates
+
+Gate docs are scaffolded by the agent but human-maintained. All entries tagged `[manual]`.
+
+### constraints.md
+
+```markdown
+## Constraint: <scope> [manual]
+<What is banned or required, and why>
+```
+
+### glossary.md
+
+```markdown
+## Glossary: <term> [manual]
+<Definition in project context>
+```
+
+### state.md
+
+```markdown
+## State: <store_name> [manual]
+Type: database | cache | config | file
+Location: <path or connection>
+Schema: <shape of data>
+Lifecycle: <when created, when updated, when purged>
+Owned-by: <which module writes to this>
+Read-by: <which modules consume this>
+```
+
+### Rules
+
+- Gate docs are validation inputs, not agent outputs
+- Agent reads gate docs during Pass 3 validation
+- Agent enforces constraints/glossary consistency but never modifies gate doc content
+- All gate doc entries tagged `[manual]` to signal human ownership
+
+## Ownership Tags
+
+Every section in module and flow docs must have an ownership tag:
+
+| Tag | Meaning | Agent behavior |
+|-----|---------|---------------|
+| `[derived]` | Regenerated from code + reviews | Overwrite freely on each run |
+| `[authored]` | Written with human judgment | Preserve, flag conflicts if code changed |
+| `[manual]` | Human-maintained gate doc entry | Never modify |
+| *(untagged)* | Defaults to `[authored]` | Safe default — never overwrite |
+
+## Processing Order
+
+1. **Modules first** — dependencies-first ordering improves truthfulness ~8%
+2. **Flows second** — module docs become verified context for flow generation
+
+## Self-Validation (3-pass)
+
+**Pass 1 -- Structural compliance:** Required headings present, ownership tags on every section, anchors match canonical format, last-verified timestamp updated.
+
+**Pass 2 -- Referential integrity:** Module names match real code artifacts, listed exports actually exist, dependency references resolve, flow step module references match `.documentation/modules/` filenames.
+
+**Pass 3 -- Consistency with gate docs:** Domain terms match glossary spellings, no banned patterns from constraints.md in examples, state references match state.md entries.
