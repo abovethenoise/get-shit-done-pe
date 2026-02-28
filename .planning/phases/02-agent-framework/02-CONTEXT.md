@@ -57,15 +57,16 @@ Define the agent framework pattern (goal-driven definitions with layered context
 - **Executor = Sonnet** — does the work: research gathering, planning, execution, doc writing
 - **Judge = Opus** — validates, synthesizes, reviews, handles user Q&A
 - Hardcoded mapping, not configurable
-- Orchestrator runs on Sonnet, escalates to Opus only for judgment steps
+- User session runs on Opus — this IS the orchestrator + Q&A layer
+- Claude Code constraint: model parameter only accepts "sonnet", "haiku", or "inherit" — cannot specify "opus" directly
+- Therefore: judges use "inherit" to get Opus from the parent session
 - Applied across the full pipeline:
   ```
-  Orchestration:  Sonnet (Executor)
-  Chat/Q&A:       Opus (Judge)
-  Research:       6x Sonnet (Executor) → Opus (Judge: synthesize)
-  Plan:           Sonnet (Executor) → Validate (CLI) → Q&A Opus (Judge)
-  Execute:        Sonnet (Executor) → Review Opus (Judge)
-  Docs:           Sonnet (Executor) → Review Opus (Judge)
+  Your session:    Opus (orchestrator + Q&A + judge dispatcher)
+  Research:        6x Sonnet (Executor) → inherit/Opus (Judge: synthesize)
+  Plan:            Sonnet (Executor) → Validate (CLI) → Opus (your session)
+  Execute:         Sonnet (Executor) → inherit/Opus (Judge: review)
+  Docs:            Sonnet (Executor) → inherit/Opus (Judge: review)
   ```
 
 ### Scope constraints
