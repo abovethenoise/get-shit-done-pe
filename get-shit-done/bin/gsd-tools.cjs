@@ -139,6 +139,7 @@ const milestone = require('./lib/milestone.cjs');
 const commands = require('./lib/commands.cjs');
 const init = require('./lib/init.cjs');
 const frontmatter = require('./lib/frontmatter.cjs');
+const { cmdPlanValidate } = require('./lib/plan-validate.cjs');
 
 // ─── CLI Router ───────────────────────────────────────────────────────────────
 
@@ -172,7 +173,7 @@ async function main() {
   const command = args[0];
 
   if (!command) {
-    error('Usage: gsd-tools <command> [args] [--raw] [--cwd <path>]\nCommands: state, resolve-model, find-phase, commit, verify-summary, verify, frontmatter, template, generate-slug, current-timestamp, list-todos, verify-path-exists, config-ensure-section, init');
+    error('Usage: gsd-tools <command> [args] [--raw] [--cwd <path>]\nCommands: state, resolve-model, find-phase, commit, verify-summary, verify, frontmatter, template, generate-slug, current-timestamp, list-todos, verify-path-exists, config-ensure-section, init, plan-validate');
   }
 
   switch (command) {
@@ -577,6 +578,14 @@ async function main() {
         limit: limitIdx !== -1 ? parseInt(args[limitIdx + 1], 10) : 10,
         freshness: freshnessIdx !== -1 ? args[freshnessIdx + 1] : null,
       }, raw);
+      break;
+    }
+
+    // ─── Plan validation ─────────────────────────────────────────────────────
+    case 'plan-validate': {
+      const reqSource = args[1];
+      const planFiles = args.slice(2).filter(a => a !== '--raw');
+      cmdPlanValidate(cwd, reqSource, planFiles, raw);
       break;
     }
 

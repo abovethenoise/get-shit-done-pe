@@ -9,11 +9,11 @@ created: "{date}"
 
 ## Trace Table
 
-| REQ ID | Layer | Status | Plan | Review | Docs |
-|--------|-------|--------|------|--------|------|
-| EU-01  | End-User   | draft | - | - | - |
-| FN-01  | Functional | draft | - | - | - |
-| TC-01  | Technical  | draft | - | - | - |
+| REQ | Research | Plan | Execute | Review | Docs | Status |
+|-----|----------|------|---------|--------|------|--------|
+| EU-01 | - | - | - | - | - | draft |
+| FN-01 | - | - | - | - | - | draft |
+| TC-01 | - | - | - | - | - | draft |
 
 ## End-User Requirements
 
