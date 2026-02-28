@@ -23,11 +23,11 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 5 of 6 (Documentation)
-Plan: 1 of 3 in current phase -- COMPLETE
-Status: Executing Phase 5 -- 05-01 complete
-Last activity: 2026-02-28 -- Completed 05-01 (doc agent + gate docs)
+Plan: 2 of 3 in current phase
+Status: Executing Phase 5 -- 05-02 complete
+Last activity: 2026-02-28 -- Completed 05-02 (init doc-phase + docs template)
 
-Progress: [████████░░] 86%
+Progress: [█████████░] 93%
 
 ## Performance Metrics
 
@@ -103,6 +103,8 @@ Recent decisions affecting current work:
 - [05-01]: Doc agent definition kept inline (~150 lines) rather than referencing external template
 - [05-01]: Gate doc frontmatter uses type/gate/last-verified fields per RESEARCH.md
 - [05-01]: WHY blocks restricted to cited review findings only -- uncited speculation excluded
+- [05-02]: cmdInitDocPhase mirrors cmdInitReviewPhase pattern with doc-specific fields (doc_agent_path, documentation_dir, gate_docs_exist, summary_files)
+- [05-02]: docs.md template fully replaced: v1 design/features/lessons removed, v2 modules/flows/gate with strict heading templates and ownership tags
 
 ### Pending Todos
 
@@ -116,5 +118,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 05-01-PLAN.md
+Stopped at: Completed 05-02-PLAN.md
 Resume file: None
