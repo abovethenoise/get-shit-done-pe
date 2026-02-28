@@ -54,21 +54,14 @@ describe('extractFrontmatter', () => {
     assert.deepStrictEqual(result.key, ['a', 'b', 'c']);
   });
 
-  test('handles quoted commas in inline arrays — REG-04 known limitation', () => {
-    // REG-04: The split(',') on line 53 does NOT respect quotes.
-    // The parser WILL split on commas inside quotes, producing wrong results.
-    // This test documents the CURRENT (buggy) behavior.
+  test('handles quoted commas in inline arrays — REG-04 fix', () => {
+    // REG-04: js-yaml correctly handles quoted commas in inline arrays.
     const content = '---\nkey: ["a, b", c]\n---\n';
     const result = extractFrontmatter(content);
-    // Current behavior: splits on ALL commas, producing 3 items instead of 2
-    // Expected correct behavior would be: ["a, b", "c"]
-    // Actual current behavior: ["a", "b", "c"] (split ignores quotes)
     assert.ok(Array.isArray(result.key), 'should produce an array');
-    assert.ok(result.key.length >= 2, 'should produce at least 2 items from comma split');
-    // The bug produces ["a", "b\"", "c"] or similar — the exact output depends on
-    // how the regex strips quotes after the split.
-    // We verify the key insight: the result has MORE items than intended (known limitation).
-    assert.ok(result.key.length > 2, 'REG-04: split produces more items than intended due to quoted comma bug');
+    assert.strictEqual(result.key.length, 2, 'should produce exactly 2 items');
+    assert.strictEqual(result.key[0], 'a, b', 'first item should preserve internal comma');
+    assert.strictEqual(result.key[1], 'c', 'second item should be plain string');
   });
 
   test('returns empty object for no frontmatter', () => {
@@ -111,6 +104,81 @@ describe('extractFrontmatter', () => {
     assert.strictEqual(result.first, 'one');
     assert.strictEqual(result.second, 'two');
     assert.strictEqual(result.third, 'three');
+  });
+
+  // ─── js-yaml upgrade tests ───────────────────────────────────────────────
+
+  test('parses 3-layer nested YAML (must_haves > artifacts > object fields)', () => {
+    const content = `---
+phase: 01
+must_haves:
+  artifacts:
+    - path: src/auth.ts
+      provides: JWT authentication
+      exports:
+        - createToken
+        - verifyToken
+  truths:
+    - All tests pass
+---
+body`;
+    const result = extractFrontmatter(content);
+    assert.ok(result.must_haves, 'should have must_haves');
+    assert.ok(result.must_haves.artifacts, 'should have artifacts');
+    assert.strictEqual(result.must_haves.artifacts.length, 1);
+    assert.strictEqual(result.must_haves.artifacts[0].path, 'src/auth.ts');
+    assert.strictEqual(result.must_haves.artifacts[0].provides, 'JWT authentication');
+    assert.deepStrictEqual(result.must_haves.artifacts[0].exports, ['createToken', 'verifyToken']);
+    assert.deepStrictEqual(result.must_haves.truths, ['All tests pass']);
+  });
+
+  test('handles colon-containing values correctly', () => {
+    const content = '---\nurl: "http://example.com:8080/path"\nmessage: "Error: something failed"\n---\n';
+    const result = extractFrontmatter(content);
+    assert.strictEqual(result.url, 'http://example.com:8080/path');
+    assert.strictEqual(result.message, 'Error: something failed');
+  });
+
+  test('YAML 1.2: yes/no parsed as strings not booleans', () => {
+    const content = '---\nanswer: yes\nother: no\n---\n';
+    const result = extractFrontmatter(content);
+    // With yaml.DEFAULT_SCHEMA (YAML 1.2 core), yes/no should be strings
+    assert.strictEqual(result.answer, 'yes', 'yes should be string, not boolean true');
+    assert.strictEqual(result.other, 'no', 'no should be string, not boolean false');
+  });
+
+  test('parses 5-level deep nested objects', () => {
+    const content = `---
+level1:
+  level2:
+    level3:
+      level4:
+        level5: deep_value
+---
+`;
+    const result = extractFrontmatter(content);
+    assert.strictEqual(result.level1.level2.level3.level4.level5, 'deep_value');
+  });
+
+  test('round-trip preserves 3-layer nested YAML without data loss', () => {
+    const obj = {
+      phase: '01',
+      must_haves: {
+        truths: ['All tests pass', 'Coverage exceeds 80%'],
+        artifacts: [
+          { path: 'src/auth.ts', provides: 'JWT auth' },
+          { path: 'src/db.ts', provides: 'Database layer' },
+        ],
+      },
+    };
+    const serialized = reconstructFrontmatter(obj);
+    const doc = `---\n${serialized}\n---\n`;
+    const parsed = extractFrontmatter(doc);
+    assert.strictEqual(parsed.phase, '01');
+    assert.deepStrictEqual(parsed.must_haves.truths, obj.must_haves.truths);
+    assert.strictEqual(parsed.must_haves.artifacts.length, 2);
+    assert.strictEqual(parsed.must_haves.artifacts[0].path, 'src/auth.ts');
+    assert.strictEqual(parsed.must_haves.artifacts[1].provides, 'Database layer');
   });
 });
 
