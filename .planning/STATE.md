@@ -10,27 +10,27 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 1 of 6 (Foundation)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: Executing
-Last activity: 2026-02-28 — Completed 01-01 (frontmatter js-yaml upgrade)
+Last activity: 2026-02-28 — Completed 01-02 (v2 templates & core helpers)
 
-Progress: [█░░░░░░░░░] 6%
+Progress: [██░░░░░░░░] 12%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0
-- Average duration: -
-- Total execution time: 0 hours
+- Total plans completed: 1
+- Average duration: 4min
+- Total execution time: 0.07 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| 01-foundation | 1 | 4min | 4min |
 
 **Recent Trend:**
-- Last 5 plans: -
+- Last 5 plans: 01-02 (4min)
 - Trend: -
 
 *Updated after each plan completion*
@@ -47,6 +47,9 @@ Recent decisions affecting current work:
 - [Roadmap]: Requirements schema (REQS-01, REQS-02) in Phase 1 with foundation; traceability enforcement (REQS-03, REQS-04) in Phase 3 with planning
 - [01-01]: Used FAILSAFE_SCHEMA (not DEFAULT_SCHEMA) to preserve v1 string-only behavior for all scalar values
 - [01-01]: Stringify all leaves before yaml.dump to avoid FAILSAFE_SCHEMA crash on Number/Boolean types
+- [01-02]: Templates use YAML frontmatter type discriminator (Kubernetes kind pattern)
+- [01-02]: findCapabilityInternal detects partial creation (dir exists but no CAPABILITY.md)
+- [01-02]: generateSlugInternal returns empty string for slash-containing and unicode-only input
 
 ### Pending Todos
 
@@ -60,5 +63,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 01-01-PLAN.md
+Stopped at: Completed 01-02-PLAN.md
 Resume file: None
