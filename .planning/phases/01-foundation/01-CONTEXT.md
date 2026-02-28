@@ -98,6 +98,19 @@ Each feature defines requirements across three layers. Each layer has structured
 - Per-Requirement Trace: Each REQ gets verdict + multi-dimensional evidence (code, domain, integration) + gap analysis + fix scope + blocking assessment
 - Reviewer Notes: Domain reviewer, code reviewer, integration reviewer — captures concerns not tied to specific REQs (pattern issues, invariant breaches, cross-boundary problems)
 
+### Two-Tier Planning
+Feature execution order lives in the capability-level PLAN.md, not in filenames or STATE.md.
+
+**Capability PLAN.md** — sequencing:
+- Build sequence (ordered list of features)
+- Dependency graph (what blocks what)
+- Phasing rationale (why this order)
+
+**Feature PLAN.md** — implementation:
+- REQ-level tasks and steps
+- How to build THIS feature
+- References specific EU/FN/TC requirement IDs
+
 ### YAML Frontmatter
 - ALL .md artifacts get YAML frontmatter — both .planning/ and .documentation/ files
 - Machine-readable metadata for consistent parsing and tooling
