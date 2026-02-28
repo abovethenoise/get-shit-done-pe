@@ -48,7 +48,7 @@
 ### Review
 
 - [ ] **REVW-01**: 4 parallel specialist reviewers: end-user, functional, technical, code quality
-- [ ] **REVW-02**: Each reviewer produces trace report: per-requirement verdict (met / partially met / not met / regression)
+- [ ] **REVW-02**: Each reviewer produces trace report: per-requirement verdict (met / not met / regression)
 - [ ] **REVW-03**: End-user reviewer traces against story + acceptance criteria
 - [ ] **REVW-04**: Functional reviewer traces against behavior specs
 - [ ] **REVW-05**: Technical reviewer traces against implementation specs

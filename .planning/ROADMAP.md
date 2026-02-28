@@ -77,14 +77,15 @@ Plans:
 **Requirements**: REVW-01, REVW-02, REVW-03, REVW-04, REVW-05, REVW-06, REVW-07, REVW-08
 **Success Criteria** (what must be TRUE):
   1. 4 reviewers run in parallel without context leakage: end-user traces against story + acceptance, functional traces against behavior specs, technical traces against implementation specs, code quality traces for DRY/KISS/bloat
-  2. Each reviewer produces a structured trace report with per-requirement verdicts (met / partially met / not met / regression) and finding severity (blocker / major / minor)
+  2. Each reviewer produces a structured trace report with per-requirement verdicts (met / not met / regression) — the synthesizer assigns finding severity (blocker / major / minor) after seeing all 4 reports
   3. The synthesizer consolidates 4 reports using explicit priority ordering (user > functional > technical > quality), includes a mandatory conflicts section, and presents recommendations to the user
   4. User reviews synthesized recommendations before any findings are acted on
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 04-01: TBD
-- [ ] 04-02: TBD
+- [ ] 04-01-PLAN.md — Agent definitions: 4 specialist reviewers (end-user, functional, technical, code quality) + review synthesizer
+- [ ] 04-02-PLAN.md — Infrastructure: review template rewrite, frontmatter schema, init review-phase CLI command
+- [ ] 04-03-PLAN.md — Workflow and command: review-phase orchestration (gather-synthesize + Q&A + re-review loop) + slash command
 
 ### Phase 5: Documentation
 **Goal**: After review acceptance, a documentation agent reads the actual built code and generates reference docs optimized for future lookup -- not a rehash of the spec
