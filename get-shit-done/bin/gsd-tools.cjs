@@ -125,6 +125,7 @@
  *   init map-codebase                  All context for map-codebase workflow
  *   init progress                      All context for progress workflow
  *   init review-phase <phase>          All context for review-phase workflow
+ *   init doc-phase <phase>             All context for doc-phase workflow
  */
 
 const fs = require('fs');
@@ -550,8 +551,11 @@ async function main() {
         case 'review-phase':
           init.cmdInitReviewPhase(cwd, args[2], raw);
           break;
+        case 'doc-phase':
+          init.cmdInitDocPhase(cwd, args[2], raw);
+          break;
         default:
-          error(`Unknown init workflow: ${workflow}\nAvailable: execute-phase, plan-phase, new-project, new-milestone, quick, resume, verify-work, phase-op, todos, milestone-op, map-codebase, progress, review-phase`);
+          error(`Unknown init workflow: ${workflow}\nAvailable: execute-phase, plan-phase, new-project, new-milestone, quick, resume, verify-work, phase-op, todos, milestone-op, map-codebase, progress, review-phase, doc-phase`);
       }
       break;
     }

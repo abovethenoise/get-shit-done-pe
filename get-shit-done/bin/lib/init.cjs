@@ -699,6 +699,109 @@ function cmdInitReviewPhase(cwd, phase, raw) {
   output(result, raw);
 }
 
+function cmdInitDocPhase(cwd, phase, raw) {
+  if (!phase) {
+    error('phase required for init doc-phase');
+  }
+
+  const config = loadConfig(cwd);
+  const phaseInfo = findPhaseInternal(cwd, phase);
+
+  const roadmapPhase = getRoadmapPhaseInternal(cwd, phase);
+  const reqMatch = roadmapPhase?.section?.match(/^\*\*Requirements\*\*:[^\S\n]*([^\n]*)$/m);
+  const reqExtracted = reqMatch
+    ? reqMatch[1].replace(/[\[\]]/g, '').split(',').map(s => s.trim()).filter(Boolean).join(', ')
+    : null;
+  const phase_req_ids = (reqExtracted && reqExtracted !== 'TBD') ? reqExtracted : null;
+
+  // Doc agent path
+  const doc_agent_path = toPosixPath(path.join('agents', 'gsd-doc-writer.md'));
+
+  // Resolve model for doc agent (role_type: executor)
+  const doc_agent_model = resolveModelInternal(cwd, 'gsd-doc-writer');
+
+  // Collect summary files from phase directory
+  let summary_files = [];
+  if (phaseInfo?.directory) {
+    const phaseDirFull = path.join(cwd, phaseInfo.directory);
+    try {
+      const files = fs.readdirSync(phaseDirFull);
+      summary_files = files
+        .filter(f => f.endsWith('-SUMMARY.md') || f === 'SUMMARY.md')
+        .map(f => toPosixPath(path.join(phaseInfo.directory, f)));
+    } catch {}
+  }
+
+  // Documentation directory
+  const documentation_dir = '.documentation';
+
+  // Check if gate docs exist
+  const gate_docs_exist = pathExistsInternal(cwd, path.join(documentation_dir, 'gate'));
+
+  // Feature/capability paths from capabilities directory
+  let feature_paths = [];
+  let capability_paths = [];
+  const capDir = path.join(cwd, '.planning', 'capabilities');
+  try {
+    const caps = fs.readdirSync(capDir, { withFileTypes: true })
+      .filter(e => e.isDirectory())
+      .map(e => e.name);
+    for (const cap of caps) {
+      const capPath = toPosixPath(path.join('.planning', 'capabilities', cap, 'CAPABILITY.md'));
+      if (pathExistsInternal(cwd, capPath)) {
+        capability_paths.push(capPath);
+      }
+      const featDir = path.join(capDir, cap);
+      try {
+        const feats = fs.readdirSync(featDir, { withFileTypes: true })
+          .filter(e => e.isDirectory())
+          .map(e => e.name);
+        for (const feat of feats) {
+          const featPath = toPosixPath(path.join('.planning', 'capabilities', cap, feat, 'FEATURE.md'));
+          if (pathExistsInternal(cwd, featPath)) {
+            feature_paths.push(featPath);
+          }
+        }
+      } catch {}
+    }
+  } catch {}
+
+  const result = {
+    // Models
+    doc_agent_model,
+
+    // Phase info
+    phase_found: !!phaseInfo,
+    phase_dir: phaseInfo?.directory || null,
+    phase_number: phaseInfo?.phase_number || null,
+    phase_name: phaseInfo?.phase_name || null,
+    phase_req_ids,
+
+    // Doc agent
+    doc_agent_path,
+
+    // Config flags
+    commit_docs: config.commit_docs,
+
+    // Summary files from phase
+    summary_files,
+
+    // Documentation
+    documentation_dir,
+    gate_docs_exist,
+
+    // Feature/capability inventory
+    feature_paths,
+    capability_paths,
+
+    // File paths
+    state_path: '.planning/STATE.md',
+    roadmap_path: '.planning/ROADMAP.md',
+  };
+
+  output(result, raw);
+}
+
 function cmdInitProgress(cwd, raw) {
   const config = loadConfig(cwd);
   const milestone = getMilestoneInfo(cwd);
@@ -811,4 +914,5 @@ module.exports = {
   cmdInitMapCodebase,
   cmdInitProgress,
   cmdInitReviewPhase,
+  cmdInitDocPhase,
 };
