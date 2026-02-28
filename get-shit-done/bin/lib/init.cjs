@@ -802,6 +802,100 @@ function cmdInitDocPhase(cwd, phase, raw) {
   output(result, raw);
 }
 
+function cmdInitProject(cwd, raw) {
+  const config = loadConfig(cwd);
+
+  // Detect code presence
+  let codeExists = false;
+  try {
+    const files = execSync('find . -maxdepth 3 \\( -name "*.ts" -o -name "*.js" -o -name "*.py" -o -name "*.go" -o -name "*.rs" -o -name "*.swift" -o -name "*.java" -o -name "*.rb" -o -name "*.php" -o -name "*.c" -o -name "*.cpp" -o -name "*.cs" \\) 2>/dev/null | grep -v node_modules | grep -v .git | head -5', {
+      cwd,
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+    codeExists = files.trim().length > 0;
+  } catch {}
+
+  // Also check for package files as code indicators
+  const hasPackageFile = pathExistsInternal(cwd, 'package.json') ||
+                         pathExistsInternal(cwd, 'requirements.txt') ||
+                         pathExistsInternal(cwd, 'Cargo.toml') ||
+                         pathExistsInternal(cwd, 'go.mod') ||
+                         pathExistsInternal(cwd, 'Package.swift') ||
+                         pathExistsInternal(cwd, 'pyproject.toml') ||
+                         pathExistsInternal(cwd, 'Gemfile');
+
+  codeExists = codeExists || hasPackageFile;
+
+  // Detect planning existence
+  const planningExists = pathExistsInternal(cwd, '.planning');
+  const projectExists = pathExistsInternal(cwd, '.planning/PROJECT.md');
+
+  // Detect partial run
+  let partialRun = { has_partial: false, completed_sections: [], next_section: null };
+  const initStatePath = path.join(cwd, '.planning', 'init-state.json');
+  try {
+    const stateContent = fs.readFileSync(initStatePath, 'utf-8');
+    const stateData = JSON.parse(stateContent);
+    if (stateData.completed_sections && stateData.completed_sections.length > 0) {
+      partialRun.has_partial = true;
+      partialRun.completed_sections = stateData.completed_sections;
+      partialRun.mode = stateData.mode || null;
+
+      // Determine next section based on mode
+      const allSections = stateData.mode === 'existing'
+        ? ['scan', 'validation', 'gap_fill', 'project_md', 'capability_map', 'documentation']
+        : ['goals', 'tech_stack', 'architecture', 'project_md', 'capability_map', 'documentation'];
+
+      const completed = new Set(stateData.completed_sections);
+      partialRun.next_section = allSections.find(s => !completed.has(s)) || null;
+    }
+  } catch {}
+
+  // Auto-detect mode
+  let detectedMode;
+  if (!codeExists && !planningExists) {
+    detectedMode = 'new';
+  } else if (codeExists && !projectExists) {
+    detectedMode = 'existing';
+  } else if (projectExists) {
+    // PROJECT.md already exists -- could be partial run or re-init
+    detectedMode = partialRun.has_partial ? (partialRun.mode || 'ambiguous') : 'ambiguous';
+  } else {
+    detectedMode = 'ambiguous';
+  }
+
+  // Project context for existing projects
+  let projectContext = null;
+  if (projectExists) {
+    try {
+      projectContext = fs.readFileSync(path.join(cwd, '.planning', 'PROJECT.md'), 'utf-8').substring(0, 2000);
+    } catch {}
+  }
+
+  const result = {
+    // Detection
+    detected_mode: detectedMode,
+    planning_exists: planningExists,
+    code_exists: codeExists,
+    project_exists: projectExists,
+
+    // Partial run state
+    partial_run: partialRun,
+
+    // Project context (truncated for existing)
+    project_context: projectContext,
+
+    // Config
+    commit_docs: config.commit_docs,
+
+    // Git state
+    has_git: pathExistsInternal(cwd, '.git'),
+  };
+
+  output(result, raw);
+}
+
 function cmdInitProgress(cwd, raw) {
   const config = loadConfig(cwd);
   const milestone = getMilestoneInfo(cwd);
@@ -915,4 +1009,5 @@ module.exports = {
   cmdInitProgress,
   cmdInitReviewPhase,
   cmdInitDocPhase,
+  cmdInitProject,
 };

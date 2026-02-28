@@ -126,6 +126,7 @@
  *   init progress                      All context for progress workflow
  *   init review-phase <phase>          All context for review-phase workflow
  *   init doc-phase <phase>             All context for doc-phase workflow
+ *   init project                       All context for init-project workflow (auto-detect mode)
  */
 
 const fs = require('fs');
@@ -554,8 +555,11 @@ async function main() {
         case 'doc-phase':
           init.cmdInitDocPhase(cwd, args[2], raw);
           break;
+        case 'project':
+          init.cmdInitProject(cwd, raw);
+          break;
         default:
-          error(`Unknown init workflow: ${workflow}\nAvailable: execute-phase, plan-phase, new-project, new-milestone, quick, resume, verify-work, phase-op, todos, milestone-op, map-codebase, progress, review-phase, doc-phase`);
+          error(`Unknown init workflow: ${workflow}\nAvailable: execute-phase, plan-phase, new-project, new-milestone, quick, resume, verify-work, phase-op, todos, milestone-op, map-codebase, progress, review-phase, doc-phase, project`);
       }
       break;
     }
