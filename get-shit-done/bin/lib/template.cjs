@@ -219,4 +219,39 @@ function cmdTemplateFill(cwd, templateType, options, raw) {
   output({ created: true, path: relPath, template: templateType }, raw, relPath);
 }
 
-module.exports = { cmdTemplateSelect, cmdTemplateFill };
+// ─── fillTemplate — Single source of truth for capability/feature content ────
+
+/**
+ * Generate filled template content (frontmatter + body) for a given type.
+ * Returns the content string. Does NOT write to disk or call output().
+ *
+ * @param {string} type - 'capability' or 'feature'
+ * @param {object} options - { name, slug, date, capability (for features) }
+ * @returns {string} Full markdown content with frontmatter
+ */
+function fillTemplate(type, options) {
+  const { name, slug, date } = options;
+
+  switch (type) {
+    case 'capability': {
+      const templatePath = path.join(__dirname, '..', '..', 'templates', 'capability.md');
+      let content = fs.readFileSync(templatePath, 'utf-8');
+      content = content.replace(/\{date\}/g, date);
+      content = content.replace(/\{capability\}/g, name);
+      content = content.replace(/\{slug\}/g, slug);
+      return content;
+    }
+    case 'feature': {
+      const templatePath = path.join(__dirname, '..', '..', 'templates', 'feature.md');
+      let content = fs.readFileSync(templatePath, 'utf-8');
+      content = content.replace(/\{date\}/g, date);
+      content = content.replace(/\{feature\}/g, name);
+      content = content.replace(/\{slug\}/g, options.capability || slug);
+      return content;
+    }
+    default:
+      throw new Error(`fillTemplate: unknown type '${type}'. Available: capability, feature`);
+  }
+}
+
+module.exports = { cmdTemplateSelect, cmdTemplateFill, fillTemplate };
