@@ -65,11 +65,11 @@ Plans:
   2. After drafting, the planner self-critiques on coverage gaps, approach validity, feasibility concerns, and surfaces assumptions needing human guidance (maximum 2 rounds, then hard stop)
   3. Self-critique findings are presented to the user as Q&A -- plan is not finalized until user confirms
   4. A traceability table exists mapping every REQ ID through plan, execution, review, and documentation stages
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 03-01: TBD
-- [ ] 03-02: TBD
+- [ ] 03-01-PLAN.md — CLI plan validator (gsd plan-validate) and FEATURE.md template update for traceability columns
+- [ ] 03-02-PLAN.md — v2 planner agent (self-critique loop, v2 task schema) and plan-phase workflow (Q&A loop, validation gate, finalization confirmation)
 
 ### Phase 4: Review Layer
 **Goal**: Executed work is reviewed by 4 specialist agents in parallel, each tracing against their requirement layer, with a synthesizer that adjudicates conflicts and presents consolidated recommendations

@@ -19,8 +19,8 @@
 
 - [x] **REQS-01**: 3-layer requirement format per feature: end-user (story + acceptance), functional (behavior spec), technical (implementation spec)
 - [x] **REQS-02**: REQ ID scheme namespaced per layer (EU-xx, FN-xx, TC-xx) within each feature
-- [ ] **REQS-03**: Zero-orphan-task enforcement — every plan task must reference at least one REQ ID
-- [ ] **REQS-04**: Traceability table mapping every REQ ID through plan → execution → review → documentation
+- [x] **REQS-03**: Zero-orphan-task enforcement — every plan task must reference at least one REQ ID
+- [x] **REQS-04**: Traceability table mapping every REQ ID through plan → execution → review → documentation
 
 ### Project Initialization
 
@@ -117,8 +117,8 @@
 | FOUND-07 | Phase 7 | Pending |
 | REQS-01 | Phase 1 | Complete |
 | REQS-02 | Phase 1 | Complete |
-| REQS-03 | Phase 3 | Pending |
-| REQS-04 | Phase 3 | Pending |
+| REQS-03 | Phase 3 | Complete |
+| REQS-04 | Phase 3 | Complete |
 | INIT-01 | Phase 6 | Pending |
 | INIT-02 | Phase 6 | Pending |
 | INIT-03 | Phase 6 | Pending |
