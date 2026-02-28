@@ -108,58 +108,58 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FOUND-01 | — | Pending |
-| FOUND-02 | — | Pending |
-| FOUND-03 | — | Pending |
-| FOUND-04 | — | Pending |
-| FOUND-05 | — | Pending |
-| FOUND-06 | — | Pending |
-| FOUND-07 | — | Pending |
-| REQS-01 | — | Pending |
-| REQS-02 | — | Pending |
-| REQS-03 | — | Pending |
-| REQS-04 | — | Pending |
-| INIT-01 | — | Pending |
-| INIT-02 | — | Pending |
-| INIT-03 | — | Pending |
-| WKFL-01 | — | Pending |
-| WKFL-02 | — | Pending |
-| WKFL-03 | — | Pending |
-| WKFL-04 | — | Pending |
-| WKFL-05 | — | Pending |
-| WKFL-06 | — | Pending |
-| WKFL-07 | — | Pending |
-| PLAN-01 | — | Pending |
-| PLAN-02 | — | Pending |
-| PLAN-03 | — | Pending |
-| PLAN-04 | — | Pending |
-| REVW-01 | — | Pending |
-| REVW-02 | — | Pending |
-| REVW-03 | — | Pending |
-| REVW-04 | — | Pending |
-| REVW-05 | — | Pending |
-| REVW-06 | — | Pending |
-| REVW-07 | — | Pending |
-| REVW-08 | — | Pending |
-| DOCS-01 | — | Pending |
-| DOCS-02 | — | Pending |
-| DOCS-03 | — | Pending |
-| RSRCH-01 | — | Pending |
-| RSRCH-02 | — | Pending |
-| RSRCH-03 | — | Pending |
-| RSRCH-04 | — | Pending |
-| RSRCH-05 | — | Pending |
-| RSRCH-06 | — | Pending |
-| AGNT-01 | — | Pending |
-| AGNT-02 | — | Pending |
-| AGNT-03 | — | Pending |
-| AGNT-04 | — | Pending |
+| FOUND-01 | Phase 1 | Pending |
+| FOUND-02 | Phase 1 | Pending |
+| FOUND-03 | Phase 1 | Pending |
+| FOUND-04 | Phase 1 | Pending |
+| FOUND-05 | Phase 1 | Pending |
+| FOUND-06 | Phase 1 | Pending |
+| FOUND-07 | Phase 7 | Pending |
+| REQS-01 | Phase 1 | Pending |
+| REQS-02 | Phase 1 | Pending |
+| REQS-03 | Phase 3 | Pending |
+| REQS-04 | Phase 3 | Pending |
+| INIT-01 | Phase 6 | Pending |
+| INIT-02 | Phase 6 | Pending |
+| INIT-03 | Phase 6 | Pending |
+| WKFL-01 | Phase 6 | Pending |
+| WKFL-02 | Phase 6 | Pending |
+| WKFL-03 | Phase 6 | Pending |
+| WKFL-04 | Phase 6 | Pending |
+| WKFL-05 | Phase 6 | Pending |
+| WKFL-06 | Phase 6 | Pending |
+| WKFL-07 | Phase 6 | Pending |
+| PLAN-01 | Phase 3 | Pending |
+| PLAN-02 | Phase 3 | Pending |
+| PLAN-03 | Phase 3 | Pending |
+| PLAN-04 | Phase 3 | Pending |
+| REVW-01 | Phase 4 | Pending |
+| REVW-02 | Phase 4 | Pending |
+| REVW-03 | Phase 4 | Pending |
+| REVW-04 | Phase 4 | Pending |
+| REVW-05 | Phase 4 | Pending |
+| REVW-06 | Phase 4 | Pending |
+| REVW-07 | Phase 4 | Pending |
+| REVW-08 | Phase 4 | Pending |
+| DOCS-01 | Phase 5 | Pending |
+| DOCS-02 | Phase 5 | Pending |
+| DOCS-03 | Phase 5 | Pending |
+| RSRCH-01 | Phase 2 | Pending |
+| RSRCH-02 | Phase 2 | Pending |
+| RSRCH-03 | Phase 2 | Pending |
+| RSRCH-04 | Phase 2 | Pending |
+| RSRCH-05 | Phase 2 | Pending |
+| RSRCH-06 | Phase 2 | Pending |
+| AGNT-01 | Phase 2 | Pending |
+| AGNT-02 | Phase 2 | Pending |
+| AGNT-03 | Phase 2 | Pending |
+| AGNT-04 | Phase 2 | Pending |
 
 **Coverage:**
 - v1 requirements: 46 total
-- Mapped to phases: 0
-- Unmapped: 46
+- Mapped to phases: 46
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-28*
-*Last updated: 2026-02-28 after initial definition*
+*Last updated: 2026-02-28 after roadmap creation*
