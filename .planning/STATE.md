@@ -23,9 +23,9 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 9 of 12 (Structure & Integration)
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-03-01 -- Phase 9 context gathered
+Plan: 1 of 3 complete
+Status: In progress
+Last activity: 2026-03-01 -- Plan 09-01 complete (orphan cleanup + stale refs)
 
 Progress: [██████████] 100%
 
@@ -44,9 +44,10 @@ Progress: [██████████] 100%
 | 08 (plan 03) | 1 | 1min | 1min |
 | 08 (plan 04) | 1 | 1min | 1min |
 | 08 (plan 05) | 1 | 2min | 2min |
+| 09 (plan 01) | 1 | 3min | 3min |
 
 **Recent Trend:**
-- 08-05: CHANGELOG, .github/, build-hooks, 2 dead tests deleted in 2min
+- 09-01: 7 orphaned commands deleted, all stale refs fixed in workflows/agents/hooks in 3min
 
 *Updated after each plan completion*
 
@@ -61,7 +62,8 @@ Recent decisions affecting current work:
 - [Milestone 2]: Structure before polish -- establish v2 model before auditing templates/references against it
 - [Milestone 2]: Automated testing before install -- catch problems before packaging
 - [Milestone 2]: Install and validation combined -- install is meaningless without proving it works
-- [08-01]: Slash-command refs to deleted commands in surviving files left for Phase 10 audit
+- [09-01]: All slash-command refs to deleted commands now fixed (discuss-phase, verify-work, pause-work, new-milestone, complete-milestone, add-phase)
+- [09-01]: Context-monitor hook uses generic STATE.md language instead of specific command refs
 - [Phase 08]: Slash-command text refs and @file refs from Phase-10-flagged commands to deleted workflows left intact for Phase 10 audit
 - [08-03]: Surviving refs to deleted agents in v1 framework code (core.cjs, init.cjs, model-profiles.md, templates) deferred to Phase 10 audit
 - [08-04]: Refs to gsd-check-update in bin/install.js and scripts/build-hooks.js left for install/build phase cleanup
@@ -74,5 +76,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Phase 9 context gathered
-Resume file: .planning/phases/09-structure-integration/09-CONTEXT.md
+Stopped at: Completed 09-01-PLAN.md
+Resume file: None
