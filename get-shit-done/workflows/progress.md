@@ -22,18 +22,18 @@ If `project_exists` is false (no `.planning/` directory):
 ```
 No planning structure found.
 
-Run /gsd:new-project to start a new project.
+Run /gsd:new to start a new project.
 ```
 
 Exit.
 
-If missing STATE.md: suggest `/gsd:new-project`.
+If missing STATE.md: suggest `/gsd:new`.
 
 **If ROADMAP.md missing but PROJECT.md exists:**
 
 This means a milestone was completed and archived. Go to **Route F** (between milestones).
 
-If missing both ROADMAP.md and PROJECT.md: suggest `/gsd:new-project`.
+If missing both ROADMAP.md and PROJECT.md: suggest `/gsd:new`.
 </step>
 
 <step name="load">
@@ -105,15 +105,13 @@ Present:
 ## Current Position
 Phase [N] of [total]: [phase-name]
 Plan [M] of [phase-total]: [status]
-CONTEXT: [✓ if has_context | - if not]
+CONTEXT: [check-mark if has_context | - if not]
 
 ## Key Decisions Made
 - [extract from $STATE.decisions[]]
-- [e.g. jq -r '.decisions[].decision' from state-snapshot]
 
 ## Blockers/Concerns
 - [extract from $STATE.blockers[]]
-- [e.g. jq -r '.blockers[].text' from state-snapshot]
 
 ## Active Debug Sessions
 - [count] active — /gsd:debug to continue
@@ -171,13 +169,13 @@ Read its `<objective>` section.
 ```
 ---
 
-## ▶ Next Up
+## > Next Up
 
 **{phase}-{plan}: [Plan Name]** — [objective summary from PLAN.md]
 
-`/gsd:execute-phase {phase}`
+`/gsd:execute {phase}`
 
-<sub>`/clear` first → fresh context window</sub>
+<sub>`/clear` first — fresh context window</sub>
 
 ---
 ```
@@ -193,14 +191,14 @@ Check if `{phase_num}-CONTEXT.md` exists in phase directory.
 ```
 ---
 
-## ▶ Next Up
+## > Next Up
 
 **Phase {N}: {Name}** — {Goal from ROADMAP.md}
-<sub>✓ Context gathered, ready to plan</sub>
+<sub>Context gathered, ready to plan</sub>
 
-`/gsd:plan-phase {phase-number}`
+`/gsd:new` or `/gsd:enhance` — enter via framing command to plan and execute
 
-<sub>`/clear` first → fresh context window</sub>
+<sub>`/clear` first — fresh context window</sub>
 
 ---
 ```
@@ -210,19 +208,18 @@ Check if `{phase_num}-CONTEXT.md` exists in phase directory.
 ```
 ---
 
-## ▶ Next Up
+## > Next Up
 
 **Phase {N}: {Name}** — {Goal from ROADMAP.md}
 
-`/gsd:discuss-capability {phase}` — gather context and clarify approach
+`/gsd:new` or `/gsd:enhance` — describe what you want to build
 
-<sub>`/clear` first → fresh context window</sub>
+<sub>`/clear` first — fresh context window</sub>
 
 ---
 
 **Also available:**
-- `/gsd:plan-phase {phase}` — skip discussion, plan directly
-- `/gsd:list-phase-assumptions {phase}` — see Claude's assumptions
+- `/gsd:discuss` — gather context and clarify approach
 
 ---
 ```
@@ -236,19 +233,13 @@ UAT.md exists with gaps (diagnosed issues). User needs to plan fixes.
 ```
 ---
 
-## ⚠ UAT Gaps Found
+## UAT Gaps Found
 
 **{phase_num}-UAT.md** has {N} gaps requiring fixes.
 
-`/gsd:plan-phase {phase} --gaps`
+`/gsd:debug` — diagnose and fix gaps
 
-<sub>`/clear` first → fresh context window</sub>
-
----
-
-**Also available:**
-- `/gsd:execute-phase {phase}` — execute phase plans
-- `/gsd:review-phase {phase}` — run more UAT testing
+<sub>`/clear` first — fresh context window</sub>
 
 ---
 ```
@@ -281,21 +272,20 @@ Read ROADMAP.md to get the next phase's name and goal.
 ```
 ---
 
-## ✓ Phase {Z} Complete
+## Phase {Z} Complete
 
-## ▶ Next Up
+## > Next Up
 
 **Phase {Z+1}: {Name}** — {Goal from ROADMAP.md}
 
-`/gsd:discuss-capability {Z+1}` — gather context and clarify approach
+`/gsd:new` or `/gsd:enhance` — enter via framing command
 
-<sub>`/clear` first → fresh context window</sub>
+<sub>`/clear` first — fresh context window</sub>
 
 ---
 
 **Also available:**
-- `/gsd:plan-phase {Z+1}` — skip discussion, plan directly
-- `/gsd:review-phase {Z}` — user acceptance test before continuing
+- `/gsd:discuss` — gather context and clarify approach
 
 ---
 ```
@@ -307,22 +297,17 @@ Read ROADMAP.md to get the next phase's name and goal.
 ```
 ---
 
-## 🎉 Milestone Complete
+## Milestone Complete
 
 All {N} phases finished!
 
-## ▶ Next Up
+## > Next Up
 
 **Complete Milestone** — archive and prepare for next
 
 `/gsd:progress` — review milestone status and next steps
 
-<sub>`/clear` first → fresh context window</sub>
-
----
-
-**Also available:**
-- `/gsd:review-phase` — user acceptance test before completing milestone
+<sub>`/clear` first — fresh context window</sub>
 
 ---
 ```
@@ -338,17 +323,17 @@ Read MILESTONES.md to find the last completed milestone version.
 ```
 ---
 
-## ✓ Milestone v{X.Y} Complete
+## Milestone v{X.Y} Complete
 
 Ready to plan the next milestone.
 
-## ▶ Next Up
+## > Next Up
 
-**Start Next Milestone** — questioning → research → requirements → roadmap
+**Start Next Milestone** — questioning, research, requirements, roadmap
 
 `/gsd:new` — start new project or milestone
 
-<sub>`/clear` first → fresh context window</sub>
+<sub>`/clear` first — fresh context window</sub>
 
 ---
 ```
@@ -358,10 +343,10 @@ Ready to plan the next milestone.
 <step name="edge_cases">
 **Handle edge cases:**
 
-- Phase complete but next phase not planned → offer `/gsd:plan-phase [next]`
-- All work complete → offer milestone completion
-- Blockers present → highlight before offering to continue
-- Handoff file exists → mention it, offer `/gsd:resume-work`
+- Phase complete but next phase not planned: offer `/gsd:new` or `/gsd:enhance`
+- All work complete: offer milestone completion
+- Blockers present: highlight before offering to continue
+- Handoff file exists: mention it, offer `/gsd:resume`
   </step>
 
 </process>
@@ -371,7 +356,7 @@ Ready to plan the next milestone.
 - [ ] Rich context provided (recent work, decisions, issues)
 - [ ] Current position clear with visual progress
 - [ ] What's next clearly explained
-- [ ] Smart routing: /gsd:execute-phase if plans exist, /gsd:plan-phase if not
+- [ ] Smart routing: v2 framing commands for planning and execution
 - [ ] User confirms before any action
 - [ ] Seamless handoff to appropriate gsd command
       </success_criteria>

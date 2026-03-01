@@ -27,7 +27,7 @@ Parse JSON for: `state_exists`, `roadmap_exists`, `project_exists`, `planning_ex
 
 **If `state_exists` is true:** Proceed to load_state
 **If `state_exists` is false but `roadmap_exists` or `project_exists` is true:** Offer to reconstruct STATE.md
-**If `planning_exists` is false:** This is a new project - route to /gsd:new-project
+**If `planning_exists` is false:** This is a new project - route to /gsd:new
 </step>
 
 <step name="load_state">
@@ -98,24 +98,24 @@ fi
 Present complete project status to user:
 
 ```
-╔══════════════════════════════════════════════════════════════╗
-║  PROJECT STATUS                                               ║
-╠══════════════════════════════════════════════════════════════╣
-║  Building: [one-liner from PROJECT.md "What This Is"]         ║
-║                                                               ║
-║  Phase: [X] of [Y] - [Phase name]                            ║
-║  Plan:  [A] of [B] - [Status]                                ║
-║  Progress: [██████░░░░] XX%                                  ║
-║                                                               ║
-║  Last activity: [date] - [what happened]                     ║
-╚══════════════════════════════════════════════════════════════╝
++--------------------------------------------------------------+
+|  PROJECT STATUS                                               |
++--------------------------------------------------------------+
+|  Building: [one-liner from PROJECT.md "What This Is"]         |
+|                                                               |
+|  Phase: [X] of [Y] - [Phase name]                            |
+|  Plan:  [A] of [B] - [Status]                                |
+|  Progress: [======----] XX%                                   |
+|                                                               |
+|  Last activity: [date] - [what happened]                      |
++--------------------------------------------------------------+
 
 [If incomplete work found:]
-⚠️  Incomplete work detected:
+  Incomplete work detected:
     - [.continue-here file or incomplete plan]
 
 [If interrupted agent found:]
-⚠️  Interrupted agent detected:
+  Interrupted agent detected:
     Agent ID: [id]
     Task: [task description from agent-history.json]
     Interrupted: [timestamp]
@@ -123,12 +123,12 @@ Present complete project status to user:
     Resume with: Task tool (resume parameter with agent ID)
 
 [If blockers exist:]
-⚠️  Carried concerns:
+  Carried concerns:
     - [blocker 1]
     - [blocker 2]
 
-[If alignment is not ✓:]
-⚠️  Brief alignment: [status] - [assessment]
+[If alignment is not check-mark:]
+  Brief alignment: [status] - [assessment]
 ```
 
 </step>
@@ -137,34 +137,34 @@ Present complete project status to user:
 Based on project state, determine the most logical next action:
 
 **If interrupted agent exists:**
-→ Primary: Resume interrupted agent (Task tool with resume parameter)
-→ Option: Start fresh (abandon agent work)
+-> Primary: Resume interrupted agent (Task tool with resume parameter)
+-> Option: Start fresh (abandon agent work)
 
 **If .continue-here file exists:**
-→ Primary: Resume from checkpoint
-→ Option: Start fresh on current plan
+-> Primary: Resume from checkpoint
+-> Option: Start fresh on current plan
 
 **If incomplete plan (PLAN without SUMMARY):**
-→ Primary: Complete the incomplete plan
-→ Option: Abandon and move on
+-> Primary: Complete the incomplete plan
+-> Option: Abandon and move on
 
 **If phase in progress, all plans complete:**
-→ Primary: Transition to next phase
-→ Option: Review completed work
+-> Primary: Transition to next phase
+-> Option: Review completed work
 
 **If phase ready to plan:**
-→ Check if CONTEXT.md exists for this phase:
+-> Check if CONTEXT.md exists for this phase:
 
 - If CONTEXT.md missing:
-  → Primary: Discuss phase vision (how user imagines it working)
-  → Secondary: Plan directly (skip context gathering)
+  -> Primary: Discuss what to build (`/gsd:discuss`)
+  -> Secondary: Start directly (`/gsd:new` or `/gsd:enhance`)
 - If CONTEXT.md exists:
-  → Primary: Plan the phase
-  → Option: Review roadmap
+  -> Primary: Start planning and execution via framing command
+  -> Option: Review roadmap
 
 **If phase ready to execute:**
-→ Primary: Execute next plan
-→ Option: Review the plan first
+-> Primary: Execute next plan (`/gsd:execute {phase}`)
+-> Option: Review the plan first
 </step>
 
 <step name="offer_options">
@@ -176,11 +176,11 @@ What would you like to do?
 [Primary action based on state - e.g.:]
 1. Resume interrupted agent [if interrupted agent found]
    OR
-1. Execute phase (/gsd:execute-phase {phase})
+1. Execute next plan (/gsd:execute {phase})
    OR
-1. Discuss Phase 3 context (/gsd:discuss-capability 3) [if CONTEXT.md missing]
+1. Discuss what to build (/gsd:discuss) [if CONTEXT.md missing]
    OR
-1. Plan Phase 3 (/gsd:plan-phase 3) [if CONTEXT.md exists or discuss option declined]
+1. Start planning (/gsd:new or /gsd:enhance) [if CONTEXT.md exists]
 
 [Secondary options:]
 2. Review current phase status
@@ -194,7 +194,7 @@ What would you like to do?
 ls .planning/phases/XX-name/*-CONTEXT.md 2>/dev/null
 ```
 
-If missing, suggest discuss-capability before plan. If exists, offer plan directly.
+If missing, suggest discuss before planning. If exists, offer framing command directly.
 
 Wait for user selection.
 </step>
@@ -202,43 +202,42 @@ Wait for user selection.
 <step name="route_to_workflow">
 Based on user selection, route to appropriate workflow:
 
-- **Execute plan** → Show command for user to run after clearing:
+- **Execute plan** -> Show command for user to run after clearing:
   ```
   ---
 
-  ## ▶ Next Up
+  ## > Next Up
 
   **{phase}-{plan}: [Plan Name]** — [objective from PLAN.md]
 
-  `/gsd:execute-phase {phase}`
+  `/gsd:execute {phase}`
 
-  <sub>`/clear` first → fresh context window</sub>
+  <sub>`/clear` first — fresh context window</sub>
 
   ---
   ```
-- **Plan phase** → Show command for user to run after clearing:
+- **Plan capability/feature** -> Show command for user to run after clearing:
   ```
   ---
 
-  ## ▶ Next Up
+  ## > Next Up
 
   **Phase [N]: [Name]** — [Goal from ROADMAP.md]
 
-  `/gsd:plan-phase [phase-number]`
+  `/gsd:new` or `/gsd:enhance` — enter via framing command
 
-  <sub>`/clear` first → fresh context window</sub>
+  <sub>`/clear` first — fresh context window</sub>
 
   ---
 
   **Also available:**
-  - `/gsd:discuss-capability [N]` — gather context first
-  - `/gsd:research-phase [N]` — investigate unknowns
+  - `/gsd:discuss` — gather context first
+  - `/gsd:refactor` — restructure existing code
 
   ---
   ```
-- **Transition** → ./transition.md
-- **Review alignment** → Read PROJECT.md, compare to current state
-- **Something else** → Ask what they need
+- **Review alignment** -> Read PROJECT.md, compare to current state
+- **Something else** -> Ask what they need
 </step>
 
 <step name="update_session">
@@ -264,10 +263,10 @@ If STATE.md is missing but other artifacts exist:
 
 "STATE.md missing. Reconstructing from artifacts..."
 
-1. Read PROJECT.md → Extract "What This Is" and Core Value
-2. Read ROADMAP.md → Determine phases, find current position
-3. Scan \*-SUMMARY.md files → Extract decisions, concerns
-4. Check for .continue-here files → Session continuity
+1. Read PROJECT.md -> Extract "What This Is" and Core Value
+2. Read ROADMAP.md -> Determine phases, find current position
+3. Scan *-SUMMARY.md files -> Extract decisions, concerns
+4. Check for .continue-here files -> Session continuity
 
 Reconstruct and write STATE.md, then proceed normally.
 
@@ -293,7 +292,7 @@ Resume is complete when:
 - [ ] STATE.md loaded (or reconstructed)
 - [ ] Incomplete work detected and flagged
 - [ ] Clear status presented to user
-- [ ] Contextual next actions offered
+- [ ] Contextual next actions offered (v2 framing commands)
 - [ ] User knows exactly where project stands
 - [ ] Session continuity updated
       </success_criteria>
