@@ -180,18 +180,22 @@ function cmdStateAdvancePlan(cwd, raw) {
     return;
   }
 
+  // Also extract v2 fields for inclusion in output
+  const activeCapability = stateExtractField(content, 'Active capability');
+  const activeFeature = stateExtractField(content, 'Active feature');
+
   if (currentPlan >= totalPlans) {
     content = stateReplaceField(content, 'Status', 'Phase complete — ready for verification') || content;
     content = stateReplaceField(content, 'Last Activity', today) || content;
     writeStateMd(statePath, content, cwd);
-    output({ advanced: false, reason: 'last_plan', current_plan: currentPlan, total_plans: totalPlans, status: 'ready_for_verification' }, raw, 'false');
+    output({ advanced: false, reason: 'last_plan', current_plan: currentPlan, total_plans: totalPlans, status: 'ready_for_verification', active_capability: activeCapability, active_feature: activeFeature }, raw, 'false');
   } else {
     const newPlan = currentPlan + 1;
     content = stateReplaceField(content, 'Current Plan', String(newPlan)) || content;
     content = stateReplaceField(content, 'Status', 'Ready to execute') || content;
     content = stateReplaceField(content, 'Last Activity', today) || content;
     writeStateMd(statePath, content, cwd);
-    output({ advanced: true, previous_plan: currentPlan, current_plan: newPlan, total_plans: totalPlans }, raw, 'true');
+    output({ advanced: true, previous_plan: currentPlan, current_plan: newPlan, total_plans: totalPlans, active_capability: activeCapability, active_feature: activeFeature }, raw, 'true');
   }
 }
 
@@ -235,11 +239,13 @@ function cmdStateUpdateProgress(cwd, raw) {
 
   let content = fs.readFileSync(statePath, 'utf-8');
 
-  // Count summaries across all phases
+  // Count summaries across all phases (v1) and capabilities/features (v2)
   const phasesDir = path.join(cwd, '.planning', 'phases');
+  const capabilitiesDir = path.join(cwd, '.planning', 'capabilities');
   let totalPlans = 0;
   let totalSummaries = 0;
 
+  // v1: count from phases/
   if (fs.existsSync(phasesDir)) {
     const phaseDirs = fs.readdirSync(phasesDir, { withFileTypes: true })
       .filter(e => e.isDirectory()).map(e => e.name);
@@ -248,6 +254,27 @@ function cmdStateUpdateProgress(cwd, raw) {
       totalPlans += files.filter(f => f.match(/-PLAN\.md$/i)).length;
       totalSummaries += files.filter(f => f.match(/-SUMMARY\.md$/i)).length;
     }
+  }
+
+  // v2: also count from capabilities/*/features/*/
+  if (fs.existsSync(capabilitiesDir)) {
+    try {
+      const capDirs = fs.readdirSync(capabilitiesDir, { withFileTypes: true })
+        .filter(e => e.isDirectory()).map(e => e.name);
+      for (const capSlug of capDirs) {
+        const featuresDir = path.join(capabilitiesDir, capSlug, 'features');
+        try {
+          const featDirs = fs.readdirSync(featuresDir, { withFileTypes: true })
+            .filter(e => e.isDirectory()).map(e => e.name);
+          for (const featSlug of featDirs) {
+            const featPath = path.join(featuresDir, featSlug);
+            const files = fs.readdirSync(featPath);
+            totalPlans += files.filter(f => f.match(/-PLAN\.md$/i)).length;
+            totalSummaries += files.filter(f => f.match(/-SUMMARY\.md$/i)).length;
+          }
+        } catch {}
+      }
+    } catch {}
   }
 
   const percent = totalPlans > 0 ? Math.min(100, Math.round(totalSummaries / totalPlans * 100)) : 0;
@@ -433,6 +460,12 @@ function cmdStateSnapshot(cwd, raw) {
   const lastActivityDesc = extractField('Last Activity Description');
   const pausedAt = extractField('Paused At');
 
+  // v2 capability/feature fields
+  const activeCapabilitySnap = extractField('Active capability');
+  const activeFeatureSnap = extractField('Active feature');
+  const pipelinePositionSnap = extractField('Pipeline position');
+  const lastAgentSummarySnap = extractField('Last agent summary');
+
   // Parse numeric fields
   const totalPhases = totalPhasesRaw ? parseInt(totalPhasesRaw, 10) : null;
   const totalPlansInPhase = totalPlansRaw ? parseInt(totalPlansRaw, 10) : null;
@@ -487,6 +520,7 @@ function cmdStateSnapshot(cwd, raw) {
   }
 
   const result = {
+    // v1 fields
     current_phase: currentPhase,
     current_phase_name: currentPhaseName,
     total_phases: totalPhases,
@@ -500,6 +534,11 @@ function cmdStateSnapshot(cwd, raw) {
     blockers,
     paused_at: pausedAt,
     session,
+    // v2 fields
+    active_capability: activeCapabilitySnap,
+    active_feature: activeFeatureSnap,
+    pipeline_position: pipelinePositionSnap,
+    last_agent_summary: lastAgentSummarySnap,
   };
 
   output(result, raw);
@@ -531,6 +570,12 @@ function buildStateFrontmatter(bodyContent, cwd) {
   const pausedAt = extractField('Paused At');
   const currentCapability = extractField('Current capability');
   const currentFeature = extractField('Current feature');
+
+  // v2 field names (active_ replaces current_ for capability/feature model)
+  const activeCapability = extractField('Active capability');
+  const activeFeature = extractField('Active feature');
+  const pipelinePosition = extractField('Pipeline position');
+  const lastAgentSummary = extractField('Last agent summary');
 
   let milestone = null;
   let milestoneName = null;
@@ -610,6 +655,11 @@ function buildStateFrontmatter(bodyContent, cwd) {
   if (pausedAt) fm.paused_at = pausedAt;
   if (currentCapability && currentCapability !== 'None') fm.current_capability = currentCapability;
   if (currentFeature && currentFeature !== 'None') fm.current_feature = currentFeature;
+  // v2 fields
+  if (activeCapability && activeCapability !== 'None') fm.active_capability = activeCapability;
+  if (activeFeature && activeFeature !== 'None') fm.active_feature = activeFeature;
+  if (pipelinePosition) fm.pipeline_position = pipelinePosition;
+  if (lastAgentSummary) fm.last_agent_summary = lastAgentSummary;
   fm.last_updated = new Date().toISOString();
   if (lastActivity) fm.last_activity = lastActivity;
 

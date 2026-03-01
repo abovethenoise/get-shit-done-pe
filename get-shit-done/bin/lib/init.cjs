@@ -5,7 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
-const { loadConfig, resolveModelInternal, findPhaseInternal, getRoadmapPhaseInternal, pathExistsInternal, generateSlugInternal, getMilestoneInfo, normalizePhaseName, toPosixPath, output, error } = require('./core.cjs');
+const { loadConfig, resolveModelInternal, findPhaseInternal, getRoadmapPhaseInternal, pathExistsInternal, generateSlugInternal, getMilestoneInfo, normalizePhaseName, toPosixPath, findCapabilityInternal, findFeatureInternal, output, error } = require('./core.cjs');
 
 function cmdInitExecutePhase(cwd, phase, raw) {
   if (!phase) {
@@ -1195,7 +1195,317 @@ function cmdInitDiscussFeature(cwd, raw) {
   output(result, raw);
 }
 
+// ─── v2 Capability/Feature init functions ────────────────────────────────────
+
+function cmdInitPlanFeature(cwd, capSlug, featSlug, raw) {
+  if (!capSlug || !featSlug) {
+    error('capability slug and feature slug required for init plan-feature');
+  }
+
+  const config = loadConfig(cwd);
+  const capInfo = findCapabilityInternal(cwd, capSlug);
+  const featInfo = findFeatureInternal(cwd, capSlug, featSlug);
+
+  const result = {
+    // Models
+    researcher_model: resolveModelInternal(cwd, 'gsd-phase-researcher'),
+    planner_model: resolveModelInternal(cwd, 'gsd-planner'),
+    checker_model: resolveModelInternal(cwd, 'gsd-plan-checker'),
+
+    // Workflow flags
+    research_enabled: config.research,
+    plan_checker_enabled: config.plan_checker,
+    commit_docs: config.commit_docs,
+
+    // Capability info
+    capability_found: !!capInfo?.found,
+    capability_slug: capSlug,
+    capability_dir: capInfo?.found ? toPosixPath(path.relative(cwd, capInfo.directory)) : null,
+
+    // Feature info
+    feature_found: !!featInfo?.found,
+    feature_slug: featSlug,
+    feature_dir: featInfo?.found ? toPosixPath(path.relative(cwd, featInfo.directory)) : null,
+
+    // Existing artifacts
+    has_research: false,
+    has_context: false,
+    has_plans: false,
+    plan_count: 0,
+    plans: [],
+    summaries: [],
+
+    // Environment
+    planning_exists: pathExistsInternal(cwd, '.planning'),
+    roadmap_exists: pathExistsInternal(cwd, '.planning/ROADMAP.md'),
+
+    // File paths
+    state_path: '.planning/STATE.md',
+    roadmap_path: '.planning/ROADMAP.md',
+    requirements_path: '.planning/REQUIREMENTS.md',
+  };
+
+  // Populate artifacts from feature directory
+  if (featInfo?.found) {
+    const featDirFull = featInfo.directory;
+    try {
+      const files = fs.readdirSync(featDirFull);
+      const plans = files.filter(f => f.endsWith('-PLAN.md') || f === 'PLAN.md').sort();
+      const summaries = files.filter(f => f.endsWith('-SUMMARY.md') || f === 'SUMMARY.md').sort();
+      result.has_research = files.some(f => f === 'RESEARCH.md' || f.endsWith('-RESEARCH.md'));
+      result.has_context = files.some(f => f === 'CONTEXT.md' || f.endsWith('-CONTEXT.md'));
+      result.has_plans = plans.length > 0;
+      result.plan_count = plans.length;
+      result.plans = plans;
+      result.summaries = summaries;
+
+      const contextFile = files.find(f => f.endsWith('-CONTEXT.md') || f === 'CONTEXT.md');
+      if (contextFile) {
+        result.context_path = toPosixPath(path.join(result.feature_dir, contextFile));
+      }
+      const researchFile = files.find(f => f.endsWith('-RESEARCH.md') || f === 'RESEARCH.md');
+      if (researchFile) {
+        result.research_path = toPosixPath(path.join(result.feature_dir, researchFile));
+      }
+    } catch {}
+  }
+
+  output(result, raw);
+}
+
+function cmdInitExecuteFeature(cwd, capSlug, featSlug, raw) {
+  if (!capSlug || !featSlug) {
+    error('capability slug and feature slug required for init execute-feature');
+  }
+
+  const config = loadConfig(cwd);
+  const capInfo = findCapabilityInternal(cwd, capSlug);
+  const featInfo = findFeatureInternal(cwd, capSlug, featSlug);
+  const milestone = getMilestoneInfo(cwd);
+
+  const result = {
+    // Models
+    executor_model: resolveModelInternal(cwd, 'gsd-executor'),
+    verifier_model: resolveModelInternal(cwd, 'gsd-verifier'),
+
+    // Config flags
+    commit_docs: config.commit_docs,
+    parallelization: config.parallelization,
+    verifier_enabled: config.verifier,
+
+    // Capability info
+    capability_found: !!capInfo?.found,
+    capability_slug: capSlug,
+    capability_dir: capInfo?.found ? toPosixPath(path.relative(cwd, capInfo.directory)) : null,
+
+    // Feature info
+    feature_found: !!featInfo?.found,
+    feature_slug: featSlug,
+    feature_dir: featInfo?.found ? toPosixPath(path.relative(cwd, featInfo.directory)) : null,
+
+    // Plan inventory
+    plans: [],
+    summaries: [],
+    incomplete_plans: [],
+    plan_count: 0,
+    incomplete_count: 0,
+
+    // Milestone info
+    milestone_version: milestone.version,
+    milestone_name: milestone.name,
+
+    // File existence
+    state_exists: pathExistsInternal(cwd, '.planning/STATE.md'),
+    roadmap_exists: pathExistsInternal(cwd, '.planning/ROADMAP.md'),
+    config_exists: pathExistsInternal(cwd, '.planning/config.json'),
+
+    // File paths
+    state_path: '.planning/STATE.md',
+    roadmap_path: '.planning/ROADMAP.md',
+    config_path: '.planning/config.json',
+  };
+
+  // Populate plan inventory from feature directory
+  if (featInfo?.found) {
+    try {
+      const files = fs.readdirSync(featInfo.directory);
+      const plans = files.filter(f => f.endsWith('-PLAN.md') || f === 'PLAN.md').sort();
+      const summaries = files.filter(f => f.endsWith('-SUMMARY.md') || f === 'SUMMARY.md').sort();
+      const completedIds = new Set(summaries.map(s => s.replace('-SUMMARY.md', '').replace('SUMMARY.md', '')));
+      const incomplete = plans.filter(p => !completedIds.has(p.replace('-PLAN.md', '').replace('PLAN.md', '')));
+
+      result.plans = plans;
+      result.summaries = summaries;
+      result.incomplete_plans = incomplete;
+      result.plan_count = plans.length;
+      result.incomplete_count = incomplete.length;
+    } catch {}
+  }
+
+  output(result, raw);
+}
+
+function cmdInitFeatureOp(cwd, capSlug, featSlug, op, raw) {
+  if (!capSlug || !featSlug) {
+    error('capability slug and feature slug required for init feature-op');
+  }
+
+  const config = loadConfig(cwd);
+  const capInfo = findCapabilityInternal(cwd, capSlug);
+  const featInfo = findFeatureInternal(cwd, capSlug, featSlug);
+
+  const result = {
+    // Config
+    commit_docs: config.commit_docs,
+    brave_search: config.brave_search,
+
+    // Operation
+    operation: op || null,
+
+    // Capability info
+    capability_found: !!capInfo?.found,
+    capability_slug: capSlug,
+    capability_dir: capInfo?.found ? toPosixPath(path.relative(cwd, capInfo.directory)) : null,
+
+    // Feature info
+    feature_found: !!featInfo?.found,
+    feature_slug: featSlug,
+    feature_dir: featInfo?.found ? toPosixPath(path.relative(cwd, featInfo.directory)) : null,
+
+    // Existing artifacts
+    has_research: false,
+    has_context: false,
+    has_plans: false,
+    plan_count: 0,
+
+    // File existence
+    roadmap_exists: pathExistsInternal(cwd, '.planning/ROADMAP.md'),
+    planning_exists: pathExistsInternal(cwd, '.planning'),
+
+    // File paths
+    state_path: '.planning/STATE.md',
+    roadmap_path: '.planning/ROADMAP.md',
+    requirements_path: '.planning/REQUIREMENTS.md',
+  };
+
+  // Populate artifacts from feature directory
+  if (featInfo?.found) {
+    try {
+      const files = fs.readdirSync(featInfo.directory);
+      const plans = files.filter(f => f.endsWith('-PLAN.md') || f === 'PLAN.md');
+      result.has_research = files.some(f => f === 'RESEARCH.md' || f.endsWith('-RESEARCH.md'));
+      result.has_context = files.some(f => f === 'CONTEXT.md' || f.endsWith('-CONTEXT.md'));
+      result.has_plans = plans.length > 0;
+      result.plan_count = plans.length;
+
+      const contextFile = files.find(f => f.endsWith('-CONTEXT.md') || f === 'CONTEXT.md');
+      if (contextFile) {
+        result.context_path = toPosixPath(path.join(result.feature_dir, contextFile));
+      }
+      const researchFile = files.find(f => f.endsWith('-RESEARCH.md') || f === 'RESEARCH.md');
+      if (researchFile) {
+        result.research_path = toPosixPath(path.join(result.feature_dir, researchFile));
+      }
+    } catch {}
+  }
+
+  output(result, raw);
+}
+
+function cmdInitFeatureProgress(cwd, raw) {
+  const config = loadConfig(cwd);
+  const milestone = getMilestoneInfo(cwd);
+
+  const capabilitiesDir = path.join(cwd, '.planning', 'capabilities');
+  const capabilities = [];
+
+  try {
+    const entries = fs.readdirSync(capabilitiesDir, { withFileTypes: true });
+    const dirs = entries.filter(e => e.isDirectory()).map(e => e.name).sort();
+
+    for (const capSlug of dirs) {
+      const capPath = path.join(capabilitiesDir, capSlug);
+      const capFiles = fs.readdirSync(capPath);
+      const hasCapMd = capFiles.some(f => f === 'CAPABILITY.md');
+
+      const featuresDir = path.join(capPath, 'features');
+      const features = [];
+      let totalPlans = 0;
+      let totalSummaries = 0;
+
+      try {
+        const featEntries = fs.readdirSync(featuresDir, { withFileTypes: true });
+        const featDirs = featEntries.filter(e => e.isDirectory()).map(e => e.name).sort();
+
+        for (const featSlug of featDirs) {
+          const featPath = path.join(featuresDir, featSlug);
+          const featFiles = fs.readdirSync(featPath);
+          const plans = featFiles.filter(f => f.endsWith('-PLAN.md') || f === 'PLAN.md');
+          const summaries = featFiles.filter(f => f.endsWith('-SUMMARY.md') || f === 'SUMMARY.md');
+          const status = summaries.length >= plans.length && plans.length > 0 ? 'complete' :
+                         plans.length > 0 ? 'in_progress' : 'pending';
+
+          totalPlans += plans.length;
+          totalSummaries += summaries.length;
+
+          features.push({
+            slug: featSlug,
+            status,
+            plan_count: plans.length,
+            summary_count: summaries.length,
+          });
+        }
+      } catch {}
+
+      capabilities.push({
+        slug: capSlug,
+        has_capability_md: hasCapMd,
+        feature_count: features.length,
+        features,
+        total_plans: totalPlans,
+        total_summaries: totalSummaries,
+      });
+    }
+  } catch {}
+
+  const totalPlans = capabilities.reduce((sum, c) => sum + c.total_plans, 0);
+  const totalSummaries = capabilities.reduce((sum, c) => sum + c.total_summaries, 0);
+
+  const result = {
+    // Models
+    executor_model: resolveModelInternal(cwd, 'gsd-executor'),
+    planner_model: resolveModelInternal(cwd, 'gsd-planner'),
+
+    // Config
+    commit_docs: config.commit_docs,
+
+    // Milestone
+    milestone_version: milestone.version,
+    milestone_name: milestone.name,
+
+    // Capability overview
+    capabilities,
+    capability_count: capabilities.length,
+    total_features: capabilities.reduce((sum, c) => sum + c.feature_count, 0),
+    total_plans: totalPlans,
+    total_summaries: totalSummaries,
+
+    // File existence
+    project_exists: pathExistsInternal(cwd, '.planning/PROJECT.md'),
+    roadmap_exists: pathExistsInternal(cwd, '.planning/ROADMAP.md'),
+    state_exists: pathExistsInternal(cwd, '.planning/STATE.md'),
+
+    // File paths
+    state_path: '.planning/STATE.md',
+    roadmap_path: '.planning/ROADMAP.md',
+    project_path: '.planning/PROJECT.md',
+  };
+
+  output(result, raw);
+}
+
 module.exports = {
+  // v1 phase functions (frozen -- bootstrap trap)
   cmdInitExecutePhase,
   cmdInitPlanPhase,
   cmdInitNewProject,
@@ -1213,4 +1523,9 @@ module.exports = {
   cmdInitFramingDiscovery,
   cmdInitDiscussCapability,
   cmdInitDiscussFeature,
+  // v2 capability/feature init functions
+  cmdInitPlanFeature,
+  cmdInitExecuteFeature,
+  cmdInitFeatureOp,
+  cmdInitFeatureProgress,
 };

@@ -543,8 +543,21 @@ async function main() {
         case 'discuss-feature':
           init.cmdInitDiscussFeature(cwd, raw);
           break;
+        // v2 capability/feature init commands
+        case 'plan-feature':
+          init.cmdInitPlanFeature(cwd, args[2], args[3], raw);
+          break;
+        case 'execute-feature':
+          init.cmdInitExecuteFeature(cwd, args[2], args[3], raw);
+          break;
+        case 'feature-op':
+          init.cmdInitFeatureOp(cwd, args[2], args[3], args[4], raw);
+          break;
+        case 'feature-progress':
+          init.cmdInitFeatureProgress(cwd, raw);
+          break;
         default:
-          error(`Unknown init workflow: ${workflow}\nAvailable: execute-phase, plan-phase, new-project, new-milestone, quick, resume, verify-work, phase-op, milestone-op, map-codebase, progress, review-phase, doc-phase, project, framing-discovery, discuss-capability, discuss-feature`);
+          error(`Unknown init workflow: ${workflow}\nAvailable: execute-phase, plan-phase, new-project, new-milestone, quick, resume, verify-work, phase-op, milestone-op, map-codebase, progress, review-phase, doc-phase, project, framing-discovery, discuss-capability, discuss-feature, plan-feature, execute-feature, feature-op, feature-progress`);
       }
       break;
     }
