@@ -20,7 +20,6 @@
  *   verify-summary <path>              Verify a SUMMARY.md file
  *   generate-slug <text>               Convert text to URL-safe slug
  *   current-timestamp [format]         Get timestamp (full|date|filename)
- *   list-todos [area]                  Count and enumerate pending todos
  *   verify-path-exists <path>          Check file/directory existence
  *   config-ensure-section              Initialize .planning/config.json
  *   history-digest                     Aggregate all SUMMARY.md data
@@ -53,13 +52,9 @@
  *
  * Validation:
  *   validate consistency               Check phase numbering, disk/roadmap sync
- *   validate health [--repair]         Check .planning/ integrity, optionally repair
  *
  * Progress:
  *   progress [json|table|bar]          Render progress in various formats
- *
- * Todos:
- *   todo complete <filename>           Move todo from pending to completed
  *
  * Scaffolding:
  *   scaffold context --phase <N>       Create CONTEXT.md template
@@ -90,7 +85,7 @@
  *     [--plan M] [--name "..."]
  *     [--fields '{json}']
  *   template fill plan --phase N       Create pre-filled PLAN.md
- *     [--plan M] [--type execute|tdd]
+ *     [--plan M] [--type execute]
  *     [--wave N] [--fields '{json}']
  *   template fill verification         Create pre-filled VERIFICATION.md
  *     --phase N [--fields '{json}']
@@ -120,7 +115,6 @@
  *   init resume                        All context for resume-project workflow
  *   init verify-work <phase>           All context for verify-work workflow
  *   init phase-op <phase>              Generic phase operation context
- *   init todos [area]                  All context for todo workflows
  *   init milestone-op                  All context for milestone operations
  *   init map-codebase                  All context for map-codebase workflow
  *   init progress                      All context for progress workflow
@@ -179,7 +173,7 @@ async function main() {
   const command = args[0];
 
   if (!command) {
-    error('Usage: gsd-tools <command> [args] [--raw] [--cwd <path>]\nCommands: state, resolve-model, find-phase, commit, verify-summary, verify, frontmatter, template, generate-slug, current-timestamp, list-todos, verify-path-exists, config-ensure-section, init, plan-validate');
+    error('Usage: gsd-tools <command> [args] [--raw] [--cwd <path>]\nCommands: state, resolve-model, find-phase, commit, verify-summary, verify, frontmatter, template, generate-slug, current-timestamp, verify-path-exists, config-ensure-section, init, plan-validate');
   }
 
   switch (command) {
@@ -360,11 +354,6 @@ async function main() {
       break;
     }
 
-    case 'list-todos': {
-      commands.cmdListTodos(cwd, args[1], raw);
-      break;
-    }
-
     case 'verify-path-exists': {
       commands.cmdVerifyPathExists(cwd, args[1], raw);
       break;
@@ -476,11 +465,8 @@ async function main() {
       const subcommand = args[1];
       if (subcommand === 'consistency') {
         verify.cmdValidateConsistency(cwd, raw);
-      } else if (subcommand === 'health') {
-        const repairFlag = args.includes('--repair');
-        verify.cmdValidateHealth(cwd, { repair: repairFlag }, raw);
       } else {
-        error('Unknown validate subcommand. Available: consistency, health');
+        error('Unknown validate subcommand. Available: consistency');
       }
       break;
     }
@@ -488,16 +474,6 @@ async function main() {
     case 'progress': {
       const subcommand = args[1] || 'json';
       commands.cmdProgressRender(cwd, subcommand, raw);
-      break;
-    }
-
-    case 'todo': {
-      const subcommand = args[1];
-      if (subcommand === 'complete') {
-        commands.cmdTodoComplete(cwd, args[2], raw);
-      } else {
-        error('Unknown todo subcommand. Available: complete');
-      }
       break;
     }
 
@@ -540,9 +516,6 @@ async function main() {
         case 'phase-op':
           init.cmdInitPhaseOp(cwd, args[2], raw);
           break;
-        case 'todos':
-          init.cmdInitTodos(cwd, args[2], raw);
-          break;
         case 'milestone-op':
           init.cmdInitMilestoneOp(cwd, raw);
           break;
@@ -571,7 +544,7 @@ async function main() {
           init.cmdInitDiscussFeature(cwd, raw);
           break;
         default:
-          error(`Unknown init workflow: ${workflow}\nAvailable: execute-phase, plan-phase, new-project, new-milestone, quick, resume, verify-work, phase-op, todos, milestone-op, map-codebase, progress, review-phase, doc-phase, project, framing-discovery, discuss-capability, discuss-feature`);
+          error(`Unknown init workflow: ${workflow}\nAvailable: execute-phase, plan-phase, new-project, new-milestone, quick, resume, verify-work, phase-op, milestone-op, map-codebase, progress, review-phase, doc-phase, project, framing-discovery, discuss-capability, discuss-feature`);
       }
       break;
     }
