@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-03-01T16:17:00.122Z"
+last_updated: "2026-03-01T16:27:25.955Z"
 progress:
   total_phases: 10
   completed_phases: 9
   total_plans: 38
-  completed_plans: 36
+  completed_plans: 37
 ---
 
 # Project State
@@ -23,11 +23,11 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 10 of 12 (Remaining Cleanup & Polish)
-Plan: 7 of 8 complete
+Plan: 6 of 8 complete
 Status: In progress
-Last activity: 2026-03-01 -- Plan 10-07 complete (update reference docs and agent files for v2 workflows)
+Last activity: 2026-03-01 -- Plan 10-06 complete (update 17 templates to v2 feature language)
 
-Progress: [==========..........] 50% (phases) | Plan 7/8
+Progress: [==========..........] 50% (phases) | Plan 6/8
 
 ## Performance Metrics
 
@@ -58,6 +58,7 @@ Progress: [==========..........] 50% (phases) | Plan 7/8
 
 *Updated after each plan completion*
 | Phase 10 P07 | 4min | 2 tasks | 6 files |
+| Phase 10 P06 | 13min | 2 tasks | 17 files |
 
 ## Accumulated Context
 
@@ -86,6 +87,7 @@ Recent decisions affecting current work:
 - [10-03]: 4 phase workflows renamed to generic names; transition.md invocation removed from execute.md; plan.md auto-advance simplified
 - [10-05]: Dead init routes return error messages; MODEL_PROFILES reduced to 2 v1 fallbacks; quick: haiku added to ROLE_MODEL_MAP
 - [Phase 10]: Updated gsd-plan-checker.md alongside planned agent files (same stale refs)
+- [Phase 10]: Updated requirements.md v1/v2 sections to Active/Deferred; traceability Phase column to Feature
 
 ### Blockers/Concerns
 
