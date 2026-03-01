@@ -138,14 +138,19 @@ GSD produces execution records (SUMMARY.md), not reference documentation. v1 doc
 | **Summary frontmatter dependency graph** | requires/provides/affects | Metadata for traceability |
 | **Milestone audit + integration checker** | Cross-reference requirements vs implementation | Useful when shipping milestones |
 
-### Remove (REMOVE)
+### Remove (REMOVE) — confirmed via R1/R2 risk analysis
 
-| Concept | What It Does | Why Remove |
-|---------|-------------|-----------|
-| **TDD execution pattern** | RED-GREEN-REFACTOR cycle | Not running TDD workflow. Re-add if adopted. |
-| **Todo system** | add-todo, check-todos | Linear does this better. Solving a solved problem. |
-| **Health check** | Validate .planning/ integrity | Statusline metrics. Nice-to-have, not load-bearing. |
-| **Plan deviation rules** | 4 rules for executor off-plan behavior | Matters for teams. Solo, you notice and fix. |
+| Concept | Risk Level | Cleanup Cost | Verdict |
+|---------|-----------|-------------|---------|
+| **TDD execution pattern** | HIGH (13 files × 2 trees) | 4 `@tdd.md` refs, planner/checker/executor blocks | REMOVE — accepted cleanup cost |
+| **Todo system** | MEDIUM (1 hard dep in progress.md) | 2 lines in progress.md + 3 CLI functions | REMOVE — Linear handles this |
+| **Health check** | LOW (zero kept deps) | 2 files + 1 CLI function + 5 error strings | REMOVE — standalone diagnostic |
+
+### Reversed (was REMOVE → now KEEP GSD, simplified)
+
+| Concept | Why Reversed | Action |
+|---------|-------------|--------|
+| **Plan deviation rules** | Rules ARE the executor's unplanned-work brain. Behavioral void if removed. HIGH risk. | KEEP but simplify + goldilocks. Integrate with new v1 pipeline flow. |
 
 ---
 
@@ -188,18 +193,18 @@ GSD produces execution records (SUMMARY.md), not reference documentation. v1 doc
 
 ---
 
-## Summary Scoreboard (FINAL)
+## Summary Scoreboard (FINAL — post R1/R2 risk analysis)
 
 | Category | Count | Items |
 |----------|-------|-------|
 | **KEEP v1** | 11 | Framing, research (6-agent), discovery (lens-aware), hierarchy (capability/feature), requirements (3-layer), review (4-reviewer), documentation (doc-writer), gather-synthesize, zero-orphan enforcement, escalation protocol, init-project |
 | **KEEP GSD** | 7 | Session mgmt, wave execution, quick mode, codebase mapping, model routing, git branching, debugger |
 | **KEEP GSD (low)** | 3 | Checkpoints, summary frontmatter, milestone audit |
-| **KEEP GSD (modified)** | 1 | External plan-checker (incorporate gather→synthesize→draft→Q&A flow) |
-| **REMOVE** | 4 | TDD pattern, todos, health check, deviation rules |
+| **KEEP GSD (modified)** | 2 | External plan-checker (incorporate gather→synthesize→draft→Q&A flow), deviation rules (simplify + integrate with v1 pipeline) |
+| **REMOVE** | 3 | TDD pattern (13 files × 2 trees), todos (progress.md fix + 3 CLI fns), health check (2 files + 1 CLI fn) |
 | **DROP dead** | 2 | `.bak` file, `discovery-phase.md` |
 | **CONFLICTS resolved** | 4 | Planner → project wins, init → init-project wins, resume naming fix, deploy gap |
 
 ---
 
-*Final inventory — Q&A complete 2026-02-28. Ready for planning.*
+*Final inventory — Q&A complete 2026-02-28. Risk analysis complete. Ready for planning.*
