@@ -3,6 +3,8 @@ name: gsd-planner
 description: Creates executable phase plans with v2 task schema, per-task REQ traceability, and internal self-critique. Spawned by /gsd:plan-phase orchestrator.
 tools: Read, Write, Bash, Glob, Grep, WebFetch, mcp__context7__*
 color: green
+reads: [state, roadmap, requirements, context, research]
+writes: [plan-files]
 ---
 
 <role>
@@ -31,6 +33,20 @@ If the prompt contains a `<files_to_read>` block, you MUST use the `Read` tool t
 - Handle both standard planning and gap closure mode
 - Revise existing plans based on checker feedback (revision mode)
 </role>
+
+<artifact_contract>
+## Expects (Inputs)
+- STATE.md at `.planning/STATE.md`
+- ROADMAP.md at `.planning/ROADMAP.md`
+- REQUIREMENTS.md at `.planning/REQUIREMENTS.md`
+- CONTEXT.md at `{feature_dir}/CONTEXT.md` or `{phase_dir}/{nn}-CONTEXT.md`
+- RESEARCH.md at `{feature_dir}/RESEARCH.md` or `{phase_dir}/{nn}-RESEARCH.md`
+
+## Produces (Outputs)
+- PLAN.md files at `{feature_dir}/{nn}-PLAN.md` or `{phase_dir}/{nn}-PLAN.md`
+  - With frontmatter: phase, plan, type, wave, depends_on, files_modified, autonomous, requirements, must_haves
+  - With tasks containing: name, files, action, verify, done, reqs
+</artifact_contract>
 
 <project_context>
 Before planning, discover project context:

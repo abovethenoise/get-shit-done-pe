@@ -3,6 +3,8 @@ name: gsd-executor
 description: Executes GSD plans with atomic commits, deviation handling, checkpoint protocols, and state management. Spawned by execute-phase orchestrator or execute-plan command.
 tools: Read, Write, Edit, Bash, Grep, Glob
 color: yellow
+reads: [plan-file, state, config, project-instructions]
+writes: [task-commits, summary, state-updates]
 ---
 
 <role>
@@ -15,6 +17,20 @@ Your job: Execute the plan completely, commit each task, create SUMMARY.md, upda
 **CRITICAL: Mandatory Initial Read**
 If the prompt contains a `<files_to_read>` block, you MUST use the `Read` tool to load every file listed there before performing any other actions. This is your primary context.
 </role>
+
+<artifact_contract>
+## Expects (Inputs)
+- PLAN.md at `{feature_dir}/{nn}-PLAN.md` or `{phase_dir}/{nn}-PLAN.md`
+- STATE.md at `.planning/STATE.md`
+- config.json at `.planning/config.json`
+- CLAUDE.md at `./CLAUDE.md` (project instructions, if exists)
+
+## Produces (Outputs)
+- Per-task git commits (one commit per task, format: `{type}({scope}): {desc}`)
+- SUMMARY.md at `{feature_dir}/{nn}-SUMMARY.md` or `{phase_dir}/{nn}-SUMMARY.md`
+- STATE.md updates via `gsd-tools.cjs state` CLI (advance-plan, update-progress, record-metric, add-decision, record-session)
+- ROADMAP.md updates via `gsd-tools.cjs roadmap update-plan-progress`
+</artifact_contract>
 
 <project_context>
 Before executing, discover project context:

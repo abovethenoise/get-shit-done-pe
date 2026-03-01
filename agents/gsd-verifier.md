@@ -3,6 +3,8 @@ name: gsd-verifier
 description: Verifies phase goal achievement through goal-backward analysis. Checks codebase delivers what phase promised, not just that tasks completed. Creates VERIFICATION.md report.
 tools: Read, Write, Bash, Grep, Glob
 color: green
+reads: [plan-file, summary, roadmap, requirements]
+writes: [verification-report]
 ---
 
 <role>
@@ -15,6 +17,22 @@ If the prompt contains a `<files_to_read>` block, you MUST use the `Read` tool t
 
 **Critical mindset:** Do NOT trust SUMMARY.md claims. SUMMARYs document what Claude SAID it did. You verify what ACTUALLY exists in the code. These often differ.
 </role>
+
+<artifact_contract>
+## Expects (Inputs)
+- PLAN.md files at `{feature_dir}/{nn}-PLAN.md` or `{phase_dir}/{nn}-PLAN.md`
+- SUMMARY.md files at `{feature_dir}/{nn}-SUMMARY.md` or `{phase_dir}/{nn}-SUMMARY.md`
+- ROADMAP.md at `.planning/ROADMAP.md`
+- REQUIREMENTS.md at `.planning/REQUIREMENTS.md`
+
+## Produces (Outputs)
+- VERIFICATION.md at `{feature_dir}/VERIFICATION.md` or `{phase_dir}/{nn}-VERIFICATION.md`
+  - Goal-backward analysis results
+  - Per-requirement verification (achieved/not-achieved/partial)
+  - File existence checks
+  - Commit verification
+  - Overall verdict: PASS | FAIL | PARTIAL
+</artifact_contract>
 
 <project_context>
 Before verifying, discover project context:

@@ -3,6 +3,8 @@ name: gsd-plan-checker
 description: Verifies plans will achieve phase goal before execution. Goal-backward analysis of plan quality. Spawned by /gsd:plan-phase orchestrator.
 tools: Read, Bash, Glob, Grep
 color: green
+reads: [plan-files, roadmap, requirements, context, research]
+writes: [checker-verdict]
 ---
 
 <role>
@@ -25,6 +27,22 @@ If the prompt contains a `<files_to_read>` block, you MUST use the `Read` tool t
 
 You are NOT the executor or verifier — you verify plans WILL work before execution burns context.
 </role>
+
+<artifact_contract>
+## Expects (Inputs)
+- PLAN.md files at `{feature_dir}/{nn}-PLAN.md` or `{phase_dir}/{nn}-PLAN.md`
+- ROADMAP.md at `.planning/ROADMAP.md`
+- REQUIREMENTS.md at `.planning/REQUIREMENTS.md`
+- CONTEXT.md at `{feature_dir}/CONTEXT.md` or `{phase_dir}/{nn}-CONTEXT.md`
+- RESEARCH.md at `{feature_dir}/RESEARCH.md` or `{phase_dir}/{nn}-RESEARCH.md`
+
+## Produces (Outputs)
+- Checker verdict (structured return to orchestrator, not a file):
+  - Verdict: PASS | FAIL | CONDITIONAL
+  - Issues list with severity
+  - Questions for planner (if CONDITIONAL)
+  - Coverage analysis (requirements vs tasks)
+</artifact_contract>
 
 <project_context>
 Before verifying, discover project context:
