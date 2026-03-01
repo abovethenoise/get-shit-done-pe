@@ -117,8 +117,8 @@ Requirements for Install-Ready Launch milestone. Each maps to roadmap phases.
 
 ### Directory & Structure
 
-- [ ] **DIR-01**: New projects use `.planning/capabilities/` directory structure (no `phases/` directory)
-- [ ] **DIR-02**: `.documentation/` directory structure deployed: `architecture.md`, `domain.md`, `mapping.md`, `capabilities/`, `decisions/`
+- [x] **DIR-01**: New projects use `.planning/capabilities/` directory structure (no `phases/` directory)
+- [x] **DIR-02**: `.documentation/` directory structure deployed: `architecture.md`, `domain.md`, `mapping.md`, `capabilities/`, `decisions/`
 - [x] **DIR-03**: All v2 path references use capability/feature model, not phase model
 
 ### Validation
@@ -218,8 +218,8 @@ Deferred to post-v2.0. Tracked but not in current roadmap.
 | CLN-02 | Phase 8 | Complete |
 | CLN-06 | Phase 8 | Complete |
 | CLN-07 | Phase 8 | Complete |
-| DIR-01 | Phase 9 | Pending |
-| DIR-02 | Phase 9 | Pending |
+| DIR-01 | Phase 9 | Complete |
+| DIR-02 | Phase 9 | Complete |
 | DIR-03 | Phase 9 | Complete |
 | INTG-01 | Phase 9 | Complete |
 | INTG-02 | Phase 9 | Complete |
