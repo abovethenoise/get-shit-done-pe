@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 Phase: 10 of 12 (Remaining Cleanup & Polish)
 Plan: 5 of 8 complete
 Status: In progress
-Last activity: 2026-03-01 -- Plan 10-05 complete (dead init routes, model profiles, workflow routing)
+Last activity: 2026-03-01 -- Plan 10-04 complete (remove dead CLI routes and handler functions)
 
 Progress: [==========..........] 50% (phases) | Plan 5/8
 
@@ -50,10 +50,11 @@ Progress: [==========..........] 50% (phases) | Plan 5/8
 | 10 (plan 01) | 1 | 2min | 2min |
 | 10 (plan 02) | 1 | 3min | 3min |
 | 10 (plan 03) | 1 | 3min | 3min |
+| 10 (plan 04) | 1 | 9min | 9min |
 | 10 (plan 05) | 1 | 6min | 6min |
 
 **Recent Trend:**
-- 10-05: Removed 4 dead init routes, modernized model profiles to v2 4-tier, updated workflow routing, 6min
+- 10-04: Removed 29 dead CLI routes and 29 dead handler functions from 8 lib modules, ~1750 lines deleted, 9min
 
 *Updated after each plan completion*
 
@@ -80,6 +81,7 @@ Recent decisions affecting current work:
 - [Phase 08]: run-tests.cjs retained -- 14 live test files remain; package.json build:hooks ref and install.js CHANGELOG copy deferred to Phase 12
 - [10-01]: All 5 v1 phase commands deleted; dead workflows (verify-phase, research-phase, transition) and verification-report template deleted
 - [10-02]: 8 stale v1 templates + 5 dead reference docs deleted; requirements.md updated for discovery brief guidance
+- [10-04]: 29 dead routes removed from router, 29 dead handlers from 8 lib modules; kept internal helpers (spliceFrontmatter, FRONTMATTER_SCHEMAS) still used by live code
 - [10-03]: 4 phase workflows renamed to generic names; transition.md invocation removed from execute.md; plan.md auto-advance simplified
 - [10-05]: Dead init routes return error messages; MODEL_PROFILES reduced to 2 v1 fallbacks; quick: haiku added to ROLE_MODEL_MAP
 
@@ -90,5 +92,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Completed 10-05-PLAN.md
+Stopped at: Completed 10-04-PLAN.md
 Resume file: None
