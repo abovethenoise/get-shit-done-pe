@@ -13,7 +13,7 @@
 - [x] **FOUND-04**: CLI commands for capability lifecycle (create, list, status)
 - [x] **FOUND-05**: CLI commands for feature lifecycle (create, list, status)
 - [x] **FOUND-06**: Templates updated for all new artifact types (CAPABILITY.md, FEATURE.md, REVIEW.md, DOCS.md)
-- [ ] **FOUND-07**: Existing bloat, dead features, and artifacts that don't fit the new model are removed
+- [x] **FOUND-07**: Existing bloat, dead features, and artifacts that don't fit the new model are removed
 
 ### Requirements System
 
@@ -114,7 +114,7 @@
 | FOUND-04 | Phase 1 | Complete |
 | FOUND-05 | Phase 1 | Complete |
 | FOUND-06 | Phase 1 | Complete |
-| FOUND-07 | Phase 7 | Pending |
+| FOUND-07 | Phase 7 | Complete |
 | REQS-01 | Phase 1 | Complete |
 | REQS-02 | Phase 1 | Complete |
 | REQS-03 | Phase 3 | Complete |
