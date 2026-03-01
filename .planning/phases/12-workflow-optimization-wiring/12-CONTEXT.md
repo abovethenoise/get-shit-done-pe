@@ -54,7 +54,7 @@ Each feature is a self-contained unit with full pipeline history.
 - Keep separate workflow files (plan.md, execute.md, review.md, doc.md). framing-pipeline.md orchestrates.
 - Pipeline passes **feature only** (not cap + feature). Stages derive capability from feature's directory path.
 - **Capability orchestrator:** Thin orchestrator reads CAPABILITY.md, gets prioritized feature list, calls framing-pipeline for each feature in order. Same pattern as execute-phase dispatching plans.
-- **Two entry points preserved:** `/gsd:new <cap>` runs capability orchestrator; `/gsd:new <cap> <feat>` runs framing-pipeline directly for one feature.
+- **Single entry point:** `/gsd:<lens> <slug>` (e.g., `/gsd:new mistake-detection`). 3-tier slug resolution determines whether the input resolves to a capability or feature. If capability, capability orchestrator handles it. If feature, framing-pipeline runs directly. User doesn't need to specify which — the system figures it out.
 
 ### Slug resolution (3-tier)
 - **Exact match** -> route directly (`/new mistake-detection`)
@@ -65,17 +65,39 @@ Each feature is a self-contained unit with full pipeline history.
 - **Lens is always explicit** via command: /new, /debug, /enhance, /refactor
 - Only exception: brownfield init auto-selects "enhance" lens
 
-### Plan sequence
-- Research (6 gatherers + 1 synthesizer) -> Draft plan -> Self-validate (plan-checker) -> Surface assumptions, gaps, questions for Q&A with user -> Loop (refine based on answers) -> Finalize
+### Pipeline stage transitions
+
+**Requirements -> Plan: Always user-initiated.**
+- User details out many features in parallel, starts planning/building in separate terminals. Each terminal is a "team."
+- No auto-advance. User runs `/gsd:plan <feature>` when ready.
+- This enables the parallel workflow pattern: Terminal 1 plans feature A while Terminal 2 discusses feature B while Terminal 3 executes feature C.
+
+**Plan stage (full sequence):**
+- Research (6 gatherers + 1 synthesizer) -> Draft plan -> Self-validate (plan-checker) -> Surface assumptions, gaps, questions for Q&A with user -> Loop (refine based on answers, re-validate if needed) -> Finalize
 - Assumptions surfacing uses existing list-phase-assumptions pattern, adapted for features
 - Single plan per feature (if too big, feature should be split)
+- Capability-level planning: plans all features together, creates DAG with dependencies
 
-### Pipeline stage transitions
-- **Requirements -> Plan: Always user-initiated.** User details out many features in parallel, starts planning/building in separate terminals. Each terminal is a "team."
-- **Plan -> Execute: User-initiated.** `/gsd:execute <feature>` kicks off execution.
-- **Execute -> Review -> Doc: Auto-chain.** Human checkpoints within the chain for fix decisions (review Q&A) and documentation confirmations. User kicks off execute once, runs through to doc.
-- **Review:** Code review + requirements verification against FEATURE.md 3-layer requirements. Surfaces gaps.
-- **Doc:** Updates .documentation/ (architecture.md, domain.md, mapping.md) + capability module/flow docs. Uses existing gsd-doc-writer.md agent with 3-pass self-validation, section ownership tags, strict heading templates from Phase 5 requirements (DOCS-01/02/03).
+**Plan -> Execute: User-initiated.**
+- `/gsd:execute <feature>` kicks off execution
+- Capability-level execution: per-feature in waves, parallel where DAG allows
+
+**Execute -> Review: Auto-chains.**
+- Review = code review + requirements verification against FEATURE.md 3-layer requirements (EU/FN/TC)
+- Surfaces gaps and issues
+- Human checkpoint: if issues found, Q&A with user for fix decisions -> fix -> continue
+- If clean: auto-continues to doc
+
+**Review -> Document: Auto-chains.**
+- Updates `.documentation/` files: architecture.md, domain.md, mapping.md
+- Updates capability-specific module and flow documentation
+- Uses existing gsd-doc-writer.md agent with 3-pass self-validation (structural compliance -> referential integrity -> gate consistency)
+- Section ownership model: [derived] sections regenerated from code, [authored] sections preserved
+- Strict heading templates for grep consistency (from Phase 5 DOCS-01/02/03)
+- Module docs before flow docs (8% truthfulness improvement)
+- Human checkpoint: surfaces documentation changes for user confirmation before writing
+
+**Full auto-chain:** User kicks off execute once -> builds code -> auto-reviews against requirements -> auto-documents -> done. Only pauses for human decisions (fix Q&A, doc confirmations).
 
 ### State & roadmap model
 - **STATE.md tracks:** Active focus group, active capability + feature within focus, current plan, key decisions from discovery, blockers
@@ -117,7 +139,6 @@ Surface mistakes and grade decisions for a single user session.
 - 3-step detect/branch/converge pattern for init (not a complex decision tree)
 - Focus groups are the v2 replacement for milestones — lightweight sequencing, not heavyweight project management
 - Documentation requirements from Phase 5 (DOCS-01/02/03) define the doc agent behavior: reflect-and-write, 3-pass validation, section ownership tags [derived]/[authored], strict heading templates for grep consistency
-- Module docs before flow docs (8% truthfulness improvement finding from Phase 5 research)
 
 </specifics>
 
