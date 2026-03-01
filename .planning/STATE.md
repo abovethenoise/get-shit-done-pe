@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-02-28T23:55:33.026Z"
+last_updated: "2026-03-01T01:17:23.008Z"
 progress:
   total_phases: 7
   completed_phases: 6
-  total_plans: 21
-  completed_plans: 20
+  total_plans: 22
+  completed_plans: 21
 ---
 
 # Project State
@@ -23,9 +23,9 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 7 of 7 (Cleanup) -- IN PROGRESS
-Plan: 1 of 2 in current phase -- COMPLETE
-Status: 07-01 complete -- removed dead code and obsolete features
-Last activity: 2026-03-01 -- Completed 07-01 (archived 9 files, cleaned 18 files of TDD/Todo/Health references)
+Plan: 2 of 3 in current phase -- COMPLETE
+Status: 07-02 complete -- simplified deviation rules, resolved naming conflicts
+Last activity: 2026-03-01 -- Completed 07-02 (reconciled conflicts, simplified unplanned-work handling)
 
 Progress: [█████████░] 95%
 
@@ -61,6 +61,7 @@ Progress: [█████████░] 95%
 | Phase 06 P02 | 3min | 2 tasks | 7 files |
 | Phase 06 P05 | 5min | 2 tasks | 6 files |
 | Phase 06 P03 | 3min | 2 tasks | 3 files |
+| Phase 07 P02 | 4min | 2 tasks | 10 files |
 
 ## Current Focus
 
@@ -126,6 +127,9 @@ Recent decisions affecting current work:
 - [06-03]: Requirements generation always produces all 3 layers (EU/FN/TC) with lens-specific weighting (debug: thin EU rich TC, new: rich EU thin TC)
 - [06-03]: Maximum 1 backward reset per pipeline run -- prevents infinite escalation loops
 - [06-03]: Major issues use propose-and-confirm -- pipeline never auto-returns to upstream stage
+- [Phase 07]: Replaced 4 numbered deviation rules with compact prose guidance -- same behavior, 75% fewer lines
+- [Phase 07]: Renamed resume-project.md to resume-work.md -- user-facing command name wins
+- [Phase 07]: Project v2 planner wins over installed v1 -- no useful patches to cherry-pick
 
 ### Blockers/Concerns
 
@@ -135,5 +139,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Completed 07-01-PLAN.md -- removed dead code and obsolete features
+Stopped at: Completed 07-02-PLAN.md
 Resume file: None
