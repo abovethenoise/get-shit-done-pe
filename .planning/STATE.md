@@ -5,10 +5,10 @@ milestone_name: milestone
 status: unknown
 last_updated: "2026-03-01T18:33:34.586Z"
 progress:
-  total_phases: 11
-  completed_phases: 10
+  total_phases: 14
+  completed_phases: 11
   total_plans: 41
-  completed_plans: 40
+  completed_plans: 41
 ---
 
 # Project State
@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-28)
 
 **Core value:** Every piece of executed work traces back to a specific requirement, and every requirement is verified against the actual code.
-**Current focus:** Phase 11 -- Automated Testing (milestone v2.0)
+**Current focus:** Phase 12 -- Workflow Optimization & Wiring (milestone v2.0)
 
 ## Current Position
 
-Phase: 11 of 12 (Automated Testing)
-Plan: 2 of 3 complete
-Status: In progress
-Last activity: 2026-03-01 -- Plan 11-02 complete (CLI route smoke tests, 21 routes tested)
+Phase: 12 of 14 (Workflow Optimization & Wiring)
+Plan: 0 of TBD
+Status: Not started
+Last activity: 2026-03-01 -- Phase 11 complete. Roadmap restructured: Phase 12 (wiring) → 13 (E2E testing) → 14 (install)
 
-Progress: [=============-------] 67% (Phase 11) | Plan 2/3
+Progress: [===============-----] 79% (11/14 phases complete)
 
 ## Performance Metrics
 
@@ -103,5 +103,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Completed 11-01-PLAN.md (@file ref scan and cross-ref audit)
-Resume file: None
+Stopped at: Phase 12 context gathered — all v2 flow decisions captured (init, capability/feature bridge, pipeline rewiring, state/roadmap model)
+Resume file: .planning/phases/12-workflow-optimization-wiring/12-CONTEXT.md
