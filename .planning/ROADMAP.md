@@ -18,7 +18,7 @@ Milestone v2.0 "Install-Ready Launch" takes everything built in milestone 1 (pha
 
 - [x] **Phase 8: Low Risk Cleanup** - Remove things we obviously won't use: dead commands, orphaned workflows/agents, dropped hooks and metadata files (completed 2026-03-01)
 - [x] **Phase 9: Structure & Integration** - Establish v2 directory model and wire orphaned components (research gatherers, hooks) into the surviving chain (completed 2026-03-01)
-- [ ] **Phase 10: Remaining Cleanup & Polish** - Harder cleanup that depends on knowing the v2 structure: CLI audit, template/reference audits, file reference validation
+- [x] **Phase 10: Remaining Cleanup & Polish** - Harder cleanup that depends on knowing the v2 structure: CLI audit, template/reference audits, file reference validation (completed 2026-03-01)
 - [ ] **Phase 11: Automated Testing** - Verify every surviving command fires without error and all file references resolve before attempting install
 - [ ] **Phase 12: Install & Try New Project** - Make it installable via npm install -g, then prove it works end-to-end on real projects
 
@@ -91,6 +91,6 @@ Phases execute in numeric order: 8 -> 9 -> 10 -> 11 -> 12
 |-------|----------------|--------|-----------|
 | 8. Low Risk Cleanup | 5/5 | Complete   | 2026-03-01 |
 | 9. Structure & Integration | 3/3 | Complete   | 2026-03-01 |
-| 10. Remaining Cleanup & Polish | 7/8 | In Progress|  |
+| 10. Remaining Cleanup & Polish | 8/8 | Complete   | 2026-03-01 |
 | 11. Automated Testing | 0/TBD | Not started | - |
 | 12. Install & Try New Project | 0/TBD | Not started | - |
