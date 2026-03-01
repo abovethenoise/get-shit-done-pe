@@ -232,32 +232,6 @@ Systematic debugging with persistent state across context resets.
 Usage: `/gsd:debug "login button doesn't work"`
 Usage: `/gsd:debug` (resume active session)
 
-### Todo Management
-
-**`/gsd:add-todo [description]`**
-Capture idea or task as todo from current conversation.
-
-- Extracts context from conversation (or uses provided description)
-- Creates structured todo file in `.planning/todos/pending/`
-- Infers area from file paths for grouping
-- Checks for duplicates before creating
-- Updates STATE.md todo count
-
-Usage: `/gsd:add-todo` (infers from conversation)
-Usage: `/gsd:add-todo Add auth token refresh`
-
-**`/gsd:check-todos [area]`**
-List pending todos and select one to work on.
-
-- Lists all pending todos with title, area, age
-- Optional area filter (e.g., `/gsd:check-todos api`)
-- Loads full context for selected todo
-- Routes to appropriate action (work now, add to phase, brainstorm)
-- Moves todo to done/ when work begins
-
-Usage: `/gsd:check-todos`
-Usage: `/gsd:check-todos api`
-
 ### User Acceptance Testing
 
 **`/gsd:verify-work [phase]`**
@@ -355,9 +329,6 @@ Usage: `/gsd:join-discord`
 ├── STATE.md              # Project memory & context
 ├── RETROSPECTIVE.md      # Living retrospective (updated per milestone)
 ├── config.json           # Workflow mode & gates
-├── todos/                # Captured ideas and tasks
-│   ├── pending/          # Todos waiting to be worked on
-│   └── done/             # Completed todos
 ├── debug/                # Active debug sessions
 │   └── resolved/         # Archived resolved issues
 ├── milestones/
@@ -460,15 +431,6 @@ Example config:
 /gsd:complete-milestone 1.0.0
 /clear
 /gsd:new-milestone  # Start next milestone (questioning → research → requirements → roadmap)
-```
-
-**Capturing ideas during work:**
-
-```
-/gsd:add-todo                    # Capture from conversation context
-/gsd:add-todo Fix modal z-index  # Capture with explicit description
-/gsd:check-todos                 # Review and work on todos
-/gsd:check-todos api             # Filter by area
 ```
 
 **Debugging an issue:**

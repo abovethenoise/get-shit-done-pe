@@ -202,28 +202,6 @@ Each task: **15-60 minutes** Claude execution time.
 
 Tasks organized in waves: wave 1 runs in parallel, wave 2 depends on wave 1, etc. Waves are assigned at the plan level in frontmatter.
 
-### TDD Detection
-
-**Heuristic:** Can you write `expect(fn(input)).toBe(output)` before writing `fn`?
-- Yes -> Create a dedicated TDD plan (type: tdd)
-- No -> Standard task in standard plan
-
-**Task-level TDD** (for code-producing tasks in standard plans): Add `tdd="true"` and a `<behavior>` block:
-
-```xml
-<task type="auto" tdd="true">
-  <title>Validate plan frontmatter against v2 schema</title>
-  <reqs>REQS-03, PLAN-01</reqs>
-  <artifact>get-shit-done/bin/lib/verify.cjs</artifact>
-  <behavior>
-    - well-formed plan returns { valid: true, errors: [] }
-    - plan missing reqs returns { valid: false, errors: ['orphan_task'] }
-  </behavior>
-  <inputs>PLAN.md frontmatter -> requirements field, task XML</inputs>
-  <done>All behavior tests pass</done>
-</task>
-```
-
 ### User Setup Detection
 
 For tasks involving external services, identify human-required configuration. Record in `user_setup` frontmatter. Only include what Claude literally cannot do.
@@ -424,7 +402,7 @@ After completion, create `.planning/phases/XX-name/{phase}-{plan}-SUMMARY.md`
 |-------|----------|---------|
 | `phase` | Yes | Phase identifier (e.g., `01-foundation`) |
 | `plan` | Yes | Plan number within phase |
-| `type` | Yes | `execute` or `tdd` |
+| `type` | Yes | `execute` |
 | `wave` | Yes | Execution wave number |
 | `depends_on` | Yes | Plan IDs this plan requires |
 | `files_modified` | Yes | Files this plan touches |
@@ -544,46 +522,6 @@ Auth errors at runtime create checkpoints dynamically, NOT pre-planned.
 
 </checkpoints>
 
-<tdd_integration>
-
-## TDD Plan Structure
-
-TDD candidates get dedicated plans (type: tdd). One feature per TDD plan.
-
-```markdown
----
-phase: XX-name
-plan: NN
-type: tdd
----
-
-<objective>
-[What feature and why]
-</objective>
-
-<feature>
-  <title>[Feature name]</title>
-  <reqs>[REQ IDs]</reqs>
-  <artifact>[source file, test file]</artifact>
-  <behavior>
-    [Expected behavior in testable terms]
-    Cases: input -> expected output
-  </behavior>
-  <inputs>[Upstream artifacts]</inputs>
-  <done>[Criteria]</done>
-</feature>
-```
-
-## Red-Green-Refactor Cycle
-
-**RED:** Write failing test -> commit: `test({phase}-{plan}): add failing test for [feature]`
-**GREEN:** Write minimal code to pass -> commit: `feat({phase}-{plan}): implement [feature]`
-**REFACTOR (if needed):** Clean up -> commit: `refactor({phase}-{plan}): clean up [feature]`
-
-TDD plans target ~40% context (lower than standard 50%).
-
-</tdd_integration>
-
 <gap_closure_mode>
 
 ## Planning from Verification Gaps
@@ -685,7 +623,7 @@ Apply discovery level protocol (see discovery_levels section).
 3. Read full SUMMARYs for selected phases.
 4. Keep digest-level context for unselected phases.
 
-**From STATE.md:** Decisions constrain approach. Pending todos are candidates.
+**From STATE.md:** Decisions constrain approach.
 </step>
 
 <step name="gather_phase_context">
@@ -703,7 +641,7 @@ For each task:
 2. What does it CREATE?
 3. Can it run independently?
 
-Apply TDD detection. Apply user setup detection.
+Apply user setup detection.
 </step>
 
 <step name="build_dependency_graph">

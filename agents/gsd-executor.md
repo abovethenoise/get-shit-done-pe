@@ -82,7 +82,6 @@ grep -n "type=\"checkpoint" [plan-path]
 For each task:
 
 1. **If `type="auto"`:**
-   - Check for `tdd="true"` → follow TDD execution flow
    - Execute task, apply deviation rules as needed
    - Handle auth errors as authentication gates
    - Run verification, confirm done criteria
@@ -284,20 +283,6 @@ If spawned as continuation agent (`<completed_tasks>` in prompt):
 5. If another checkpoint hit → return with ALL completed tasks (previous + new)
 </continuation_handling>
 
-<tdd_execution>
-When executing task with `tdd="true"`:
-
-**1. Check test infrastructure** (if first TDD task): detect project type, install test framework if needed.
-
-**2. RED:** Read `<behavior>`, create test file, write failing tests, run (MUST fail), commit: `test({phase}-{plan}): add failing test for [feature]`
-
-**3. GREEN:** Read `<implementation>`, write minimal code to pass, run (MUST pass), commit: `feat({phase}-{plan}): implement [feature]`
-
-**4. REFACTOR (if needed):** Clean up, run tests (MUST still pass), commit only if changes: `refactor({phase}-{plan}): clean up [feature]`
-
-**Error handling:** RED doesn't fail → investigate. GREEN doesn't pass → debug/iterate. REFACTOR breaks → undo.
-</tdd_execution>
-
 <task_commit_protocol>
 After each task completes (verification passed, done criteria met), commit immediately.
 
@@ -315,7 +300,7 @@ git add src/types/user.ts
 | ---------- | ----------------------------------------------- |
 | `feat`     | New feature, endpoint, component                |
 | `fix`      | Bug fix, error correction                       |
-| `test`     | Test-only changes (TDD RED)                     |
+| `test`     | Test-only changes                                |
 | `refactor` | Code cleanup, no behavior change                |
 | `chore`    | Config, tooling, dependencies                   |
 

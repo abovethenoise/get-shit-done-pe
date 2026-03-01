@@ -79,7 +79,6 @@ Use this instead of manually reading/parsing ROADMAP.md.
 
 - Use `current_phase` and `next_phase` from `$ROADMAP`
 - Note `paused_at` if work was paused (from `$STATE`)
-- Count pending todos: use `init todos` or `list-todos`
 - Check for active debug sessions: `ls .planning/debug/*.md 2>/dev/null | grep -v resolved | wc -l`
   </step>
 
@@ -115,9 +114,6 @@ CONTEXT: [✓ if has_context | - if not]
 ## Blockers/Concerns
 - [extract from $STATE.blockers[]]
 - [e.g. jq -r '.blockers[].text' from state-snapshot]
-
-## Pending Todos
-- [count] pending — /gsd:check-todos to review
 
 ## Active Debug Sessions
 - [count] active — /gsd:debug to continue

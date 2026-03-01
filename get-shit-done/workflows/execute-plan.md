@@ -135,7 +135,7 @@ Deviations are normal — handle via rules below.
 
 1. Read @context files from prompt
 2. Per task:
-   - `type="auto"`: if `tdd="true"` → TDD execution. Implement with deviation rules + auth gates. Verify done criteria. Commit (see task_commit). Track hash for Summary.
+   - `type="auto"`: Implement with deviation rules + auth gates. Verify done criteria. Commit (see task_commit). Track hash for Summary.
    - `type="checkpoint:*"`: STOP → checkpoint_protocol → wait for user → continue only after confirmation.
 3. Run `<verification>` checks
 4. Confirm `<success_criteria>` met
@@ -210,21 +210,6 @@ End with: **Total deviations:** N auto-fixed (breakdown). **Impact:** assessment
 
 </deviation_documentation>
 
-<tdd_plan_execution>
-## TDD Execution
-
-For `type: tdd` plans — RED-GREEN-REFACTOR:
-
-1. **Infrastructure** (first TDD plan only): detect project, install framework, config, verify empty suite
-2. **RED:** Read `<behavior>` → failing test(s) → run (MUST fail) → commit: `test({phase}-{plan}): add failing test for [feature]`
-3. **GREEN:** Read `<implementation>` → minimal code → run (MUST pass) → commit: `feat({phase}-{plan}): implement [feature]`
-4. **REFACTOR:** Clean up → tests MUST pass → commit: `refactor({phase}-{plan}): clean up [feature]`
-
-Errors: RED doesn't fail → investigate test/existing feature. GREEN doesn't pass → debug, iterate. REFACTOR breaks → undo.
-
-See `~/.claude/get-shit-done/references/tdd.md` for structure.
-</tdd_plan_execution>
-
 <task_commit>
 ## Task Commit Protocol
 
@@ -244,8 +229,8 @@ git add src/types/user.ts
 |------|------|---------|
 | `feat` | New functionality | feat(08-02): create user registration endpoint |
 | `fix` | Bug fix | fix(08-02): correct email validation regex |
-| `test` | Test-only (TDD RED) | test(08-02): add failing test for password hashing |
-| `refactor` | No behavior change (TDD REFACTOR) | refactor(08-02): extract validation to helper |
+| `test` | Test-only | test(08-02): add failing test for password hashing |
+| `refactor` | No behavior change | refactor(08-02): extract validation to helper |
 | `perf` | Performance | perf(08-02): add database index |
 | `docs` | Documentation | docs(08-02): add API docs |
 | `style` | Formatting | style(08-02): format auth module |

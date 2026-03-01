@@ -125,7 +125,7 @@ After completion, create `.planning/phases/XX-name/{phase}-{plan}-SUMMARY.md`
 |-------|----------|---------|
 | `phase` | Yes | Phase identifier (e.g., `01-foundation`) |
 | `plan` | Yes | Plan number within phase (e.g., `01`, `02`) |
-| `type` | Yes | Always `execute` for standard plans, `tdd` for TDD plans |
+| `type` | Yes | Always `execute` |
 | `wave` | Yes | Execution wave number (1, 2, 3...). Pre-computed at plan time. |
 | `depends_on` | Yes | Array of plan IDs this plan requires. |
 | `files_modified` | Yes | Files this plan touches. |
@@ -247,7 +247,6 @@ Wave 3 runs after Waves 1 and 2. Pauses at checkpoint, orchestrator presents to 
 - Different subsystems (auth vs API vs UI)
 - >3 tasks
 - Risk of context overflow
-- TDD candidates - separate plans
 
 **Vertical slices preferred:**
 
@@ -259,18 +258,6 @@ AVOID:  Plan 01 = All models
         Plan 02 = All APIs
         Plan 03 = All UIs
 ```
-
----
-
-## TDD Plans
-
-TDD features get dedicated plans with `type: tdd`.
-
-**Heuristic:** Can you write `expect(fn(input)).toBe(output)` before writing `fn`?
-→ Yes: Create a TDD plan
-→ No: Standard task in standard plan
-
-See `~/.claude/get-shit-done/references/tdd.md` for TDD plan structure.
 
 ---
 

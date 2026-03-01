@@ -338,7 +338,7 @@ Key sections:
 - Project Reference (core value, current focus)
 - Current Position (phase, plan, status, progress bar)
 - Performance Metrics
-- Accumulated Context (decisions, todos, blockers)
+- Accumulated Context (decisions, blockers)
 - Session Continuity
 
 ## Draft Presentation Format

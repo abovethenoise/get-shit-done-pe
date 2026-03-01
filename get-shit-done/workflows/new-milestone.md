@@ -16,7 +16,7 @@ Read all files referenced by the invoking prompt's execution_context before star
 
 - Read PROJECT.md (existing project, validated requirements, decisions)
 - Read MILESTONES.md (what shipped previously)
-- Read STATE.md (pending todos, blockers)
+- Read STATE.md (blockers)
 - Check for MILESTONE-CONTEXT.md (from /gsd:discuss-milestone)
 
 ## 2. Gather Milestone Goals

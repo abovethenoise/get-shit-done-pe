@@ -84,7 +84,7 @@ Start with: [specific first action when resuming]
 
 Be specific enough for a fresh Claude to understand immediately.
 
-Use `current-timestamp` for last_updated field. You can use init todos (which provides timestamps) or call directly:
+Use `current-timestamp` for last_updated field:
 ```bash
 timestamp=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" current-timestamp full --raw)
 ```

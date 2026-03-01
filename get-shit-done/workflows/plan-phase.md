@@ -569,7 +569,6 @@ Task(
     <execution_context>
     @~/.claude/get-shit-done/workflows/execute-phase.md
     @~/.claude/get-shit-done/references/checkpoints.md
-    @~/.claude/get-shit-done/references/tdd.md
     @~/.claude/get-shit-done/references/model-profile-resolution.md
     </execution_context>
 

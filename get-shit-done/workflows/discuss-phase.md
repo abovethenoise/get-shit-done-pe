@@ -556,7 +556,7 @@ Task(
     1. Read plan-phase.md from execution_context for your complete workflow
     2. Follow ALL steps: initialize, validate, load context, research, plan, verify, auto-advance
     3. When spawning agents (gsd-phase-researcher, gsd-planner, gsd-plan-checker), use Task with specified subagent_type and model
-    4. For step 14 (auto-advance to execute): spawn execute-phase as a Task with DIRECT file reference — tell it to read execute-phase.md. Include @file refs to execute-phase.md, checkpoints.md, tdd.md, model-profile-resolution.md. Pass --no-transition flag so execute-phase returns results instead of chaining further.
+    4. For step 14 (auto-advance to execute): spawn execute-phase as a Task with DIRECT file reference — tell it to read execute-phase.md. Include @file refs to execute-phase.md, checkpoints.md, model-profile-resolution.md. Pass --no-transition flag so execute-phase returns results instead of chaining further.
     5. Do NOT use the Skill tool or /gsd: commands. Read workflow .md files directly.
     6. Return: PHASE COMPLETE (full pipeline success), PLANNING COMPLETE (planning done but execute failed/skipped), PLANNING INCONCLUSIVE, or GAPS FOUND
     </instructions>
