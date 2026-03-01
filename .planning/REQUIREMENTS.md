@@ -101,7 +101,7 @@ Requirements for Install-Ready Launch milestone. Each maps to roadmap phases.
 
 ### Cleanup
 
-- [ ] **CLN-01**: 20 orphaned workflows removed
+- [x] **CLN-01**: 20 orphaned workflows removed
 - [ ] **CLN-02**: Orphaned agents removed (gsd-codebase-mapper, etc.)
 - [ ] **CLN-03**: `gsd-tools.cjs`: full audit — verify all modules, remove dead code, remove v1-only concepts (milestone, phase CLI commands)
 - [ ] **CLN-04**: Holistic template audit — remove stale templates, update surviving ones for v2 model (capability/feature, not phase)
@@ -214,7 +214,7 @@ Deferred to post-v2.0. Tracked but not in current roadmap.
 | AGNT-03 | Phase 2 | Complete |
 | AGNT-04 | Phase 2 | Complete |
 | CMD-02 | Phase 8 | Complete |
-| CLN-01 | Phase 8 | Pending |
+| CLN-01 | Phase 8 | Complete |
 | CLN-02 | Phase 8 | Pending |
 | CLN-06 | Phase 8 | Pending |
 | CLN-07 | Phase 8 | Pending |
