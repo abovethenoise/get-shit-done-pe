@@ -18,7 +18,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 4: Review Layer** - 4 parallel specialist reviewers and review synthesizer
 - [x] **Phase 5: Documentation** - Reflect-and-write documentation agent generating reference docs from built code (completed 2026-02-28)
 - [x] **Phase 6: Workflows and Commands** - Framing-aware workflows, discovery phases, initialization commands, and end-to-end integration (completed 2026-02-28)
-- [ ] **Phase 7: Cleanup** - Audit v1 artifacts, remove dead code/features, trim anything the new model doesn't need
+- [x] **Phase 7: Cleanup** - Audit v1 artifacts, remove dead code/features, trim anything the new model doesn't need (completed 2026-02-28)
 
 ## Phase Details
 
@@ -151,3 +151,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 5. Documentation | 3/3 | Complete   | 2026-02-28 |
 | 6. Workflows and Commands | 5/5 | Complete   | 2026-02-28 |
 | 7. Cleanup | 0/3 | Not started | - |
+
