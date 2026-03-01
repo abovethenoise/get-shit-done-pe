@@ -1,5 +1,5 @@
 <purpose>
-Create executable phase prompts (PLAN.md files) for a roadmap phase with integrated research and verification. Default flow: Research (if needed) -> Plan -> Verify -> Done. Orchestrates research-workflow (6 gatherers + synthesizer), gsd-planner, and gsd-plan-checker agents with a revision loop (max 3 iterations).
+Create executable planning prompts (PLAN.md files) for a feature or capability with integrated research and verification. Default flow: Research (if needed) -> Plan -> Verify -> Done. Orchestrates research-workflow (6 gatherers + synthesizer), gsd-planner, and gsd-plan-checker agents with a revision loop (max 3 iterations).
 </purpose>
 
 <required_reading>
@@ -535,36 +535,35 @@ Display banner:
  GSD ► AUTO-ADVANCING TO EXECUTE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Plans ready. Spawning execute-phase...
+Plans ready. Spawning execution workflow...
 ```
 
-Spawn execute-phase as Task with direct workflow file reference (do NOT use Skill tool — Skills don't resolve inside Task subagents):
+Spawn execution as Task with direct workflow file reference (do NOT use Skill tool — Skills don't resolve inside Task subagents):
 ```
 Task(
   prompt="
     <objective>
-    You are the execute-phase orchestrator. Execute all plans for Phase ${PHASE}: ${PHASE_NAME}.
+    You are the execution orchestrator. Execute all plans for Phase ${PHASE}: ${PHASE_NAME}.
     </objective>
 
     <execution_context>
-    @~/.claude/get-shit-done/workflows/execute-phase.md
+    @~/.claude/get-shit-done/workflows/execute.md
     @~/.claude/get-shit-done/references/checkpoints.md
     @~/.claude/get-shit-done/references/model-profile-resolution.md
     </execution_context>
 
     <arguments>
     PHASE=${PHASE}
-    ARGUMENTS='${PHASE} --auto --no-transition'
+    ARGUMENTS='${PHASE} --auto'
     </arguments>
 
     <instructions>
-    1. Read execute-phase.md from execution_context for your complete workflow
+    1. Read execute.md from execution_context for your complete workflow
     2. Follow ALL steps: initialize, handle_branching, validate_phase, discover_and_group_plans, execute_waves, aggregate_results, close_parent_artifacts, verify_phase_goal, update_roadmap
-    3. The --no-transition flag means: after verification + roadmap update, STOP and return status. Do NOT run transition.md.
-    4. When spawning executor agents, use subagent_type='gsd-executor' with the existing @file pattern from the workflow
-    5. When spawning verifier agents, use subagent_type='gsd-verifier'
-    6. Preserve the classifyHandoffIfNeeded workaround (spot-check on that specific error)
-    7. Do NOT use the Skill tool or /gsd: commands
+    3. When spawning executor agents, use subagent_type='gsd-executor' with the existing @file pattern from the workflow
+    4. When spawning verifier agents, use subagent_type='gsd-verifier'
+    5. Preserve the classifyHandoffIfNeeded workaround (spot-check on that specific error)
+    6. Do NOT use the Skill tool or /gsd: commands
     </instructions>
   ",
   subagent_type="general-purpose",

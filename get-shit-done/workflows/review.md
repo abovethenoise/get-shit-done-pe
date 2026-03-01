@@ -1,5 +1,5 @@
 <purpose>
-Orchestrate the full review pipeline for a phase: spawn 4 specialist reviewers in parallel (gather-synthesize pattern), consolidate via synthesizer, present findings to user one-at-a-time with 5 response options, handle re-review cycles after accepted fixes.
+Orchestrate the full review pipeline for a feature or capability: spawn 4 specialist reviewers in parallel (gather-synthesize pattern), consolidate via synthesizer, present findings to user one-at-a-time with 5 response options, handle re-review cycles after accepted fixes.
 </purpose>
 
 <required_reading>

@@ -1,5 +1,5 @@
 <purpose>
-Execute all plans in a phase using wave-based parallel execution. Orchestrator stays lean — delegates plan execution to subagents.
+Execute all plans for a feature or capability using wave-based parallel execution. Orchestrator stays lean -- delegates plan execution to subagents.
 </purpose>
 
 <core_principle>
@@ -370,7 +370,7 @@ The CLI handles:
 Extract from result: `next_phase`, `next_phase_name`, `is_last_phase`.
 
 ```bash
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs(phase-{X}): complete phase execution" --files .planning/ROADMAP.md .planning/STATE.md .planning/REQUIREMENTS.md {phase_dir}/*-VERIFICATION.md
+node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs(phase-{X}): complete execution" --files .planning/ROADMAP.md .planning/STATE.md .planning/REQUIREMENTS.md {phase_dir}/*-VERIFICATION.md
 ```
 </step>
 
@@ -378,17 +378,10 @@ node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs(phase-{X}): co
 
 **Exception:** If `gaps_found`, the `verify_phase_goal` step already presents the gap-closure path (`/gsd:plan-phase {X} --gaps`). No additional routing needed — skip auto-advance.
 
-**No-transition check (spawned by auto-advance chain):**
-
-Parse `--no-transition` flag from $ARGUMENTS.
-
-**If `--no-transition` flag present:**
-
-Execute-phase was spawned by plan-phase's auto-advance. Do NOT run transition.md.
 After verification passes and roadmap is updated, return completion status to parent:
 
 ```
-## PHASE COMPLETE
+## EXECUTION COMPLETE
 
 Phase: ${PHASE_NUMBER} - ${PHASE_NAME}
 Plans: ${completed_count}/${total_count}
@@ -397,34 +390,7 @@ Verification: {Passed | Gaps Found}
 [Include aggregate_results output]
 ```
 
-STOP. Do not proceed to auto-advance or transition.
-
-**If `--no-transition` flag is NOT present:**
-
-**Auto-advance detection:**
-
-1. Parse `--auto` flag from $ARGUMENTS
-2. Read `workflow.auto_advance` from config:
-   ```bash
-   AUTO_CFG=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" config-get workflow.auto_advance 2>/dev/null || echo "false")
-   ```
-
-**If `--auto` flag present OR `AUTO_CFG` is true (AND verification passed with no gaps):**
-
-```
-╔══════════════════════════════════════════╗
-║  AUTO-ADVANCING → TRANSITION             ║
-║  Phase {X} verified, continuing chain    ║
-╚══════════════════════════════════════════╝
-```
-
-Execute the transition workflow inline (do NOT use Task — orchestrator context is ~10-15%, transition needs phase completion data already in context):
-
-Read and follow `~/.claude/get-shit-done/workflows/transition.md`, passing through the `--auto` flag so it propagates to the next phase invocation.
-
-**If neither `--auto` nor `AUTO_CFG` is true:**
-
-The workflow ends. The user runs `/gsd:progress` or invokes the transition workflow manually.
+The workflow ends. The user decides next steps (review, documentation, or next feature).
 </step>
 
 </process>
@@ -438,7 +404,7 @@ Orchestrator: ~10-15% context. Subagents: fresh 200k each. No polling (Task bloc
 - **Agent fails mid-plan:** Missing SUMMARY.md → report, ask user how to proceed
 - **Dependency chain breaks:** Wave 1 fails → Wave 2 dependents likely fail → user chooses attempt or skip
 - **All agents in wave fail:** Systemic issue → stop, report for investigation
-- **Checkpoint unresolvable:** "Skip this plan?" or "Abort phase execution?" → record partial progress in STATE.md
+- **Checkpoint unresolvable:** "Skip this plan?" or "Abort execution?" → record partial progress in STATE.md
 </failure_handling>
 
 <resumption>

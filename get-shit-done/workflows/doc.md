@@ -1,5 +1,5 @@
 <purpose>
-Orchestrate the full documentation pipeline for a phase: initialize context, locate phase artifacts, spawn a single doc-writer agent, verify output files exist, present generated docs to user one-at-a-time via Q&A review, commit on approval.
+Orchestrate the full documentation pipeline for a feature or capability: initialize context, locate artifacts, spawn a single doc-writer agent, verify output files exist, present generated docs to user one-at-a-time via Q&A review, commit on approval.
 </purpose>
 
 <required_reading>
