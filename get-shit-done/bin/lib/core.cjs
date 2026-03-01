@@ -13,19 +13,13 @@ function toPosixPath(p) {
   return p.split(path.sep).join('/');
 }
 
-// ─── Model Profile Table ─────────────────────────────────────────────────────
+// ─── Model Profile Table (DEPRECATED — v1 fallback only) ─────────────────────
+// v2 agents use ROLE_MODEL_MAP via role_type frontmatter.
+// Only gsd-planner and gsd-executor remain as v1 fallbacks.
 
 const MODEL_PROFILES = {
   'gsd-planner':              { quality: 'opus', balanced: 'opus',   budget: 'sonnet' },
-  'gsd-roadmapper':           { quality: 'opus', balanced: 'sonnet', budget: 'sonnet' },
   'gsd-executor':             { quality: 'opus', balanced: 'sonnet', budget: 'sonnet' },
-  'gsd-project-researcher':   { quality: 'opus', balanced: 'sonnet', budget: 'haiku' },
-  'gsd-research-synthesizer': { quality: 'sonnet', balanced: 'sonnet', budget: 'haiku' },
-  'gsd-debugger':             { quality: 'opus', balanced: 'sonnet', budget: 'sonnet' },
-  'gsd-codebase-mapper':      { quality: 'sonnet', balanced: 'haiku', budget: 'haiku' },
-  'gsd-verifier':             { quality: 'sonnet', balanced: 'sonnet', budget: 'haiku' },
-  'gsd-plan-checker':         { quality: 'sonnet', balanced: 'sonnet', budget: 'haiku' },
-  'gsd-integration-checker':  { quality: 'sonnet', balanced: 'sonnet', budget: 'haiku' },
 };
 
 // ─── v2 Role-Based Model Resolution ──────────────────────────────────────────
@@ -33,6 +27,7 @@ const MODEL_PROFILES = {
 const ROLE_MODEL_MAP = {
   executor: 'sonnet',
   judge: 'inherit',    // inherit = gets Opus from user's session (Claude Code constraint: cannot specify "opus" directly, only "sonnet"/"haiku"/"inherit")
+  quick: 'haiku',
 };
 
 // ─── Output helpers ───────────────────────────────────────────────────────────

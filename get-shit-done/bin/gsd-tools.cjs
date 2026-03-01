@@ -74,10 +74,7 @@
  * Compound Commands (workflow-specific initialization):
  *   init execute-phase <phase>         All context for execute-phase workflow
  *   init resume                        All context for resume-work workflow
- *   init phase-op <phase>              Generic phase operation context
  *   init progress                      All context for progress workflow
- *   init review-phase <phase>          All context for review-phase workflow
- *   init doc-phase <phase>             All context for doc-phase workflow
  *   init project                       All context for init-project workflow (auto-detect mode)
  *   init discuss-capability             All context for discuss-capability workflow
  *   init discuss-feature                All context for discuss-feature workflow
@@ -343,16 +340,16 @@ async function main() {
           init.cmdInitResume(cwd, raw);
           break;
         case 'phase-op':
-          init.cmdInitPhaseOp(cwd, args[2], raw);
+          error('init phase-op has been removed. Use v2 framing commands instead.');
           break;
         case 'progress':
           init.cmdInitProgress(cwd, raw);
           break;
         case 'review-phase':
-          init.cmdInitReviewPhase(cwd, args[2], raw);
+          error('init review-phase has been removed. Use v2 framing commands instead.');
           break;
         case 'doc-phase':
-          init.cmdInitDocPhase(cwd, args[2], raw);
+          error('init doc-phase has been removed. Use v2 framing commands instead.');
           break;
         case 'project':
           init.cmdInitProject(cwd, raw);

@@ -1,34 +1,46 @@
 # Model Profile Resolution
 
-Resolve model profile once at the start of orchestration, then use it for all Task spawns.
+Resolve the model for an agent at orchestration start, then use it for all Task spawns.
 
-## Resolution Pattern
+## v2 Resolution: `resolveModelFromRole()`
 
-```bash
-MODEL_PROFILE=$(cat .planning/config.json 2>/dev/null | grep -o '"model_profile"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "balanced")
+v2 agents declare `role_type` in their YAML frontmatter. The orchestrator reads this field and maps it to a model via `ROLE_MODEL_MAP`:
+
+```
+ROLE_MODEL_MAP = {
+  executor: 'sonnet',
+  judge: 'inherit',
+  quick: 'haiku',
+}
 ```
 
-Default: `balanced` if not set or config missing.
+### Lookup Flow
 
-## Lookup Table
+1. Read agent file frontmatter
+2. Extract `role_type` field
+3. Look up model in `ROLE_MODEL_MAP`
+4. If `role_type` absent: fall through to v1 `resolveModelInternal()`
+5. If agent file missing: fall through to v1
 
-@~/.claude/get-shit-done/references/model-profiles.md
-
-Look up the agent in the table for the resolved profile. Pass the model parameter to Task calls:
+### Usage
 
 ```
 Task(
   prompt="...",
-  subagent_type="gsd-planner",
+  subagent_type="research-gatherer",
   model="{resolved_model}"  # "inherit", "sonnet", or "haiku"
 )
 ```
 
-**Note:** Opus-tier agents resolve to `"inherit"` (not `"opus"`). This causes the agent to use the parent session's model, avoiding conflicts with organization policies that may block specific opus versions.
+**Note:** `inherit` means the agent gets Opus from the user's parent session. This avoids conflicts with organization policies that may block specific opus model versions.
 
-## Usage
+## v1 Fallback: `resolveModelInternal()`
 
-1. Resolve once at orchestration start
-2. Store the profile value
-3. Look up each agent's model from the table when spawning
-4. Pass model parameter to each Task call (values: `"inherit"`, `"sonnet"`, `"haiku"`)
+For agents without `role_type` frontmatter (legacy v1 agents):
+
+1. Read `.planning/config.json` for `model_profile` (default: `balanced`)
+2. Check `model_overrides` for agent-specific override
+3. If no override, look up agent in `MODEL_PROFILES` table
+4. Return resolved model (`inherit` for opus, `sonnet`, or `haiku`)
+
+Only `gsd-planner` and `gsd-executor` remain in the v1 profile table.

@@ -80,84 +80,7 @@ function cmdInitExecutePhase(cwd, phase, raw) {
   output(result, raw);
 }
 
-function cmdInitPlanPhase(cwd, phase, raw) {
-  if (!phase) {
-    error('phase required for init plan-phase');
-  }
-
-  const config = loadConfig(cwd);
-  const phaseInfo = findPhaseInternal(cwd, phase);
-
-  const roadmapPhase = getRoadmapPhaseInternal(cwd, phase);
-  const reqMatch = roadmapPhase?.section?.match(/^\*\*Requirements\*\*:[^\S\n]*([^\n]*)$/m);
-  const reqExtracted = reqMatch
-    ? reqMatch[1].replace(/[\[\]]/g, '').split(',').map(s => s.trim()).filter(Boolean).join(', ')
-    : null;
-  const phase_req_ids = (reqExtracted && reqExtracted !== 'TBD') ? reqExtracted : null;
-
-  const result = {
-    // Models
-    researcher_model: resolveModelInternal(cwd, 'gsd-phase-researcher'),
-    planner_model: resolveModelInternal(cwd, 'gsd-planner'),
-    checker_model: resolveModelInternal(cwd, 'gsd-plan-checker'),
-
-    // Workflow flags
-    research_enabled: config.research,
-    plan_checker_enabled: config.plan_checker,
-    nyquist_validation_enabled: config.nyquist_validation,
-    commit_docs: config.commit_docs,
-
-    // Phase info
-    phase_found: !!phaseInfo,
-    phase_dir: phaseInfo?.directory || null,
-    phase_number: phaseInfo?.phase_number || null,
-    phase_name: phaseInfo?.phase_name || null,
-    phase_slug: phaseInfo?.phase_slug || null,
-    padded_phase: phaseInfo?.phase_number?.padStart(2, '0') || null,
-    phase_req_ids,
-
-    // Existing artifacts
-    has_research: phaseInfo?.has_research || false,
-    has_context: phaseInfo?.has_context || false,
-    has_plans: (phaseInfo?.plans?.length || 0) > 0,
-    plan_count: phaseInfo?.plans?.length || 0,
-
-    // Environment
-    planning_exists: pathExistsInternal(cwd, '.planning'),
-    roadmap_exists: pathExistsInternal(cwd, '.planning/ROADMAP.md'),
-
-    // File paths
-    state_path: '.planning/STATE.md',
-    roadmap_path: '.planning/ROADMAP.md',
-    requirements_path: '.planning/REQUIREMENTS.md',
-  };
-
-  if (phaseInfo?.directory) {
-    // Find *-CONTEXT.md in phase directory
-    const phaseDirFull = path.join(cwd, phaseInfo.directory);
-    try {
-      const files = fs.readdirSync(phaseDirFull);
-      const contextFile = files.find(f => f.endsWith('-CONTEXT.md') || f === 'CONTEXT.md');
-      if (contextFile) {
-        result.context_path = toPosixPath(path.join(phaseInfo.directory, contextFile));
-      }
-      const researchFile = files.find(f => f.endsWith('-RESEARCH.md') || f === 'RESEARCH.md');
-      if (researchFile) {
-        result.research_path = toPosixPath(path.join(phaseInfo.directory, researchFile));
-      }
-      const verificationFile = files.find(f => f.endsWith('-VERIFICATION.md') || f === 'VERIFICATION.md');
-      if (verificationFile) {
-        result.verification_path = toPosixPath(path.join(phaseInfo.directory, verificationFile));
-      }
-      const uatFile = files.find(f => f.endsWith('-UAT.md') || f === 'UAT.md');
-      if (uatFile) {
-        result.uat_path = toPosixPath(path.join(phaseInfo.directory, uatFile));
-      }
-    } catch {}
-  }
-
-  output(result, raw);
-}
+// init plan-phase: DELETED — v1 command removed in Phase 10
 
 function cmdInitNewProject(cwd, raw) {
   const config = loadConfig(cwd);
@@ -361,86 +284,7 @@ function cmdInitVerifyWork(cwd, phase, raw) {
   output(result, raw);
 }
 
-function cmdInitPhaseOp(cwd, phase, raw) {
-  const config = loadConfig(cwd);
-  let phaseInfo = findPhaseInternal(cwd, phase);
-
-  // Fallback to ROADMAP.md if no directory exists (e.g., Plans: TBD)
-  if (!phaseInfo) {
-    const roadmapPhase = getRoadmapPhaseInternal(cwd, phase);
-    if (roadmapPhase?.found) {
-      const phaseName = roadmapPhase.phase_name;
-      phaseInfo = {
-        found: true,
-        directory: null,
-        phase_number: roadmapPhase.phase_number,
-        phase_name: phaseName,
-        phase_slug: phaseName ? phaseName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') : null,
-        plans: [],
-        summaries: [],
-        incomplete_plans: [],
-        has_research: false,
-        has_context: false,
-        has_verification: false,
-      };
-    }
-  }
-
-  const result = {
-    // Config
-    commit_docs: config.commit_docs,
-    brave_search: config.brave_search,
-
-    // Phase info
-    phase_found: !!phaseInfo,
-    phase_dir: phaseInfo?.directory || null,
-    phase_number: phaseInfo?.phase_number || null,
-    phase_name: phaseInfo?.phase_name || null,
-    phase_slug: phaseInfo?.phase_slug || null,
-    padded_phase: phaseInfo?.phase_number?.padStart(2, '0') || null,
-
-    // Existing artifacts
-    has_research: phaseInfo?.has_research || false,
-    has_context: phaseInfo?.has_context || false,
-    has_plans: (phaseInfo?.plans?.length || 0) > 0,
-    has_verification: phaseInfo?.has_verification || false,
-    plan_count: phaseInfo?.plans?.length || 0,
-
-    // File existence
-    roadmap_exists: pathExistsInternal(cwd, '.planning/ROADMAP.md'),
-    planning_exists: pathExistsInternal(cwd, '.planning'),
-
-    // File paths
-    state_path: '.planning/STATE.md',
-    roadmap_path: '.planning/ROADMAP.md',
-    requirements_path: '.planning/REQUIREMENTS.md',
-  };
-
-  if (phaseInfo?.directory) {
-    const phaseDirFull = path.join(cwd, phaseInfo.directory);
-    try {
-      const files = fs.readdirSync(phaseDirFull);
-      const contextFile = files.find(f => f.endsWith('-CONTEXT.md') || f === 'CONTEXT.md');
-      if (contextFile) {
-        result.context_path = toPosixPath(path.join(phaseInfo.directory, contextFile));
-      }
-      const researchFile = files.find(f => f.endsWith('-RESEARCH.md') || f === 'RESEARCH.md');
-      if (researchFile) {
-        result.research_path = toPosixPath(path.join(phaseInfo.directory, researchFile));
-      }
-      const verificationFile = files.find(f => f.endsWith('-VERIFICATION.md') || f === 'VERIFICATION.md');
-      if (verificationFile) {
-        result.verification_path = toPosixPath(path.join(phaseInfo.directory, verificationFile));
-      }
-      const uatFile = files.find(f => f.endsWith('-UAT.md') || f === 'UAT.md');
-      if (uatFile) {
-        result.uat_path = toPosixPath(path.join(phaseInfo.directory, uatFile));
-      }
-    } catch {}
-  }
-
-  output(result, raw);
-}
+// init phase-op: DELETED — v1 command removed in Phase 10
 
 function cmdInitMilestoneOp(cwd, raw) {
   const config = loadConfig(cwd);
@@ -537,211 +381,8 @@ function cmdInitMapCodebase(cwd, raw) {
   output(result, raw);
 }
 
-function cmdInitReviewPhase(cwd, phase, raw) {
-  if (!phase) {
-    error('phase required for init review-phase');
-  }
-
-  const config = loadConfig(cwd);
-  const phaseInfo = findPhaseInternal(cwd, phase);
-
-  const roadmapPhase = getRoadmapPhaseInternal(cwd, phase);
-  const reqMatch = roadmapPhase?.section?.match(/^\*\*Requirements\*\*:[^\S\n]*([^\n]*)$/m);
-  const reqExtracted = reqMatch
-    ? reqMatch[1].replace(/[\[\]]/g, '').split(',').map(s => s.trim()).filter(Boolean).join(', ')
-    : null;
-  const phase_req_ids = (reqExtracted && reqExtracted !== 'TBD') ? reqExtracted : null;
-
-  // Reviewer agent paths (4 reviewers + 1 synthesizer)
-  const agentDir = 'agents';
-  const reviewerAgents = [
-    { type: 'end-user', path: toPosixPath(path.join(agentDir, 'gsd-review-enduser.md')) },
-    { type: 'functional', path: toPosixPath(path.join(agentDir, 'gsd-review-functional.md')) },
-    { type: 'technical', path: toPosixPath(path.join(agentDir, 'gsd-review-technical.md')) },
-    { type: 'code-quality', path: toPosixPath(path.join(agentDir, 'gsd-review-quality.md')) },
-  ];
-  const synthesizerPath = toPosixPath(path.join(agentDir, 'gsd-review-synthesizer.md'));
-
-  // Resolve models for reviewer agents (all role_type: judge)
-  const reviewer_model = resolveModelInternal(cwd, 'gsd-review-enduser');
-  const synthesizer_model = resolveModelInternal(cwd, 'gsd-review-synthesizer');
-
-  // Feature/capability paths from phase directory
-  let featurePaths = [];
-  let capabilityPaths = [];
-  if (phaseInfo?.directory) {
-    const capDir = path.join(cwd, '.planning', 'capabilities');
-    try {
-      const caps = fs.readdirSync(capDir, { withFileTypes: true })
-        .filter(e => e.isDirectory())
-        .map(e => e.name);
-      for (const cap of caps) {
-        const capPath = toPosixPath(path.join('.planning', 'capabilities', cap, 'CAPABILITY.md'));
-        if (pathExistsInternal(cwd, capPath)) {
-          capabilityPaths.push(capPath);
-        }
-        const featDir = path.join(capDir, cap);
-        try {
-          const feats = fs.readdirSync(featDir, { withFileTypes: true })
-            .filter(e => e.isDirectory())
-            .map(e => e.name);
-          for (const feat of feats) {
-            const featPath = toPosixPath(path.join('.planning', 'capabilities', cap, feat, 'FEATURE.md'));
-            if (pathExistsInternal(cwd, featPath)) {
-              featurePaths.push(featPath);
-            }
-          }
-        } catch {}
-      }
-    } catch {}
-  }
-
-  const result = {
-    // Models
-    reviewer_model,
-    synthesizer_model,
-
-    // Config flags
-    commit_docs: config.commit_docs,
-    parallelization: config.parallelization,
-
-    // Phase info
-    phase_found: !!phaseInfo,
-    phase_dir: phaseInfo?.directory || null,
-    phase_number: phaseInfo?.phase_number || null,
-    phase_name: phaseInfo?.phase_name || null,
-    phase_slug: phaseInfo?.phase_slug || null,
-    phase_req_ids,
-
-    // Reviewer agents
-    reviewer_agents: reviewerAgents,
-    synthesizer_path: synthesizerPath,
-    reviewer_count: reviewerAgents.length,
-
-    // Feature/capability inventory
-    feature_paths: featurePaths,
-    capability_paths: capabilityPaths,
-    feature_count: featurePaths.length,
-    capability_count: capabilityPaths.length,
-
-    // Review config
-    max_re_review_cycles: 2,
-    failure_threshold: 2,  // >=2 of 4 reviewer failures = abort
-
-    // File existence
-    state_exists: pathExistsInternal(cwd, '.planning/STATE.md'),
-    roadmap_exists: pathExistsInternal(cwd, '.planning/ROADMAP.md'),
-
-    // File paths
-    state_path: '.planning/STATE.md',
-    roadmap_path: '.planning/ROADMAP.md',
-  };
-
-  output(result, raw);
-}
-
-function cmdInitDocPhase(cwd, phase, raw) {
-  if (!phase) {
-    error('phase required for init doc-phase');
-  }
-
-  const config = loadConfig(cwd);
-  const phaseInfo = findPhaseInternal(cwd, phase);
-
-  const roadmapPhase = getRoadmapPhaseInternal(cwd, phase);
-  const reqMatch = roadmapPhase?.section?.match(/^\*\*Requirements\*\*:[^\S\n]*([^\n]*)$/m);
-  const reqExtracted = reqMatch
-    ? reqMatch[1].replace(/[\[\]]/g, '').split(',').map(s => s.trim()).filter(Boolean).join(', ')
-    : null;
-  const phase_req_ids = (reqExtracted && reqExtracted !== 'TBD') ? reqExtracted : null;
-
-  // Doc agent path
-  const doc_agent_path = toPosixPath(path.join('agents', 'gsd-doc-writer.md'));
-
-  // Resolve model for doc agent (role_type: executor)
-  const doc_agent_model = resolveModelInternal(cwd, 'gsd-doc-writer');
-
-  // Collect summary files from phase directory
-  let summary_files = [];
-  if (phaseInfo?.directory) {
-    const phaseDirFull = path.join(cwd, phaseInfo.directory);
-    try {
-      const files = fs.readdirSync(phaseDirFull);
-      summary_files = files
-        .filter(f => f.endsWith('-SUMMARY.md') || f === 'SUMMARY.md')
-        .map(f => toPosixPath(path.join(phaseInfo.directory, f)));
-    } catch {}
-  }
-
-  // Documentation directory
-  const documentation_dir = '.documentation';
-
-  // Check if gate docs exist
-  const gate_docs_exist = pathExistsInternal(cwd, path.join(documentation_dir, 'gate'));
-
-  // Feature/capability paths from capabilities directory
-  let feature_paths = [];
-  let capability_paths = [];
-  const capDir = path.join(cwd, '.planning', 'capabilities');
-  try {
-    const caps = fs.readdirSync(capDir, { withFileTypes: true })
-      .filter(e => e.isDirectory())
-      .map(e => e.name);
-    for (const cap of caps) {
-      const capPath = toPosixPath(path.join('.planning', 'capabilities', cap, 'CAPABILITY.md'));
-      if (pathExistsInternal(cwd, capPath)) {
-        capability_paths.push(capPath);
-      }
-      const featDir = path.join(capDir, cap);
-      try {
-        const feats = fs.readdirSync(featDir, { withFileTypes: true })
-          .filter(e => e.isDirectory())
-          .map(e => e.name);
-        for (const feat of feats) {
-          const featPath = toPosixPath(path.join('.planning', 'capabilities', cap, feat, 'FEATURE.md'));
-          if (pathExistsInternal(cwd, featPath)) {
-            feature_paths.push(featPath);
-          }
-        }
-      } catch {}
-    }
-  } catch {}
-
-  const result = {
-    // Models
-    doc_agent_model,
-
-    // Phase info
-    phase_found: !!phaseInfo,
-    phase_dir: phaseInfo?.directory || null,
-    phase_number: phaseInfo?.phase_number || null,
-    phase_name: phaseInfo?.phase_name || null,
-    phase_req_ids,
-
-    // Doc agent
-    doc_agent_path,
-
-    // Config flags
-    commit_docs: config.commit_docs,
-
-    // Summary files from phase
-    summary_files,
-
-    // Documentation
-    documentation_dir,
-    gate_docs_exist,
-
-    // Feature/capability inventory
-    feature_paths,
-    capability_paths,
-
-    // File paths
-    state_path: '.planning/STATE.md',
-    roadmap_path: '.planning/ROADMAP.md',
-  };
-
-  output(result, raw);
-}
+// init review-phase: DELETED — v1 command removed in Phase 10
+// init doc-phase: DELETED — v1 command removed in Phase 10
 
 function cmdInitProject(cwd, raw) {
   const config = loadConfig(cwd);
@@ -1505,20 +1146,15 @@ function cmdInitFeatureProgress(cwd, raw) {
 }
 
 module.exports = {
-  // v1 phase functions (frozen -- bootstrap trap)
   cmdInitExecutePhase,
-  cmdInitPlanPhase,
   cmdInitNewProject,
   cmdInitNewMilestone,
   cmdInitQuick,
   cmdInitResume,
   cmdInitVerifyWork,
-  cmdInitPhaseOp,
   cmdInitMilestoneOp,
   cmdInitMapCodebase,
   cmdInitProgress,
-  cmdInitReviewPhase,
-  cmdInitDocPhase,
   cmdInitProject,
   cmdInitFramingDiscovery,
   cmdInitDiscussCapability,
