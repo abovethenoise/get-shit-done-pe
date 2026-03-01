@@ -148,10 +148,10 @@ Use AskUserQuestion:
 
 ## 4. Stage 3 -- Plan (Lens-Shaped Risk Posture)
 
-Invoke the existing plan-phase workflow with framing context:
+Invoke the planning workflow with framing context:
 
 ```
-@~/.claude/get-shit-done/workflows/plan-phase.md
+@~/.claude/get-shit-done/workflows/plan.md
 ```
 
 Provide additional context to the plan phase:
@@ -177,10 +177,10 @@ Risk posture guidance (from lens):
 
 ## 5. Stage 4 -- Execute (Lens-Shaped Aggressiveness)
 
-Invoke the existing execute-phase workflow with framing context:
+Invoke the execution workflow with framing context:
 
 ```
-@~/.claude/get-shit-done/workflows/execute-phase.md
+@~/.claude/get-shit-done/workflows/execute.md
 ```
 
 Provide additional context to the execute phase:
@@ -213,10 +213,10 @@ Review receives three inputs -- not just requirements:
 
 The third input catches spec-complete but problem-incomplete work.
 
-Invoke the existing review-phase workflow with all three inputs:
+Invoke the review workflow with all three inputs:
 
 ```
-@~/.claude/get-shit-done/workflows/review-phase.md
+@~/.claude/get-shit-done/workflows/review.md
 ```
 
 Provide additional context to the review phase:
@@ -249,10 +249,10 @@ Intent verification (from brief):
 
 The reflect stage IS Phase 5's doc agent, wired as the final pipeline step. After review acceptance, the doc agent reads actual built code and generates/updates documentation.
 
-Invoke the existing doc-phase workflow:
+Invoke the documentation workflow:
 
 ```
-@~/.claude/get-shit-done/workflows/doc-phase.md
+@~/.claude/get-shit-done/workflows/doc.md
 ```
 
 Provide additional context to the doc phase:
