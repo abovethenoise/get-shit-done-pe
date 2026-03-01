@@ -8,11 +8,22 @@ A refactored meta-prompting orchestration framework for AI coding assistants. Re
 
 Every piece of executed work traces back to a specific requirement, and every requirement is verified against the actual code — no orphan tasks, no unverified output.
 
+## Current Milestone: v2.0 — Install-Ready Launch
+
+**Goal:** Make all milestone 1 work (phases 1-7) installable, functional, and clean. If you can't `npm install -g` it and run it on a real project, it's useless.
+
+**Target:**
+- All v2 artifacts deploy via install.js to ~/.claude/
+- 11-command surface works end-to-end (init, debug, new, enhance, refactor, discuss-capability, discuss-feature, status, resume, plan, review)
+- Full pipeline runs: discovery → research → requirements → plan → execute → review → docs
+- Holistic legacy cleanup — remove everything the v2 pipeline doesn't use
+- Smoke test on a real project (new and existing)
+
 ## Requirements
 
 ### Validated
 
-<!-- Carried forward from existing GSD — proven patterns that survive. -->
+<!-- Designed and built in milestone 1 (phases 1-7). Not yet deployed. -->
 
 - ✓ Meta-prompting orchestration: commands (markdown + YAML frontmatter) → workflows → agents — existing
 - ✓ gsd-tools CLI for file I/O, state mutation, git, config parsing — existing
@@ -21,33 +32,50 @@ Every piece of executed work traces back to a specific requirement, and every re
 - ✓ Wave-based parallel execution of independent work — existing
 - ✓ Q&A/discussion-driven context gathering — existing
 - ✓ Template system for canonical document formats — existing
-- ✓ Model profile resolution (quality/balanced/budget) — existing
-- ✓ Zero runtime dependencies (Node.js stdlib only) — existing
+- ✓ Role-based model resolution (executor→sonnet, judge→opus) — milestone 1
+- ✓ Zero runtime dependencies (Node.js stdlib + vendored js-yaml/argparse) — existing
+- ✓ Project → Capability → Feature hierarchy — milestone 1 phase 1
+- ✓ Four workflow framings (debug/new/enhance/refactor) with lens-specific discovery — milestone 1 phase 6
+- ✓ 3-layer requirements (EU/FN/TC) — milestone 1 phase 1
+- ✓ 6 parallel research gatherers + synthesizer with gather-synthesize pattern — milestone 1 phase 2
+- ✓ Iterative planner with self-critique (2 rounds) + Q&A + validation gate — milestone 1 phase 3
+- ✓ 4 parallel code reviewers + synthesizer with evidence-gated verdicts — milestone 1 phase 4
+- ✓ Reflect-and-write documentation agent — milestone 1 phase 5
+- ✓ Discovery Brief as handoff artifact between discovery and pipeline — milestone 1 phase 6
+- ✓ Framing-pipeline with 6 stages and universal escalation protocol — milestone 1 phase 6
+- ✓ /init with auto-detect (new/existing) — milestone 1 phase 6
+- ✓ discuss-capability/discuss-feature with fuzzy resolution and backward routing — milestone 1 phase 6
+- ✓ Full traceability: every plan task maps to specific requirement IDs — milestone 1 phase 3
 
 ### Active
 
-<!-- New capabilities and structural changes for v2. -->
+<!-- Milestone 2 scope: deploy, clean, integrate, validate. -->
 
-- [ ] Project → Capability → Feature hierarchy replacing project → milestone → phase
-- [ ] Four workflow framings: debug, new, enhance, refactor — each with distinct discovery steps converging to same artifact pipeline
-- [ ] 3-layer requirements: end-user (story + acceptance), functional (behavior spec), technical (implementation spec)
-- [ ] First-principles research: challenge assumptions + reason from constraints upward, parallelized gather → synthesize
-- [ ] Iterative planning with system self-critique: research → draft → self-critique (coverage, approach validity, feasibility, surface assumptions) → present to user
-- [ ] 4 parallel code reviewers with trace reports: end-user, functional, technical, code quality (DRY/KISS/no bloat)
-- [ ] Review synthesis: consolidate 4 reviewer traces → verify findings → present recommendations to user
-- [ ] Reflect-and-write documentation step: .documentation/ directory with final-state reference docs generated from actual built code
-- [ ] Full traceability: every plan task maps to specific requirement IDs, no orphan tasks allowed
-- [ ] Layered agent context: core (project + capability) always present, framing-specific context added on top
-- [ ] Goal-driven agent definitions with artifact awareness — framing changes the questions agents ask, not the agent itself
-- [ ] Command structure encodes framing: `debug capability`, `new feature`, `refactor capability`, `enhance feature`
+- [ ] All v2 commands, workflows, agents, templates, references deploy via npm install -g
+- [ ] Source files use {GSD_ROOT} path references (install.js resolves at install time)
+- [ ] 11-command surface: init, debug, new, enhance, refactor, discuss-capability, discuss-feature, status, resume, plan, review
+- [ ] 26 unused commands removed (phase management, milestone lifecycle, utilities)
+- [ ] 20 orphaned workflows removed
+- [ ] Orphaned agents removed (gsd-codebase-mapper)
+- [ ] 6 research gatherers wired into framing pipeline (currently orphaned from surviving command chain)
+- [ ] install.js stripped to Claude Code only (remove Codex/Gemini/OpenCode adapters)
+- [ ] install.js: remove patch backup system, manifest, changelog/version metadata
+- [ ] gsd-tools.cjs: full audit + simplify (verify all modules, remove dead code)
+- [ ] Hooks: keep context monitor + statusline, drop update check, audit for v2 effectiveness
+- [ ] Default config.json ships with package
+- [ ] Framings directory (anchor questions) deployed via install
+- [ ] Full command audit — every surviving command fires without error
+- [ ] Holistic template audit — remove stale, update for v2 model
+- [ ] Holistic reference audit — remove unused, verify v2 accuracy
+- [ ] Smoke test: install, run /init on fresh repo, run framing commands, verify pipeline
 
 ### Out of Scope
 
-- Milestones — replaced by capability/feature hierarchy, no separate milestone concept
-- Auto-advance — dropped; user controls progression
-- Roadmap as separate artifact — replaced by capability/feature breakdown within project
-- Multi-AI-runtime support in v2 scope — focus on Claude Code first, port later
+- Multi-AI-runtime support (Codex/Gemini/OpenCode) — Claude Code only for v2.0, port later
+- New features or capabilities — deploy what was designed, don't redesign
+- Publishing to npm — personal tooling first
 - Backward compatibility with v1 GSD artifacts — clean break
+- User patch backup/reapply system — removed
 
 ## Context
 
@@ -112,13 +140,19 @@ refactor: reason for change → explore options ──┘
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Project/Capability/Feature hierarchy | Current milestone/phase model doesn't match how work is actually scoped — capabilities are user-facing abilities, features are building blocks | — Pending |
-| 3-layer requirements | Single-format requirements miss domain, functional, and technical nuance — each layer serves a different reviewer | — Pending |
-| System self-critique before presenting plans | Current GSD assumes research → plan is sufficient; surfacing assumptions and asking for guidance prevents silent guessing | — Pending |
-| 4 parallel reviewers vs single verifier | One verifier can't trace end-user experience AND code quality simultaneously — parallel specialization catches more issues | — Pending |
-| Framing-aware agents (same agent, different questions) | Building separate agents per framing would be redundant — the lens changes, not the agent | — Pending |
-| Clean break from v1 artifacts | Trying to maintain backward compat would constrain the hierarchy redesign | — Pending |
-| Refactor vs rewrite: TBD | Need research to determine — layered architecture carries forward but structural changes are significant | — Pending |
+| Project/Capability/Feature hierarchy | Matches how user thinks about work — capabilities are user-facing, features are building blocks | ✓ Built in milestone 1 |
+| 3-layer requirements (EU/FN/TC) | Each layer serves a different reviewer — domain, functional, and technical nuance | ✓ Built in milestone 1 |
+| System self-critique (2 rounds max) | Surfacing assumptions prevents silent guessing; hard stop prevents loops | ✓ Built in milestone 1 |
+| 4 parallel reviewers + synthesizer | Parallel specialization catches more issues; synthesizer assigns severity with cross-report context | ✓ Built in milestone 1 |
+| Framing-aware agents (same agent, different questions) | Lens changes, not the agent — discovery brief carries framing context through pipeline | ✓ Built in milestone 1 |
+| Clean break from v1 artifacts | Backward compat would constrain redesign | ✓ Confirmed |
+| 11-command surface (not 37) | Phase 6 CONTEXT.md defines the v2 command set — everything else is cruft | ✓ Decided in milestone 2 |
+| Claude Code only for v2.0 | Focus on one runtime. Strip Codex/Gemini/OpenCode adapters. | ✓ Decided in milestone 2 |
+| Files conform to install.js conventions | Less risk than modifying install.js. v2 files use gsd-* prefix, correct directories. | ✓ Decided in milestone 2 |
+| Source uses {GSD_ROOT} paths | install.js resolves at install time. No hardcoded absolute paths in source. | ✓ Decided in milestone 2 |
+| Remove patch backup system | Overcomplication for personal tooling | ✓ Decided in milestone 2 |
+| Drop update check hook | Noise for personal use. Keep context monitor + statusline. | ✓ Decided in milestone 2 |
+| Capability/feature directory only | New projects use .planning/capabilities/. No phases/ directory. | ✓ Decided in milestone 2 |
 
 ---
-*Last updated: 2026-02-28 after initialization*
+*Last updated: 2026-02-28 after milestone 2 initialization*
