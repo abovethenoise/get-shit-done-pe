@@ -78,31 +78,90 @@
 - [x] **AGNT-03**: Framing changes the questions agents ask, not the agent definition itself
 - [x] **AGNT-04**: Agent prompts are constrained to prevent scope hallucination and generic output
 
-## v2 Requirements
+## v2.0 Requirements
+
+Requirements for Install-Ready Launch milestone. Each maps to roadmap phases.
+
+### Install & Deploy
+
+- [ ] **INST-01**: All v2 commands, workflows, agents, templates, references deploy via `npm install -g`
+- [ ] **INST-02**: Source files use `{GSD_ROOT}` path references — install.js resolves at install time (no hardcoded absolute paths)
+- [ ] **INST-03**: All v2 files follow `gsd-*` prefix convention (commands: `gsd-*.md`, agents: `gsd-*.md`, hooks: `gsd-*.js`)
+- [ ] **INST-04**: v2 files placed in correct install.js directories: `commands/gsd/`, `agents/`, `get-shit-done/` (workflows/references/templates)
+- [ ] **INST-05**: `install.js` stripped to Claude Code only (remove Codex/Gemini/OpenCode adapters and runtime conversions)
+- [ ] **INST-06**: `install.js`: remove patch backup system (`gsd-local-patches/`), manifest (`gsd-file-manifest.json`), changelog/version metadata
+- [ ] **INST-07**: Default `config.json` ships with package
+- [ ] **INST-08**: Framings directory (anchor questions) deployed via install path
+
+### Command Surface
+
+- [ ] **CMD-01**: 11-command surface works end-to-end: init, debug, new, enhance, refactor, discuss-capability, discuss-feature, status, resume, plan, review
+- [ ] **CMD-02**: 26 unused commands removed (phase management, milestone lifecycle, utilities)
+- [ ] **CMD-03**: Every surviving command fires without error (full command audit)
+
+### Cleanup
+
+- [ ] **CLN-01**: 20 orphaned workflows removed
+- [ ] **CLN-02**: Orphaned agents removed (gsd-codebase-mapper, etc.)
+- [ ] **CLN-03**: `gsd-tools.cjs`: full audit — verify all modules, remove dead code, remove v1-only concepts (milestone, phase CLI commands)
+- [ ] **CLN-04**: Holistic template audit — remove stale templates, update surviving ones for v2 model (capability/feature, not phase)
+- [ ] **CLN-05**: Holistic reference audit — remove unused references, verify v2 accuracy
+- [ ] **CLN-06**: Remove orphaned hook: `gsd-check-update.js` (update check dropped per decision)
+- [ ] **CLN-07**: Remove VERSION, CHANGELOG.md, `package.json` `"type": "commonjs"` enforcement if no longer needed
+
+### Integration
+
+- [ ] **INTG-01**: 6 research gatherers wired into framing pipeline (currently orphaned from surviving command chain)
+- [ ] **INTG-02**: Hooks: keep context monitor + statusline, drop update check, audit remaining hooks for v2 effectiveness
+- [ ] **INTG-03**: All `@file` references in commands/workflows/agents resolve to files that actually exist post-cleanup
+
+### Directory & Structure
+
+- [ ] **DIR-01**: New projects use `.planning/capabilities/` directory structure (no `phases/` directory)
+- [ ] **DIR-02**: `.documentation/` directory structure deployed: `architecture.md`, `domain.md`, `mapping.md`, `capabilities/`, `decisions/`
+- [ ] **DIR-03**: All v2 path references use capability/feature model, not phase model
+
+### Validation
+
+- [ ] **VAL-01**: Smoke test: `npm install -g`, run `/init` on fresh repo, verify project setup
+- [ ] **VAL-02**: Smoke test: run framing commands (`/debug`, `/new`, `/enhance`, `/refactor`), verify discovery → pipeline flow
+- [ ] **VAL-03**: Smoke test: run on existing project, verify `/init` auto-detect works
+
+## Future Requirements
+
+Deferred to post-v2.0. Tracked but not in current roadmap.
 
 ### Migration
 
 - **MIGR-01**: `gsd migrate` command converts v1 .planning/ artifacts to v2 structure
 - **MIGR-02**: Migration guide documenting v1 → v2 artifact mapping
 
+### Multi-Runtime
+
+- **MRUN-01**: Codex adapter support for install.js
+- **MRUN-02**: Gemini adapter support for install.js
+- **MRUN-03**: OpenCode adapter support for install.js
+
 ### Enhancements
 
 - **ENH-01**: Framing-aware context injection with examples and anti-patterns per work type
 - **ENH-02**: Extended STATE.md fields for cross-feature dependencies and blocked capabilities
-- **ENH-03**: Multi-runtime support (Gemini CLI, OpenCode, Codex)
 
 ## Out of Scope
 
 | Feature | Reason |
 |---------|--------|
+| Multi-AI-runtime support (Codex/Gemini/OpenCode) | Claude Code only for v2.0, port later |
+| New features or capabilities | Deploy what was designed, don't redesign |
+| Publishing to npm | Personal tooling first |
+| Backward compatibility with v1 GSD artifacts | Clean break |
+| User patch backup/reapply system | Removed — overcomplication for personal tooling |
 | Auto-advance through stages | Removes user from control loop; compounds errors silently |
 | Real-time collaboration | Framework is single-user, single-project by design |
 | AI-generated test suites in orchestrator | Tests belong in executor domain, not orchestrator |
 | Vector database / embeddings for context | STATE.md discipline beats non-deterministic retrieval |
-| Backward compatibility with v1 artifacts | Clean break needed for hierarchy redesign |
 | Dashboard / progress visualization UI | Terminal-native; /gsd:progress covers this |
 | LLM-judged requirement quality scoring | Circular — AI grading its own inputs; structural validation instead |
-| Milestones as separate concept | Replaced by capability/feature hierarchy |
 
 ## Traceability
 
@@ -156,10 +215,11 @@
 | AGNT-04 | Phase 2 | Complete |
 
 **Coverage:**
-- v1 requirements: 46 total
-- Mapped to phases: 46
-- Unmapped: 0
+- v1 requirements: 46 total — all complete
+- v2.0 requirements: 24 total
+- Mapped to phases: 0
+- Unmapped: 24
 
 ---
 *Requirements defined: 2026-02-28*
-*Last updated: 2026-02-28 after roadmap creation*
+*Last updated: 2026-02-28 after v2.0 requirements definition*
