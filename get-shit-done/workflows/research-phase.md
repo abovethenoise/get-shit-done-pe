@@ -1,17 +1,18 @@
 <purpose>
-Research how to implement a phase. Spawns gsd-phase-researcher with phase context.
+Research how to implement a phase. Thin wrapper that delegates to research-workflow.md for the actual 6-gatherer research pipeline.
 
 Standalone research command. For most workflows, use `/gsd:plan-phase` which integrates research automatically.
 </purpose>
 
 <process>
 
-## Step 0: Resolve Model Profile
+## Step 0: Resolve Context
 
-@~/.claude/get-shit-done/references/model-profile-resolution.md
+```bash
+INIT=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" init phase-op "${PHASE}")
+```
 
-Resolve model for:
-- `gsd-phase-researcher`
+Extract from init JSON: `phase_dir`, `padded_phase`, `phase_number`, `phase_name`, `state_path`, `requirements_path`, `context_path`, `has_research`, `commit_docs`.
 
 ## Step 1: Normalize and Validate Phase
 
@@ -31,43 +32,40 @@ ls .planning/phases/${PHASE}-*/RESEARCH.md 2>/dev/null
 
 If exists: Offer update/view/skip options.
 
-## Step 3: Gather Phase Context
+## Step 3: Determine Output Directory
 
-```bash
-INIT=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" init phase-op "${PHASE}")
-# Extract: phase_dir, padded_phase, phase_number, state_path, requirements_path, context_path
+Set `output_dir` to the phase directory: `${phase_dir}`
+
+## Step 4: Delegate to Research Workflow
+
+Invoke the research workflow with assembled parameters:
+
+```
+@~/.claude/get-shit-done/workflows/research-workflow.md
 ```
 
-## Step 4: Spawn Researcher
+Pass:
+- `subject`: "Phase {phase_number}: {phase_name}" (from PHASE_INFO)
+- `context_paths`:
+  - `project_path`: .planning/PROJECT.md
+  - `state_path`: {state_path}
+  - `roadmap_path`: .planning/ROADMAP.md
+  - `requirements_path`: {requirements_path}
+- `output_dir`: {phase_dir}
+- `capability_path`: null (phase-scoped, not capability-scoped)
+- `feature_path`: null (phase-scoped, not feature-scoped)
+- `framing_context`: null (standalone invocation, no framing)
 
-```
-Task(
-  prompt="<objective>
-Research implementation approach for Phase {phase}: {name}
-</objective>
+The research workflow handles:
+1. Spawning 6 gatherers in parallel via gather-synthesize
+2. Consolidating via research synthesizer
+3. Writing RESEARCH.md to {output_dir}/RESEARCH.md
 
-<files_to_read>
-- {context_path} (USER DECISIONS from /gsd:discuss-capability)
-- {requirements_path} (Project requirements)
-- {state_path} (Project decisions and history)
-</files_to_read>
-
-<additional_context>
-Phase description: {description}
-</additional_context>
-
-<output>
-Write to: .planning/phases/${PHASE}-{slug}/${PHASE}-RESEARCH.md
-</output>",
-  subagent_type="gsd-phase-researcher",
-  model="{researcher_model}"
-)
-```
+Wait for completion.
 
 ## Step 5: Handle Return
 
-- `## RESEARCH COMPLETE` — Display summary, offer: Plan/Dig deeper/Review/Done
-- `## CHECKPOINT REACHED` — Present to user, spawn continuation
-- `## RESEARCH INCONCLUSIVE` — Show attempts, offer: Add context/Try different mode/Manual
+- `status: "complete"` or `status: "partial"` -- Display summary, offer: Plan/Dig deeper/Review/Done
+- `status: "failed"` -- Show failures, offer: Add context/Retry/Manual
 
 </process>

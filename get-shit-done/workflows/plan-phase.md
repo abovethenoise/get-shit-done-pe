@@ -1,5 +1,5 @@
 <purpose>
-Create executable phase prompts (PLAN.md files) for a roadmap phase with integrated research and verification. Default flow: Research (if needed) -> Plan -> Verify -> Done. Orchestrates gsd-phase-researcher, gsd-planner, and gsd-plan-checker agents with a revision loop (max 3 iterations).
+Create executable phase prompts (PLAN.md files) for a roadmap phase with integrated research and verification. Default flow: Research (if needed) -> Plan -> Verify -> Done. Orchestrates research-workflow (6 gatherers + synthesizer), gsd-planner, and gsd-plan-checker agents with a revision loop (max 3 iterations).
 </purpose>
 
 <required_reading>
@@ -172,52 +172,32 @@ Display banner:
 ◆ Spawning researcher...
 ```
 
-### Spawn gsd-phase-researcher
+### Delegate to Research Workflow
 
-```bash
-PHASE_DESC=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" roadmap get-phase "${PHASE}" | jq -r '.section')
-```
-
-Research prompt:
-
-```markdown
-<objective>
-Research how to implement Phase {phase_number}: {phase_name}
-Answer: "What do I need to know to PLAN this phase well?"
-</objective>
-
-<files_to_read>
-- {context_path} (USER DECISIONS from /gsd:discuss-capability)
-- {requirements_path} (Project requirements)
-- {state_path} (Project decisions and history)
-</files_to_read>
-
-<additional_context>
-**Phase description:** {phase_description}
-**Phase requirement IDs (MUST address):** {phase_req_ids}
-
-**Project instructions:** Read ./CLAUDE.md if exists — follow project-specific guidelines
-**Project skills:** Check .claude/skills/ or .agents/skills/ directory (if either exists) — read SKILL.md files, research should account for project skill patterns
-</additional_context>
-
-<output>
-Write to: {phase_dir}/{phase_num}-RESEARCH.md
-</output>
-```
+Invoke the research workflow:
 
 ```
-Task(
-  prompt="First, read ~/.claude/agents/gsd-phase-researcher.md for your role and instructions.\n\n" + research_prompt,
-  subagent_type="general-purpose",
-  model="{researcher_model}",
-  description="Research Phase {phase}"
-)
+@~/.claude/get-shit-done/workflows/research-workflow.md
 ```
 
-### Handle Researcher Return
+Pass:
+- `subject`: "Phase {phase_number}: {phase_name}"
+- `context_paths`:
+  - `project_path`: .planning/PROJECT.md
+  - `state_path`: {state_path}
+  - `roadmap_path`: .planning/ROADMAP.md
+  - `requirements_path`: {requirements_path}
+- `output_dir`: {phase_dir}
+- `capability_path`: null (phase-scoped)
+- `feature_path`: null (phase-scoped)
+- `framing_context`: null (standalone planning, no framing -- unless framing_context was passed from framing-pipeline caller)
 
-- **`## RESEARCH COMPLETE`:** Display confirmation, continue to step 6
-- **`## RESEARCH BLOCKED`:** Display blocker, offer: 1) Provide context, 2) Skip research, 3) Abort
+The research workflow spawns 6 gatherers in parallel via gather-synthesize, then consolidates via the research synthesizer. Output: `{phase_dir}/RESEARCH.md`.
+
+### Handle Research Return
+
+- **`status: "complete"` or `status: "partial"`:** Display confirmation, continue to step 6
+- **`status: "failed"`:** Display blocker, offer: 1) Provide context, 2) Skip research, 3) Abort
 
 ## 5.5. Create Validation Strategy (if Nyquist enabled)
 
@@ -658,7 +638,7 @@ Verification: {Passed | Passed with override | Skipped}
 - [ ] Phase directory created if needed
 - [ ] CONTEXT.md loaded early (step 4) and passed to ALL agents
 - [ ] Research completed (unless --skip-research or --gaps or exists)
-- [ ] gsd-phase-researcher spawned with CONTEXT.md
+- [ ] research-workflow spawned with CONTEXT.md
 - [ ] Existing plans checked
 - [ ] gsd-planner spawned with CONTEXT.md + RESEARCH.md
 - [ ] Plans created (PLANNING COMPLETE or CHECKPOINT handled)

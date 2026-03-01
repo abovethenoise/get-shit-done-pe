@@ -9,7 +9,6 @@ Model profiles control which Claude model each GSD agent uses. This allows balan
 | gsd-planner | opus | opus | sonnet |
 | gsd-roadmapper | opus | sonnet | sonnet |
 | gsd-executor | opus | sonnet | sonnet |
-| gsd-phase-researcher | opus | sonnet | haiku |
 | gsd-project-researcher | opus | sonnet | haiku |
 | gsd-research-synthesizer | sonnet | sonnet | haiku |
 | gsd-debugger | opus | sonnet | sonnet |

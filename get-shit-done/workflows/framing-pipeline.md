@@ -73,22 +73,30 @@ Research agents investigate technical feasibility with lens-aware focus.
 - /enhance: Prioritize existing module boundaries, integration points, test coverage
 - /refactor: Prioritize dependency mapping, consumer contracts, migration precedents
 
-Invoke the existing research workflow, passing framing context:
+Invoke the research workflow directly, passing framing context:
 
 ```
-@~/.claude/get-shit-done/workflows/research-phase.md
+@~/.claude/get-shit-done/workflows/research-workflow.md
 ```
 
-Provide additional context to the research phase:
-```
-<framing_context>
-Brief path: {BRIEF_PATH}
-Primary lens: {LENS}
-Secondary lens: {SECONDARY_LENS or "none"}
-Lens direction: {LENS_METADATA.direction}
-Research focus: {lens-specific focus from above}
-</framing_context>
-```
+Pass:
+- `subject`: "{CAPABILITY_NAME}" (the capability being researched)
+- `context_paths`:
+  - `project_path`: .planning/PROJECT.md
+  - `state_path`: .planning/STATE.md
+  - `roadmap_path`: .planning/ROADMAP.md
+  - `requirements_path`: .planning/capabilities/{CAPABILITY_SLUG}/REQUIREMENTS.md (if exists)
+- `output_dir`: .planning/capabilities/{CAPABILITY_SLUG}
+- `capability_path`: .planning/capabilities/{CAPABILITY_SLUG}/CAPABILITY.md
+- `feature_path`: null (capability-level research, not feature-level)
+- `framing_context`:
+  - `brief_path`: {BRIEF_PATH}
+  - `lens`: {LENS}
+  - `secondary_lens`: {SECONDARY_LENS or null}
+  - `direction`: {LENS_METADATA.direction}
+  - `focus`: {lens-specific focus from above}
+
+The research workflow spawns 6 gatherers in parallel via gather-synthesize, then consolidates via the research synthesizer. Output: `{output_dir}/RESEARCH.md`.
 
 **After research completes:**
 - Check for escalation signals in research output (see escalation-protocol.md)
