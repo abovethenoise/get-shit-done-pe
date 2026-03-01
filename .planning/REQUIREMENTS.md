@@ -96,7 +96,7 @@ Requirements for Install-Ready Launch milestone. Each maps to roadmap phases.
 ### Command Surface
 
 - [ ] **CMD-01**: 11-command surface works end-to-end: init, debug, new, enhance, refactor, discuss-capability, discuss-feature, status, resume, plan, review
-- [ ] **CMD-02**: 26 unused commands removed (phase management, milestone lifecycle, utilities)
+- [x] **CMD-02**: 26 unused commands removed (phase management, milestone lifecycle, utilities)
 - [ ] **CMD-03**: Every surviving command fires without error (full command audit)
 
 ### Cleanup
@@ -213,7 +213,7 @@ Deferred to post-v2.0. Tracked but not in current roadmap.
 | AGNT-02 | Phase 2 | Complete |
 | AGNT-03 | Phase 2 | Complete |
 | AGNT-04 | Phase 2 | Complete |
-| CMD-02 | Phase 8 | Pending |
+| CMD-02 | Phase 8 | Complete |
 | CLN-01 | Phase 8 | Pending |
 | CLN-02 | Phase 8 | Pending |
 | CLN-06 | Phase 8 | Pending |
