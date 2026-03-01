@@ -34,7 +34,7 @@
 - [x] **WKFL-02**: Debug framing discovery: observe current state → compare to expected → hypothesize → root cause → converge to pipeline
 - [x] **WKFL-03**: New framing discovery: explore → brainstorm → converge to pipeline
 - [x] **WKFL-04**: Enhance framing discovery: assess what's working → identify what needs improvement → align → converge to pipeline
-- [x] **WKFL-05**: Refactor framing discovery: reason for change → new goal/mission → understand codebase → explore options → align → converge to pipeline
+- [x] **WKFL-05**: Refactor framing discovery: reason for change → explore options → converge to pipeline
 - [x] **WKFL-06**: All framings converge to same artifact pipeline: requirements → plan → execute → review → documentation
 - [x] **WKFL-07**: Framing context injection: same agents receive different question sets based on active framing
 
@@ -213,13 +213,40 @@ Deferred to post-v2.0. Tracked but not in current roadmap.
 | AGNT-02 | Phase 2 | Complete |
 | AGNT-03 | Phase 2 | Complete |
 | AGNT-04 | Phase 2 | Complete |
+| CMD-02 | Phase 8 | Pending |
+| CLN-01 | Phase 8 | Pending |
+| CLN-02 | Phase 8 | Pending |
+| CLN-06 | Phase 8 | Pending |
+| CLN-07 | Phase 8 | Pending |
+| DIR-01 | Phase 9 | Pending |
+| DIR-02 | Phase 9 | Pending |
+| DIR-03 | Phase 9 | Pending |
+| INTG-01 | Phase 9 | Pending |
+| INTG-02 | Phase 9 | Pending |
+| CLN-03 | Phase 10 | Pending |
+| CLN-04 | Phase 10 | Pending |
+| CLN-05 | Phase 10 | Pending |
+| INTG-03 | Phase 10 | Pending |
+| CMD-03 | Phase 11 | Pending |
+| INST-01 | Phase 12 | Pending |
+| INST-02 | Phase 12 | Pending |
+| INST-03 | Phase 12 | Pending |
+| INST-04 | Phase 12 | Pending |
+| INST-05 | Phase 12 | Pending |
+| INST-06 | Phase 12 | Pending |
+| INST-07 | Phase 12 | Pending |
+| INST-08 | Phase 12 | Pending |
+| CMD-01 | Phase 12 | Pending |
+| VAL-01 | Phase 12 | Pending |
+| VAL-02 | Phase 12 | Pending |
+| VAL-03 | Phase 12 | Pending |
 
 **Coverage:**
-- v1 requirements: 46 total — all complete
-- v2.0 requirements: 24 total
-- Mapped to phases: 0
-- Unmapped: 24
+- v1 requirements: 46 total -- all complete
+- v2.0 requirements: 27 total
+- Mapped to phases: 27
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-28*
-*Last updated: 2026-02-28 after v2.0 requirements definition*
+*Last updated: 2026-03-01 after v2.0 roadmap rewrite (phases 8-12)*

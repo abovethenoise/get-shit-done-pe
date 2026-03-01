@@ -2,153 +2,95 @@
 
 ## Overview
 
-GSD v2 replaces the milestone/phase hierarchy with project/capability/feature, adds 3-layer requirements, 4-parallel code review, self-critiquing plans, and framing-aware workflows. The build follows a strict dependency chain: foundation infrastructure and schemas first (everything reads templates), then agent definitions (workflows spawn agents), then the pipeline stages in order (plan, review, document), then workflows and commands that orchestrate it all.
+Milestone v2.0 "Install-Ready Launch" takes everything built in milestone 1 (phases 1-7) and makes it real: installable via `npm install -g`, clean of dead code, with all components wired together and verified on actual projects. The sequence is deliberate: safe deletions first (low-risk cleanup), then establish the v2 directory model and wire orphaned components (structure/integration), then harder cleanup that depends on knowing what survived (remaining cleanup), then automated verification (testing), and finally install and end-to-end validation on a real project.
+
+## Milestones
+
+- Milestone 1 (Phases 1-7): Design and build v2 pipeline -- COMPLETE
+- Milestone 2 (Phases 8-12): Install-Ready Launch -- IN PROGRESS
 
 ## Phases
 
 **Phase Numbering:**
-- Integer phases (1, 2, 3): Planned milestone work
-- Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
+- Phases 1-7: Milestone 1 (complete)
+- Phases 8-12: Milestone 2 (current)
+- Decimal phases (e.g., 8.1): Urgent insertions if needed
 
-Decimal phases appear between their surrounding integers in numeric order.
-
-- [x] **Phase 1: Foundation** - Directory structure, templates, CLI commands, YAML migration, and requirement schema (completed 2026-02-28)
-- [ ] **Phase 2: Agent Framework** - Goal-driven agent definitions with layered context and research agents
-- [ ] **Phase 3: Planning Pipeline** - Planner with self-critique, traceability enforcement, and plan finalization loop
-- [ ] **Phase 4: Review Layer** - 4 parallel specialist reviewers and review synthesizer
-- [x] **Phase 5: Documentation** - Reflect-and-write documentation agent generating reference docs from built code (completed 2026-02-28)
-- [x] **Phase 6: Workflows and Commands** - Framing-aware workflows, discovery phases, initialization commands, and end-to-end integration (completed 2026-02-28)
-- [x] **Phase 7: Cleanup** - Audit v1 artifacts, remove dead code/features, trim anything the new model doesn't need (completed 2026-02-28)
+- [ ] **Phase 8: Low Risk Cleanup** - Remove things we obviously won't use: dead commands, orphaned workflows/agents, dropped hooks and metadata files
+- [ ] **Phase 9: Structure & Integration** - Establish v2 directory model and wire orphaned components (research gatherers, hooks) into the surviving chain
+- [ ] **Phase 10: Remaining Cleanup & Polish** - Harder cleanup that depends on knowing the v2 structure: CLI audit, template/reference audits, file reference validation
+- [ ] **Phase 11: Automated Testing** - Verify every surviving command fires without error and all file references resolve before attempting install
+- [ ] **Phase 12: Install & Try New Project** - Make it installable via npm install -g, then prove it works end-to-end on real projects
 
 ## Phase Details
 
-### Phase 1: Foundation
-**Goal**: The structural backbone exists -- directory hierarchy, templates, CLI tooling, and requirement format are in place so all downstream agents and workflows have stable schemas to read and write
-**Depends on**: Nothing (first phase)
-**Requirements**: FOUND-01, FOUND-02, FOUND-03, FOUND-04, FOUND-05, FOUND-06, REQS-01, REQS-02
+### Phase 8: Low Risk Cleanup
+**Goal**: The codebase is free of obviously dead artifacts -- deleted commands, orphaned workflows, orphaned agents, dropped hooks, and metadata files that no longer serve a purpose
+**Depends on**: Phase 7 (milestone 1 cleanup audit identified what to remove)
+**Requirements**: CMD-02, CLN-01, CLN-02, CLN-06, CLN-07
 **Success Criteria** (what must be TRUE):
-  1. Running `gsd capability create` and `gsd feature create` produces the correct directory structure under `.planning/capabilities/`
-  2. FEATURE.md template contains all 3 requirement layers (end-user story + acceptance, functional behavior spec, technical implementation spec) with proper REQ ID namespacing (EU-xx, FN-xx, TC-xx)
-  3. STATE.md tracks current capability and current feature position fields
-  4. `js-yaml` parses and serializes 3-layer nested requirement YAML without data loss, and the old hand-rolled parser is removed
-  5. All new templates (CAPABILITY.md, FEATURE.md, REVIEW.md, DOCS.md) exist and match the canonical schemas
-**Plans**: 3 plans
+  1. The 26 unused commands identified in milestone 1 audit are deleted from the commands directory
+  2. The 20 orphaned workflows are deleted
+  3. Orphaned agents (gsd-codebase-mapper, etc.) are deleted
+  4. `gsd-check-update.js` hook is removed
+  5. VERSION, CHANGELOG.md, and other dropped metadata/infrastructure files are removed
+**Plans**: TBD
 
-Plans:
-- [ ] 01-01-PLAN.md — js-yaml migration: replace hand-rolled frontmatter parser with js-yaml@4.1.1
-- [ ] 01-02-PLAN.md — Templates and core helpers: create CAPABILITY/FEATURE/REVIEW/DOCS templates, add findCapabilityInternal/findFeatureInternal
-- [ ] 01-03-PLAN.md — CLI commands and state: capability/feature lifecycle commands, gsd-tools dispatch, STATE.md extensions
-
-### Phase 2: Agent Framework
-**Goal**: Agent definitions follow a consistent goal-driven pattern with layered context injection, and research agents can gather and synthesize information using available tools
-**Depends on**: Phase 1
-**Requirements**: AGNT-01, AGNT-02, AGNT-03, AGNT-04, RSRCH-01, RSRCH-02, RSRCH-03, RSRCH-04, RSRCH-05, RSRCH-06
+### Phase 9: Structure & Integration
+**Goal**: v2 directory conventions are established in all artifacts, and orphaned pipeline components (research gatherers, hooks) are wired into the surviving command chain
+**Depends on**: Phase 8 (must remove dead weight before wiring survivors)
+**Requirements**: DIR-01, DIR-02, DIR-03, INTG-01, INTG-02
 **Success Criteria** (what must be TRUE):
-  1. Every agent definition specifies its goal, the artifacts it reads, and the artifacts it writes -- no ambient knowledge assumptions
-  2. Agents receive core context (project + capability) automatically, with framing-specific context layered on top without modifying the agent definition itself
-  3. Agent prompts include explicit scope constraints that prevent scope hallucination and generic output
-  4. Research agents can be spawned in parallel (gather pattern) with a synthesizer that consolidates findings into a single summary
-  5. Research agents use mgrep for codebase search and web search tools for domain knowledge
-**Plans**: 3 plans
+  1. New projects created via /init produce `.planning/capabilities/` directory structure with no `phases/` directory
+  2. `.documentation/` directory structure is defined with architecture.md, domain.md, mapping.md, capabilities/, and decisions/ subdirectories
+  3. All path references in surviving commands, workflows, and agents use capability/feature model (no phase model references remain)
+  4. The 6 research gatherers are invoked by the framing pipeline workflow (not orphaned)
+  5. Hooks audit complete: context monitor + statusline confirmed working, update check removed, remaining hooks verified effective for v2
+**Plans**: TBD
 
-Plans:
-- [ ] 02-01-PLAN.md — Research agent definitions: 6 gatherers + 1 synthesizer following v2 goal-driven schema
-- [ ] 02-02-PLAN.md — Gather-synthesize workflow (reusable orchestration primitive) and framing directory skeleton
-- [ ] 02-03-PLAN.md — Role-based model resolution (ROLE_MODEL_MAP + resolveModelFromRole) in core.cjs
-
-### Phase 3: Planning Pipeline
-**Goal**: The planner produces plans where every task traces to specific requirement IDs, self-critiques its own draft, and presents findings for user decision before finalizing
-**Depends on**: Phase 2
-**Requirements**: PLAN-01, PLAN-02, PLAN-03, PLAN-04, REQS-03, REQS-04
+### Phase 10: Remaining Cleanup & Polish
+**Goal**: The harder cleanup work that requires knowing the final v2 structure is done -- CLI tool is lean, templates serve v2 artifact types, references are accurate, and all file pointers resolve
+**Depends on**: Phase 9 (must know v2 structure before auditing templates/references/CLI against it)
+**Requirements**: CLN-03, CLN-04, CLN-05, INTG-03
 **Success Criteria** (what must be TRUE):
-  1. Every task in a generated plan references at least one REQ ID from the 3-layer requirement set -- orphan tasks are rejected
-  2. After drafting, the planner self-critiques on coverage gaps, approach validity, feasibility concerns, and surfaces assumptions needing human guidance (maximum 2 rounds, then hard stop)
-  3. Self-critique findings are presented to the user as Q&A -- plan is not finalized until user confirms
-  4. A traceability table exists mapping every REQ ID through plan, execution, review, and documentation stages
-**Plans**: 2 plans
+  1. `gsd-tools.cjs` contains no dead modules -- every exported function is called by at least one surviving command/workflow/agent, and v1-only concepts (milestone, phase CLI commands) are removed
+  2. Every template in the templates directory serves a v2 artifact type (capability/feature model, not phase model); stale templates are removed
+  3. Every reference document is accurate for v2; unused references are removed
+  4. All `@file` references in commands/workflows/agents resolve to files that actually exist post-cleanup
+**Plans**: TBD
 
-Plans:
-- [ ] 03-01-PLAN.md — CLI plan validator (gsd plan-validate) and FEATURE.md template update for traceability columns
-- [ ] 03-02-PLAN.md — v2 planner agent (self-critique loop, v2 task schema) and plan-phase workflow (Q&A loop, validation gate, finalization confirmation)
-
-### Phase 4: Review Layer
-**Goal**: Executed work is reviewed by 4 specialist agents in parallel, each tracing against their requirement layer, with a synthesizer that adjudicates conflicts and presents consolidated recommendations
-**Depends on**: Phase 3
-**Requirements**: REVW-01, REVW-02, REVW-03, REVW-04, REVW-05, REVW-06, REVW-07, REVW-08
+### Phase 11: Automated Testing
+**Goal**: Every surviving command and file reference is verified to work before attempting install -- problems caught here, not during smoke test
+**Depends on**: Phase 10 (all cleanup and wiring must be complete before verification)
+**Requirements**: CMD-03
 **Success Criteria** (what must be TRUE):
-  1. 4 reviewers run in parallel without context leakage: end-user traces against story + acceptance, functional traces against behavior specs, technical traces against implementation specs, code quality traces for DRY/KISS/bloat
-  2. Each reviewer produces a structured trace report with per-requirement verdicts (met / not met / regression) — the synthesizer assigns finding severity (blocker / major / minor) after seeing all 4 reports
-  3. The synthesizer consolidates 4 reports using explicit priority ordering (user > functional > technical > quality), includes a mandatory conflicts section, and presents recommendations to the user
-  4. User reviews synthesized recommendations before any findings are acted on
-**Plans**: 3 plans
+  1. Every surviving command (11 total) fires without error when invoked
+  2. All `@file` references across the entire artifact set resolve to existing files (automated scan)
+  3. No command references a deleted workflow, agent, or template
+**Plans**: TBD
 
-Plans:
-- [ ] 04-01-PLAN.md — Agent definitions: 4 specialist reviewers (end-user, functional, technical, code quality) + review synthesizer
-- [ ] 04-02-PLAN.md — Infrastructure: review template rewrite, frontmatter schema, init review-phase CLI command
-- [ ] 04-03-PLAN.md — Workflow and command: review-phase orchestration (gather-synthesize + Q&A + re-review loop) + slash command
-
-### Phase 5: Documentation
-**Goal**: After review acceptance, a documentation agent reads the actual built code and generates reference docs optimized for future lookup -- not a rehash of the spec
-**Depends on**: Phase 4
-**Requirements**: DOCS-01, DOCS-02, DOCS-03
+### Phase 12: Install & Try New Project
+**Goal**: Running `npm install -g` deploys all v2 artifacts, and the full pipeline works end-to-end on both fresh and existing projects
+**Depends on**: Phase 11 (must verify components work before packaging for install)
+**Requirements**: INST-01, INST-02, INST-03, INST-04, INST-05, INST-06, INST-07, INST-08, CMD-01, VAL-01, VAL-02, VAL-03
 **Success Criteria** (what must be TRUE):
-  1. The documentation agent reads actual source files (real file paths, function names, data flows) after review is accepted -- not from memory or spec
-  2. Generated docs live in `.documentation/` organized per capability/feature, with a `built-from-code-at:` git SHA timestamp for staleness detection
-  3. Documentation is structured for quick lookups and mgrep searches (clear headings, consistent naming, searchable function/module references)
-**Plans**: 3 plans
-
-Plans:
-- [ ] 05-01-PLAN.md — Doc agent definition (gsd-doc-writer.md) + gate doc scaffolding (.documentation/gate/)
-- [ ] 05-02-PLAN.md — init doc-phase CLI command + docs.md template rewrite
-- [ ] 05-03-PLAN.md — Doc-phase workflow + slash command
-
-### Phase 6: Workflows and Commands
-**Goal**: The full pipeline is orchestrated end-to-end through framing-aware workflows (debug/new/enhance/refactor) that share a common artifact pipeline, plus initialization commands that set up new and existing projects
-**Depends on**: Phase 5
-**Requirements**: WKFL-01, WKFL-02, WKFL-03, WKFL-04, WKFL-05, WKFL-06, WKFL-07, INIT-01, INIT-02, INIT-03
-**Success Criteria** (what must be TRUE):
-  1. Four framing commands (debug, new, enhance, refactor) each run a distinct discovery phase with framing-specific questions, then all converge to the same pipeline: requirements, plan, execute, review, documentation
-  2. Framing context is injected at the workflow level -- the same agent definitions serve all framings with different question sets
-  3. New-project initialization gathers goals/opinions via Q&A and maps out capabilities; existing-project initialization discovers capabilities via parallel research then confirms with user
-  4. `discuss-capability` builds out features from a mapped capability through guided conversation
-  5. A full end-to-end test passes: one capability, one feature, through discovery, requirements, planning, execution, review, and documentation
-**Plans**: 5 plans
-
-Plans:
-- [ ] 06-01-PLAN.md -- Foundation: Discovery Brief template, framing anchor questions, lens reference doc, fillTemplate extension
-- [ ] 06-02-PLAN.md -- Framing commands: 4 slash commands (/debug, /new, /enhance, /refactor) + shared framing-discovery workflow + init command
-- [ ] 06-03-PLAN.md -- Pipeline convergence: framing-pipeline workflow (6 post-discovery stages), escalation protocol reference
-- [ ] 06-04-PLAN.md -- Project initialization: /init command with auto-detect (new/existing), both flows, incremental writes
-- [ ] 06-05-PLAN.md -- Discussion commands: /discuss-capability + /discuss-feature workflows, slash commands, init functions
-
-### Phase 7: Cleanup
-**Goal**: Audit everything remaining from v1 — identify what the new model relies on, what's dead weight, and remove anything that doesn't serve a v2 dependency
-**Depends on**: Phase 6
-**Requirements**: FOUND-07
-**Success Criteria** (what must be TRUE):
-  1. Every v1 command, workflow, agent, template, and reference file is inventoried against v2 usage
-  2. Files not referenced by any v2 capability, feature, or workflow are identified and removed
-  3. CLI commands from gsd-tools.cjs that serve only v1 concepts (milestone, phase) are removed or refactored
-  4. No dead code, obsolete templates, or orphan references remain
-**Plans**: 3 plans
-
-Plans:
-- [ ] 07-01-PLAN.md — Archive dead code: TDD execution pattern, todo system, health check, dead artifacts to .archive/07-cleanup/
-- [ ] 07-02-PLAN.md — Resolve conflicts: simplify deviation rules, fix resume naming mismatch, resolve planner divergence, clarify init paths
-- [ ] 07-03-PLAN.md — Pipeline smoke test: validate all @file references, CLI dispatch, and removed-concept sweep
+  1. `npm install -g` copies all v2 commands, workflows, agents, templates, references, and framings to their correct install.js target directories
+  2. Source files contain `{GSD_ROOT}` path tokens (no hardcoded absolute paths) and install.js resolves them at install time
+  3. install.js contains no Codex/Gemini/OpenCode adapter code, no patch backup system, no manifest, no changelog/version metadata
+  4. Default config.json and framings directory deploy alongside other artifacts
+  5. After install, `/init` on a fresh repo creates project scaffolding and framing commands launch discovery that flows into the pipeline
+  6. After install, `/init` on an existing project triggers auto-detect (existing mode) and discovers existing capabilities
+**Plans**: TBD
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
+Phases execute in numeric order: 8 -> 9 -> 10 -> 11 -> 12
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 3/3 | Complete   | 2026-02-28 |
-| 2. Agent Framework | 1/3 | In Progress|  |
-| 3. Planning Pipeline | 0/2 | Not started | - |
-| 4. Review Layer | 0/2 | Not started | - |
-| 5. Documentation | 3/3 | Complete   | 2026-02-28 |
-| 6. Workflows and Commands | 5/5 | Complete   | 2026-02-28 |
-| 7. Cleanup | 0/3 | Not started | - |
-
+| 8. Low Risk Cleanup | 0/TBD | Not started | - |
+| 9. Structure & Integration | 0/TBD | Not started | - |
+| 10. Remaining Cleanup & Polish | 0/TBD | Not started | - |
+| 11. Automated Testing | 0/TBD | Not started | - |
+| 12. Install & Try New Project | 0/TBD | Not started | - |
