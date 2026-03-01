@@ -8,7 +8,7 @@ progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 5
-  completed_plans: 3
+  completed_plans: 4
 ---
 
 # Project State
@@ -23,11 +23,11 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 8 of 12 (Low Risk Cleanup)
-Plan: 3 of 5 complete
+Plan: 4 of 5 complete
 Status: Executing phase 8
-Last activity: 2026-03-01 -- Completed 08-03 (remove orphaned agents)
+Last activity: 2026-03-01 -- Completed 08-04 (remove update-check hook)
 
-Progress: [██████░░░░] 60%
+Progress: [████████░░] 80%
 
 ## Performance Metrics
 
@@ -42,9 +42,10 @@ Progress: [██████░░░░] 60%
 | 08 (plan 01) | 1 | 1min | 1min |
 | 08 (plan 02) | 1 | 2min | 2min |
 | 08 (plan 03) | 1 | 1min | 1min |
+| 08 (plan 04) | 1 | 1min | 1min |
 
 **Recent Trend:**
-- 08-03: 6 orphaned agents deleted in 1min
+- 08-04: update-check hook deleted, dead code stripped from statusline in 1min
 
 *Updated after each plan completion*
 
@@ -62,6 +63,7 @@ Recent decisions affecting current work:
 - [08-01]: Slash-command refs to deleted commands in surviving files left for Phase 10 audit
 - [Phase 08]: Slash-command text refs and @file refs from Phase-10-flagged commands to deleted workflows left intact for Phase 10 audit
 - [08-03]: Surviving refs to deleted agents in v1 framework code (core.cjs, init.cjs, model-profiles.md, templates) deferred to Phase 10 audit
+- [08-04]: Refs to gsd-check-update in bin/install.js and scripts/build-hooks.js left for install/build phase cleanup
 
 ### Blockers/Concerns
 
@@ -70,5 +72,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Completed 08-03-PLAN.md
-Resume file: .planning/phases/08-low-risk-cleanup/08-03-SUMMARY.md
+Stopped at: Completed 08-04-PLAN.md
+Resume file: .planning/phases/08-low-risk-cleanup/08-04-SUMMARY.md
