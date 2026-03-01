@@ -7,52 +7,6 @@ const path = require('path');
 const { normalizePhaseName, findPhaseInternal, generateSlugInternal, output, error } = require('./core.cjs');
 const { reconstructFrontmatter } = require('./frontmatter.cjs');
 
-function cmdTemplateSelect(cwd, planPath, raw) {
-  if (!planPath) {
-    error('plan-path required');
-  }
-
-  try {
-    const fullPath = path.join(cwd, planPath);
-    const content = fs.readFileSync(fullPath, 'utf-8');
-
-    // Simple heuristics
-    const taskMatch = content.match(/###\s*Task\s*\d+/g) || [];
-    const taskCount = taskMatch.length;
-
-    const decisionMatch = content.match(/decision/gi) || [];
-    const hasDecisions = decisionMatch.length > 0;
-
-    // Count file mentions
-    const fileMentions = new Set();
-    const filePattern = /`([^`]+\.[a-zA-Z]+)`/g;
-    let m;
-    while ((m = filePattern.exec(content)) !== null) {
-      if (m[1].includes('/') && !m[1].startsWith('http')) {
-        fileMentions.add(m[1]);
-      }
-    }
-    const fileCount = fileMentions.size;
-
-    let template = 'templates/summary-standard.md';
-    let type = 'standard';
-
-    if (taskCount <= 2 && fileCount <= 3 && !hasDecisions) {
-      template = 'templates/summary-minimal.md';
-      type = 'minimal';
-    } else if (hasDecisions || fileCount > 6 || taskCount > 5) {
-      template = 'templates/summary-complex.md';
-      type = 'complex';
-    }
-
-    const result = { template, type, taskCount, fileCount, hasDecisions };
-    output(result, raw, template);
-  } catch (e) {
-    // Fallback to standard
-    output({ template: 'templates/summary-standard.md', type: 'standard', error: e.message }, raw, 'templates/summary-standard.md');
-  }
-}
-
 function cmdTemplateFill(cwd, templateType, options, raw) {
   if (!templateType) { error('template type required: summary, plan, or verification'); }
   if (!options.phase) { error('--phase required'); }
@@ -324,4 +278,4 @@ function fillTemplate(type, options) {
   }
 }
 
-module.exports = { cmdTemplateSelect, cmdTemplateFill, fillTemplate };
+module.exports = { cmdTemplateFill, fillTemplate };

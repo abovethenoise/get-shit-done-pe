@@ -364,38 +364,6 @@ function cmdStateAddBlocker(cwd, text, raw) {
   }
 }
 
-function cmdStateResolveBlocker(cwd, text, raw) {
-  const statePath = path.join(cwd, '.planning', 'STATE.md');
-  if (!fs.existsSync(statePath)) { output({ error: 'STATE.md not found' }, raw); return; }
-  if (!text) { output({ error: 'text required' }, raw); return; }
-
-  let content = fs.readFileSync(statePath, 'utf-8');
-
-  const sectionPattern = /(###?\s*(?:Blockers|Blockers\/Concerns|Concerns)\s*\n)([\s\S]*?)(?=\n###?|\n##[^#]|$)/i;
-  const match = content.match(sectionPattern);
-
-  if (match) {
-    const sectionBody = match[2];
-    const lines = sectionBody.split('\n');
-    const filtered = lines.filter(line => {
-      if (!line.startsWith('- ')) return true;
-      return !line.toLowerCase().includes(text.toLowerCase());
-    });
-
-    let newBody = filtered.join('\n');
-    // If section is now empty, add placeholder
-    if (!newBody.trim() || !newBody.includes('- ')) {
-      newBody = 'None\n';
-    }
-
-    content = content.replace(sectionPattern, (_match, header) => `${header}${newBody}`);
-    writeStateMd(statePath, content, cwd);
-    output({ resolved: true, blocker: text }, raw, 'true');
-  } else {
-    output({ resolved: false, reason: 'Blockers section not found in STATE.md' }, raw, 'false');
-  }
-}
-
 function cmdStateRecordSession(cwd, options, raw) {
   const statePath = path.join(cwd, '.planning', 'STATE.md');
   if (!fs.existsSync(statePath)) { output({ error: 'STATE.md not found' }, raw); return; }
@@ -727,7 +695,6 @@ module.exports = {
   cmdStateUpdateProgress,
   cmdStateAddDecision,
   cmdStateAddBlocker,
-  cmdStateResolveBlocker,
   cmdStateRecordSession,
   cmdStateSnapshot,
   cmdStateJson,
