@@ -168,7 +168,7 @@ Template for `.planning/codebase/ARCHITECTURE.md` - captures conceptual code org
 
 **Command:**
 - Purpose: CLI command definition
-- Examples: `src/commands/new-project.ts`, `src/commands/plan-phase.ts`
+- Examples: `src/commands/new-project.ts`, `src/commands/init.ts`
 - Pattern: Commander.js command registration
 
 **Template:**

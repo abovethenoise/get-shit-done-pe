@@ -13,7 +13,7 @@ This command is optional per feature. It can kill or defer features, and can rou
 2. **Planning** — Feature-level clarity informs task decomposition
 3. **discuss-capability** — Backward routing when feature reveals capability misconception
 
-**Not your job:** Execute the feature. That's the execute-phase workflow.
+**Not your job:** Execute the feature. That's the execute workflow.
 </downstream_awareness>
 
 <process>
@@ -180,7 +180,7 @@ If "Route to replan":
 The feature discussion revealed: {issue}
 
 Recommend replanning the capability:
-`/gsd:plan-phase {phase}` (with updated context)
+`/gsd:discuss-capability {capability}` (with updated context)
 
 This feature's requirements may change after replanning.
 ```

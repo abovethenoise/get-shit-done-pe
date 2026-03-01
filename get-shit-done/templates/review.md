@@ -2,7 +2,6 @@
 type: review
 feature: "{slug}"
 capability: "{slug}"
-phase: "{phase}"
 reviewer: "{reviewer_type}"
 status: pending
 ---

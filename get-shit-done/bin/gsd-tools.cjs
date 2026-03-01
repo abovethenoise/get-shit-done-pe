@@ -377,7 +377,7 @@ async function main() {
           init.cmdInitFeatureProgress(cwd, raw);
           break;
         default:
-          error(`Unknown init workflow: ${workflow}\nAvailable: execute-phase, resume, phase-op, progress, review-phase, doc-phase, project, framing-discovery, discuss-capability, discuss-feature, plan-feature, execute-feature, feature-op, feature-progress`);
+          error(`Unknown init workflow: ${workflow}\nAvailable: execute-phase, resume, phase-op, progress, project, framing-discovery, discuss-capability, discuss-feature, plan-feature, execute-feature, feature-op, feature-progress`);
       }
       break;
     }

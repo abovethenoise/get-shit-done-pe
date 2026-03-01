@@ -2,7 +2,7 @@
 
 Template for `.planning/phases/XX-name/DISCOVERY.md` - shallow research for library/option decisions.
 
-**Purpose:** Answer "which library/option should we use" questions during mandatory discovery in plan-phase.
+**Purpose:** Answer "which library/option should we use" questions during mandatory discovery in the planning workflow.
 
 For deep ecosystem research ("how do experts build this"), use the research workflow which produces RESEARCH.md.
 

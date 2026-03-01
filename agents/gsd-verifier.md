@@ -4,7 +4,7 @@ description: Verifies phase goal achievement through goal-backward analysis. Che
 tools: Read, Write, Bash, Grep, Glob
 color: green
 reads: [plan-file, summary, roadmap, requirements]
-writes: [verification-report]
+writes: [VERIFICATION.md]
 ---
 
 <role>

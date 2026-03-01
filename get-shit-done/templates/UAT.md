@@ -57,7 +57,7 @@ skipped: [N]
 
 ## Gaps
 
-<!-- YAML format for plan-phase --gaps consumption -->
+<!-- YAML format for plan --gaps consumption -->
 - truth: "[expected behavior from test]"
   status: failed
   reason: "User reported: [verbatim response]"
@@ -98,7 +98,7 @@ skipped: [N]
 **Gaps:**
 - APPEND only when issue found (YAML format)
 - After diagnosis: fill `root_cause`, `artifacts`, `missing`, `debug_session`
-- This section feeds directly into /gsd:plan-phase --gaps
+- This section feeds directly into the plan workflow --gaps
 
 </section_rules>
 
@@ -112,7 +112,7 @@ skipped: [N]
 4. UAT.md Gaps section updated with diagnosis:
    - Each gap gets `root_cause`, `artifacts`, `missing`, `debug_session` filled
 5. status → "diagnosed"
-6. Ready for /gsd:plan-phase --gaps with root causes
+6. Ready for plan workflow --gaps with root causes
 
 **After diagnosis:**
 ```yaml

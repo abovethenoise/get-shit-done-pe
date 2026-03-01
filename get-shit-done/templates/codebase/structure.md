@@ -148,7 +148,7 @@ get-shit-done/
 **commands/gsd/**
 - Purpose: Slash command definitions for Claude Code
 - Contains: *.md files (one per command)
-- Key files: new-project.md, plan-phase.md, execute-plan.md
+- Key files: init.md, new.md, discuss-capability.md
 - Subdirectories: None (flat structure)
 
 **get-shit-done/references/**
@@ -166,7 +166,7 @@ get-shit-done/
 **get-shit-done/workflows/**
 - Purpose: Reusable multi-step procedures
 - Contains: Workflow definitions called by commands
-- Key files: execute-plan.md, research-phase.md
+- Key files: execute-plan.md, research-workflow.md
 - Subdirectories: None
 
 ## Key File Locations

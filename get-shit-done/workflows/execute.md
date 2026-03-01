@@ -316,7 +316,7 @@ grep "^status:" "$PHASE_DIR"/*-VERIFICATION.md | cut -d: -f2 | tr -d ' '
 |--------|--------|
 | `passed` | → update_roadmap |
 | `human_needed` | Present items for human testing, get approval or feedback |
-| `gaps_found` | Present gap summary, offer `/gsd:plan-phase {phase} --gaps` |
+| `gaps_found` | Present gap summary, offer gap-closure planning |
 
 **If human_needed:**
 ```
@@ -342,15 +342,14 @@ All automated checks passed. {N} items need human testing:
 ---
 ## ▶ Next Up
 
-`/gsd:plan-phase {X} --gaps`
+Run the plan workflow with `--gaps` to create gap-closure plans.
 
-<sub>`/clear` first → fresh context window</sub>
+<sub>`/clear` first for fresh context window</sub>
 
 Also: `cat {phase_dir}/{phase_num}-VERIFICATION.md` — full report
-Also: `/gsd:review-phase {X}` — review and test before continuing
 ```
 
-Gap closure cycle: `/gsd:plan-phase {X} --gaps` reads VERIFICATION.md → creates gap plans with `gap_closure: true` → user runs `/gsd:execute-phase {X} --gaps-only` → verifier re-runs.
+Gap closure cycle: Plan workflow with `--gaps` reads VERIFICATION.md → creates gap plans with `gap_closure: true` → execute workflow with `--gaps-only` → verifier re-runs.
 </step>
 
 <step name="update_roadmap">
@@ -376,7 +375,7 @@ node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs(phase-{X}): co
 
 <step name="offer_next">
 
-**Exception:** If `gaps_found`, the `verify_phase_goal` step already presents the gap-closure path (`/gsd:plan-phase {X} --gaps`). No additional routing needed — skip auto-advance.
+**Exception:** If `gaps_found`, the `verify_phase_goal` step already presents the gap-closure path. No additional routing needed — skip auto-advance.
 
 After verification passes and roadmap is updated, return completion status to parent:
 
@@ -408,7 +407,7 @@ Orchestrator: ~10-15% context. Subagents: fresh 200k each. No polling (Task bloc
 </failure_handling>
 
 <resumption>
-Re-run `/gsd:execute-phase {phase}` → discover_plans finds completed SUMMARYs → skips them → resumes from first incomplete plan → continues wave execution.
+Re-run the execute workflow → discover_plans finds completed SUMMARYs → skips them → resumes from first incomplete plan → continues wave execution.
 
 STATE.md tracks: last completed plan, current wave, pending checkpoints.
 </resumption>

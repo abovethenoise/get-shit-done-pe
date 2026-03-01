@@ -1,7 +1,7 @@
 <purpose>
 Standalone research orchestration workflow. Spawns 6 specialist research gatherers in parallel via the gather-synthesize pattern, then consolidates via the research synthesizer agent. Produces a single RESEARCH.md consumed by the planner.
 
-Callers: framing-pipeline.md (Stage 1), research-phase.md (standalone command), plan-phase.md (Step 5).
+Callers: framing-pipeline.md (Stage 1), plan.md (Step 5).
 
 Separation of concerns: callers determine WHAT to research (subject, scope, framing). This workflow determines HOW to research (6 gatherers + synthesis via gather-synthesize pattern).
 </purpose>
@@ -177,7 +177,7 @@ Cause: Too many gatherers failed to produce output.
 Failed dimensions:
 - {dimension}: {reason}
 
-Action: Check agent definitions and context. Re-run with /gsd:research-phase.
+Action: Check agent definitions and context. Re-run research via the planning workflow.
 ```
 
 Return failure to caller.

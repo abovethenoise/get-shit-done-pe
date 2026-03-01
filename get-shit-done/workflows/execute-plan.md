@@ -392,8 +392,8 @@ ls -1 .planning/phases/[current-phase-dir]/*-SUMMARY.md 2>/dev/null | wc -l
 
 | Condition | Route | Action |
 |-----------|-------|--------|
-| summaries < plans | **A: More plans** | Find next PLAN without SUMMARY. Yolo: auto-continue. Interactive: show next plan, suggest `/gsd:execute-phase {phase}` + `/gsd:review-phase`. STOP here. |
-| summaries = plans, current < highest phase | **B: Phase done** | Show completion, suggest `/gsd:plan-phase {Z+1}` + `/gsd:review-phase {Z}` + `/gsd:discuss-capability {Z+1}` |
+| summaries < plans | **A: More plans** | Find next PLAN without SUMMARY. Yolo: auto-continue. Interactive: show next plan, suggest continuing execution. STOP here. |
+| summaries = plans, current < highest phase | **B: Phase done** | Show completion, suggest `/gsd:discuss-capability {Z+1}` for next phase. |
 | summaries = plans, current = highest phase | **C: Milestone done** | Show banner, suggest `/gsd:progress` for milestone review. |
 
 All routes: `/clear` first for fresh context.

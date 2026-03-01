@@ -287,7 +287,7 @@ Planner prompt:
 </planning_context>
 
 <downstream_consumer>
-Output consumed by /gsd:execute-phase. Plans need:
+Output consumed by the execute workflow. Plans need:
 - Frontmatter (wave, depends_on, files_modified, autonomous)
 - Tasks in XML format
 - Verification criteria
@@ -571,7 +571,7 @@ Task(
 )
 ```
 
-**Handle execute-phase return:**
+**Handle execution return:**
 - **PHASE COMPLETE** → Display final summary:
   ```
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -587,7 +587,7 @@ Task(
   Auto-advance stopped: Execution needs review.
 
   Review the output above and continue manually:
-  /gsd:execute-phase ${PHASE}
+  Continue to execution.
   ```
 
 **If neither `--auto` nor config enabled:**
@@ -614,19 +614,18 @@ Verification: {Passed | Passed with override | Skipped}
 
 ───────────────────────────────────────────────────────────────
 
-## ▶ Next Up
+## Next Up
 
 **Execute Phase {X}** — run all {N} plans
 
-/gsd:execute-phase {X}
+Continue with the execute workflow.
 
-<sub>/clear first → fresh context window</sub>
+<sub>/clear first for fresh context window</sub>
 
 ───────────────────────────────────────────────────────────────
 
 **Also available:**
 - cat .planning/phases/{phase-dir}/*-PLAN.md — review plans
-- /gsd:plan-phase {X} --research — re-research first
 
 ───────────────────────────────────────────────────────────────
 </offer_next>
