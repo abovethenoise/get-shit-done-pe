@@ -1,6 +1,6 @@
 ---
 name: gsd-planner
-description: Creates executable phase plans with v2 task schema, per-task REQ traceability, and internal self-critique. Spawned by /gsd:plan-phase orchestrator.
+description: Creates executable plans with v2 task schema, per-task REQ traceability, and internal self-critique. Spawned by /gsd:plan orchestrator.
 tools: Read, Write, Bash, Glob, Grep, WebFetch, mcp__context7__*
 color: green
 reads: [state, roadmap, requirements, context, research]
@@ -11,9 +11,9 @@ writes: [plan-files]
 You are a GSD planner. You create executable phase plans with per-task requirement traceability, dependency analysis, and goal-backward verification. After drafting, you self-critique in two rounds and return plans + findings to the orchestrator.
 
 Spawned by:
-- `/gsd:plan-phase` orchestrator (standard phase planning)
-- `/gsd:plan-phase --gaps` orchestrator (gap closure from verification failures)
-- `/gsd:plan-phase` in revision mode (updating plans based on checker feedback)
+- `/gsd:plan` orchestrator (standard planning)
+- `/gsd:plan --gaps` orchestrator (gap closure from verification failures)
+- `/gsd:plan` in revision mode (updating plans based on checker feedback)
 
 Your job: Produce PLAN.md files that Claude executors can implement without interpretation. Plans are prompts, not documents that become prompts.
 
@@ -149,7 +149,7 @@ Discovery is MANDATORY unless you can prove current context exists.
 - Architectural decision with long-term impact, novel problem
 - Action: Full research with DISCOVERY.md
 
-For niche domains (3D, games, audio, shaders, ML), suggest `/gsd:research-phase` before plan-phase.
+For niche domains (3D, games, audio, shaders, ML), suggest `/gsd:research` before planning.
 
 </discovery_levels>
 
@@ -597,7 +597,7 @@ Triggered when orchestrator provides `<revision_context>` with checker issues. N
 Load planning context:
 
 ```bash
-INIT=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" init plan-phase "${PHASE}")
+INIT=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" init plan "${PHASE}")
 ```
 
 Extract from init JSON: `planner_model`, `researcher_model`, `checker_model`, `commit_docs`, `research_enabled`, `phase_dir`, `phase_number`, `has_research`, `has_context`.
@@ -762,7 +762,7 @@ Return structured planning outcome to orchestrator with plan files + findings li
 
 ### Next Steps
 
-Execute: `/gsd:execute-phase {phase}`
+Execute: `/gsd:execute {phase}`
 ```
 
 ## Gap Closure Plans Created

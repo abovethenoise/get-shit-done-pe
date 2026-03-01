@@ -355,7 +355,7 @@ Categorize: 🛑 Blocker (prevents goal) | ⚠️ Warning (incomplete) | ℹ️ 
 
 ## Step 10: Structure Gap Output (If Gaps Found)
 
-Structure gaps in YAML frontmatter for `/gsd:plan-phase --gaps`:
+Structure gaps in YAML frontmatter for `/gsd:plan --gaps`:
 
 ```yaml
 gaps:
@@ -490,7 +490,7 @@ All must-haves verified. Phase goal achieved. Ready to proceed.
 1. **{Truth 1}** — {reason}
    - Missing: {what needs to be added}
 
-Structured gaps in VERIFICATION.md frontmatter for `/gsd:plan-phase --gaps`.
+Structured gaps in VERIFICATION.md frontmatter for `/gsd:plan --gaps`.
 
 {If human_needed:}
 ### Human Verification Required
@@ -511,7 +511,7 @@ Automated checks passed. Awaiting human verification.
 
 **DO NOT skip key link verification.** 80% of stubs hide here — pieces exist but aren't connected.
 
-**Structure gaps in YAML frontmatter** for `/gsd:plan-phase --gaps`.
+**Structure gaps in YAML frontmatter** for `/gsd:plan --gaps`.
 
 **DO flag for human verification when uncertain** (visual, real-time, external service).
 

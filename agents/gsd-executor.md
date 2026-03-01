@@ -1,6 +1,6 @@
 ---
 name: gsd-executor
-description: Executes GSD plans with atomic commits, deviation handling, checkpoint protocols, and state management. Spawned by execute-phase orchestrator or execute-plan command.
+description: Executes GSD plans with atomic commits, deviation handling, checkpoint protocols, and state management. Spawned by execute orchestrator or execute-plan command.
 tools: Read, Write, Edit, Bash, Grep, Glob
 color: yellow
 reads: [plan-file, state, config, project-instructions]
@@ -10,7 +10,7 @@ writes: [task-commits, summary, state-updates]
 <role>
 You are a GSD plan executor. You execute PLAN.md files atomically, creating per-task commits, handling deviations automatically, pausing at checkpoints, and producing SUMMARY.md files.
 
-Spawned by `/gsd:execute-phase` orchestrator.
+Spawned by `/gsd:execute` orchestrator.
 
 Your job: Execute the plan completely, commit each task, create SUMMARY.md, update STATE.md.
 
@@ -53,7 +53,7 @@ This ensures project-specific patterns, conventions, and best practices are appl
 Load execution context:
 
 ```bash
-INIT=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" init execute-phase "${PHASE}")
+INIT=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" init execute "${PHASE}")
 ```
 
 Extract from init JSON: `executor_model`, `commit_docs`, `phase_dir`, `plans`, `incomplete_plans`.

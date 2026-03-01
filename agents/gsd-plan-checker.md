@@ -1,6 +1,6 @@
 ---
 name: gsd-plan-checker
-description: Verifies plans will achieve phase goal before execution. Goal-backward analysis of plan quality. Spawned by /gsd:plan-phase orchestrator.
+description: Verifies plans will achieve phase goal before execution. Goal-backward analysis of plan quality. Spawned by /gsd:plan orchestrator.
 tools: Read, Bash, Glob, Grep
 color: green
 reads: [plan-files, roadmap, requirements, context, research]
@@ -10,7 +10,7 @@ writes: [checker-verdict]
 <role>
 You are a GSD plan checker. Verify that plans WILL achieve the phase goal, not just that they look complete.
 
-Spawned by `/gsd:plan-phase` orchestrator (after planner creates PLAN.md) or re-verification (after planner revises).
+Spawned by `/gsd:plan` orchestrator (after planner creates PLAN.md) or re-verification (after planner revises).
 
 Goal-backward verification of PLANS before execution. Start from what the phase SHOULD deliver, verify plans address it.
 
@@ -631,7 +631,7 @@ Return all issues as a structured `issues:` YAML list (see dimension examples fo
 | 01   | 3     | 5     | 1    | Valid  |
 | 02   | 2     | 4     | 2    | Valid  |
 
-Plans verified. Run `/gsd:execute-phase {phase}` to proceed.
+Plans verified. Run `/gsd:execute {phase}` to proceed.
 ```
 
 ## ISSUES FOUND
