@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-28)
 
 **Core value:** Every piece of executed work traces back to a specific requirement, and every requirement is verified against the actual code.
-**Current focus:** Phase 9 -- Structure & Integration (milestone v2.0)
+**Current focus:** Phase 10 -- Remaining Cleanup & Polish (milestone v2.0)
 
 ## Current Position
 
-Phase: 9 of 12 (Structure & Integration)
-Plan: 3 of 3 complete
-Status: Phase complete
-Last activity: 2026-03-01 -- Plan 09-03 complete (v2 init/state, invariants, agent contracts)
+Phase: 10 of 12 (Remaining Cleanup & Polish)
+Plan: 1 of 8 complete
+Status: In progress
+Last activity: 2026-03-01 -- Plan 10-01 complete (delete v1 phase commands and dead workflows)
 
-Progress: [██████████] 100%
+Progress: [==========..........] 50% (phases) | Plan 1/8
 
 ## Performance Metrics
 
@@ -47,9 +47,10 @@ Progress: [██████████] 100%
 | 09 (plan 01) | 1 | 3min | 3min |
 | 09 (plan 02) | 1 | 5min | 5min |
 | 09 (plan 03) | 1 | 8min | 8min |
+| 10 (plan 01) | 1 | 2min | 2min |
 
 **Recent Trend:**
-- 09-03: v2 init/state functions, pipeline invariants doc, agent artifact contracts, 8 files in 8min
+- 10-01: Deleted 9 v1 files (5 phase commands, 3 dead workflows, 1 stale template), 2min
 
 *Updated after each plan completion*
 
@@ -74,6 +75,7 @@ Recent decisions affecting current work:
 - [08-03]: Surviving refs to deleted agents in v1 framework code (core.cjs, init.cjs, model-profiles.md, templates) deferred to Phase 10 audit
 - [08-04]: Refs to gsd-check-update in bin/install.js and scripts/build-hooks.js left for install/build phase cleanup
 - [Phase 08]: run-tests.cjs retained -- 14 live test files remain; package.json build:hooks ref and install.js CHANGELOG copy deferred to Phase 12
+- [10-01]: All 5 v1 phase commands deleted; dead workflows (verify-phase, research-phase, transition) and verification-report template deleted
 
 ### Blockers/Concerns
 
@@ -82,5 +84,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Completed 09-03-PLAN.md (Phase 9 complete)
+Stopped at: Completed 10-01-PLAN.md
 Resume file: None

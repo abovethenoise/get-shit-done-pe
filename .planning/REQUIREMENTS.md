@@ -103,8 +103,8 @@ Requirements for Install-Ready Launch milestone. Each maps to roadmap phases.
 
 - [x] **CLN-01**: 20 orphaned workflows removed
 - [x] **CLN-02**: Orphaned agents removed (gsd-codebase-mapper, etc.)
-- [ ] **CLN-03**: `gsd-tools.cjs`: full audit — verify all modules, remove dead code, remove v1-only concepts (milestone, phase CLI commands)
-- [ ] **CLN-04**: Holistic template audit — remove stale templates, update surviving ones for v2 model (capability/feature, not phase)
+- [x] **CLN-03**: `gsd-tools.cjs`: full audit — verify all modules, remove dead code, remove v1-only concepts (milestone, phase CLI commands)
+- [x] **CLN-04**: Holistic template audit — remove stale templates, update surviving ones for v2 model (capability/feature, not phase)
 - [ ] **CLN-05**: Holistic reference audit — remove unused references, verify v2 accuracy
 - [x] **CLN-06**: Remove orphaned hook: `gsd-check-update.js` (update check dropped per decision)
 - [x] **CLN-07**: Remove VERSION, CHANGELOG.md, `package.json` `"type": "commonjs"` enforcement if no longer needed
@@ -113,7 +113,7 @@ Requirements for Install-Ready Launch milestone. Each maps to roadmap phases.
 
 - [x] **INTG-01**: 6 research gatherers wired into framing pipeline (currently orphaned from surviving command chain)
 - [x] **INTG-02**: Hooks: keep context monitor + statusline, drop update check, audit remaining hooks for v2 effectiveness
-- [ ] **INTG-03**: All `@file` references in commands/workflows/agents resolve to files that actually exist post-cleanup
+- [x] **INTG-03**: All `@file` references in commands/workflows/agents resolve to files that actually exist post-cleanup
 
 ### Directory & Structure
 
@@ -223,10 +223,10 @@ Deferred to post-v2.0. Tracked but not in current roadmap.
 | DIR-03 | Phase 9 | Complete |
 | INTG-01 | Phase 9 | Complete |
 | INTG-02 | Phase 9 | Complete |
-| CLN-03 | Phase 10 | Pending |
-| CLN-04 | Phase 10 | Pending |
+| CLN-03 | Phase 10 | Complete |
+| CLN-04 | Phase 10 | Complete |
 | CLN-05 | Phase 10 | Pending |
-| INTG-03 | Phase 10 | Pending |
+| INTG-03 | Phase 10 | Complete |
 | CMD-03 | Phase 11 | Pending |
 | INST-01 | Phase 12 | Pending |
 | INST-02 | Phase 12 | Pending |
