@@ -9,10 +9,10 @@ Template for `.planning/phases/XX-name/{phase}-USER-SETUP.md` - human-required c
 ## File Template
 
 ```markdown
-# Phase {X}: User Setup Required
+# User Setup Required: {feature-name}
 
 **Generated:** [YYYY-MM-DD]
-**Phase:** {phase-name}
+**Feature:** {feature-name}
 **Status:** Incomplete
 
 Complete these items for the integration to function. Claude automated everything possible; these items require human access to external dashboards/accounts.
@@ -118,10 +118,10 @@ user_setup:
 
 <stripe_example>
 ```markdown
-# Phase 10: User Setup Required
+# User Setup Required: Monetization
 
 **Generated:** 2025-01-14
-**Phase:** 10-monetization
+**Feature:** monetization
 **Status:** Incomplete
 
 Complete these items for Stripe integration to function.
@@ -193,10 +193,10 @@ Expected: Build passes, webhook returns 400 (signature validation working).
 
 <supabase_example>
 ```markdown
-# Phase 2: User Setup Required
+# User Setup Required: Authentication
 
 **Generated:** 2025-01-14
-**Phase:** 02-authentication
+**Feature:** authentication
 **Status:** Incomplete
 
 Complete these items for Supabase Auth to function.
@@ -247,10 +247,10 @@ npx supabase status
 
 <sendgrid_example>
 ```markdown
-# Phase 5: User Setup Required
+# User Setup Required: Notifications
 
 **Generated:** 2025-01-14
-**Phase:** 05-notifications
+**Feature:** notifications
 **Status:** Incomplete
 
 Complete these items for SendGrid email to function.

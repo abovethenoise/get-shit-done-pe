@@ -10,9 +10,9 @@ Template for `.planning/REQUIREMENTS.md` — checkable requirements that define 
 **Defined:** [date]
 **Core Value:** [from PROJECT.md]
 
-## v1 Requirements
+## Active Requirements
 
-Requirements for initial release. Each maps to roadmap phases.
+Requirements for current milestone. Each maps to roadmap features.
 
 ### Authentication
 
@@ -32,9 +32,9 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **[CAT]-01**: [Requirement description]
 - [ ] **[CAT]-02**: [Requirement description]
 
-## v2 Requirements
+## Deferred Requirements
 
-Deferred to future release. Tracked but not in current roadmap.
+Deferred to future milestone. Tracked but not in current roadmap.
 
 ### [Category]
 
@@ -54,17 +54,17 @@ Explicitly excluded. Documented to prevent scope creep.
 
 Which phases cover which requirements. Updated during roadmap creation.
 
-| Requirement | Phase | Status |
-|-------------|-------|--------|
-| AUTH-01 | Phase 1 | Pending |
-| AUTH-02 | Phase 1 | Pending |
-| AUTH-03 | Phase 1 | Pending |
-| AUTH-04 | Phase 1 | Pending |
-| [REQ-ID] | Phase [N] | Pending |
+| Requirement | Feature | Status |
+|-------------|---------|--------|
+| AUTH-01 | Authentication | Pending |
+| AUTH-02 | Authentication | Pending |
+| AUTH-03 | Authentication | Pending |
+| AUTH-04 | Authentication | Pending |
+| [REQ-ID] | [Feature Name] | Pending |
 
 **Coverage:**
-- v1 requirements: [X] total
-- Mapped to phases: [Y]
+- Active requirements: [X] total
+- Mapped to features: [Y]
 - Unmapped: [Z] ⚠️
 
 ---
@@ -86,10 +86,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 - Keep consistent with domain conventions
 - Typical: Authentication, Content, Social, Notifications, Moderation, Payments, Admin
 
-**v1 vs v2:**
-- v1: Committed scope, will be in roadmap phases
-- v2: Acknowledged but deferred, not in current roadmap
-- Moving v2 → v1 requires roadmap update
+**Active vs Deferred:**
+- Active: Committed scope, mapped in roadmap
+- Deferred: Acknowledged but deferred, not in current roadmap
+- Moving Deferred → Active requires roadmap update
 
 **Out of Scope:**
 - Explicit exclusions with reasoning
@@ -98,7 +98,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 **Traceability:**
 - Empty initially, populated during roadmap creation
-- Each requirement maps to exactly one phase
+- Each requirement maps to at least one feature
 - Unmapped requirements = roadmap gap
 
 **Status Values:**
@@ -111,15 +111,15 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 <evolution>
 
-**After each phase completes:**
+**After each feature completes:**
 1. Mark covered requirements as Complete
 2. Update traceability status
 3. Note any requirements that changed scope
 
 **After roadmap updates:**
-1. Verify all v1 requirements still mapped
+1. Verify all active requirements still mapped
 2. Add new requirements if scope expanded
-3. Move requirements to v2/out of scope if descoped
+3. Move requirements to deferred/out of scope if descoped
 
 **Requirement completion criteria:**
 - Requirement is "Complete" when:
@@ -137,7 +137,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 **Defined:** 2025-01-14
 **Core Value:** Users can share and discuss content with people who share their interests
 
-## v1 Requirements
+## Active Requirements
 
 ### Authentication
 
@@ -169,7 +169,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 - [ ] **SOCL-04**: User can comment on posts
 - [ ] **SOCL-05**: User can view activity feed (followed users' posts)
 
-## v2 Requirements
+## Deferred Requirements
 
 ### Notifications
 
@@ -197,30 +197,30 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ## Traceability
 
-| Requirement | Phase | Status |
-|-------------|-------|--------|
-| AUTH-01 | Phase 1 | Pending |
-| AUTH-02 | Phase 1 | Pending |
-| AUTH-03 | Phase 1 | Pending |
-| AUTH-04 | Phase 1 | Pending |
-| PROF-01 | Phase 2 | Pending |
-| PROF-02 | Phase 2 | Pending |
-| PROF-03 | Phase 2 | Pending |
-| PROF-04 | Phase 2 | Pending |
-| CONT-01 | Phase 3 | Pending |
-| CONT-02 | Phase 3 | Pending |
-| CONT-03 | Phase 3 | Pending |
-| CONT-04 | Phase 3 | Pending |
-| CONT-05 | Phase 3 | Pending |
-| SOCL-01 | Phase 4 | Pending |
-| SOCL-02 | Phase 4 | Pending |
-| SOCL-03 | Phase 4 | Pending |
-| SOCL-04 | Phase 4 | Pending |
-| SOCL-05 | Phase 4 | Pending |
+| Requirement | Feature | Status |
+|-------------|---------|--------|
+| AUTH-01 | Authentication | Pending |
+| AUTH-02 | Authentication | Pending |
+| AUTH-03 | Authentication | Pending |
+| AUTH-04 | Authentication | Pending |
+| PROF-01 | Profiles | Pending |
+| PROF-02 | Profiles | Pending |
+| PROF-03 | Profiles | Pending |
+| PROF-04 | Profiles | Pending |
+| CONT-01 | Content | Pending |
+| CONT-02 | Content | Pending |
+| CONT-03 | Content | Pending |
+| CONT-04 | Content | Pending |
+| CONT-05 | Content | Pending |
+| SOCL-01 | Social | Pending |
+| SOCL-02 | Social | Pending |
+| SOCL-03 | Social | Pending |
+| SOCL-04 | Social | Pending |
+| SOCL-05 | Social | Pending |
 
 **Coverage:**
-- v1 requirements: 18 total
-- Mapped to phases: 18
+- Active requirements: 18 total
+- Mapped to features: 18
 - Unmapped: 0 ✓
 
 ---

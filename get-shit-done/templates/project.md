@@ -119,7 +119,7 @@ Common types: Tech stack, Timeline, Budget, Dependencies, Compatibility, Perform
 
 **Last Updated:**
 - Always note when and why the document was updated
-- Format: `after Phase 2` or `after v1.0 milestone`
+- Format: `after authentication feature` or `after v1.0 milestone`
 - Triggers review of whether content is still accurate
 
 </guidelines>
@@ -128,7 +128,7 @@ Common types: Tech stack, Timeline, Budget, Dependencies, Compatibility, Perform
 
 PROJECT.md evolves throughout the project lifecycle.
 
-**After each phase transition:**
+**After each feature completion:**
 1. Requirements invalidated? → Move to Out of Scope with reason
 2. Requirements validated? → Move to Validated with phase reference
 3. New requirements emerged? → Add to Active

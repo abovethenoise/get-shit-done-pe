@@ -9,7 +9,7 @@ Template for `.planning/phases/XX-name/{phase_num}-UAT.md` — persistent UAT se
 ```markdown
 ---
 status: testing | complete | diagnosed
-phase: XX-name
+feature: XX-name
 source: [list of SUMMARY.md files tested]
 started: [ISO timestamp]
 updated: [ISO timestamp]
@@ -75,7 +75,7 @@ skipped: [N]
 
 **Frontmatter:**
 - `status`: OVERWRITE - "testing" or "complete"
-- `phase`: IMMUTABLE - set on creation
+- `feature`: IMMUTABLE - set on creation
 - `source`: IMMUTABLE - SUMMARY files being tested
 - `started`: IMMUTABLE - set on creation
 - `updated`: OVERWRITE - update on every change
@@ -157,7 +157,7 @@ skipped: [N]
 - Present summary with next steps
 
 **Resume after /clear:**
-1. Read frontmatter → know phase and status
+1. Read frontmatter → know feature and status
 2. Read Current Test → know where we are
 3. Find first [pending] result → continue from there
 4. Summary shows progress so far
@@ -183,7 +183,7 @@ Default: **major** (safe default, user can clarify if wrong)
 ```markdown
 ---
 status: diagnosed
-phase: 04-comments
+feature: comments
 source: 04-01-SUMMARY.md, 04-02-SUMMARY.md
 started: 2025-01-15T10:30:00Z
 updated: 2025-01-15T10:45:00Z

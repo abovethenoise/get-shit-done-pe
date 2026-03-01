@@ -21,7 +21,7 @@ Template for spawning gsd-planner agent. The agent contains all planning experti
 **Requirements (if exists):**
 @.planning/REQUIREMENTS.md
 
-**Phase Context (if exists):**
+**Feature Context (if exists):**
 @.planning/phases/{phase_dir}/{phase_num}-CONTEXT.md
 
 **Research (if exists):**

@@ -1,15 +1,15 @@
 ---
-phase: {N}
-slug: {phase-slug}
+feature: {N}
+slug: {feature-slug}
 status: draft
 nyquist_compliant: false
 wave_0_complete: false
 created: {date}
 ---
 
-# Phase {N} — Validation Strategy
+# Feature {N} — Validation Strategy
 
-> Per-phase validation contract for feedback sampling during execution.
+> Per-feature validation contract for feedback sampling during execution.
 
 ---
 

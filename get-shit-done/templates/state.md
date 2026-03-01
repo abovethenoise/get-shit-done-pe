@@ -18,9 +18,9 @@ See: .planning/PROJECT.md (updated [date])
 
 ## Current Position
 
-Phase: [X] of [Y] ([Phase name])
-Plan: [A] of [B] in current phase
-Status: [Ready to plan / Planning / Ready to execute / In progress / Phase complete]
+Feature: [X] of [Y] ([Feature name])
+Plan: [A] of [B] in current feature
+Status: [Ready to plan / Planning / Ready to execute / In progress / Feature complete]
 Last activity: [YYYY-MM-DD] — [What happened]
 
 Progress: [░░░░░░░░░░] 0%
@@ -51,8 +51,8 @@ Progress: [░░░░░░░░░░] 0%
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
-- [Phase X]: [Decision summary]
-- [Phase Y]: [Decision summary]
+- [Feature X]: [Decision summary]
+- [Feature Y]: [Decision summary]
 
 ### Blockers/Concerns
 
@@ -86,7 +86,7 @@ STATE.md is the project's short-term memory spanning all phases and sessions.
 **Creation:** After ROADMAP.md is created (during init)
 - Reference PROJECT.md (read it for current context)
 - Initialize empty accumulated context sections
-- Set position to "Phase 1 ready to plan"
+- Set position to "Feature 1 ready to plan"
 
 **Reading:** First step of every workflow
 - progress: Present status to user
@@ -118,8 +118,8 @@ Claude reads PROJECT.md directly for requirements, constraints, and decisions.
 
 ### Current Position
 Where we are right now:
-- Phase X of Y — which phase
-- Plan A of B — which plan within phase
+- Feature X of Y — which feature
+- Plan A of B — which plan within feature
 - Status — current state
 - Last activity — what happened most recently
 - Progress bar — visual indicator of overall completion
@@ -139,9 +139,9 @@ Updated after each plan completion.
 
 **Decisions:** Reference to PROJECT.md Key Decisions table, plus recent decisions summary for quick access. Full decision log lives in PROJECT.md.
 
-**Blockers/Concerns:** From "Next Phase Readiness" sections
+**Blockers/Concerns:** From "Next Steps" sections
 - Issues that affect future work
-- Prefix with originating phase
+- Prefix with originating feature
 - Cleared when addressed
 
 ### Session Continuity

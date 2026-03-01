@@ -4,7 +4,7 @@ Copy and fill this structure for `.planning/phases/XX-name/.continue-here.md`:
 
 ```yaml
 ---
-phase: XX-name
+feature: XX-name
 task: 3
 total_tasks: 7
 status: in_progress
@@ -26,7 +26,7 @@ last_updated: 2025-01-15T14:30:00Z
 </completed_work>
 
 <remaining_work>
-[What's left in this phase]
+[What's left in this feature]
 
 - Task 3: [name] - [what's left to do]
 - Task 4: [name] - Not started
@@ -63,7 +63,7 @@ Start with: [specific action]
 <yaml_fields>
 Required YAML frontmatter:
 
-- `phase`: Directory name (e.g., `02-authentication`)
+- `feature`: Directory name (e.g., `02-authentication`)
 - `task`: Current task number
 - `total_tasks`: How many tasks in phase
 - `status`: `in_progress`, `blocked`, `almost_done`
