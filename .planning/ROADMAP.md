@@ -96,5 +96,5 @@ Phases execute in numeric order: 8 -> 9 -> 10 -> 11 -> 12
 | 8. Low Risk Cleanup | 5/5 | Complete   | 2026-03-01 |
 | 9. Structure & Integration | 3/3 | Complete   | 2026-03-01 |
 | 10. Remaining Cleanup & Polish | 8/8 | Complete    | 2026-03-01 |
-| 11. Automated Testing | 0/3 | Planned | - |
+| 11. Automated Testing | 2/3 | In Progress|  |
 | 12. Install & Try New Project | 0/TBD | Not started | - |

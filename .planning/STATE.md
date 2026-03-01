@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-03-01T16:39:21.080Z"
+last_updated: "2026-03-01T18:33:12.898Z"
 progress:
-  total_phases: 10
+  total_phases: 11
   completed_phases: 10
-  total_plans: 38
-  completed_plans: 38
+  total_plans: 41
+  completed_plans: 40
 ---
 
 # Project State
@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-28)
 
 **Core value:** Every piece of executed work traces back to a specific requirement, and every requirement is verified against the actual code.
-**Current focus:** Phase 10 -- Remaining Cleanup & Polish (milestone v2.0)
+**Current focus:** Phase 11 -- Automated Testing (milestone v2.0)
 
 ## Current Position
 
-Phase: 10 of 12 (Remaining Cleanup & Polish)
-Plan: 8 of 8 complete
-Status: Phase complete
-Last activity: 2026-03-01 -- Plan 10-08 complete (full-sweep verification, 16 files fixed)
+Phase: 11 of 12 (Automated Testing)
+Plan: 2 of 3 complete
+Status: In progress
+Last activity: 2026-03-01 -- Plan 11-02 complete (CLI route smoke tests, 21 routes tested)
 
-Progress: [====================] 100% (Phase 10) | Plan 8/8
+Progress: [=============-------] 67% (Phase 11) | Plan 2/3
 
 ## Performance Metrics
 
@@ -57,9 +57,11 @@ Progress: [====================] 100% (Phase 10) | Plan 8/8
 - 10-04: Removed 29 dead CLI routes and 29 dead handler functions from 8 lib modules, ~1750 lines deleted, 9min
 
 *Updated after each plan completion*
+| Phase 11 P02 | 4min | 1 task | 1 file |
 | Phase 10 P08 | 5min | 2 tasks | 16 files |
 | Phase 10 P07 | 4min | 2 tasks | 6 files |
 | Phase 10 P06 | 13min | 2 tasks | 17 files |
+| Phase 11 P01 | 3min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -91,6 +93,7 @@ Recent decisions affecting current work:
 - [Phase 10]: Updated requirements.md v1/v2 sections to Active/Deferred; traceability Phase column to Feature
 - [10-08]: CLI route names (init execute-phase etc.) are functional identifiers, not stale refs -- left intact
 - [10-08]: Replaced /gsd:plan-phase slash command refs with generic "plan workflow" language since v2 commands deleted
+- [11-02]: All 21 CLI routes smoke tested -- 19 PASS, 2 WARN (cosmetic arg requirements), 0 FAIL
 
 ### Blockers/Concerns
 
@@ -99,5 +102,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Completed 10-08-PLAN.md (Phase 10 complete)
+Stopped at: Completed 11-02-PLAN.md (CLI route smoke tests)
 Resume file: None

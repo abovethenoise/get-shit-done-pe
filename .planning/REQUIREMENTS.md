@@ -97,7 +97,7 @@ Requirements for Install-Ready Launch milestone. Each maps to roadmap phases.
 
 - [ ] **CMD-01**: 11-command surface works end-to-end: init, debug, new, enhance, refactor, discuss-capability, discuss-feature, status, resume, plan, review
 - [x] **CMD-02**: 26 unused commands removed (phase management, milestone lifecycle, utilities)
-- [ ] **CMD-03**: Every surviving command fires without error (full command audit)
+- [x] **CMD-03**: Every surviving command fires without error (full command audit)
 
 ### Cleanup
 
@@ -227,7 +227,7 @@ Deferred to post-v2.0. Tracked but not in current roadmap.
 | CLN-04 | Phase 10 | Complete |
 | CLN-05 | Phase 10 | Complete |
 | INTG-03 | Phase 10 | Complete |
-| CMD-03 | Phase 11 | Pending |
+| CMD-03 | Phase 11 | Complete |
 | INST-01 | Phase 12 | Pending |
 | INST-02 | Phase 12 | Pending |
 | INST-03 | Phase 12 | Pending |
