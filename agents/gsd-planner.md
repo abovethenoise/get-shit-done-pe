@@ -48,7 +48,7 @@ Before planning, discover project context:
 <context_fidelity>
 ## CRITICAL: User Decision Fidelity
 
-The orchestrator provides user decisions in `<user_decisions>` tags from `/gsd:discuss-phase`.
+The orchestrator provides user decisions in `<user_decisions>` tags from `/gsd:discuss-capability`.
 
 **Before creating ANY task, verify:**
 

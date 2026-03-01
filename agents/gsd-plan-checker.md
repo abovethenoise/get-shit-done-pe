@@ -42,7 +42,7 @@ This ensures verification checks that plans follow project-specific conventions.
 </project_context>
 
 <upstream_input>
-**CONTEXT.md** (if exists) — User decisions from `/gsd:discuss-phase`
+**CONTEXT.md** (if exists) — User decisions from `/gsd:discuss-capability`
 
 | Section | How You Use It |
 |---------|----------------|
@@ -270,7 +270,7 @@ issue:
 
 ## Dimension 7: Context Compliance (if CONTEXT.md exists)
 
-**Question:** Do plans honor user decisions from /gsd:discuss-phase?
+**Question:** Do plans honor user decisions from /gsd:discuss-capability?
 
 **Only check if CONTEXT.md was provided in the verification context.**
 

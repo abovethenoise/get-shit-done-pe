@@ -390,7 +390,7 @@ Next: Phase [X+1] — [Name]
 ⚡ Auto-continuing: Discuss Phase [X+1] first
 ```
 
-Exit skill and invoke SlashCommand("/gsd:discuss-phase [X+1] --auto")
+Exit skill and invoke SlashCommand("/gsd:discuss-capability [X+1] --auto")
 
 </if>
 
@@ -407,7 +407,7 @@ Exit skill and invoke SlashCommand("/gsd:discuss-phase [X+1] --auto")
 
 **Phase [X+1]: [Name]** — [Goal from ROADMAP.md]
 
-`/gsd:discuss-phase [X+1]` — gather context and clarify approach
+`/gsd:discuss-capability [X+1]` — gather context and clarify approach
 
 <sub>`/clear` first → fresh context window</sub>
 
@@ -439,7 +439,7 @@ Exit skill and invoke SlashCommand("/gsd:discuss-phase [X+1] --auto")
 ---
 
 **Also available:**
-- `/gsd:discuss-phase [X+1]` — revisit context
+- `/gsd:discuss-capability [X+1]` — revisit context
 - `/gsd:research-phase [X+1]` — investigate unknowns
 
 ---
@@ -466,7 +466,7 @@ Phase {X} marked complete.
 ⚡ Auto-continuing: Complete milestone and archive
 ```
 
-Exit skill and invoke SlashCommand("/gsd:complete-milestone {version}")
+Exit skill and invoke SlashCommand("/gsd:progress {version}")
 
 </if>
 
@@ -483,7 +483,7 @@ Exit skill and invoke SlashCommand("/gsd:complete-milestone {version}")
 
 **Complete Milestone {version}** — archive and prepare for next
 
-`/gsd:complete-milestone {version}`
+`/gsd:progress {version}`
 
 <sub>`/clear` first → fresh context window</sub>
 

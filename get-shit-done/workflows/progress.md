@@ -214,7 +214,7 @@ Check if `{phase_num}-CONTEXT.md` exists in phase directory.
 
 **Phase {N}: {Name}** — {Goal from ROADMAP.md}
 
-`/gsd:discuss-phase {phase}` — gather context and clarify approach
+`/gsd:discuss-capability {phase}` — gather context and clarify approach
 
 <sub>`/clear` first → fresh context window</sub>
 
@@ -248,7 +248,7 @@ UAT.md exists with gaps (diagnosed issues). User needs to plan fixes.
 
 **Also available:**
 - `/gsd:execute-phase {phase}` — execute phase plans
-- `/gsd:verify-work {phase}` — run more UAT testing
+- `/gsd:review-phase {phase}` — run more UAT testing
 
 ---
 ```
@@ -287,7 +287,7 @@ Read ROADMAP.md to get the next phase's name and goal.
 
 **Phase {Z+1}: {Name}** — {Goal from ROADMAP.md}
 
-`/gsd:discuss-phase {Z+1}` — gather context and clarify approach
+`/gsd:discuss-capability {Z+1}` — gather context and clarify approach
 
 <sub>`/clear` first → fresh context window</sub>
 
@@ -295,7 +295,7 @@ Read ROADMAP.md to get the next phase's name and goal.
 
 **Also available:**
 - `/gsd:plan-phase {Z+1}` — skip discussion, plan directly
-- `/gsd:verify-work {Z}` — user acceptance test before continuing
+- `/gsd:review-phase {Z}` — user acceptance test before continuing
 
 ---
 ```
@@ -315,14 +315,14 @@ All {N} phases finished!
 
 **Complete Milestone** — archive and prepare for next
 
-`/gsd:complete-milestone`
+`/gsd:progress` — review milestone status and next steps
 
 <sub>`/clear` first → fresh context window</sub>
 
 ---
 
 **Also available:**
-- `/gsd:verify-work` — user acceptance test before completing milestone
+- `/gsd:review-phase` — user acceptance test before completing milestone
 
 ---
 ```
@@ -346,7 +346,7 @@ Ready to plan the next milestone.
 
 **Start Next Milestone** — questioning → research → requirements → roadmap
 
-`/gsd:new-milestone`
+`/gsd:new` — start new project or milestone
 
 <sub>`/clear` first → fresh context window</sub>
 

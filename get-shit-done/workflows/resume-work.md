@@ -178,7 +178,7 @@ What would you like to do?
    OR
 1. Execute phase (/gsd:execute-phase {phase})
    OR
-1. Discuss Phase 3 context (/gsd:discuss-phase 3) [if CONTEXT.md missing]
+1. Discuss Phase 3 context (/gsd:discuss-capability 3) [if CONTEXT.md missing]
    OR
 1. Plan Phase 3 (/gsd:plan-phase 3) [if CONTEXT.md exists or discuss option declined]
 
@@ -194,7 +194,7 @@ What would you like to do?
 ls .planning/phases/XX-name/*-CONTEXT.md 2>/dev/null
 ```
 
-If missing, suggest discuss-phase before plan. If exists, offer plan directly.
+If missing, suggest discuss-capability before plan. If exists, offer plan directly.
 
 Wait for user selection.
 </step>
@@ -231,7 +231,7 @@ Based on user selection, route to appropriate workflow:
   ---
 
   **Also available:**
-  - `/gsd:discuss-phase [N]` — gather context first
+  - `/gsd:discuss-capability [N]` — gather context first
   - `/gsd:research-phase [N]` — investigate unknowns
 
   ---

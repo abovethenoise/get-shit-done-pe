@@ -100,7 +100,7 @@ Mode: ecosystem
 
 <files_to_read>
 - {requirements_path} (Requirements)
-- {context_path} (Phase context from discuss-phase, if exists)
+- {context_path} (Phase context from discuss-capability, if exists)
 - {state_path} (Prior project decisions and blockers)
 </files_to_read>
 
