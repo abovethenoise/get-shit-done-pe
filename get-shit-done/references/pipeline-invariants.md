@@ -11,10 +11,10 @@
 **Why:** Executors need full context to implement complex tasks. If the orchestrator passes content instead of paths, it exhausts its own context window and degrades quality for subsequent plans.
 
 **Where:**
-- `get-shit-done/workflows/execute-phase.md` -- `execute_waves` step spawns Task per plan
+- `get-shit-done/workflows/execute.md` -- `execute_waves` step spawns Task per plan
 - `get-shit-done/workflows/framing-pipeline.md` -- stage 4 spawns executor
 
-**Verify:** Check that execute-phase.md uses `Task()` with `<files_to_read>` paths, not inline content.
+**Verify:** Check that execute.md uses `Task()` with `<files_to_read>` paths, not inline content.
 
 ---
 
@@ -25,7 +25,7 @@
 **Why:** Executing dependent plans before their prerequisites produces broken code, missing imports, or incomplete state.
 
 **Where:**
-- `get-shit-done/workflows/execute-phase.md` -- `discover_and_group_plans` step
+- `get-shit-done/workflows/execute.md` -- `discover_and_group_plans` step
 - `get-shit-done/bin/gsd-tools.cjs` -- `phase-plan-index` CLI command reads plan frontmatter
 
 **Verify:** `node gsd-tools.cjs phase-plan-index {phase}` returns plans grouped by wave with correct dependency chains.
@@ -39,9 +39,9 @@
 **Why:** Plans are prompts for executors. A bad plan produces bad execution. Catching issues before execution saves context budget and prevents rework.
 
 **Where:**
-- `get-shit-done/workflows/plan-phase.md` -- steps 10-12 (spawn checker, handle verdict, revision loop)
+- `get-shit-done/workflows/plan.md` -- steps 10-12 (spawn checker, handle verdict, revision loop)
 
-**Verify:** plan-phase.md contains checker spawn, verdict parsing, and revision loop with iteration limit.
+**Verify:** plan.md contains checker spawn, verdict parsing, and revision loop with iteration limit.
 
 ---
 
@@ -67,7 +67,7 @@
 
 **Where:**
 - All workflow `.md` files use `<files_to_read>` blocks with paths
-- `get-shit-done/workflows/execute-phase.md` -- Task prompts contain paths only
+- `get-shit-done/workflows/execute.md` -- Task prompts contain paths only
 
 **Verify:** Search workflow files for `<files_to_read>` blocks; confirm they contain paths (starting with `.planning/` or `get-shit-done/`), not inline markdown content.
 
@@ -94,8 +94,8 @@
 **Why:** Claude Code sessions have limited lifetime. When a session ends mid-execution, the next session needs: current position, completed work, decisions, blockers, and what to do next. Without handoff, work gets repeated or lost.
 
 **Where:**
-- `get-shit-done/workflows/transition.md` -- updates session fields
 - `get-shit-done/templates/state.md` -- `Session Continuity` section template
+- `get-shit-done/workflows/execute.md` -- updates session fields via state commands
 - SUMMARY.md frontmatter -- `key-decisions`, `requirements-completed`, `key-files`
 
 **Verify:** STATE.md `Stopped at` field is current. SUMMARY.md exists for completed plans. `state record-session` writes correct values.
@@ -109,7 +109,7 @@
 **Why:** Untraceable work means: no way to verify coverage, no way to detect gaps, no audit trail from requirement to implementation.
 
 **Where:**
-- `get-shit-done/workflows/plan-phase.md` -- step 9.7 (`plan-validate` CLI)
+- `get-shit-done/workflows/plan.md` -- step 9.7 (`plan-validate` CLI)
 - `get-shit-done/workflows/execute-plan.md` -- `update_requirements` step
 - `get-shit-done/bin/gsd-tools.cjs` -- `plan-validate`, `requirements mark-complete`
 
@@ -138,7 +138,7 @@
 **Why:** Executors can hallucinate completion. A "PASS" with missing files or phantom commits wastes the entire downstream pipeline.
 
 **Where:**
-- `get-shit-done/workflows/execute-phase.md` -- `execute_waves` step 4 (post-execution verification)
+- `get-shit-done/workflows/execute.md` -- `execute_waves` step 4 (post-execution verification)
 - `agents/gsd-executor.md` -- `self_check` section
 
 **Verify:** SUMMARY.md contains `## Self-Check: PASSED`. Files listed in `key-files` exist on disk. Commit hashes in task table appear in `git log`.

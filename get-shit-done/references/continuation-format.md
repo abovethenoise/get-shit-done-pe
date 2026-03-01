@@ -44,7 +44,7 @@ Standard format for presenting next steps after completing a command or workflow
 
 **02-03: Refresh Token Rotation** — Add /api/auth/refresh with sliding expiry
 
-`/gsd:execute-phase 2`
+`/gsd:execute Authentication`
 
 <sub>`/clear` first → fresh context window</sub>
 
@@ -52,12 +52,11 @@ Standard format for presenting next steps after completing a command or workflow
 
 **Also available:**
 - Review plan before executing
-- `/gsd:list-phase-assumptions 2` — check assumptions
 
 ---
 ```
 
-### Execute Final Plan in Phase
+### Execute Final Plan in Feature
 
 Add note that this is the last plan and what comes after:
 
@@ -67,69 +66,69 @@ Add note that this is the last plan and what comes after:
 ## ▶ Next Up
 
 **02-03: Refresh Token Rotation** — Add /api/auth/refresh with sliding expiry
-<sub>Final plan in Phase 2</sub>
+<sub>Final plan in Authentication</sub>
 
-`/gsd:execute-phase 2`
+`/gsd:execute Authentication`
 
 <sub>`/clear` first → fresh context window</sub>
 
 ---
 
 **After this completes:**
-- Phase 2 → Phase 3 transition
-- Next: **Phase 3: Core Features** — User dashboard and settings
+- Next feature ready for planning
+- Next: **Core Features** — User dashboard and settings
 
 ---
 ```
 
-### Plan a Phase
+### Plan a Feature
 
 ```
 ---
 
 ## ▶ Next Up
 
-**Phase 2: Authentication** — JWT login flow with refresh tokens
+**Authentication** — JWT login flow with refresh tokens
 
-`/gsd:plan-phase 2`
+`/gsd:plan Authentication`
 
 <sub>`/clear` first → fresh context window</sub>
 
 ---
 
 **Also available:**
-- `/gsd:discuss-phase 2` — gather context first
-- `/gsd:research-phase 2` — investigate unknowns
+- `/gsd:discuss Authentication` — gather context first
+- `/gsd:research Authentication` — investigate unknowns
 - Review roadmap
 
 ---
 ```
 
-### Phase Complete, Ready for Next
+### Feature Complete, Ready for Next
 
 Show completion status before next action:
 
 ```
 ---
 
-## ✓ Phase 2 Complete
+## ✓ Authentication Complete
 
 3/3 plans executed
 
 ## ▶ Next Up
 
-**Phase 3: Core Features** — User dashboard, settings, and data export
+**Core Features** — User dashboard, settings, and data export
 
-`/gsd:plan-phase 3`
+`/gsd:plan Core Features`
 
 <sub>`/clear` first → fresh context window</sub>
 
 ---
 
 **Also available:**
-- `/gsd:discuss-phase 3` — gather context first
-- `/gsd:research-phase 3` — investigate unknowns
-- Review what Phase 2 built
+- `/gsd:discuss Core Features` — gather context first
+- `/gsd:research Core Features` — investigate unknowns
+- Review what Authentication built
 
 ---
 ```
@@ -143,13 +142,13 @@ When there's no clear primary action:
 
 ## ▶ Next Up
 
-**Phase 3: Core Features** — User dashboard, settings, and data export
+**Core Features** — User dashboard, settings, and data export
 
-**To plan directly:** `/gsd:plan-phase 3`
+**To plan directly:** `/gsd:plan Core Features`
 
-**To discuss context first:** `/gsd:discuss-phase 3`
+**To discuss context first:** `/gsd:discuss Core Features`
 
-**To research unknowns:** `/gsd:research-phase 3`
+**To research unknowns:** `/gsd:research Core Features`
 
 <sub>`/clear` first → fresh context window</sub>
 
@@ -163,13 +162,13 @@ When there's no clear primary action:
 
 ## 🎉 Milestone v1.0 Complete
 
-All 4 phases shipped
+All features shipped
 
 ## ▶ Next Up
 
 **Start v1.1** — questioning → research → requirements → roadmap
 
-`/gsd:new-milestone`
+`/gsd:init`
 
 <sub>`/clear` first → fresh context window</sub>
 
@@ -178,14 +177,14 @@ All 4 phases shipped
 
 ## Pulling Context
 
-### For phases (from ROADMAP.md):
+### For features/capabilities (from ROADMAP.md):
 
 ```markdown
-### Phase 2: Authentication
+### Authentication
 **Goal**: JWT login flow with refresh tokens
 ```
 
-Extract: `**Phase 2: Authentication** — JWT login flow with refresh tokens`
+Extract: `**Authentication** — JWT login flow with refresh tokens`
 
 ### For plans (from ROADMAP.md):
 
@@ -214,7 +213,7 @@ Extract: `**02-03: Refresh Token Rotation** — Add /api/auth/refresh with slidi
 ## To Continue
 
 Run `/clear`, then paste:
-/gsd:execute-phase 2
+/gsd:execute Authentication
 ```
 
 User has no idea what 02-03 is about.
@@ -222,7 +221,7 @@ User has no idea what 02-03 is about.
 ### Don't: Missing /clear explanation
 
 ```
-`/gsd:plan-phase 3`
+`/gsd:plan Core Features`
 
 Run /clear first.
 ```
@@ -242,7 +241,7 @@ Sounds like an afterthought. Use "Also available:" instead.
 
 ```
 ```
-/gsd:plan-phase 3
+/gsd:plan Core Features
 ```
 ```
 
