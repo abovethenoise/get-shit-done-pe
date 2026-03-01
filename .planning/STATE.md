@@ -23,11 +23,11 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 10 of 12 (Remaining Cleanup & Polish)
-Plan: 2 of 8 complete
+Plan: 3 of 8 complete
 Status: In progress
-Last activity: 2026-03-01 -- Plan 10-02 complete (delete stale templates and dead reference docs)
+Last activity: 2026-03-01 -- Plan 10-03 complete (rename phase workflows to generic names)
 
-Progress: [==========..........] 50% (phases) | Plan 2/8
+Progress: [==========..........] 50% (phases) | Plan 3/8
 
 ## Performance Metrics
 
@@ -49,9 +49,10 @@ Progress: [==========..........] 50% (phases) | Plan 2/8
 | 09 (plan 03) | 1 | 8min | 8min |
 | 10 (plan 01) | 1 | 2min | 2min |
 | 10 (plan 02) | 1 | 3min | 3min |
+| 10 (plan 03) | 1 | 3min | 3min |
 
 **Recent Trend:**
-- 10-02: Deleted 13 dead v1 files (8 templates, 5 reference docs), updated requirements.md, 3min
+- 10-03: Renamed 4 phase workflows to generic names, updated framing-pipeline.md, removed transition.md invocation, 3min
 
 *Updated after each plan completion*
 
@@ -78,6 +79,7 @@ Recent decisions affecting current work:
 - [Phase 08]: run-tests.cjs retained -- 14 live test files remain; package.json build:hooks ref and install.js CHANGELOG copy deferred to Phase 12
 - [10-01]: All 5 v1 phase commands deleted; dead workflows (verify-phase, research-phase, transition) and verification-report template deleted
 - [10-02]: 8 stale v1 templates + 5 dead reference docs deleted; requirements.md updated for discovery brief guidance
+- [10-03]: 4 phase workflows renamed to generic names; transition.md invocation removed from execute.md; plan.md auto-advance simplified
 
 ### Blockers/Concerns
 
@@ -86,5 +88,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Completed 10-02-PLAN.md
+Stopped at: Completed 10-03-PLAN.md
 Resume file: None
