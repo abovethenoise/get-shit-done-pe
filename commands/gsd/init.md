@@ -31,7 +31,7 @@ Initialize a project through auto-detected flow. Handles both new (greenfield) a
 - `.documentation/mapping.md` -- domain-to-code links
 - `.documentation/decisions/` -- architectural decision records
 
-**After this command:** Run `/gsd:new-project` to set up requirements, research, and roadmap.
+**After this command:** Run `/gsd:new` to set up requirements, research, and roadmap.
 </objective>
 
 <execution_context>

@@ -136,7 +136,7 @@ skipped: [N]
 
 <lifecycle>
 
-**Creation:** When /gsd:verify-work starts new session
+**Creation:** When verification starts a new session
 - Extract tests from SUMMARY.md files
 - Set status to "testing"
 - Current Test points to test 1

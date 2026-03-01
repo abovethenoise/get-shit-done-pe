@@ -22,7 +22,7 @@ Parse JSON for: `researcher_model`, `planner_model`, `checker_model`, `research_
 
 **File paths (for <files_to_read> blocks):** `state_path`, `roadmap_path`, `requirements_path`, `context_path`, `research_path`, `verification_path`, `uat_path`. These are null if files don't exist.
 
-**If `planning_exists` is false:** Error — run `/gsd:new-project` first.
+**If `planning_exists` is false:** Error — run `/gsd:new` first.
 
 ## 2. Parse and Normalize Arguments
 

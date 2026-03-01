@@ -359,7 +359,7 @@ Mode: [New / Existing]
 
 [N] capabilities mapped
 
-Next: Run /gsd:new-project to set up requirements and roadmap
+Next: Run /gsd:new to set up requirements and roadmap
       (or /gsd:discuss-capability to explore a specific capability first)
 ```
 
