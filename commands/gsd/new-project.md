@@ -9,6 +9,9 @@ allowed-tools:
   - Task
   - AskUserQuestion
 ---
+
+> **Note:** For new projects, prefer `/gsd:init` which auto-detects new vs existing projects.
+
 <context>
 **Flags:**
 - `--auto` — Automatic mode. After config questions, runs research → requirements → roadmap without further interaction. Expects idea document via @ reference.

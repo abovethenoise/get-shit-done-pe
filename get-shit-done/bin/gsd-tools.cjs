@@ -112,7 +112,7 @@
  *   init new-project                   All context for new-project workflow
  *   init new-milestone                 All context for new-milestone workflow
  *   init quick <description>           All context for quick workflow
- *   init resume                        All context for resume-project workflow
+ *   init resume                        All context for resume-work workflow
  *   init verify-work <phase>           All context for verify-work workflow
  *   init phase-op <phase>              Generic phase operation context
  *   init milestone-op                  All context for milestone operations

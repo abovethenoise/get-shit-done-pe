@@ -12,7 +12,7 @@ allowed-tools:
 <objective>
 Restore complete project context and resume work seamlessly from previous session.
 
-Routes to the resume-project workflow which handles:
+Routes to the resume-work workflow which handles:
 
 - STATE.md loading (or reconstruction if missing)
 - Checkpoint detection (.continue-here files)
@@ -22,11 +22,11 @@ Routes to the resume-project workflow which handles:
   </objective>
 
 <execution_context>
-@~/.claude/get-shit-done/workflows/resume-project.md
+@~/.claude/get-shit-done/workflows/resume-work.md
 </execution_context>
 
 <process>
-**Follow the resume-project workflow** from `@~/.claude/get-shit-done/workflows/resume-project.md`.
+**Follow the resume-work workflow** from `@~/.claude/get-shit-done/workflows/resume-work.md`.
 
 The workflow handles all resumption logic including:
 
