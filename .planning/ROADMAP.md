@@ -67,7 +67,11 @@ Milestone v2.0 "Install-Ready Launch" takes everything built in milestone 1 (pha
   1. Every surviving command (11 total) fires without error when invoked
   2. All `@file` references across the entire artifact set resolve to existing files (automated scan)
   3. No command references a deleted workflow, agent, or template
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 11-01-PLAN.md -- @file reference scan + cross-reference audit + auto-fix obvious renames
+- [ ] 11-02-PLAN.md -- CLI route smoke tests against synthetic fixtures
+- [ ] 11-03-PLAN.md -- E2E simulation + friction log consolidation + user Q&A + fix agreed items
 
 ### Phase 12: Install & Try New Project
 **Goal**: Running `npm install -g` deploys all v2 artifacts, and the full pipeline works end-to-end on both fresh and existing projects
@@ -92,5 +96,5 @@ Phases execute in numeric order: 8 -> 9 -> 10 -> 11 -> 12
 | 8. Low Risk Cleanup | 5/5 | Complete   | 2026-03-01 |
 | 9. Structure & Integration | 3/3 | Complete   | 2026-03-01 |
 | 10. Remaining Cleanup & Polish | 8/8 | Complete    | 2026-03-01 |
-| 11. Automated Testing | 0/TBD | Not started | - |
+| 11. Automated Testing | 0/3 | Planned | - |
 | 12. Install & Try New Project | 0/TBD | Not started | - |
