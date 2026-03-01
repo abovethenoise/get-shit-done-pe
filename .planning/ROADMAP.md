@@ -130,10 +130,11 @@ Plans:
   2. Files not referenced by any v2 capability, feature, or workflow are identified and removed
   3. CLI commands from gsd-tools.cjs that serve only v1 concepts (milestone, phase) are removed or refactored
   4. No dead code, obsolete templates, or orphan references remain
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 07-01: TBD
+- [ ] 07-01-PLAN.md — Remove dead code: TDD execution pattern, todo system, health check, dead artifacts (discovery-phase.md, .bak file)
+- [ ] 07-02-PLAN.md — Resolve conflicts: simplify deviation rules, fix resume naming mismatch, resolve planner divergence, clarify init paths
 
 ## Progress
 
@@ -148,4 +149,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 4. Review Layer | 0/2 | Not started | - |
 | 5. Documentation | 3/3 | Complete   | 2026-02-28 |
 | 6. Workflows and Commands | 5/5 | Complete   | 2026-02-28 |
-| 7. Cleanup | 0/1 | Not started | - |
+| 7. Cleanup | 0/2 | Not started | - |
