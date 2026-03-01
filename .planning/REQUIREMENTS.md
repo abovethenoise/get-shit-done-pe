@@ -111,7 +111,7 @@ Requirements for Install-Ready Launch milestone. Each maps to roadmap phases.
 
 ### Integration
 
-- [ ] **INTG-01**: 6 research gatherers wired into framing pipeline (currently orphaned from surviving command chain)
+- [x] **INTG-01**: 6 research gatherers wired into framing pipeline (currently orphaned from surviving command chain)
 - [x] **INTG-02**: Hooks: keep context monitor + statusline, drop update check, audit remaining hooks for v2 effectiveness
 - [ ] **INTG-03**: All `@file` references in commands/workflows/agents resolve to files that actually exist post-cleanup
 
@@ -221,7 +221,7 @@ Deferred to post-v2.0. Tracked but not in current roadmap.
 | DIR-01 | Phase 9 | Pending |
 | DIR-02 | Phase 9 | Pending |
 | DIR-03 | Phase 9 | Complete |
-| INTG-01 | Phase 9 | Pending |
+| INTG-01 | Phase 9 | Complete |
 | INTG-02 | Phase 9 | Complete |
 | CLN-03 | Phase 10 | Pending |
 | CLN-04 | Phase 10 | Pending |

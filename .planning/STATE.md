@@ -23,9 +23,9 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 9 of 12 (Structure & Integration)
-Plan: 1 of 3 complete
+Plan: 2 of 3 complete
 Status: In progress
-Last activity: 2026-03-01 -- Plan 09-01 complete (orphan cleanup + stale refs)
+Last activity: 2026-03-01 -- Plan 09-02 complete (gatherer wiring)
 
 Progress: [██████████] 100%
 
@@ -45,9 +45,10 @@ Progress: [██████████] 100%
 | 08 (plan 04) | 1 | 1min | 1min |
 | 08 (plan 05) | 1 | 2min | 2min |
 | 09 (plan 01) | 1 | 3min | 3min |
+| 09 (plan 02) | 1 | 5min | 5min |
 
 **Recent Trend:**
-- 09-01: 7 orphaned commands deleted, all stale refs fixed in workflows/agents/hooks in 3min
+- 09-02: 6 research gatherers wired into pipeline, gsd-phase-researcher replaced, 9 files in 5min
 
 *Updated after each plan completion*
 
@@ -64,6 +65,8 @@ Recent decisions affecting current work:
 - [Milestone 2]: Install and validation combined -- install is meaningless without proving it works
 - [09-01]: All slash-command refs to deleted commands now fixed (discuss-phase, verify-work, pause-work, new-milestone, complete-milestone, add-phase)
 - [09-01]: Context-monitor hook uses generic STATE.md language instead of specific command refs
+- [09-02]: framing-pipeline invokes research-workflow.md directly (skips research-phase wrapper)
+- [09-02]: 6 gatherers replace gsd-phase-researcher via research-workflow + gather-synthesize
 - [Phase 08]: Slash-command text refs and @file refs from Phase-10-flagged commands to deleted workflows left intact for Phase 10 audit
 - [08-03]: Surviving refs to deleted agents in v1 framework code (core.cjs, init.cjs, model-profiles.md, templates) deferred to Phase 10 audit
 - [08-04]: Refs to gsd-check-update in bin/install.js and scripts/build-hooks.js left for install/build phase cleanup
@@ -76,5 +79,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Completed 09-01-PLAN.md
+Stopped at: Completed 09-02-PLAN.md
 Resume file: None
