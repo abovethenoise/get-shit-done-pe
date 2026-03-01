@@ -1,68 +1,73 @@
-# E2E Simulation Notes
+# E2E Simulation Notes (Full Pipeline Trace)
 
 **Date:** 2026-03-01
-**Synthetic project:** /tmp/gsd-e2e-* (todo-app with task-management feature)
+**Synthetic project:** /tmp/gsd-e2e-* (TaskFlow — task management app)
+**Method:** Claude role-playing as user, reading each workflow to understand what Claude-as-agent would do at each step, running CLI routes against synthetic fixtures, tracing data flow through the full pipeline.
 
-## Simulation Sequence
+## What I Did
 
-### Step 1: Init new project (empty dir)
-- **Route:** `init project --cwd=<empty>`
-- **Result:** PASS — exit 0, valid JSON, `detected_mode: "new"`, correct shape
-- **Notes:** Clean detection, all fields present
+Started with an empty git repo. Traced the full user journey:
 
-### Step 2: Create project scaffolding
-- Manually created: STATE.md, REQUIREMENTS.md, ROADMAP.md, config.json
-- Capability: `todo-app` with feature `task-management`
-- Git initialized and committed
+1. `/gsd:init` → read init-project.md → CLI auto-detection → Q&A flow → PROJECT.md + capabilities + .documentation/
+2. `/gsd:new task-management` → read framing-discovery.md → CLI fuzzy resolution → discovery Q&A → Discovery Brief
+3. Pipeline handoff → read framing-pipeline.md → Stage 1 research → Stage 2 requirements → Stage 3 plan → **BREAKS**
 
-### Step 3: Framing discovery (new lens)
-- **Route:** `init framing-discovery new --cwd=<dir>`
-- **Result:** PASS — returns lens, MVU slots, anchor questions path, capability list
-- **Notes:** All framing context present. `anchor_questions_exists: true`, `framing_lenses_exists: true`
+## Step-by-Step Trace
 
-### Step 4: Discuss capability
-- **Route:** `init discuss-capability --cwd=<dir>`
-- **Result:** PASS — returns capability list with todo-app
-- **Notes:** `doc_capabilities` empty (no .documentation/ dir yet) — correct behavior
+### /gsd:init (works)
+- `init project --cwd=<empty>` → `detected_mode: "new"` ✓
+- init-project.md directs Claude to run deep Q&A (goals, tech stack, architecture)
+- Write PROJECT.md from template
+- `capability-create task-management` → creates `.planning/capabilities/task-management/CAPABILITY.md` with template ✓
+- Seed `.documentation/` (architecture.md, domain.md, mapping.md, decisions/) ✓
+- After-text says "Run `/gsd:new-project`" → **WRONG** — should be `/gsd:new`
+- **No STATE.md created. No ROADMAP.md created.**
 
-### Step 5: Discuss feature
-- **Route:** `init discuss-feature --cwd=<dir>`
-- **Result:** PASS — returns capability list with nested features, flat feature list
-- **Notes:** Feature paths correctly formed (`todo-app/task-management`)
+### /gsd:new task-management (works through discovery, breaks at pipeline)
+- `init framing-discovery new task-management` → resolves capability correctly ✓
+- Anchor questions loaded, MVU slots (problem, who, done_criteria, constraints) present ✓
+- Claude would run Q&A, track MVU, produce Discovery Brief at `.planning/capabilities/task-management/BRIEF.md`
+- Summary playback, user confirms brief ✓
+- Hands off to framing-pipeline.md with CAPABILITY_SLUG, LENS, BRIEF_PATH ✓
 
-### Step 6: Plan feature
-- **Route:** `init plan-feature todo-app task-management --cwd=<dir>`
-- **Result:** PASS — returns planning context with model config, capability/feature paths
-- **Notes:** `research_enabled: false` (from config.json), `plan_checker_enabled: true`
+### Pipeline Stage 1: Research (probably works with degradation)
+- framing-pipeline.md passes `state_path: .planning/STATE.md` → **doesn't exist**
+- research-workflow.md reads STATE.md as optional context → would get null, continue
+- 6 gatherers spawn, each reads codebase + brief → would work
+- Output: RESEARCH.md at capability dir ✓ (probably)
 
-### Step 7: Execute feature
-- **Route:** `init execute-feature todo-app task-management --cwd=<dir>`
-- **Result:** PASS — returns executor/verifier models, capability/feature context
-- **Notes:** `plan_count: 0` (no plans yet) — correct for scaffolded-but-unplanned feature
+### Pipeline Stage 2: Requirements (works)
+- Auto-generate 3-layer requirements from brief
+- Writes to `.planning/capabilities/task-management/REQUIREMENTS.md`
+- Lens-weighted (new lens: rich EU, medium FN, thin TC)
+- Self-contained, no external init route needed ✓
 
-### Step 8: Progress
-- **Route:** `init progress --cwd=<dir>`
-- **Result:** PASS — returns milestone info, empty phases (v2 uses capabilities not phases)
-- **Notes:** `phase_count: 0` is correct — v2 doesn't use phase structure for progress tracking. But `project_exists: false` — the progress route checks for PROJECT.md which we didn't create. This is accurate behavior.
+### Pipeline Stage 3: Plan (BREAKS)
+- framing-pipeline.md says: "Invoke plan.md"
+- plan.md Step 1 runs: `init plan-phase "${PHASE}"`
+- **PHASE is undefined.** Pipeline passed CAPABILITY_SLUG, not a phase number.
+- CLI route `init plan-phase` expects a phase number → will error or return garbage
+- **Pipeline halts.**
 
-### Step 9: Resume
-- **Route:** `init resume --cwd=<dir>`
-- **Result:** PASS — returns state/roadmap existence, no interrupted agent
-- **Notes:** `project_exists: false` same as progress. `has_interrupted_agent: false` — correct for fresh project.
+### Pipeline Stages 4-6 (would break same way)
+- execute.md: `init execute-phase "${PHASE_ARG}"` — same problem
+- review.md: `init review-phase "${PHASE}"` — same problem (also a DEAD route that returns error)
+- doc.md: `init doc-phase "${PHASE}"` — same problem (also a DEAD route)
 
-## Findings
+## Key Architectural Finding
 
-### Friction
-1. **`/gsd:new-project` doesn't exist** — init.md after-text says "Run `/gsd:new-project`" but the actual command is `/gsd:new`. Same issue in init-project.md workflow and plan.md error message. (3 locations)
-2. **`/gsd:discuss-phase` dead reference** — research.md template line 21 references this v1 command.
+The v2 system has TWO parallel routing systems:
 
-### Cosmetic
-1. **Progress route returns phases not capabilities** — `init progress` returns `phases: []` and `phase_count: 0`. The v2 model uses capabilities/features, not phases. The progress route still uses phase terminology internally. Not a blocker since the progress.md workflow handles the display, but the JSON shape is v1-flavored.
-2. **`feature-op` accepts no args silently** — Returns JSON with null capability/feature fields instead of erroring. Other routes (`plan-feature`, `execute-feature`) properly validate and error.
+```
+V1 (phase-based):
+  /gsd:plan-phase 11 → plan.md → init plan-phase "11" → phase dir → plans
 
-### No Issues
-- All 9 routes produce valid JSON
-- Output shapes match what consuming commands/workflows expect
-- Capability/feature paths resolve correctly
-- Config settings (commit_docs, research, parallelization) propagate correctly
-- State detection works for both new and existing projects
+V2 (capability/feature-based):
+  /gsd:new cap → discovery → brief → framing-pipeline → plan.md → init plan-phase ??? → BREAKS
+                                                                    init plan-feature cap feat → WORKS (but not wired)
+```
+
+The v2 CLI routes exist (`init plan-feature`, `init execute-feature`) and return correct JSON. But the pipeline workflow files still call the v1 phase routes. The bridge is missing.
+
+## Cleanup
+- `/tmp/gsd-e2e-*` removed after simulation
