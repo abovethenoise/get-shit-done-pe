@@ -1,11 +1,10 @@
 ---
-phase: XX-name
 plan: YY
 subsystem: [primary category]
 tags: [searchable tech]
 provides:
   - [bullet list of what was built/delivered]
-affects: [list of phase names or keywords]
+affects: [list of feature names or keywords]
 tech-stack:
   added: [libraries/tools]
   patterns: [architectural/code patterns]
@@ -17,7 +16,7 @@ duration: Xmin
 completed: YYYY-MM-DD
 ---
 
-# Phase [X]: [Name] Summary (Minimal)
+# Plan Summary: [Name] (Minimal)
 
 **[Substantive one-liner describing outcome]**
 
@@ -37,5 +36,5 @@ completed: YYYY-MM-DD
 ## Files Created/Modified
 - `path/to/file.ts` - What it does
 
-## Next Phase Readiness
-[Ready for next phase]
+## Next Steps
+[Ready for next plan or feature]

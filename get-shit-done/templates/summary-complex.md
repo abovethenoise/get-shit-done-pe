@@ -1,14 +1,13 @@
 ---
-phase: XX-name
 plan: YY
 subsystem: [primary category]
 tags: [searchable tech]
 requires:
-  - phase: [prior phase]
-    provides: [what that phase built]
+  - plan: [prior plan]
+    provides: [what that plan built]
 provides:
   - [bullet list of what was built/delivered]
-affects: [list of phase names or keywords]
+affects: [list of feature names or keywords]
 tech-stack:
   added: [libraries/tools]
   patterns: [architectural/code patterns]
@@ -23,7 +22,7 @@ duration: Xmin
 completed: YYYY-MM-DD
 ---
 
-# Phase [X]: [Name] Summary (Complex)
+# Plan Summary: [Name] (Complex)
 
 **[Substantive one-liner describing outcome]**
 
@@ -54,6 +53,6 @@ completed: YYYY-MM-DD
 ## Issues Encountered
 [Problems during planned work and resolutions]
 
-## Next Phase Readiness
-[What's ready for next phase]
+## Next Steps
+[What's ready for the next plan or feature]
 [Blockers or concerns]

@@ -1,6 +1,6 @@
 # Summary Template
 
-Template for `.planning/phases/XX-name/{phase}-{plan}-SUMMARY.md` - phase completion documentation.
+Template for `.planning/phases/XX-name/{phase}-{plan}-SUMMARY.md` - plan completion documentation.
 
 ---
 
@@ -8,22 +8,21 @@ Template for `.planning/phases/XX-name/{phase}-{plan}-SUMMARY.md` - phase comple
 
 ```markdown
 ---
-phase: XX-name
 plan: YY
 subsystem: [primary category: auth, payments, ui, api, database, infra, testing, etc.]
 tags: [searchable tech: jwt, stripe, react, postgres, prisma]
 
 # Dependency graph
 requires:
-  - phase: [prior phase this depends on]
-    provides: [what that phase built that this uses]
+  - plan: [prior plan this depends on]
+    provides: [what that plan built that this uses]
 provides:
-  - [bullet list of what this phase built/delivered]
-affects: [list of phase names or keywords that will need this context]
+  - [bullet list of what this plan built/delivered]
+affects: [list of feature names or keywords that will need this context]
 
 # Tech tracking
 tech-stack:
-  added: [libraries/tools added in this phase]
+  added: [libraries/tools added in this plan]
   patterns: [architectural/code patterns established]
 
 key-files:
@@ -45,9 +44,9 @@ duration: Xmin
 completed: YYYY-MM-DD
 ---
 
-# Phase [X]: [Name] Summary
+# Plan Summary: [Name]
 
-**[Substantive one-liner describing outcome - NOT "phase complete" or "implementation finished"]**
+**[Substantive one-liner describing outcome - NOT "plan complete" or "implementation finished"]**
 
 ## Performance
 
@@ -115,31 +114,30 @@ Each task was committed atomically:
 [If no USER-SETUP.md:]
 None - no external service configuration required.
 
-## Next Phase Readiness
-[What's ready for next phase]
+## Next Steps
+[What's ready for the next plan or feature]
 [Any blockers or concerns]
 
 ---
-*Phase: XX-name*
 *Completed: [date]*
 ```
 
 <frontmatter_guidance>
-**Purpose:** Enable automatic context assembly via dependency graph. Frontmatter makes summary metadata machine-readable so plan-phase can scan all summaries quickly and select relevant ones based on dependencies.
+**Purpose:** Enable automatic context assembly via dependency graph. Frontmatter makes summary metadata machine-readable so the planner can scan all summaries quickly and select relevant ones based on dependencies.
 
 **Fast scanning:** Frontmatter is first ~25 lines, cheap to scan across all summaries without reading full content.
 
-**Dependency graph:** `requires`/`provides`/`affects` create explicit links between phases, enabling transitive closure for context selection.
+**Dependency graph:** `requires`/`provides`/`affects` create explicit links between plans, enabling transitive closure for context selection.
 
-**Subsystem:** Primary categorization (auth, payments, ui, api, database, infra, testing) for detecting related phases.
+**Subsystem:** Primary categorization (auth, payments, ui, api, database, infra, testing) for detecting related plans.
 
 **Tags:** Searchable technical keywords (libraries, frameworks, tools) for tech stack awareness.
 
 **Key-files:** Important files for @context references in PLAN.md.
 
-**Patterns:** Established conventions future phases should maintain.
+**Patterns:** Established conventions future plans should maintain.
 
-**Population:** Frontmatter is populated during summary creation in execute-plan.md. See `<step name="create_summary">` for field-by-field guidance.
+**Population:** Frontmatter is populated during summary creation by the executor. See `<step name="create_summary">` for field-by-field guidance.
 </frontmatter_guidance>
 
 <one_liner_rules>
@@ -161,7 +159,7 @@ The one-liner should tell someone what actually shipped.
 
 <example>
 ```markdown
-# Phase 1: Foundation Summary
+# Plan Summary: Foundation
 
 **JWT auth with refresh rotation using jose library, Prisma User model, and protected API middleware**
 
@@ -215,12 +213,11 @@ The one-liner should tell someone what actually shipped.
 ## Issues Encountered
 - jsonwebtoken CommonJS import failed in Edge runtime - switched to jose (planned library change, worked as expected)
 
-## Next Phase Readiness
+## Next Steps
 - Auth foundation complete, ready for feature development
 - User registration endpoint needed before public launch
 
 ---
-*Phase: 01-foundation*
 *Completed: 2025-01-15*
 ```
 </example>

@@ -1,9 +1,9 @@
-# Phase Prompt Template
+# Plan Prompt Template
 
 > **Note:** Planning methodology is in `agents/gsd-planner.md`.
 > This template defines the PLAN.md output format that the agent produces.
 
-Template for `.planning/phases/XX-name/{phase}-{plan}-PLAN.md` - executable phase plans optimized for parallel execution.
+Template for `.planning/phases/XX-name/{phase}-{plan}-PLAN.md` - executable plans optimized for parallel execution.
 
 **Naming:** Use `{phase}-{plan}-PLAN.md` format (e.g., `01-02-PLAN.md` for Phase 1, Plan 2)
 
@@ -13,7 +13,6 @@ Template for `.planning/phases/XX-name/{phase}-{plan}-PLAN.md` - executable phas
 
 ```markdown
 ---
-phase: XX-name
 plan: NN
 type: execute
 wave: N                     # Execution wave (1, 2, 3...). Pre-computed at plan time.
@@ -123,7 +122,6 @@ After completion, create `.planning/phases/XX-name/{phase}-{plan}-SUMMARY.md`
 
 | Field | Required | Purpose |
 |-------|----------|---------|
-| `phase` | Yes | Phase identifier (e.g., `01-foundation`) |
 | `plan` | Yes | Plan number within phase (e.g., `01`, `02`) |
 | `type` | Yes | Always `execute` |
 | `wave` | Yes | Execution wave number (1, 2, 3...). Pre-computed at plan time. |
@@ -134,7 +132,7 @@ After completion, create `.planning/phases/XX-name/{phase}-{plan}-SUMMARY.md`
 | `user_setup` | No | Array of human-required setup items (external services) |
 | `must_haves` | Yes | Goal-backward verification criteria (see below) |
 
-**Wave is pre-computed:** Wave numbers are assigned during `/gsd:plan-phase`. Execute-phase reads `wave` directly from frontmatter and groups plans by wave number. No runtime dependency analysis needed.
+**Wave is pre-computed:** Wave numbers are assigned during planning. The executor reads `wave` directly from frontmatter and groups plans by wave number. No runtime dependency analysis needed.
 
 **Must-haves enable verification:** The `must_haves` field carries goal-backward requirements from planning to execution. After all plans complete, execute-phase spawns a verification subagent that checks these criteria against the actual codebase.
 
@@ -148,18 +146,21 @@ After completion, create `.planning/phases/XX-name/{phase}-{plan}-SUMMARY.md`
 
 ```yaml
 # Plan 01 - User feature
+plan: 01
 wave: 1
 depends_on: []
 files_modified: [src/models/user.ts, src/api/users.ts]
 autonomous: true
 
 # Plan 02 - Product feature (no overlap with Plan 01)
+plan: 02
 wave: 1
 depends_on: []
 files_modified: [src/models/product.ts, src/api/products.ts]
 autonomous: true
 
 # Plan 03 - Order feature (no overlap)
+plan: 03
 wave: 1
 depends_on: []
 files_modified: [src/models/order.ts, src/api/orders.ts]
@@ -172,12 +173,14 @@ All three run in parallel (Wave 1) - no dependencies, no file conflicts.
 
 ```yaml
 # Plan 01 - Auth foundation
+plan: 01
 wave: 1
 depends_on: []
 files_modified: [src/lib/auth.ts, src/middleware/auth.ts]
 autonomous: true
 
 # Plan 02 - Protected features (needs auth)
+plan: 02
 wave: 2
 depends_on: ["01"]
 files_modified: [src/features/dashboard.ts]
@@ -190,6 +193,7 @@ Plan 02 in Wave 2 waits for Plan 01 in Wave 1 - genuine dependency on auth types
 
 ```yaml
 # Plan 03 - UI with verification
+plan: 03
 wave: 3
 depends_on: ["01", "02"]
 files_modified: [src/components/Dashboard.tsx]
@@ -285,7 +289,6 @@ AVOID:  Plan 01 = All models
 
 ```markdown
 ---
-phase: 03-features
 plan: 01
 type: execute
 wave: 1
@@ -344,7 +347,6 @@ After completion, create `.planning/phases/03-features/03-01-SUMMARY.md`
 
 ```markdown
 ---
-phase: 03-features
 plan: 03
 type: execute
 wave: 2
@@ -430,6 +432,7 @@ Plan 03: All UIs (depends on 02)
 **Bad: Missing autonomy flag**
 ```yaml
 # Has checkpoint but no autonomous: false
+plan: 01
 depends_on: []
 files_modified: [...]
 # autonomous: ???  <- Missing!
@@ -484,7 +487,7 @@ user_setup:
 
 **NOT included:** Package installs, code changes, file creation, CLI commands Claude can run.
 
-**Result:** Execute-plan generates `{phase}-USER-SETUP.md` with checklist for the user.
+**Result:** The executor generates `{phase}-USER-SETUP.md` with checklist for the user.
 
 See `~/.claude/get-shit-done/templates/user-setup.md` for full schema and examples
 
@@ -492,7 +495,7 @@ See `~/.claude/get-shit-done/templates/user-setup.md` for full schema and exampl
 
 ## Must-Haves (Goal-Backward Verification)
 
-The `must_haves` field defines what must be TRUE for the phase goal to be achieved. Derived during planning, verified after execution.
+The `must_haves` field defines what must be TRUE for the feature goal to be achieved. Derived during planning, verified after execution.
 
 **Structure:**
 
@@ -546,11 +549,9 @@ Task completion ≠ Goal achievement. A task "create chat component" can complet
 
 **Verification flow:**
 
-1. Plan-phase derives must_haves from phase goal (goal-backward)
+1. Planning derives must_haves from feature goal (goal-backward)
 2. Must_haves written to PLAN.md frontmatter
-3. Execute-phase runs all plans
+3. Executor runs all plans
 4. Verification subagent checks must_haves against codebase
 5. Gaps found → fix plans created → execute → re-verify
-6. All must_haves pass → phase complete
-
-See `~/.claude/get-shit-done/workflows/verify-phase.md` for verification logic.
+6. All must_haves pass → feature complete

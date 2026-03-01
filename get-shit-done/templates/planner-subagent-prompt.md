@@ -9,7 +9,7 @@ Template for spawning gsd-planner agent. The agent contains all planning experti
 ```markdown
 <planning_context>
 
-**Phase:** {phase_number}
+**Feature:** {feature_name}
 **Mode:** {standard | gap_closure}
 
 **Project State:**
@@ -49,7 +49,7 @@ Before returning PLANNING COMPLETE:
 - [ ] Tasks are specific and actionable
 - [ ] Dependencies correctly identified
 - [ ] Waves assigned for parallel execution
-- [ ] must_haves derived from phase goal
+- [ ] must_haves derived from feature goal
 </quality_gate>
 ```
 
@@ -59,9 +59,9 @@ Before returning PLANNING COMPLETE:
 
 | Placeholder | Source | Example |
 |-------------|--------|---------|
-| `{phase_number}` | From roadmap/arguments | `5` or `2.1` |
+| `{feature_name}` | From roadmap/arguments | `user-profiles` or `auth` |
 | `{phase_dir}` | Phase directory name | `05-user-profiles` |
-| `{phase}` | Phase prefix | `05` |
+| `{phase_num}` | Phase number prefix | `05` |
 | `{standard \| gap_closure}` | Mode flag | `standard` |
 
 ---
@@ -73,7 +73,7 @@ Before returning PLANNING COMPLETE:
 Task(
   prompt=filled_template,
   subagent_type="gsd-planner",
-  description="Plan Phase {phase}"
+  description="Plan {feature_name}"
 )
 ```
 
@@ -82,7 +82,7 @@ Task(
 Task(
   prompt=filled_template,  # with mode: gap_closure
   subagent_type="gsd-planner",
-  description="Plan gaps for Phase {phase}"
+  description="Plan gaps for {feature_name}"
 )
 ```
 
@@ -94,7 +94,7 @@ For checkpoints, spawn fresh agent with:
 
 ```markdown
 <objective>
-Continue planning for Phase {phase_number}: {phase_name}
+Continue planning for {feature_name}
 </objective>
 
 <prior_state>
