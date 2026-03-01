@@ -16,7 +16,7 @@ Milestone v2.0 "Install-Ready Launch" takes everything built in milestone 1 (pha
 - Phases 8-12: Milestone 2 (current)
 - Decimal phases (e.g., 8.1): Urgent insertions if needed
 
-- [ ] **Phase 8: Low Risk Cleanup** - Remove things we obviously won't use: dead commands, orphaned workflows/agents, dropped hooks and metadata files
+- [x] **Phase 8: Low Risk Cleanup** - Remove things we obviously won't use: dead commands, orphaned workflows/agents, dropped hooks and metadata files (completed 2026-03-01)
 - [ ] **Phase 9: Structure & Integration** - Establish v2 directory model and wire orphaned components (research gatherers, hooks) into the surviving chain
 - [ ] **Phase 10: Remaining Cleanup & Polish** - Harder cleanup that depends on knowing the v2 structure: CLI audit, template/reference audits, file reference validation
 - [ ] **Phase 11: Automated Testing** - Verify every surviving command fires without error and all file references resolve before attempting install
@@ -89,7 +89,7 @@ Phases execute in numeric order: 8 -> 9 -> 10 -> 11 -> 12
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 8. Low Risk Cleanup | 1/5 | In progress | - |
+| 8. Low Risk Cleanup | 5/5 | Complete   | 2026-03-01 |
 | 9. Structure & Integration | 0/TBD | Not started | - |
 | 10. Remaining Cleanup & Polish | 0/TBD | Not started | - |
 | 11. Automated Testing | 0/TBD | Not started | - |

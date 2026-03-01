@@ -6,9 +6,9 @@ status: executing
 last_updated: 2026-03-01
 progress:
   total_phases: 5
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 5
-  completed_plans: 4
+  completed_plans: 5
 ---
 
 # Project State
@@ -23,11 +23,11 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 8 of 12 (Low Risk Cleanup)
-Plan: 4 of 5 complete
-Status: Executing phase 8
-Last activity: 2026-03-01 -- Completed 08-04 (remove update-check hook)
+Plan: 5 of 5 complete
+Status: Phase 8 complete
+Last activity: 2026-03-01 -- Completed 08-05 (remove dead metadata/infrastructure)
 
-Progress: [████████░░] 80%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -43,9 +43,10 @@ Progress: [████████░░] 80%
 | 08 (plan 02) | 1 | 2min | 2min |
 | 08 (plan 03) | 1 | 1min | 1min |
 | 08 (plan 04) | 1 | 1min | 1min |
+| 08 (plan 05) | 1 | 2min | 2min |
 
 **Recent Trend:**
-- 08-04: update-check hook deleted, dead code stripped from statusline in 1min
+- 08-05: CHANGELOG, .github/, build-hooks, 2 dead tests deleted in 2min
 
 *Updated after each plan completion*
 
@@ -64,6 +65,7 @@ Recent decisions affecting current work:
 - [Phase 08]: Slash-command text refs and @file refs from Phase-10-flagged commands to deleted workflows left intact for Phase 10 audit
 - [08-03]: Surviving refs to deleted agents in v1 framework code (core.cjs, init.cjs, model-profiles.md, templates) deferred to Phase 10 audit
 - [08-04]: Refs to gsd-check-update in bin/install.js and scripts/build-hooks.js left for install/build phase cleanup
+- [Phase 08]: run-tests.cjs retained -- 14 live test files remain; package.json build:hooks ref and install.js CHANGELOG copy deferred to Phase 12
 
 ### Blockers/Concerns
 
@@ -72,5 +74,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Completed 08-04-PLAN.md
-Resume file: .planning/phases/08-low-risk-cleanup/08-04-SUMMARY.md
+Stopped at: Completed 08-05-PLAN.md (Phase 8 complete)
+Resume file: .planning/phases/08-low-risk-cleanup/08-05-SUMMARY.md
