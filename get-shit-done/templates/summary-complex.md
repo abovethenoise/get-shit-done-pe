@@ -48,8 +48,8 @@ completed: YYYY-MM-DD
 ## Decisions Made
 [Key decisions with brief rationale]
 
-## Deviations from Plan (Auto-fixed)
-[Detailed auto-fix records per GSD deviation rules]
+## Unplanned Changes
+[Detailed auto-fix records with descriptions and rationale]
 
 ## Issues Encountered
 [Problems during planned work and resolutions]

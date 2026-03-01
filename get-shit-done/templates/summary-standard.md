@@ -40,9 +40,9 @@ completed: YYYY-MM-DD
 - `path/to/file.ts` - What it does
 - `path/to/another.ts` - What it does
 
-## Decisions & Deviations
+## Decisions & Unplanned Changes
 [Key decisions or "None - followed plan as specified"]
-[Minor deviations if any, or "None"]
+[Unplanned changes if any, or "None"]
 
 ## Next Phase Readiness
 [What's ready for next phase]

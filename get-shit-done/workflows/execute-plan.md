@@ -66,7 +66,7 @@ grep -n "type=\"checkpoint" .planning/phases/XX-name/{phase}-{plan}-PLAN.md
 | Verify-only | B (segmented) | Segments between checkpoints. After none/human-verify → SUBAGENT. After decision/human-action → MAIN |
 | Decision | C (main) | Execute entirely in main context |
 
-**Pattern A:** init_agent_tracking → spawn Task(subagent_type="gsd-executor", model=executor_model) with prompt: execute plan at [path], autonomous, all tasks + SUMMARY + commit, follow deviation/auth rules, report: plan name, tasks, SUMMARY path, commit hash → track agent_id → wait → update tracking → report.
+**Pattern A:** init_agent_tracking → spawn Task(subagent_type="gsd-executor", model=executor_model) with prompt: execute plan at [path], autonomous, all tasks + SUMMARY + commit, follow unplanned-work guidance + auth gates, report: plan name, tasks, SUMMARY path, commit hash → track agent_id → wait → update tracking → report.
 
 **Pattern B:** Execute segment-by-segment. Autonomous segments: spawn subagent for assigned tasks only (no SUMMARY/commit). Checkpoints: main context. After all segments: aggregate, create SUMMARY, commit. See segment_execution.
 
@@ -99,9 +99,9 @@ Pattern B only (verify-only checkpoints). Skip for A/C.
 
 1. Parse segment map: checkpoint locations and types
 2. Per segment:
-   - Subagent route: spawn gsd-executor for assigned tasks only. Prompt: task range, plan path, read full plan for context, execute assigned tasks, track deviations, NO SUMMARY/commit. Track via agent protocol.
+   - Subagent route: spawn gsd-executor for assigned tasks only. Prompt: task range, plan path, read full plan for context, execute assigned tasks, track unplanned changes, NO SUMMARY/commit. Track via agent protocol.
    - Main route: execute tasks using standard flow (step name="execute")
-3. After ALL segments: aggregate files/deviations/decisions → create SUMMARY.md → commit → self-check:
+3. After ALL segments: aggregate files/changes/decisions → create SUMMARY.md → commit → self-check:
    - Verify key-files.created exist on disk with `[ -f ]`
    - Check `git log --oneline --all --grep="{phase}-{plan}"` returns ≥1 commit
    - Append `## Self-Check: PASSED` or `## Self-Check: FAILED` to SUMMARY
@@ -131,15 +131,13 @@ If previous SUMMARY has unresolved "Issues Encountered" or "Next Phase Readiness
 </step>
 
 <step name="execute">
-Deviations are normal — handle via rules below.
-
 1. Read @context files from prompt
 2. Per task:
-   - `type="auto"`: Implement with deviation rules + auth gates. Verify done criteria. Commit (see task_commit). Track hash for Summary.
+   - `type="auto"`: Implement with auth gates. Handle unexpected issues per unplanned-work guidance. Verify done criteria. Commit (see task_commit). Track hash for Summary.
    - `type="checkpoint:*"`: STOP → checkpoint_protocol → wait for user → continue only after confirmation.
 3. Run `<verification>` checks
 4. Confirm `<success_criteria>` met
-5. Document deviations in Summary
+5. Document unplanned changes in Summary
 </step>
 
 <authentication_gates>
@@ -165,50 +163,33 @@ Auth errors during execution are NOT failures — they're expected interaction p
 
 </authentication_gates>
 
-<deviation_rules>
+<unplanned_work>
 
-## Deviation Rules
+## Unplanned Work
 
-You WILL discover unplanned work. Apply automatically, track all for Summary.
+You will encounter unexpected issues during execution. Full guidance is in `agents/gsd-executor.md`.
 
-| Rule | Trigger | Action | Permission |
-|------|---------|--------|------------|
-| **1: Bug** | Broken behavior, errors, wrong queries, type errors, security vulns, race conditions, leaks | Fix → test → verify → track `[Rule 1 - Bug]` | Auto |
-| **2: Missing Critical** | Missing essentials: error handling, validation, auth, CSRF/CORS, rate limiting, indexes, logging | Add → test → verify → track `[Rule 2 - Missing Critical]` | Auto |
-| **3: Blocking** | Prevents completion: missing deps, wrong types, broken imports, missing env/config/files, circular deps | Fix blocker → verify proceeds → track `[Rule 3 - Blocking]` | Auto |
-| **4: Architectural** | Structural change: new DB table, schema change, new service, switching libs, breaking API, new infra | STOP → present decision (below) → track `[Rule 4 - Architectural]` | Ask user |
+**Auto-fix:** Bugs, missing dependencies, blockers — fix and continue. Document in summary.
 
-**Rule 4 format:**
-```
-⚠️ Architectural Decision Needed
+**Stop and ask:** Architectural issues that change the plan's fundamental approach — STOP and return checkpoint.
 
-Current task: [task name]
-Discovery: [what prompted this]
-Proposed change: [modification]
-Why needed: [rationale]
-Impact: [what this affects]
-Alternatives: [other approaches]
+**Scope:** Only fix issues directly related to the current task. Log unrelated discoveries to `deferred-items.md`.
 
-Proceed with proposed change? (yes / different approach / defer)
-```
+**Limit:** More than 2 auto-fixes on a single task — pause and assess.
 
-**Priority:** Rule 4 (STOP) > Rules 1-3 (auto) > unsure → Rule 4
-**Edge cases:** missing validation → R2 | null crash → R1 | new table → R4 | new column → R1/2
-**Heuristic:** Affects correctness/security/completion? → R1-3. Maybe? → R4.
+</unplanned_work>
 
-</deviation_rules>
+<unplanned_work_documentation>
 
-<deviation_documentation>
+## Documenting Unplanned Changes
 
-## Documenting Deviations
+Summary MUST include unplanned changes section. None? → `## Unplanned Changes\n\nNone - plan executed exactly as written.`
 
-Summary MUST include deviations section. None? → `## Deviations from Plan\n\nNone - plan executed exactly as written.`
+Per change: **Brief description** — why it was needed. Include: Found during (Task X) | Issue | Fix | Files modified | Commit hash.
 
-Per deviation: **[Rule N - Category] Title** — Found during: Task X | Issue | Fix | Files modified | Verification | Commit hash
+End with: **Unplanned changes:** N (brief breakdown). **Impact:** assessment.
 
-End with: **Total deviations:** N auto-fixed (breakdown). **Impact:** assessment.
-
-</deviation_documentation>
+</unplanned_work_documentation>
 
 <task_commit>
 ## Task Commit Protocol

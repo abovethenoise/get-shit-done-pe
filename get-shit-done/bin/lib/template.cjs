@@ -107,7 +107,7 @@ function cmdTemplateFill(cwd, templateType, options, raw) {
         '## Files Created/Modified',
         '- `path/to/file.ts` - What it does',
         '',
-        '## Decisions & Deviations',
+        '## Decisions & Unplanned Changes',
         '[Key decisions or "None - followed plan as specified"]',
         '',
         '## Next Phase Readiness',

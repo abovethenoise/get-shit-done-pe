@@ -79,33 +79,30 @@ Each task was committed atomically:
 ## Decisions Made
 [Key decisions with brief rationale, or "None - followed plan as specified"]
 
-## Deviations from Plan
+## Unplanned Changes
 
-[If no deviations: "None - plan executed exactly as written"]
+[If no unplanned changes: "None - plan executed exactly as written."]
 
-[If deviations occurred:]
+[If unplanned changes occurred:]
 
-### Auto-fixed Issues
-
-**1. [Rule X - Category] Brief description**
+**1. Auto-fixed: [brief description]** — [why it was needed]
 - **Found during:** Task [N] ([task name])
 - **Issue:** [What was wrong]
 - **Fix:** [What was done]
 - **Files modified:** [file paths]
-- **Verification:** [How it was verified]
 - **Committed in:** [hash] (part of task commit)
 
-[... repeat for each auto-fix ...]
+[... repeat for each change ...]
 
 ---
 
-**Total deviations:** [N] auto-fixed ([breakdown by rule])
-**Impact on plan:** [Brief assessment - e.g., "All auto-fixes necessary for correctness/security. No scope creep."]
+**Unplanned changes:** [N] ([brief breakdown])
+**Impact on plan:** [Brief assessment - e.g., "All fixes necessary for correctness. No scope creep."]
 
 ## Issues Encountered
 [Problems and how they were resolved, or "None"]
 
-[Note: "Deviations from Plan" documents unplanned work that was handled automatically via deviation rules. "Issues Encountered" documents problems during planned work that required problem-solving.]
+[Note: "Unplanned Changes" documents unexpected work handled during execution. "Issues Encountered" documents problems during planned work that required problem-solving.]
 
 ## User Setup Required
 
@@ -194,30 +191,26 @@ The one-liner should tell someone what actually shipped.
 - 15-min access tokens with 7-day refresh tokens
 - Storing refresh tokens in database for revocation capability
 
-## Deviations from Plan
+## Unplanned Changes
 
-### Auto-fixed Issues
-
-**1. [Rule 2 - Missing Critical] Added password hashing with bcrypt**
+**1. Auto-fixed: Added password hashing with bcrypt** — storing plaintext would be a critical security flaw
 - **Found during:** Task 2 (Login endpoint implementation)
-- **Issue:** Plan didn't specify password hashing - storing plaintext would be critical security flaw
+- **Issue:** Plan didn't specify password hashing
 - **Fix:** Added bcrypt hashing on registration, comparison on login with salt rounds 10
 - **Files modified:** src/app/api/auth/login/route.ts, src/lib/auth.ts
-- **Verification:** Password hash test passes, plaintext never stored
 - **Committed in:** abc123f (Task 2 commit)
 
-**2. [Rule 3 - Blocking] Installed missing jose dependency**
+**2. Auto-fixed: Installed missing jose dependency** — import failing without it
 - **Found during:** Task 4 (JWT token generation)
-- **Issue:** jose package not in package.json, import failing
+- **Issue:** jose package not in package.json
 - **Fix:** Ran `npm install jose`
 - **Files modified:** package.json, package-lock.json
-- **Verification:** Import succeeds, build passes
 - **Committed in:** def456g (Task 4 commit)
 
 ---
 
-**Total deviations:** 2 auto-fixed (1 missing critical, 1 blocking)
-**Impact on plan:** Both auto-fixes essential for security and functionality. No scope creep.
+**Unplanned changes:** 2 (1 security fix, 1 missing dependency)
+**Impact on plan:** Both fixes essential for security and functionality. No scope creep.
 
 ## Issues Encountered
 - jsonwebtoken CommonJS import failed in Edge runtime - switched to jose (planned library change, worked as expected)

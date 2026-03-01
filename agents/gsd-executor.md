@@ -82,7 +82,7 @@ grep -n "type=\"checkpoint" [plan-path]
 For each task:
 
 1. **If `type="auto"`:**
-   - Execute task, apply deviation rules as needed
+   - Execute task, handle unexpected issues per unplanned-work guidance
    - Handle auth errors as authentication gates
    - Run verification, confirm done criteria
    - Commit (see task_commit_protocol)
@@ -92,83 +92,22 @@ For each task:
    - STOP immediately — return structured checkpoint message
    - A fresh agent will be spawned to continue
 
-3. After all tasks: run overall verification, confirm success criteria, document deviations
+3. After all tasks: run overall verification, confirm success criteria, document unplanned changes
 </step>
 
 </execution_flow>
 
-<deviation_rules>
-**While executing, you WILL discover work not in the plan.** Apply these rules automatically. Track all deviations for Summary.
+<unplanned_work>
+**You will encounter unexpected issues during execution.** Handle them as follows:
 
-**Shared process for Rules 1-3:** Fix inline → add/update tests if applicable → verify fix → continue task → track as `[Rule N - Type] description`
+**Auto-fix:** If you encounter a bug, missing dependency, or blocker during task execution — fix it and continue. Document what you fixed and why in the summary.
 
-No user permission needed for Rules 1-3.
+**Stop and ask:** If you discover an architectural issue that changes the plan's fundamental approach — STOP execution and return a checkpoint. Do not attempt architectural fixes autonomously.
 
----
+**Scope boundary:** Auto-fixes must be directly related to the current task. Do not fix unrelated issues discovered during execution. Log out-of-scope discoveries to `deferred-items.md` in the phase directory.
 
-**RULE 1: Auto-fix bugs**
-
-**Trigger:** Code doesn't work as intended (broken behavior, errors, incorrect output)
-
-**Examples:** Wrong queries, logic errors, type errors, null pointer exceptions, broken validation, security vulnerabilities, race conditions, memory leaks
-
----
-
-**RULE 2: Auto-add missing critical functionality**
-
-**Trigger:** Code missing essential features for correctness, security, or basic operation
-
-**Examples:** Missing error handling, no input validation, missing null checks, no auth on protected routes, missing authorization, no CSRF/CORS, no rate limiting, missing DB indexes, no error logging
-
-**Critical = required for correct/secure/performant operation.** These aren't "features" — they're correctness requirements.
-
----
-
-**RULE 3: Auto-fix blocking issues**
-
-**Trigger:** Something prevents completing current task
-
-**Examples:** Missing dependency, wrong types, broken imports, missing env var, DB connection error, build config error, missing referenced file, circular dependency
-
----
-
-**RULE 4: Ask about architectural changes**
-
-**Trigger:** Fix requires significant structural modification
-
-**Examples:** New DB table (not column), major schema changes, new service layer, switching libraries/frameworks, changing auth approach, new infrastructure, breaking API changes
-
-**Action:** STOP → return checkpoint with: what found, proposed change, why needed, impact, alternatives. **User decision required.**
-
----
-
-**RULE PRIORITY:**
-1. Rule 4 applies → STOP (architectural decision)
-2. Rules 1-3 apply → Fix automatically
-3. Genuinely unsure → Rule 4 (ask)
-
-**Edge cases:**
-- Missing validation → Rule 2 (security)
-- Crashes on null → Rule 1 (bug)
-- Need new table → Rule 4 (architectural)
-- Need new column → Rule 1 or 2 (depends on context)
-
-**When in doubt:** "Does this affect correctness, security, or ability to complete task?" YES → Rules 1-3. MAYBE → Rule 4.
-
----
-
-**SCOPE BOUNDARY:**
-Only auto-fix issues DIRECTLY caused by the current task's changes. Pre-existing warnings, linting errors, or failures in unrelated files are out of scope.
-- Log out-of-scope discoveries to `deferred-items.md` in the phase directory
-- Do NOT fix them
-- Do NOT re-run builds hoping they resolve themselves
-
-**FIX ATTEMPT LIMIT:**
-Track auto-fix attempts per task. After 3 auto-fix attempts on a single task:
-- STOP fixing — document remaining issues in SUMMARY.md under "Deferred Issues"
-- Continue to the next task (or return checkpoint if blocked)
-- Do NOT restart the build to find more issues
-</deviation_rules>
+**Limit:** If a single task requires more than 2 auto-fixes, pause and assess whether the plan needs revision.
+</unplanned_work>
 
 <analysis_paralysis_guard>
 **During task execution, if you make 5+ consecutive Read/Grep/Glob calls without any Edit/Write/Bash action:**
@@ -209,7 +148,7 @@ Store the result for checkpoint handling below.
 
 **CRITICAL: Automation before verification**
 
-Before any `checkpoint:human-verify`, ensure verification environment is ready. If plan lacks server startup before checkpoint, ADD ONE (deviation Rule 3).
+Before any `checkpoint:human-verify`, ensure verification environment is ready. If plan lacks server startup before checkpoint, ADD ONE (auto-fix: missing server start).
 
 For full automation-first patterns, server lifecycle, CLI handling:
 **See @~/.claude/get-shit-done/references/checkpoints.md**
@@ -331,14 +270,12 @@ After all tasks complete, create `{phase}-{plan}-SUMMARY.md` at `.planning/phase
 - Good: "JWT auth with refresh rotation using jose library"
 - Bad: "Authentication implemented"
 
-**Deviation documentation:**
+**Unplanned changes documentation:**
 
 ```markdown
-## Deviations from Plan
+## Unplanned Changes
 
-### Auto-fixed Issues
-
-**1. [Rule 1 - Bug] Fixed case-sensitive email uniqueness**
+**1. Auto-fixed: case-sensitive email uniqueness check** — required for correctness
 - **Found during:** Task 4
 - **Issue:** [description]
 - **Fix:** [what was done]
@@ -454,7 +391,7 @@ Plan execution complete when:
 
 - [ ] All tasks executed (or paused at checkpoint with full state returned)
 - [ ] Each task committed individually with proper format
-- [ ] All deviations documented
+- [ ] All unplanned changes documented
 - [ ] Authentication gates handled and documented
 - [ ] SUMMARY.md created with substantive content
 - [ ] STATE.md updated (position, decisions, issues, session)
