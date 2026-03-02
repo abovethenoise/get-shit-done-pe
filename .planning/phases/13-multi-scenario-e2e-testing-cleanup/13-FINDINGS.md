@@ -4,9 +4,9 @@
 **Scenarios completed:** 2/13
 
 ## Summary
-- Total findings: 7
+- Total findings: 11
 - Fixed inline: 0
-- Open for triage: 7
+- Open for triage: 11
 - From targeted sweep: 0
 
 ## Findings
@@ -22,6 +22,10 @@
 | F5 | S01 | bug | `slug-resolve` CLI route does not exist. Returns `Error: Unknown command: slug-resolve`. | OPEN | - |
 | F6 | S01 | friction | v2 workflow files referenced in plan context do not exist: `init-project.md`, `discuss-capability.md`, `discuss-feature.md`, `framing-pipeline.md`, `plan.md`, `execute.md`. Actual workflow names retained from v1: `new-project.md`, `discuss-phase.md`, `plan-phase.md`, `execute-phase.md`, `execute-plan.md`. | OPEN | - |
 | F7 | S01 | friction | `research-workflow.md` does not exist. No standalone research workflow file found. | OPEN | - |
+| F8 | S02 | bug | `plan-phase.md` workflow calls `init plan-phase` (v1 phase route), not `init plan-feature` (v2 feature route). Feature pipeline is not wired. | OPEN | - |
+| F9 | S02 | bug | `discuss-feature.md` workflow does not exist. No separate feature discussion flow. | OPEN | - |
+| F10 | S02 | bug | No workflow file calls `init plan-feature`, `init execute-feature`, or `init feature-op`. These v2 init routes are orphaned. | OPEN | - |
+| F11 | S02 | friction | Single-feature pipeline entry requires manual directory creation and has no workflow path to planning without going through the phase model. | OPEN | - |
 
 ### From Targeted Sweep
 
