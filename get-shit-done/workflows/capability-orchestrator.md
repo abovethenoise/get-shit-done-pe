@@ -5,8 +5,8 @@ Same pattern as execute.md wave orchestration but for features within a capabili
 </purpose>
 
 <required_reading>
-@~/.claude/get-shit-done/workflows/framing-pipeline.md
-@~/.claude/get-shit-done/references/framing-lenses.md
+@{GSD_ROOT}/get-shit-done/workflows/framing-pipeline.md
+@{GSD_ROOT}/get-shit-done/references/framing-lenses.md
 </required_reading>
 
 <process>
@@ -89,7 +89,7 @@ For each feature in the current wave:
 
 2. **Invoke framing-pipeline.md:**
    ```
-   @~/.claude/get-shit-done/workflows/framing-pipeline.md
+   @{GSD_ROOT}/get-shit-done/workflows/framing-pipeline.md
    ```
    Pass:
    - FEATURE_SLUG: the current feature's slug

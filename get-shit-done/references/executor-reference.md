@@ -203,7 +203,7 @@ When spawned as continuation agent (`<completed_tasks>` in prompt):
 
 ## SUMMARY.md Creation
 
-Use the Write tool to create files. Use the summary template from `@~/.claude/get-shit-done/templates/summary.md`.
+Use the Write tool to create files. Use the summary template from `@{GSD_ROOT}/get-shit-done/templates/summary.md`.
 
 **Frontmatter:** phase, plan, subsystem, tags, dependency graph (requires/provides/affects), tech-stack (added/patterns), key-files (created/modified), decisions, metrics (duration, completed date).
 

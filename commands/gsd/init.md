@@ -35,13 +35,13 @@ Initialize a project through auto-detected flow. Handles both new (greenfield) a
 </objective>
 
 <execution_context>
-@~/.claude/get-shit-done/workflows/init-project.md
-@~/.claude/get-shit-done/workflows/gather-synthesize.md
-@~/.claude/get-shit-done/references/questioning.md
-@~/.claude/get-shit-done/templates/project.md
+@{GSD_ROOT}/get-shit-done/workflows/init-project.md
+@{GSD_ROOT}/get-shit-done/workflows/gather-synthesize.md
+@{GSD_ROOT}/get-shit-done/references/questioning.md
+@{GSD_ROOT}/get-shit-done/templates/project.md
 </execution_context>
 
 <process>
-Execute the init-project workflow from @~/.claude/get-shit-done/workflows/init-project.md end-to-end.
+Execute the init-project workflow from @{GSD_ROOT}/get-shit-done/workflows/init-project.md end-to-end.
 Preserve all workflow gates (auto-detection, validation, incremental writes, commits).
 </process>

@@ -4,7 +4,7 @@ Create executable planning prompts (PLAN.md files) for a feature. Default flow: 
 
 <required_reading>
 Read all files referenced by the invoking prompt's execution_context before starting.
-@~/.claude/get-shit-done/references/ui-brand.md
+@{GSD_ROOT}/get-shit-done/references/ui-brand.md
 </required_reading>
 
 <inputs>
@@ -51,7 +51,7 @@ If null: ask user -- "Continue without context" or "Run discuss-feature first".
 **Skip if:** `--skip-research` flag, or `research_enabled` is false without `--research` override.
 **If `has_research` AND no `--research` flag:** Use existing, skip to step 6.
 
-**If research needed:** Invoke `@~/.claude/get-shit-done/workflows/research-workflow.md` with subject, context_paths (PROJECT.md, STATE.md, ROADMAP.md, requirements), output_dir, capability_path, feature_path, framing_context. Spawns 6 gatherers + synthesizer. Output: `{feature_dir}/RESEARCH.md`.
+**If research needed:** Invoke `@{GSD_ROOT}/get-shit-done/workflows/research-workflow.md` with subject, context_paths (PROJECT.md, STATE.md, ROADMAP.md, requirements), output_dir, capability_path, feature_path, framing_context. Spawns 6 gatherers + synthesizer. Output: `{feature_dir}/RESEARCH.md`.
 
 Handle return: complete/partial -> continue. Failed -> offer: provide context, skip research, abort.
 
@@ -99,7 +99,7 @@ Output consumed by execute workflow. Plans need: frontmatter (wave, depends_on, 
 
 ```
 Task(
-  prompt="First, read ~/.claude/agents/gsd-planner.md for your role.\n\n" + filled_prompt,
+  prompt="First, read {GSD_ROOT}/agents/gsd-planner.md for your role.\n\n" + filled_prompt,
   subagent_type="general-purpose",
   model="{planner_model}",
   description="Plan Feature {CAPABILITY_SLUG}/{FEATURE_SLUG}"

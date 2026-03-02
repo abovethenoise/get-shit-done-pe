@@ -5,7 +5,7 @@ Execute a feature plan (PLAN.md) and create the outcome summary (SUMMARY.md).
 <required_reading>
 Read STATE.md before any operation to load project context.
 Read config.json for planning behavior settings.
-@~/.claude/get-shit-done/references/git-integration.md
+@{GSD_ROOT}/get-shit-done/references/git-integration.md
 </required_reading>
 
 <inputs>
@@ -156,7 +156,7 @@ DURATION_MIN=$(( DURATION_SEC / 60 ))
 </step>
 
 <step name="create_summary">
-Create `{plan_id}-SUMMARY.md` at `${feature_dir}/`. Use `~/.claude/get-shit-done/templates/summary.md`.
+Create `{plan_id}-SUMMARY.md` at `${feature_dir}/`. Use `{GSD_ROOT}/get-shit-done/templates/summary.md`.
 
 **Frontmatter:** feature (cap/feat), plan, subsystem, tags, requires/provides/affects, tech-stack, key-files, key-decisions, requirements-completed (copy from PLAN.md frontmatter), duration, completed date.
 

@@ -26,7 +26,7 @@ Guided exploration of a capability's core idea, boundaries, and suggested lens. 
 </objective>
 
 <execution_context>
-@~/.claude/get-shit-done/workflows/discuss-capability.md
+@{GSD_ROOT}/get-shit-done/workflows/discuss-capability.md
 </execution_context>
 
 <context>

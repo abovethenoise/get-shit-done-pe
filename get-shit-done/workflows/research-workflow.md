@@ -9,7 +9,7 @@ Separation of concerns: callers determine WHAT to research (subject, scope, fram
 <required_reading>
 Read all files referenced by the invoking prompt's execution_context before starting.
 
-@~/.claude/get-shit-done/workflows/gather-synthesize.md
+@{GSD_ROOT}/get-shit-done/workflows/gather-synthesize.md
 </required_reading>
 
 <inputs>
@@ -141,7 +141,7 @@ synthesizer:
 Delegate to the gather-synthesize pattern:
 
 ```
-@~/.claude/get-shit-done/workflows/gather-synthesize.md
+@{GSD_ROOT}/get-shit-done/workflows/gather-synthesize.md
 ```
 
 Pass:

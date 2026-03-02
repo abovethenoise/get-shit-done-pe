@@ -7,9 +7,9 @@ Invoked by framing-discovery.md after brief finalization. All four framings conv
 <required_reading>
 Read all files referenced by the invoking prompt's execution_context before starting.
 
-@~/.claude/get-shit-done/references/framing-lenses.md
-@~/.claude/get-shit-done/references/escalation-protocol.md
-@~/.claude/get-shit-done/references/ui-brand.md
+@{GSD_ROOT}/get-shit-done/references/framing-lenses.md
+@{GSD_ROOT}/get-shit-done/references/escalation-protocol.md
+@{GSD_ROOT}/get-shit-done/references/ui-brand.md
 </required_reading>
 
 <inputs>
@@ -83,7 +83,7 @@ Research agents investigate technical feasibility with lens-aware focus.
 Invoke the research workflow directly, passing framing context:
 
 ```
-@~/.claude/get-shit-done/workflows/research-workflow.md
+@{GSD_ROOT}/get-shit-done/workflows/research-workflow.md
 ```
 
 Pass:
@@ -166,7 +166,7 @@ Lens-specific question prompts for the requirements Q&A:
 Invoke the planning workflow with framing context:
 
 ```
-@~/.claude/get-shit-done/workflows/plan.md
+@{GSD_ROOT}/get-shit-done/workflows/plan.md
 ```
 
 Provide context to the plan workflow:
@@ -199,7 +199,7 @@ Risk posture guidance (from lens):
 Invoke the execution workflow with framing context:
 
 ```
-@~/.claude/get-shit-done/workflows/execute.md
+@{GSD_ROOT}/get-shit-done/workflows/execute.md
 ```
 
 Provide context to the execute workflow:
@@ -241,7 +241,7 @@ The third input catches spec-complete but problem-incomplete work.
 Invoke the review workflow with all three inputs:
 
 ```
-@~/.claude/get-shit-done/workflows/review.md
+@{GSD_ROOT}/get-shit-done/workflows/review.md
 ```
 
 Provide context to the review workflow:
@@ -283,7 +283,7 @@ The doc stage IS the doc agent wired as the final pipeline step. After review ac
 Invoke the documentation workflow:
 
 ```
-@~/.claude/get-shit-done/workflows/doc.md
+@{GSD_ROOT}/get-shit-done/workflows/doc.md
 ```
 
 Provide context to the doc workflow:

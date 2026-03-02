@@ -276,7 +276,7 @@ Display stage banner:
 GSD > INIT > EXISTING PROJECT > SCANNING
 ```
 
-Use the gather-synthesize pattern (@~/.claude/get-shit-done/workflows/gather-synthesize.md) for parallel codebase analysis.
+Use the gather-synthesize pattern (@{GSD_ROOT}/get-shit-done/workflows/gather-synthesize.md) for parallel codebase analysis.
 
 **Gatherer dimensions:**
 

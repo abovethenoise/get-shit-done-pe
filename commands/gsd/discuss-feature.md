@@ -26,7 +26,7 @@ Guided exploration of a feature's implementation approach, edge cases, and depen
 </objective>
 
 <execution_context>
-@~/.claude/get-shit-done/workflows/discuss-feature.md
+@{GSD_ROOT}/get-shit-done/workflows/discuss-feature.md
 </execution_context>
 
 <context>

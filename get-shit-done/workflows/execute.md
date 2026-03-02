@@ -70,9 +70,9 @@ Execute each wave in sequence. Within a wave: parallel if `PARALLELIZATION=true`
        </objective>
 
        <execution_context>
-       @~/.claude/get-shit-done/workflows/execute-plan.md
-       @~/.claude/get-shit-done/templates/summary.md
-       @~/.claude/get-shit-done/references/checkpoints.md
+       @{GSD_ROOT}/get-shit-done/workflows/execute-plan.md
+       @{GSD_ROOT}/get-shit-done/templates/summary.md
+       @{GSD_ROOT}/get-shit-done/references/checkpoints.md
        </execution_context>
 
        <files_to_read>

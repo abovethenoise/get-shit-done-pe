@@ -22,8 +22,8 @@ Plan a capability or feature through the framing pipeline's plan stage. Resolves
 </objective>
 
 <execution_context>
-@~/.claude/get-shit-done/workflows/plan.md
-@~/.claude/get-shit-done/workflows/capability-orchestrator.md
+@{GSD_ROOT}/get-shit-done/workflows/plan.md
+@{GSD_ROOT}/get-shit-done/workflows/capability-orchestrator.md
 </execution_context>
 
 <context>
@@ -70,13 +70,13 @@ Parse JSON result for: `resolved`, `tier`, `type`, `capability_slug`, `feature_s
 
 For **feature-level planning:**
 ```
-@~/.claude/get-shit-done/workflows/plan.md
+@{GSD_ROOT}/get-shit-done/workflows/plan.md
 ```
 Pass: FEATURE_SLUG, CAPABILITY_SLUG, LENS=plan
 
 For **capability-level planning:**
 ```
-@~/.claude/get-shit-done/workflows/capability-orchestrator.md
+@{GSD_ROOT}/get-shit-done/workflows/capability-orchestrator.md
 ```
 Pass: CAPABILITY_SLUG, LENS=plan
 

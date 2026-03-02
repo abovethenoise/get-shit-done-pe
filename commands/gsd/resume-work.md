@@ -22,11 +22,11 @@ Routes to the resume-work workflow which handles:
   </objective>
 
 <execution_context>
-@~/.claude/get-shit-done/workflows/resume-work.md
+@{GSD_ROOT}/get-shit-done/workflows/resume-work.md
 </execution_context>
 
 <process>
-**Follow the resume-work workflow** from `@~/.claude/get-shit-done/workflows/resume-work.md`.
+**Follow the resume-work workflow** from `@{GSD_ROOT}/get-shit-done/workflows/resume-work.md`.
 
 The workflow handles all resumption logic including:
 

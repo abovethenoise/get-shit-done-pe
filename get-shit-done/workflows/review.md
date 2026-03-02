@@ -3,8 +3,8 @@ Orchestrate the full review pipeline for a feature: spawn 4 specialist reviewers
 </purpose>
 
 <required_reading>
-@~/.claude/get-shit-done/workflows/gather-synthesize.md
-@~/.claude/get-shit-done/references/ui-brand.md
+@{GSD_ROOT}/get-shit-done/workflows/gather-synthesize.md
+@{GSD_ROOT}/get-shit-done/references/ui-brand.md
 </required_reading>
 
 <inputs>

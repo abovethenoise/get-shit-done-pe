@@ -27,9 +27,9 @@ Run architect-mode discovery for a new capability or feature. Defines the proble
 </objective>
 
 <execution_context>
-@~/.claude/get-shit-done/workflows/framing-discovery.md
-@~/.claude/get-shit-done/references/framing-lenses.md
-@~/.claude/get-shit-done/references/ui-brand.md
+@{GSD_ROOT}/get-shit-done/workflows/framing-discovery.md
+@{GSD_ROOT}/get-shit-done/references/framing-lenses.md
+@{GSD_ROOT}/get-shit-done/references/ui-brand.md
 </execution_context>
 
 <context>
@@ -40,7 +40,7 @@ Context files are resolved inside the workflow via `gsd-tools init framing-disco
 </context>
 
 <process>
-Execute the framing-discovery workflow from @~/.claude/get-shit-done/workflows/framing-discovery.md end-to-end.
+Execute the framing-discovery workflow from @{GSD_ROOT}/get-shit-done/workflows/framing-discovery.md end-to-end.
 
 Pass: LENS=new, CAPABILITY_SLUG=(resolved from $ARGUMENTS via fuzzy matching).
 

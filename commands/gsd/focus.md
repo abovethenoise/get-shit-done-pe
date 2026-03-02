@@ -18,7 +18,7 @@ Create a focus group via guided Q&A. Focus groups are the v2 replacement for mil
 </objective>
 
 <execution_context>
-@~/.claude/get-shit-done/workflows/focus.md
+@{GSD_ROOT}/get-shit-done/workflows/focus.md
 </execution_context>
 
 <context>
@@ -31,7 +31,7 @@ Context loaded via `gsd-tools init feature-progress` for capability/feature over
 Invoke the focus.md workflow end-to-end:
 
 ```
-@~/.claude/get-shit-done/workflows/focus.md
+@{GSD_ROOT}/get-shit-done/workflows/focus.md
 ```
 
 Pass: FOCUS_GROUP_NAME from $ARGUMENTS (if provided).

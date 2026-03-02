@@ -19,7 +19,7 @@ Run code review + requirements verification for a feature. Review always operate
 </objective>
 
 <execution_context>
-@~/.claude/get-shit-done/workflows/review.md
+@{GSD_ROOT}/get-shit-done/workflows/review.md
 </execution_context>
 
 <context>
@@ -53,7 +53,7 @@ Parse JSON result.
 ## 3. Workflow Invocation
 
 ```
-@~/.claude/get-shit-done/workflows/review.md
+@{GSD_ROOT}/get-shit-done/workflows/review.md
 ```
 
 Pass: FEATURE_SLUG, CAPABILITY_SLUG

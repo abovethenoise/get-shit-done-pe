@@ -7,8 +7,8 @@ Shared across all four framing entry points (/debug, /new, /enhance, /refactor).
 <required_reading>
 Read all files referenced by the invoking prompt's execution_context before starting.
 
-@~/.claude/get-shit-done/references/framing-lenses.md
-@~/.claude/get-shit-done/references/ui-brand.md
+@{GSD_ROOT}/get-shit-done/references/framing-lenses.md
+@{GSD_ROOT}/get-shit-done/references/ui-brand.md
 </required_reading>
 
 <process>
@@ -246,7 +246,7 @@ Brief complete. Starting post-discovery pipeline:
 Invoke the framing-pipeline workflow with the discovery context:
 
 ```
-@~/.claude/get-shit-done/workflows/framing-pipeline.md
+@{GSD_ROOT}/get-shit-done/workflows/framing-pipeline.md
 ```
 
 Pass the following context to framing-pipeline:
