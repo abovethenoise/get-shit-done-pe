@@ -103,5 +103,7 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Phase 12 context gathered — all v2 flow decisions captured (init, capability/feature bridge, pipeline rewiring, state/roadmap model)
-Resume file: .planning/phases/12-workflow-optimization-wiring/12-CONTEXT.md
+Stopped at: Phase 12 research COMPLETE (6 parallel researchers + synthesis). User Q&A done. Ready to spawn planner.
+Resume: /gsd:plan-phase 12 --skip-research
+Next action: Spawn gsd-planner agent with 12-RESEARCH-SYNTHESIS.md + all 6 RESEARCH-*.md files + 12-CONTEXT.md
+Key decisions from Q&A: (1) Requirements populate FEATURE.md directly, (2) install.js cleanup in Phase 12, (3) Wire v2 first then delete v1
