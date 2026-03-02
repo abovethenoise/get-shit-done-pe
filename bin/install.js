@@ -181,10 +181,8 @@ function copyWithPathReplacement(srcDir, destDir, pathPrefix) {
       copyWithPathReplacement(srcPath, destPath, pathPrefix);
     } else if (entry.name.endsWith('.md')) {
       let content = fs.readFileSync(srcPath, 'utf8');
-      const globalClaudeRegex = /~\/\.claude\//g;
-      const localClaudeRegex = /\.\/\.claude\//g;
-      content = content.replace(globalClaudeRegex, pathPrefix);
-      content = content.replace(localClaudeRegex, './.claude/');
+      const gsdRootRegex = /\{GSD_ROOT\}\//g;
+      content = content.replace(gsdRootRegex, pathPrefix);
       content = processAttribution(content, attribution);
       fs.writeFileSync(destPath, content);
     } else {
@@ -325,7 +323,7 @@ function uninstall(isGlobal) {
   // 4. Remove GSD hooks
   const hooksDir = path.join(targetDir, 'hooks');
   if (fs.existsSync(hooksDir)) {
-    const gsdHooks = ['gsd-statusline.js', 'gsd-check-update.js', 'gsd-check-update.sh', 'gsd-context-monitor.js'];
+    const gsdHooks = ['gsd-statusline.js', 'gsd-context-monitor.js'];
     let hookCount = 0;
     for (const hook of gsdHooks) {
       const hookPath = path.join(hooksDir, hook);
@@ -375,7 +373,7 @@ function uninstall(isGlobal) {
       settings.hooks.SessionStart = settings.hooks.SessionStart.filter(entry => {
         if (entry.hooks && Array.isArray(entry.hooks)) {
           const hasGsdHook = entry.hooks.some(h =>
-            h.command && (h.command.includes('gsd-check-update') || h.command.includes('gsd-statusline'))
+            h.command && h.command.includes('gsd-statusline')
           );
           return !hasGsdHook;
         }
@@ -525,8 +523,8 @@ function install(isGlobal) {
     for (const entry of agentEntries) {
       if (entry.isFile() && entry.name.endsWith('.md')) {
         let content = fs.readFileSync(path.join(agentsSrc, entry.name), 'utf8');
-        const dirRegex = /~\/\.claude\//g;
-        content = content.replace(dirRegex, pathPrefix);
+        const gsdRootRegex = /\{GSD_ROOT\}\//g;
+        content = content.replace(gsdRootRegex, pathPrefix);
         content = processAttribution(content, attribution);
         fs.writeFileSync(path.join(agentsDest, entry.name), content);
       }
@@ -543,30 +541,34 @@ function install(isGlobal) {
   fs.writeFileSync(pkgJsonDest, '{"type":"commonjs"}\n');
   console.log(`  ${green}✓${reset} Wrote package.json (CommonJS mode)`);
 
-  // Copy hooks from dist/ (bundled with dependencies)
-  const hooksSrc = path.join(src, 'hooks', 'dist');
+  // Copy hooks
+  const hooksSrc = path.join(src, 'hooks');
   if (fs.existsSync(hooksSrc)) {
     const hooksDest = path.join(targetDir, 'hooks');
     fs.mkdirSync(hooksDest, { recursive: true });
-    const hookEntries = fs.readdirSync(hooksSrc);
-    const configDirReplacement = isGlobal ? "'.claude'" : "'.claude'";
-    for (const entry of hookEntries) {
-      const srcFile = path.join(hooksSrc, entry);
-      if (fs.statSync(srcFile).isFile()) {
-        const destFile = path.join(hooksDest, entry);
-        if (entry.endsWith('.js')) {
-          let content = fs.readFileSync(srcFile, 'utf8');
-          content = content.replace(/'\.claude'/g, configDirReplacement);
-          fs.writeFileSync(destFile, content);
-        } else {
-          fs.copyFileSync(srcFile, destFile);
-        }
+    const hookFiles = ['gsd-context-monitor.js', 'gsd-statusline.js'];
+    for (const hookFile of hookFiles) {
+      const srcFile = path.join(hooksSrc, hookFile);
+      if (fs.existsSync(srcFile)) {
+        fs.copyFileSync(srcFile, path.join(hooksDest, hookFile));
       }
     }
     if (verifyInstalled(hooksDest, 'hooks')) {
-      console.log(`  ${green}✓${reset} Installed hooks (bundled)`);
+      // hooks installed successfully
     } else {
       failures.push('hooks');
+    }
+  }
+
+  // Clean up legacy v1 artifacts
+  const legacyCleanup = [
+    path.join(targetDir, 'gsd-local-patches'),
+    path.join(targetDir, 'gsd-file-manifest.json'),
+    path.join(targetDir, 'get-shit-done', 'VERSION'),
+  ];
+  for (const p of legacyCleanup) {
+    if (fs.existsSync(p)) {
+      fs.rmSync(p, { recursive: true, force: true });
     }
   }
 
