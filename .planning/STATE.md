@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-03-02T14:40:36Z"
+last_updated: "2026-03-02T15:02:14Z"
 progress:
   total_phases: 14
   completed_phases: 11
@@ -23,9 +23,9 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 12 of 14 (Workflow Optimization & Wiring)
-Plan: 4 of TBD
+Plan: 9 of 9
 Status: In progress
-Last activity: 2026-03-02 -- Plan 12-04 complete. 4 new slash commands (plan, review, status, focus), capability-orchestrator, focus.md, universal slug-resolve.
+Last activity: 2026-03-02 -- Plan 12-05 complete. 4 core agents rewritten to goldilocks size (~89% reduction), v2 aware, 4 reference files created.
 
 Progress: [===============-----] 79% (11/14 phases complete)
 
@@ -66,6 +66,8 @@ Progress: [===============-----] 79% (11/14 phases complete)
 | Phase 12 P02 | 7min | 2 tasks | 8 files |
 | Phase 12 P03 | 4min | 2 tasks | 5 files |
 | Phase 12 P04 | 6min | 2 tasks | 11 files |
+| Phase 12 P09 | 8min | 2 tasks | 7 files |
+| Phase 12 P05 | 8min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -112,6 +114,9 @@ Recent decisions affecting current work:
 - [12-04]: slug-resolve is universal -- all commands use 3-tier CLI route, no inline resolution
 - [12-04]: Focus groups replace milestones with lightweight DAG-based sequencing
 - [12-04]: Capability orchestrator reuses framing-pipeline per feature (not custom pipeline)
+- [12-09]: 7 workflows condensed 56% (2676->1186 lines), all v1 cruft removed
+- [12-09]: progress.md rewritten for feature/capability/focus group routing model
+- [12-09]: resume-work.md scans .planning/capabilities/ instead of .planning/phases/
 
 ### Blockers/Concerns
 
@@ -120,6 +125,6 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 12-04-PLAN.md (4 new slash commands, capability-orchestrator, focus.md, universal slug-resolve)
-Resume: Continue with next Phase 12 plan
+Stopped at: Completed 12-09-PLAN.md (7 workflow files condensed, v2-clean, feature/capability model)
+Resume: Continue with remaining Phase 12 plans
 Next action: Execute remaining Phase 12 plans
