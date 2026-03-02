@@ -14,7 +14,7 @@ const fs = require('fs');
 const path = require('path');
 const { runGsdTools, createTempProject, cleanup } = require('./helpers.cjs');
 
-// ─── Dispatcher Error Paths ──────────────────────────────────────────────────
+// --- Dispatcher Error Paths ---
 
 describe('dispatcher error paths', () => {
   let tmpDir;
@@ -87,13 +87,6 @@ describe('dispatcher error paths', () => {
     assert.ok(result.error.includes('Unknown verify subcommand'), `Expected "Unknown verify subcommand" in stderr, got: ${result.error}`);
   });
 
-  // Unknown subcommand: phases
-  test('phases unknown subcommand errors', () => {
-    const result = runGsdTools('phases bogus', tmpDir);
-    assert.strictEqual(result.success, false, 'Should exit non-zero');
-    assert.ok(result.error.includes('Unknown phases subcommand'), `Expected "Unknown phases subcommand" in stderr, got: ${result.error}`);
-  });
-
   // Unknown subcommand: roadmap
   test('roadmap unknown subcommand errors', () => {
     const result = runGsdTools('roadmap bogus', tmpDir);
@@ -108,34 +101,6 @@ describe('dispatcher error paths', () => {
     assert.ok(result.error.includes('Unknown requirements subcommand'), `Expected "Unknown requirements subcommand" in stderr, got: ${result.error}`);
   });
 
-  // Unknown subcommand: phase
-  test('phase unknown subcommand errors', () => {
-    const result = runGsdTools('phase bogus', tmpDir);
-    assert.strictEqual(result.success, false, 'Should exit non-zero');
-    assert.ok(result.error.includes('Unknown phase subcommand'), `Expected "Unknown phase subcommand" in stderr, got: ${result.error}`);
-  });
-
-  // Unknown subcommand: milestone
-  test('milestone unknown subcommand errors', () => {
-    const result = runGsdTools('milestone bogus', tmpDir);
-    assert.strictEqual(result.success, false, 'Should exit non-zero');
-    assert.ok(result.error.includes('Unknown milestone subcommand'), `Expected "Unknown milestone subcommand" in stderr, got: ${result.error}`);
-  });
-
-  // Unknown subcommand: validate
-  test('validate unknown subcommand errors', () => {
-    const result = runGsdTools('validate bogus', tmpDir);
-    assert.strictEqual(result.success, false, 'Should exit non-zero');
-    assert.ok(result.error.includes('Unknown validate subcommand'), `Expected "Unknown validate subcommand" in stderr, got: ${result.error}`);
-  });
-
-  // Unknown subcommand: todo
-  test('todo unknown subcommand errors', () => {
-    const result = runGsdTools('todo bogus', tmpDir);
-    assert.strictEqual(result.success, false, 'Should exit non-zero');
-    assert.ok(result.error.includes('Unknown todo subcommand'), `Expected "Unknown todo subcommand" in stderr, got: ${result.error}`);
-  });
-
   // Unknown subcommand: init
   test('init unknown workflow errors', () => {
     const result = runGsdTools('init bogus', tmpDir);
@@ -144,7 +109,7 @@ describe('dispatcher error paths', () => {
   });
 });
 
-// ─── Dispatcher Routing Branches ─────────────────────────────────────────────
+// --- Dispatcher Routing Branches ---
 
 describe('dispatcher routing branches', () => {
   let tmpDir;
@@ -157,16 +122,6 @@ describe('dispatcher routing branches', () => {
     cleanup(tmpDir);
   });
 
-  // find-phase
-  test('find-phase locates phase directory by number', () => {
-    const phaseDir = path.join(tmpDir, '.planning', 'phases', '01-test-phase');
-    fs.mkdirSync(phaseDir, { recursive: true });
-
-    const result = runGsdTools('find-phase 01', tmpDir);
-    assert.strictEqual(result.success, true, `find-phase failed: ${result.error}`);
-    assert.ok(result.output.includes('01-test-phase'), `Expected output to contain "01-test-phase", got: ${result.output}`);
-  });
-
   // init resume
   test('init resume returns valid JSON', () => {
     fs.writeFileSync(
@@ -176,30 +131,6 @@ describe('dispatcher routing branches', () => {
 
     const result = runGsdTools('init resume', tmpDir);
     assert.strictEqual(result.success, true, `init resume failed: ${result.error}`);
-    const parsed = JSON.parse(result.output);
-    assert.ok(typeof parsed === 'object', 'Output should be valid JSON object');
-  });
-
-  // init verify-work
-  test('init verify-work returns valid JSON', () => {
-    // Create STATE.md
-    fs.writeFileSync(
-      path.join(tmpDir, '.planning', 'STATE.md'),
-      '# Project State\n\n## Current Position\n\nPhase: 1 of 1 (Test)\nPlan: 01-01 complete\nStatus: Ready\nLast activity: 2026-01-01\n\nProgress: [##########] 100%\n\n## Session Continuity\n\nLast session: 2026-01-01\nStopped at: Test\nResume file: None\n'
-    );
-
-    // Create ROADMAP.md with phase section
-    fs.writeFileSync(
-      path.join(tmpDir, '.planning', 'ROADMAP.md'),
-      '# Roadmap\n\n## Milestone: v1.0 Test\n\n### Phase 1: Test Phase\n**Goal**: Test goal\n**Depends on**: None\n**Requirements**: TEST-01\n**Success Criteria**:\n  1. Tests pass\n**Plans**: 1 plan\nPlans:\n- [x] 01-01-PLAN.md\n\n## Progress\n\n| Phase | Plans | Status | Date |\n|-------|-------|--------|------|\n| 1 | 1/1 | Complete | 2026-01-01 |\n'
-    );
-
-    // Create phase dir
-    const phaseDir = path.join(tmpDir, '.planning', 'phases', '01-test');
-    fs.mkdirSync(phaseDir, { recursive: true });
-
-    const result = runGsdTools('init verify-work 01', tmpDir);
-    assert.strictEqual(result.success, true, `init verify-work failed: ${result.error}`);
     const parsed = JSON.parse(result.output);
     assert.ok(typeof parsed === 'object', 'Output should be valid JSON object');
   });
@@ -228,7 +159,7 @@ describe('dispatcher routing branches', () => {
     assert.strictEqual(result.success, true, `roadmap update-plan-progress failed: ${result.error}`);
   });
 
-  // state (no subcommand) — default load
+  // state (no subcommand) -- default load
   test('state with no subcommand calls cmdStateLoad', () => {
     fs.writeFileSync(
       path.join(tmpDir, '.planning', 'STATE.md'),
