@@ -1,5 +1,6 @@
 ---
 type: capability
+name: "{name}"
 status: planning
 created: "{date}"
 ---
@@ -9,6 +10,10 @@ created: "{date}"
 ## Goal
 
 {One sentence: what this capability delivers to the user.}
+
+## Why
+
+{Why this capability matters. What problem it solves. What happens without it. 2-3 sentences max.}
 
 ## Domain Model
 
@@ -52,9 +57,11 @@ created: "{date}"
 
 ## Features
 
-| Feature | Status |
-|---------|--------|
-| {feature} | planning |
+Features are listed in priority order. Higher priority features are listed first.
+
+| Feature | Priority | Depends-On | Status |
+|---------|----------|------------|--------|
+| {feature} | P1 | none | planning |
 
 ## Decisions
 

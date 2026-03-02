@@ -1,75 +1,53 @@
 # State Template
 
-Template for `.planning/STATE.md` — the project's living memory.
+Template for `.planning/STATE.md` -- the project's living memory.
 
 ---
 
 ## File Template
 
 ```markdown
+---
+gsd_state_version: 2.0
+active_focus: null
+status: unknown
+last_updated: "{date}"
+progress:
+  capabilities: 0
+  features: 0
+  total_plans: 0
+  completed_plans: 0
+---
+
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated [date])
+See: .planning/PROJECT.md (updated {date})
+**Core value:** {core_value}
 
-**Core value:** [One-liner from PROJECT.md Core Value section]
-**Current focus:** [Current phase name]
+## Active Focus Groups
 
-## Current Position
+{empty on init -- populated by /gsd:focus}
 
-Feature: [X] of [Y] ([Feature name])
-Plan: [A] of [B] in current feature
-Status: [Ready to plan / Planning / Ready to execute / In progress / Feature complete]
-Last activity: [YYYY-MM-DD] — [What happened]
+## Key Decisions
 
-Progress: [░░░░░░░░░░] 0%
+{empty on init}
 
-## Performance Metrics
+## Blockers
 
-**Velocity:**
-- Total plans completed: [N]
-- Average duration: [X] min
-- Total execution time: [X.X] hours
-
-**By Phase:**
-
-| Phase | Plans | Total | Avg/Plan |
-|-------|-------|-------|----------|
-| - | - | - | - |
-
-**Recent Trend:**
-- Last 5 plans: [durations]
-- Trend: [Improving / Stable / Degrading]
-
-*Updated after each plan completion*
-
-## Accumulated Context
-
-### Decisions
-
-Decisions are logged in PROJECT.md Key Decisions table.
-Recent decisions affecting current work:
-
-- [Feature X]: [Decision summary]
-- [Feature Y]: [Decision summary]
-
-### Blockers/Concerns
-
-[Issues that affect future work]
-
-None yet.
+{none}
 
 ## Session Continuity
 
-Last session: [YYYY-MM-DD HH:MM]
-Stopped at: [Description of last completed action]
-Resume file: [Path to .continue-here*.md if exists, otherwise "None"]
+Last session: {date}
+Last action: Project initialized
+Resume: Run /gsd:discuss-capability <cap> to begin
 ```
 
 <purpose>
 
-STATE.md is the project's short-term memory spanning all phases and sessions.
+STATE.md is the project's short-term memory spanning all capabilities, features, and sessions.
 
 **Problem it solves:** Information is captured in summaries, issues, and decisions but not systematically consumed. Sessions start without context.
 
@@ -83,26 +61,25 @@ STATE.md is the project's short-term memory spanning all phases and sessions.
 
 <lifecycle>
 
-**Creation:** After ROADMAP.md is created (during init)
+**Creation:** During /gsd:init (steps 3h/4h)
 - Reference PROJECT.md (read it for current context)
-- Initialize empty accumulated context sections
-- Set position to "Feature 1 ready to plan"
+- Initialize empty focus groups and decisions
+- Set session continuity to "Project initialized"
 
 **Reading:** First step of every workflow
 - progress: Present status to user
 - plan: Inform planning decisions
 - execute: Know current position
-- transition: Know what's complete
+- focus: Know what's active
 
 **Writing:** After every significant action
 - execute: After SUMMARY.md created
-  - Update position (phase, plan, status)
-  - Note new decisions (detail in PROJECT.md)
+  - Update active focus group state
+  - Note new decisions
   - Add blockers/concerns
-- transition: After phase marked complete
-  - Update progress bar
-  - Clear resolved blockers
-  - Refresh Project Reference date
+- focus: After focus group created/updated
+  - Update Active Focus Groups section
+  - Set active_focus in frontmatter
 
 </lifecycle>
 
@@ -111,44 +88,43 @@ STATE.md is the project's short-term memory spanning all phases and sessions.
 ### Project Reference
 Points to PROJECT.md for full context. Includes:
 - Core value (the ONE thing that matters)
-- Current focus (which phase)
 - Last update date (triggers re-read if stale)
 
 Claude reads PROJECT.md directly for requirements, constraints, and decisions.
 
-### Current Position
-Where we are right now:
-- Feature X of Y — which feature
-- Plan A of B — which plan within feature
-- Status — current state
-- Last activity — what happened most recently
-- Progress bar — visual indicator of overall completion
+### Active Focus Groups
+Where we are right now. Each focus group tracks:
+- Goal (what the sprint delivers)
+- Active capability/feature being worked
+- Current plan path
+- Status (in progress / blocked / complete)
 
-Progress calculation: (completed plans) / (total plans across all phases) × 100%
+Supports multiple parallel focus groups.
 
-### Performance Metrics
-Track velocity to understand execution patterns:
-- Total plans completed
-- Average duration per plan
-- Per-phase breakdown
-- Recent trend (improving/stable/degrading)
+Format per focus group:
+```
+### Focus: {group-name}
+**Goal:** {one sentence}
+**Active capability:** {cap-slug} / {feat-slug}
+**Current plan:** {path to active PLAN.md or "none"}
+**Status:** {In progress / Blocked / Complete}
+```
 
-Updated after each plan completion.
+### Key Decisions
+3-5 recent decisions affecting active work. Scoped to active focus groups.
+- {cap/feat}: {decision summary}
 
-### Accumulated Context
+Full decision log lives in PROJECT.md.
 
-**Decisions:** Reference to PROJECT.md Key Decisions table, plus recent decisions summary for quick access. Full decision log lives in PROJECT.md.
-
-**Blockers/Concerns:** From "Next Steps" sections
-- Issues that affect future work
-- Prefix with originating feature
-- Cleared when addressed
+### Blockers
+Active blockers only. Cleared when addressed.
+- {cap/feat}: {blocker description}
 
 ### Session Continuity
 Enables instant resumption:
 - When was last session
 - What was last completed
-- Is there a .continue-here file to resume from
+- What to do next (points to focus group or capability)
 
 </sections>
 
@@ -157,9 +133,10 @@ Enables instant resumption:
 Keep STATE.md under 100 lines.
 
 It's a DIGEST, not an archive. If accumulated context grows too large:
-- Keep only 3-5 recent decisions in summary (full log in PROJECT.md)
+- Keep only 3-5 recent decisions (full log in PROJECT.md)
 - Keep only active blockers, remove resolved ones
+- Max 2 decisions per focus group in the section
 
-The goal is "read once, know where we are" — if it's too long, that fails.
+The goal is "read once, know where we are" -- if it's too long, that fails.
 
 </size_constraint>
