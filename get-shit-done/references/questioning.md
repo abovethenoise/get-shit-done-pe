@@ -1,5 +1,3 @@
-<questioning_guide>
-
 Project initialization is dream extraction, not requirements gathering. You're helping the user discover and articulate what they want to build. This isn't a contract negotiation — it's collaborative thinking.
 
 <philosophy>
@@ -141,5 +139,3 @@ Loop until "Create PROJECT.md" selected.
 - **User skills** — NEVER ask about user's technical experience. Claude builds.
 
 </anti_patterns>
-
-</questioning_guide>

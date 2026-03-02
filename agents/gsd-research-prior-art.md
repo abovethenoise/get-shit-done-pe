@@ -19,7 +19,7 @@ Answer: how have others solved this class of problem — what patterns, librarie
 ## Success Criteria
 
 - At least 2 distinct prior approaches are identified and compared on relevant dimensions (complexity, fit, maturity)
-- Each approach is assessed for fit with GSD's specific constraints, not evaluated in the abstract
+- Each approach is assessed for fit with project's specific constraints, not evaluated in the abstract
 - Anti-patterns are identified: approaches that look appealing but have documented failure modes in similar contexts
 - Output tells the planner which approach to start from, not just what options exist
 
@@ -50,7 +50,7 @@ Write to the file path provided by the orchestrator. Structure your output as:
 
 ### Recommended Starting Point
 
-[Approach name]: [rationale for why this fits GSD's constraints] — [source]
+[Approach name]: [rationale for why this fits the project's constraints] — [source]
 
 ### Anti-Patterns
 
