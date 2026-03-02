@@ -1,7 +1,7 @@
 <purpose>
-Orchestrate the 6 post-discovery pipeline stages for any framing. After discovery produces a brief, this workflow runs: research -> requirements -> plan -> execute -> review -> reflect. Framing context (brief path + lens metadata) shapes behavior at every stage without changing agent definitions.
+Orchestrate the 6 post-discovery pipeline stages for any framing at feature level. After discovery produces a brief, this workflow runs: research -> requirements -> plan -> execute -> review -> doc. Framing context (brief path + lens metadata) shapes behavior at every stage without changing agent definitions.
 
-Invoked by framing-discovery.md after brief finalization. All four framings converge here.
+Invoked by framing-discovery.md after brief finalization. All four framings converge here. The pipeline operates on a single feature -- capability context is derived from the feature's directory path.
 </purpose>
 
 <required_reading>
@@ -14,11 +14,13 @@ Read all files referenced by the invoking prompt's execution_context before star
 
 <inputs>
 The invoking workflow passes these as context:
-- `BRIEF_PATH`: Absolute path to the completed Discovery Brief (.planning/capabilities/{slug}/BRIEF.md)
+- `BRIEF_PATH`: Absolute path to the completed Discovery Brief (.planning/capabilities/{cap}/features/{feat}/DISCOVERY-BRIEF.md)
 - `LENS`: Primary lens identifier (debug | new | enhance | refactor)
 - `SECONDARY_LENS`: Secondary lens identifier (optional, for compound work)
 - `CAPABILITY_SLUG`: The resolved capability slug
 - `CAPABILITY_NAME`: The resolved capability name
+- `FEATURE_SLUG`: The feature being processed
+- `FEATURE_DIR`: Absolute path to the feature directory (.planning/capabilities/{cap}/features/{feat})
 </inputs>
 
 <process>
@@ -40,7 +42,12 @@ LENS_METADATA:
   brief_spec_fields: {from framing-lenses.md -- lens-specific Specification fields}
 ```
 
-This metadata is passed to every stage as context. The orchestrator passes PATHS, not content -- each stage reads files itself.
+Read anchor questions for the active lens:
+```bash
+ANCHOR_QUESTIONS_PATH="get-shit-done/framings/${LENS}/anchor-questions.md"
+```
+
+This metadata and anchor questions are passed to every stage as context. The orchestrator passes PATHS, not content -- each stage reads files itself.
 
 Display banner:
 ```
@@ -48,12 +55,12 @@ Display banner:
  GSD > FRAMING PIPELINE
 -------------------------------------------------------
 
-Capability: {CAPABILITY_NAME}
+Feature: {CAPABILITY_SLUG}/{FEATURE_SLUG}
 Lens: {LENS} {+ SECONDARY_LENS if compound}
 Brief: {BRIEF_PATH}
 Completion: {completion signal}
 
-Running 6 stages: research -> requirements -> plan -> execute -> review -> reflect
+Running 6 stages: research -> requirements -> plan -> execute -> review -> doc
 ```
 
 Initialize escalation state:
@@ -80,21 +87,21 @@ Invoke the research workflow directly, passing framing context:
 ```
 
 Pass:
-- `subject`: "{CAPABILITY_NAME}" (the capability being researched)
+- `subject`: "{CAPABILITY_NAME}/{FEATURE_SLUG}" (the feature being researched)
 - `context_paths`:
   - `project_path`: .planning/PROJECT.md
   - `state_path`: .planning/STATE.md
   - `roadmap_path`: .planning/ROADMAP.md
-  - `requirements_path`: .planning/capabilities/{CAPABILITY_SLUG}/REQUIREMENTS.md (if exists)
-- `output_dir`: .planning/capabilities/{CAPABILITY_SLUG}
+- `output_dir`: .planning/capabilities/{CAPABILITY_SLUG}/features/{FEATURE_SLUG}
 - `capability_path`: .planning/capabilities/{CAPABILITY_SLUG}/CAPABILITY.md
-- `feature_path`: null (capability-level research, not feature-level)
+- `feature_path`: ${FEATURE_DIR}/FEATURE.md
 - `framing_context`:
   - `brief_path`: {BRIEF_PATH}
   - `lens`: {LENS}
   - `secondary_lens`: {SECONDARY_LENS or null}
   - `direction`: {LENS_METADATA.direction}
   - `focus`: {lens-specific focus from above}
+  - `anchor_questions_path`: {ANCHOR_QUESTIONS_PATH}
 
 The research workflow spawns 6 gatherers in parallel via gather-synthesize, then consolidates via the research synthesizer. Output: `{output_dir}/RESEARCH.md`.
 
@@ -126,10 +133,12 @@ Read the brief at `BRIEF_PATH`. Extract:
 - Scope Boundary (in/out) -> requirement scoping
 - Unknowns & Assumptions -> flag as risks in requirements
 
-Draft requirements to `.planning/capabilities/{CAPABILITY_SLUG}/REQUIREMENTS.md` using the 3-layer format:
+Draft requirements directly into FEATURE.md, populating the 3-layer sections:
 - EU-xx: End-user stories with acceptance criteria
 - FN-xx: Functional behavior specifications
 - TC-xx: Technical implementation specifications
+
+Read the existing FEATURE.md template structure at `${FEATURE_DIR}/FEATURE.md`, fill in the End-User Requirements, Functional Requirements, and Technical Specs sections.
 
 Present drafted requirements to user:
 
@@ -141,6 +150,12 @@ Use AskUserQuestion:
   - "Approve" -- requirements are good, proceed to planning
   - "Edit" -- provide corrections (re-draft affected sections)
   - "Back to discovery" -- requirements reveal discovery gaps (escalation)
+
+Lens-specific question prompts for the requirements Q&A:
+- **debug:** "What behavior should change? What should remain the same?"
+- **new:** "What user stories matter most? What acceptance criteria are non-negotiable?"
+- **enhance:** "What's working that must be preserved? What's the minimum viable enhancement?"
+- **refactor:** "What constraints exist on the refactor? What behavioral invariants must hold?"
 
 **If "Back to discovery":** This is a MODERATE escalation. Handle per Section 8.
 
@@ -154,13 +169,17 @@ Invoke the planning workflow with framing context:
 @~/.claude/get-shit-done/workflows/plan.md
 ```
 
-Provide additional context to the plan phase:
+Provide context to the plan workflow:
 ```
 <framing_context>
 Brief path: {BRIEF_PATH}
 Primary lens: {LENS}
 Secondary lens: {SECONDARY_LENS or "none"}
 Lens direction: {LENS_METADATA.direction}
+Anchor questions: {ANCHOR_QUESTIONS_PATH}
+Capability: {CAPABILITY_SLUG}
+Feature: {FEATURE_SLUG}
+Feature dir: {FEATURE_DIR}
 
 Risk posture guidance (from lens):
 - debug: Conservative. Isolate the fix. Minimize blast radius. Test the hypothesis before committing to a solution path.
@@ -183,12 +202,16 @@ Invoke the execution workflow with framing context:
 @~/.claude/get-shit-done/workflows/execute.md
 ```
 
-Provide additional context to the execute phase:
+Provide context to the execute workflow:
 ```
 <framing_context>
 Brief path: {BRIEF_PATH}
 Primary lens: {LENS}
 Secondary lens: {SECONDARY_LENS or "none"}
+Anchor questions: {ANCHOR_QUESTIONS_PATH}
+Capability: {CAPABILITY_SLUG}
+Feature: {FEATURE_SLUG}
+Feature dir: {FEATURE_DIR}
 
 Execution approach guidance (from lens):
 - debug: Diagnostic-first. Verify hypothesis before fixing. Minimal change to resolve root cause.
@@ -201,9 +224,11 @@ Execution approach guidance (from lens):
 **After execution completes:**
 - Check for escalation signals (execution discovered scope problems, requirement mismatches)
 - If escalation: handle per Section 8
-- If clean: proceed to Stage 5
+- If clean: **auto-chain to Stage 5** (no user intervention needed)
 
-## 6. Stage 5 -- Review (3-Input Model)
+## 6. Stage 5 -- Review (3-Input Model, Auto-Chained from Execute)
+
+**Execute -> Review auto-chain:** After execute.md completes, automatically invoke review.md without user intervention. The review stage itself has a human checkpoint if issues are found.
 
 Review receives three inputs -- not just requirements:
 
@@ -219,13 +244,17 @@ Invoke the review workflow with all three inputs:
 @~/.claude/get-shit-done/workflows/review.md
 ```
 
-Provide additional context to the review phase:
+Provide context to the review workflow:
 ```
 <framing_context>
 Brief path: {BRIEF_PATH}
 Primary lens: {LENS}
 Secondary lens: {SECONDARY_LENS or "none"}
 Lens direction: {LENS_METADATA.direction}
+Anchor questions: {ANCHOR_QUESTIONS_PATH}
+Capability: {CAPABILITY_SLUG}
+Feature: {FEATURE_SLUG}
+Feature dir: {FEATURE_DIR}
 
 Review disposition (from lens):
 - debug: Verify root cause is addressed (not just symptom). Check reproduction path no longer triggers. Verify no regressions in adjacent paths.
@@ -241,13 +270,15 @@ Intent verification (from brief):
 ```
 
 **After review completes:**
-- If review finds issues requiring re-work: normal review re-review cycle handles this
+- If review finds issues requiring re-work: normal review re-review cycle handles this (Q&A with user for fix decisions)
 - If review finds fundamental scope/requirement problems: MAJOR escalation per Section 8
-- If review passes: proceed to Stage 6
+- If review passes cleanly: **auto-chain to Stage 6** (no user intervention needed)
 
-## 7. Stage 6 -- Reflect (Documentation)
+## 7. Stage 6 -- Doc/Reflect (Auto-Chained from Review)
 
-The reflect stage IS Phase 5's doc agent, wired as the final pipeline step. After review acceptance, the doc agent reads actual built code and generates/updates documentation.
+**Review -> Doc auto-chain:** After review completes cleanly, automatically invoke doc.md. If review surfaces issues, Q&A checkpoint intervenes first -- once resolved, doc stage auto-chains.
+
+The doc stage IS the doc agent wired as the final pipeline step. After review acceptance, the doc agent reads actual built code and generates/updates documentation.
 
 Invoke the documentation workflow:
 
@@ -255,22 +286,34 @@ Invoke the documentation workflow:
 @~/.claude/get-shit-done/workflows/doc.md
 ```
 
-Provide additional context to the doc phase:
+Provide context to the doc workflow:
 ```
 <framing_context>
 Brief path: {BRIEF_PATH}
 Primary lens: {LENS}
-Capability: {CAPABILITY_NAME} ({CAPABILITY_SLUG})
+Anchor questions: {ANCHOR_QUESTIONS_PATH}
+Capability: {CAPABILITY_SLUG} ({CAPABILITY_NAME})
+Feature: {FEATURE_SLUG}
+Feature dir: {FEATURE_DIR}
 
 Documentation focus:
 - What was built (from review-verified artifacts)
 - How it connects to existing system (from brief Context section)
 - Key decisions made during execution (from plan SUMMARY.md files)
+
+Lens-specific doc emphasis:
+- debug: Document the fix and root cause
+- new: Document the new capability
+- enhance: Document what changed and why
+- refactor: Document structural changes with before/after
 </framing_context>
 ```
 
+**Human checkpoint within doc stage:** doc.md surfaces documentation changes for user confirmation before writing to `.documentation/`.
+
 **After documentation completes:**
-- Update capability status (from "in-progress" to "complete" if all stages passed cleanly)
+- Update FEATURE.md frontmatter status to "complete" (all 6 stages passed)
+- Update FEATURE.md trace table to mark all columns complete
 - Proceed to completion
 
 ## 8. Escalation Handling
@@ -287,7 +330,7 @@ Read the stage output for escalation indicators:
 
 ### Minor (Flag and Continue)
 
-Log the issue. Continue to next stage. The reflect stage (doc agent) captures minor flags in documentation.
+Log the issue. Continue to next stage. The doc stage captures minor flags in documentation.
 
 ```
 [ESCALATION: Minor] Stage {N}: {description}
@@ -345,7 +388,7 @@ Display completion banner:
  GSD > PIPELINE COMPLETE
 -------------------------------------------------------
 
-Capability: {CAPABILITY_NAME}
+Feature: {CAPABILITY_SLUG}/{FEATURE_SLUG}
 Lens: {LENS} {+ SECONDARY_LENS if compound}
 
 Stages completed:
@@ -354,12 +397,12 @@ Stages completed:
   3. Plan          [OK]
   4. Execute       [OK]
   5. Review        [OK]
-  6. Reflect       [OK]
+  6. Doc           [OK]
 
 Escalations: {count} ({breakdown by tier})
 Backward resets: {backward_resets}/{max_backward_resets}
 
-Capability status: {updated status}
+Feature status: complete
 ```
 
 </process>
@@ -367,11 +410,18 @@ Capability status: {updated status}
 <key_constraints>
 - Orchestrator passes PATHS not content. Each stage reads files itself with fresh context.
 - All 6 stages run in sequence. No stage skipping.
+- LENS and ANCHOR_QUESTIONS_PATH propagated to all 6 pipeline stages.
+- Each stage receives lens framing context that affects its Q&A, discovery, and agent behavior.
 - Requirements generation always produces all 3 layers (EU/FN/TC). Weight varies by lens.
+- Requirements populate FEATURE.md directly, not a separate REQUIREMENTS.md.
+- Research output written to feature directory, not capability directory.
 - Review receives 3 inputs: requirements + lens metadata + brief. The brief check catches spec-complete-but-problem-incomplete work.
-- Reflect stage is Phase 5's doc agent -- not a new agent.
+- Doc stage is the doc agent -- not a new agent.
+- Execute -> Review auto-chains (no user intervention). Review -> Doc auto-chains when clean.
+- Full auto-chain: user kicks off execute once -> builds code -> auto-reviews -> auto-documents -> done. Only pauses for human decisions (fix Q&A, doc confirmations).
 - Escalation protocol is universal: same 3 tiers at every stage boundary.
 - Maximum 1 backward reset per pipeline run. After that, hard stop (user must restart manually).
 - Major issues use propose-and-confirm. No auto-return.
 - Compound work: primary lens governs, secondary lens informs. See framing-lenses.md precedence table.
+- FEATURE.md status updated to "complete" when all 6 stages finish.
 </key_constraints>
