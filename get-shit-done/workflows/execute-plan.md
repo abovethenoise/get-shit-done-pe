@@ -5,52 +5,31 @@ Execute a feature plan (PLAN.md) and create the outcome summary (SUMMARY.md).
 <required_reading>
 Read STATE.md before any operation to load project context.
 Read config.json for planning behavior settings.
-
 @~/.claude/get-shit-done/references/git-integration.md
 </required_reading>
 
 <inputs>
-**CAPABILITY_SLUG** — The capability this feature belongs to (e.g., "coaching")
-**FEATURE_SLUG** — The feature being executed (e.g., "mistake-detection")
-
-These come from the execute.md orchestrator or from direct invocation.
+**CAPABILITY_SLUG** -- The capability this feature belongs to (e.g., "coaching")
+**FEATURE_SLUG** -- The feature being executed (e.g., "mistake-detection")
 </inputs>
 
 <process>
 
 <step name="init_context" priority="first">
-Load execution context (paths only to minimize orchestrator context):
-
 ```bash
 INIT=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" init execute-feature "$CAPABILITY_SLUG" "$FEATURE_SLUG")
 ```
 
-Extract from init JSON: `executor_model`, `commit_docs`, `feature_dir`, `feature_slug`, `capability_slug`, `plans`, `summaries`, `incomplete_plans`, `state_path`, `config_path`.
+Extract: `executor_model`, `commit_docs`, `feature_dir`, `feature_slug`, `capability_slug`, `plans`, `summaries`, `incomplete_plans`, `state_path`, `config_path`.
 
 If `.planning/` missing: error.
 </step>
 
 <step name="identify_plan">
-```bash
-# Use plans/summaries from INIT JSON, or list files
-ls ${feature_dir}/*-PLAN.md 2>/dev/null | sort
-ls ${feature_dir}/*-SUMMARY.md 2>/dev/null | sort
-```
+Find first PLAN without matching SUMMARY (match by ID prefix, e.g., 01-PLAN.md -> 01-SUMMARY.md).
 
-Find first PLAN without matching SUMMARY:
-
-```bash
-# Match plan files to summaries by ID prefix
-# e.g., 01-PLAN.md matches 01-SUMMARY.md
-```
-
-<if mode="yolo">
-Auto-approve: `Execute {plan_file} [Plan X of Y for Feature ${FEATURE_SLUG}]` -> parse_segments.
-</if>
-
-<if mode="interactive" OR="custom with gates.execute_next_plan true">
-Present plan identification, wait for confirmation.
-</if>
+<if mode="yolo">Auto-approve: `Execute {plan_file} [Plan X of Y for Feature ${FEATURE_SLUG}]` -> parse_segments.</if>
+<if mode="interactive">Present plan identification, wait for confirmation.</if>
 </step>
 
 <step name="record_start_time">
@@ -65,21 +44,15 @@ PLAN_START_EPOCH=$(date +%s)
 grep -n "type=\"checkpoint" ${feature_dir}/{plan_file}
 ```
 
-**Routing by checkpoint type:**
-
 | Checkpoints | Pattern | Execution |
 |-------------|---------|-----------|
 | None | A (autonomous) | Single subagent: full plan + SUMMARY + commit |
-| Verify-only | B (segmented) | Segments between checkpoints. After none/human-verify -> SUBAGENT. After decision/human-action -> MAIN |
+| Verify-only | B (segmented) | Segments between checkpoints. Subagent for auto, main for decisions |
 | Decision | C (main) | Execute entirely in main context |
 
-**Pattern A:** init_agent_tracking -> spawn Task(subagent_type="gsd-executor", model=executor_model) with prompt: execute plan at [path], autonomous, all tasks + SUMMARY + commit, follow unplanned-work guidance + auth gates, report: plan name, tasks, SUMMARY path, commit hash -> track agent_id -> wait -> update tracking -> report.
-
-**Pattern B:** Execute segment-by-segment. Autonomous segments: spawn subagent for assigned tasks only (no SUMMARY/commit). Checkpoints: main context. After all segments: aggregate, create SUMMARY, commit. See segment_execution.
-
+**Pattern A:** init_agent_tracking -> spawn Task(subagent_type="gsd-executor", model=executor_model) -> track -> wait -> report.
+**Pattern B:** Execute segment-by-segment. Auto segments via subagent (tasks only, no SUMMARY). Checkpoints in main. After all: aggregate, SUMMARY, commit.
 **Pattern C:** Execute in main using standard flow (step name="execute").
-
-Fresh context per subagent preserves peak quality. Main context stays lean.
 </step>
 
 <step name="init_agent_tracking">
@@ -88,32 +61,17 @@ if [ ! -f .planning/agent-history.json ]; then
   echo '{"version":"1.0","max_entries":50,"entries":[]}' > .planning/agent-history.json
 fi
 rm -f .planning/current-agent-id.txt
-if [ -f .planning/current-agent-id.txt ]; then
-  INTERRUPTED_ID=$(cat .planning/current-agent-id.txt)
-  echo "Found interrupted agent: $INTERRUPTED_ID"
-fi
 ```
 
-If interrupted: ask user to resume (Task `resume` parameter) or start fresh.
-
-**Tracking protocol:** On spawn: write agent_id to `current-agent-id.txt`, append to agent-history.json: `{"agent_id":"[id]","task_description":"[desc]","feature":"[cap/feat]","plan":"[plan]","segment":[num|null],"timestamp":"[ISO]","status":"spawned","completion_timestamp":null}`. On completion: status -> "completed", set completion_timestamp, delete current-agent-id.txt. Prune: if entries > max_entries, remove oldest "completed" (never "spawned").
+On spawn: write agent_id to `current-agent-id.txt`, append to agent-history.json. On completion: status -> "completed", delete current-agent-id.txt. Prune: if entries > max_entries, remove oldest "completed".
 
 Run for Pattern A/B before spawning. Pattern C: skip.
 </step>
 
 <step name="segment_execution">
-Pattern B only (verify-only checkpoints). Skip for A/C.
+Pattern B only. Per segment: subagent for auto tasks (no SUMMARY/commit), main for checkpoints. After ALL segments: aggregate -> SUMMARY -> commit -> self-check (key-files exist, git commits present, append Self-Check status).
 
-1. Parse segment map: checkpoint locations and types
-2. Per segment:
-   - Subagent route: spawn gsd-executor for assigned tasks only. Prompt: task range, plan path, read full plan for context, execute assigned tasks, track unplanned changes, NO SUMMARY/commit. Track via agent protocol.
-   - Main route: execute tasks using standard flow (step name="execute")
-3. After ALL segments: aggregate files/changes/decisions -> create SUMMARY.md -> commit -> self-check:
-   - Verify key-files.created exist on disk with `[ -f ]`
-   - Check `git log --oneline --all --grep="${CAPABILITY_SLUG}/${FEATURE_SLUG}"` returns >=1 commit
-   - Append `## Self-Check: PASSED` or `## Self-Check: FAILED` to SUMMARY
-
-   **Known Claude Code bug (classifyHandoffIfNeeded):** If any segment agent reports "failed" with `classifyHandoffIfNeeded is not defined`, this is a Claude Code runtime bug — not a real failure. Run spot-checks; if they pass, treat as successful.
+**classifyHandoffIfNeeded bug:** If segment agent reports "failed" with this error, run spot-checks; if pass, treat as successful.
 </step>
 
 <step name="load_prompt">
@@ -122,250 +80,123 @@ cat ${feature_dir}/{plan_file}
 ```
 This IS the execution instructions. Follow exactly. If plan references CONTEXT.md: honor user's vision throughout.
 
-**If plan contains `<interfaces>` block:** These are pre-extracted type definitions and contracts. Use them directly — do NOT re-read the source files to discover types. The planner already extracted what you need.
+**If plan contains `<interfaces>` block:** Use pre-extracted type definitions directly -- do NOT re-read source files.
 </step>
 
 <step name="previous_plan_check">
-```bash
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" phases list --type summaries --raw
-# Or check feature directory for previous summaries
-ls ${feature_dir}/*-SUMMARY.md 2>/dev/null | sort | tail -1
-```
-If previous SUMMARY has unresolved "Issues Encountered" or "Next Phase Readiness" blockers: AskUserQuestion(header="Previous Issues", options: "Proceed anyway" | "Address first" | "Review previous").
+Check previous SUMMARY for unresolved "Issues Encountered" or blockers. If found: ask "Proceed anyway" | "Address first" | "Review previous".
 </step>
 
 <step name="execute">
 1. Read @context files from prompt
 2. Per task:
-   - `type="auto"`: Implement with auth gates. Handle unexpected issues per unplanned-work guidance. Verify done criteria. Commit (see task_commit). Track hash for Summary.
-   - `type="checkpoint:*"`: STOP -> checkpoint_protocol -> wait for user -> continue only after confirmation.
+   - `type="auto"`: Implement, handle auth gates, handle unexpected issues per deviation rules. Verify done criteria. Commit per task_commit. Track hash.
+   - `type="checkpoint:*"`: STOP -> checkpoint_protocol -> wait -> continue after confirmation.
 3. Run `<verification>` checks
 4. Confirm `<success_criteria>` met
 5. Document unplanned changes in Summary
 </step>
 
-<authentication_gates>
-
-## Authentication Gates
-
-Auth errors during execution are NOT failures — they're expected interaction points.
+<step name="auth_gates">
+Auth errors during execution are NOT failures -- they're expected interaction points.
 
 **Indicators:** "Not authenticated", "Unauthorized", 401/403, "Please run {tool} login", "Set {ENV_VAR}"
 
-**Protocol:**
-1. Recognize auth gate (not a bug)
-2. STOP task execution
-3. Create dynamic checkpoint:human-action with exact auth steps
-4. Wait for user to authenticate
-5. Verify credentials work
-6. Retry original task
-7. Continue normally
+**Protocol:** Recognize -> STOP -> create dynamic checkpoint:human-action with exact auth steps -> wait -> verify credentials -> retry -> continue.
 
-**Example:** `vercel --yes` -> "Not authenticated" -> checkpoint asking user to `vercel login` -> verify with `vercel whoami` -> retry deploy -> continue
+In Summary: document under "Authentication Gates", not deviations.
+</step>
 
-**In Summary:** Document as normal flow under "## Authentication Gates", not as deviations.
+<step name="unplanned_work">
+**Auto-fix:** Bugs, missing dependencies, blockers -- fix and continue. Document in summary.
+**Stop and ask:** Architectural issues that change fundamental approach -- STOP, return checkpoint.
+**Scope:** Only fix issues directly related to current task. Log unrelated discoveries to `deferred-items.md`.
+**Limit:** More than 2 auto-fixes on a single task -- pause and assess.
 
-</authentication_gates>
+Summary MUST include unplanned changes section (or "None - plan executed exactly as written").
+</step>
 
-<unplanned_work>
-
-## Unplanned Work
-
-You will encounter unexpected issues during execution. Full guidance is in `agents/gsd-executor.md`.
-
-**Auto-fix:** Bugs, missing dependencies, blockers — fix and continue. Document in summary.
-
-**Stop and ask:** Architectural issues that change the plan's fundamental approach — STOP and return checkpoint.
-
-**Scope:** Only fix issues directly related to the current task. Log unrelated discoveries to `deferred-items.md`.
-
-**Limit:** More than 2 auto-fixes on a single task — pause and assess.
-
-</unplanned_work>
-
-<unplanned_work_documentation>
-
-## Documenting Unplanned Changes
-
-Summary MUST include unplanned changes section. None? -> `## Unplanned Changes\n\nNone - plan executed exactly as written.`
-
-Per change: **Brief description** — why it was needed. Include: Found during (Task X) | Issue | Fix | Files modified | Commit hash.
-
-End with: **Unplanned changes:** N (brief breakdown). **Impact:** assessment.
-
-</unplanned_work_documentation>
-
-<task_commit>
-## Task Commit Protocol
-
+<step name="task_commit">
 After each task (verification passed, done criteria met), commit immediately.
 
-**1. Check:** `git status --short`
+1. `git status --short`
+2. Stage individually (NEVER `git add .`)
+3. Commit: `{type}({CAPABILITY_SLUG}/{FEATURE_SLUG}): {description}` with bullet points
+4. Record: `TASK_COMMIT=$(git rev-parse --short HEAD)`
 
-**2. Stage individually** (NEVER `git add .` or `git add -A`):
-```bash
-git add src/api/auth.ts
-git add src/types/user.ts
-```
-
-**3. Commit type:**
-
-| Type | When | Example |
-|------|------|---------|
-| `feat` | New functionality | feat(coaching/mistake-detection): create detection endpoint |
-| `fix` | Bug fix | fix(coaching/mistake-detection): correct pattern matching |
-| `test` | Test-only | test(coaching/mistake-detection): add failing test for detection |
-| `refactor` | No behavior change | refactor(coaching/mistake-detection): extract validation helper |
-| `perf` | Performance | perf(coaching/mistake-detection): add database index |
-| `docs` | Documentation | docs(coaching/mistake-detection): add API docs |
-| `style` | Formatting | style(coaching/mistake-detection): format module |
-| `chore` | Config/deps | chore(coaching/mistake-detection): add dependency |
-
-**4. Format:** `{type}({CAPABILITY_SLUG}/{FEATURE_SLUG}): {description}` with bullet points for key changes.
-
-**5. Record hash:**
-```bash
-TASK_COMMIT=$(git rev-parse --short HEAD)
-TASK_COMMITS+=("Task ${TASK_NUM}: ${TASK_COMMIT}")
-```
-
-</task_commit>
+| Type | When |
+|------|------|
+| `feat` | New functionality |
+| `fix` | Bug fix |
+| `test` | Test-only |
+| `refactor` | No behavior change |
+| `chore` | Config/deps |
+</step>
 
 <step name="checkpoint_protocol">
 On `type="checkpoint:*"`: automate everything possible first. Checkpoints are for verification/decisions only.
 
-Display: `CHECKPOINT: [Type]` box -> Progress {X}/{Y} -> Task name -> type-specific content -> `YOUR ACTION: [signal]`
+Display: `CHECKPOINT: [Type]` -> Progress {X}/{Y} -> type-specific content -> `YOUR ACTION: [signal]`
 
-| Type | Content | Resume signal |
-|------|---------|---------------|
-| human-verify (90%) | What was built + verification steps (commands/URLs) | "approved" or describe issues |
-| decision (9%) | Decision needed + context + options with pros/cons | "Select: option-id" |
-| human-action (1%) | What was automated + ONE manual step + verification plan | "done" |
+| Type | Resume signal |
+|------|---------------|
+| human-verify (90%) | "approved" or describe issues |
+| decision (9%) | "Select: option-id" |
+| human-action (1%) | "done" |
 
-After response: verify if specified. Pass -> continue. Fail -> inform, wait. WAIT for user — do NOT hallucinate completion.
-
-See ~/.claude/get-shit-done/references/checkpoints.md for details.
-</step>
-
-<step name="checkpoint_return_for_orchestrator">
-When spawned via Task and hitting checkpoint: return structured state (cannot interact with user directly).
-
-**Required return:** 1) Completed Tasks table (hashes + files) 2) Current Task (what's blocking) 3) Checkpoint Details (user-facing content) 4) Awaiting (what's needed from user)
-
-Orchestrator parses -> presents to user -> spawns fresh continuation with your completed tasks state. You will NOT be resumed. In main context: use checkpoint_protocol above.
-</step>
-
-<step name="verification_failure_gate">
-If verification fails: STOP. Present: "Verification failed for Task [X]: [name]. Expected: [criteria]. Actual: [result]." Options: Retry | Skip (mark incomplete) | Stop (investigate). If skipped -> SUMMARY "Issues Encountered".
+When spawned via Task: return structured state (completed tasks table, current task, checkpoint details, awaiting). Orchestrator parses and spawns fresh continuation.
 </step>
 
 <step name="record_completion_time">
 ```bash
-PLAN_END_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 PLAN_END_EPOCH=$(date +%s)
-
 DURATION_SEC=$(( PLAN_END_EPOCH - PLAN_START_EPOCH ))
 DURATION_MIN=$(( DURATION_SEC / 60 ))
-
-if [[ $DURATION_MIN -ge 60 ]]; then
-  HRS=$(( DURATION_MIN / 60 ))
-  MIN=$(( DURATION_MIN % 60 ))
-  DURATION="${HRS}h ${MIN}m"
-else
-  DURATION="${DURATION_MIN} min"
-fi
 ```
-</step>
-
-<step name="generate_user_setup">
-```bash
-grep -A 50 "^user_setup:" ${feature_dir}/{plan_file} | head -50
-```
-
-If user_setup exists: create `USER-SETUP.md` in the feature directory using template `~/.claude/get-shit-done/templates/user-setup.md`. Per service: env vars table, account setup checklist, dashboard config, local dev notes, verification commands. Status "Incomplete". Set `USER_SETUP_CREATED=true`. If empty/missing: skip.
 </step>
 
 <step name="create_summary">
 Create `{plan_id}-SUMMARY.md` at `${feature_dir}/`. Use `~/.claude/get-shit-done/templates/summary.md`.
 
-**Frontmatter:** feature (cap/feat), plan, subsystem, tags | requires/provides/affects | tech-stack.added/patterns | key-files.created/modified | key-decisions | requirements-completed (**MUST** copy `requirements` array from PLAN.md frontmatter verbatim) | duration ($DURATION), completed ($PLAN_END_TIME date).
+**Frontmatter:** feature (cap/feat), plan, subsystem, tags, requires/provides/affects, tech-stack, key-files, key-decisions, requirements-completed (copy from PLAN.md frontmatter), duration, completed date.
 
-Title: `# Feature: ${CAPABILITY_SLUG}/${FEATURE_SLUG} Plan [Y] Summary`
-
-One-liner SUBSTANTIVE: "JWT auth with refresh rotation using jose library" not "Authentication implemented"
-
-Include: duration, start/end times, task count, file count.
+One-liner SUBSTANTIVE: "JWT auth with refresh rotation using jose library" not "Authentication implemented".
 
 Next: more plans -> "Ready for {next-plan}" | last -> "Feature complete, ready for review".
 </step>
 
-<step name="update_current_position">
-Update STATE.md using gsd-tools:
-
+<step name="update_state">
 ```bash
-# Advance plan counter (handles last-plan edge case)
 node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" state advance-plan
-
-# Recalculate progress bar from disk state
 node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" state update-progress
-
-# Record execution metrics
 node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" state record-metric \
   --phase "${PHASE}" --plan "${PLAN}" --duration "${DURATION}" \
   --tasks "${TASK_COUNT}" --files "${FILE_COUNT}"
-```
-</step>
 
-<step name="extract_decisions_and_issues">
-From SUMMARY: Extract decisions and add to STATE.md:
-
-```bash
-# Add each decision from SUMMARY key-decisions
-# Prefer file inputs for shell-safe text (preserves `$`, `*`, etc. exactly)
+# Decisions (use file inputs for shell-safe text)
 node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" state add-decision \
   --phase "${PHASE}" --summary-file "${DECISION_TEXT_FILE}" --rationale-file "${RATIONALE_FILE}"
 
-# Add blockers if any found
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" state add-blocker --text-file "${BLOCKER_TEXT_FILE}"
-```
-</step>
-
-<step name="update_session_continuity">
-Update session info using gsd-tools:
-
-```bash
+# Session
 node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" state record-session \
-  --stopped-at "Completed ${CAPABILITY_SLUG}/${FEATURE_SLUG} plan ${PLAN}" \
-  --resume-file "None"
+  --stopped-at "Completed ${CAPABILITY_SLUG}/${FEATURE_SLUG} plan ${PLAN}"
 ```
-
-Keep STATE.md under 150 lines.
-</step>
-
-<step name="issues_review_gate">
-If SUMMARY "Issues Encountered" != "None": yolo -> log and continue. Interactive -> present issues, wait for acknowledgment.
 </step>
 
 <step name="update_roadmap">
 ```bash
 node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" roadmap update-plan-progress "${PHASE}"
 ```
-Counts PLAN vs SUMMARY files on disk. Updates progress table row with correct count and status (`In Progress` or `Complete` with date).
 </step>
 
 <step name="update_requirements">
-Mark completed requirements from the PLAN.md frontmatter `requirements:` field:
-
 ```bash
 node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" requirements mark-complete ${REQ_IDS}
 ```
-
-Extract requirement IDs from the plan's frontmatter (e.g., `requirements: [AUTH-01, AUTH-02]`). If no requirements field, skip.
+Extract from plan frontmatter `requirements:` field. Skip if none.
 </step>
 
 <step name="git_commit_metadata">
-Task code already committed per-task. Commit plan metadata:
-
 ```bash
 node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs(${CAPABILITY_SLUG}/${FEATURE_SLUG}): complete [plan-name] plan" --files ${feature_dir}/{plan_id}-SUMMARY.md .planning/STATE.md .planning/ROADMAP.md .planning/REQUIREMENTS.md
 ```
@@ -374,30 +205,16 @@ node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs(${CAPABILITY_S
 <step name="update_codebase_map">
 If .planning/codebase/ doesn't exist: skip.
 
-```bash
-FIRST_TASK=$(git log --oneline --grep="feat(${CAPABILITY_SLUG}/${FEATURE_SLUG}):" --grep="fix(${CAPABILITY_SLUG}/${FEATURE_SLUG}):" --grep="test(${CAPABILITY_SLUG}/${FEATURE_SLUG}):" --reverse | head -1 | cut -d' ' -f1)
-git diff --name-only ${FIRST_TASK}^..HEAD 2>/dev/null
-```
-
-Update only structural changes: new src/ dir -> STRUCTURE.md | deps -> STACK.md | file pattern -> CONVENTIONS.md | API client -> INTEGRATIONS.md | config -> STACK.md | renamed -> update paths. Skip code-only/bugfix/content changes.
-
-```bash
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "" --files .planning/codebase/*.md --amend
-```
+Check git diff for structural changes (new src/ dir, deps, file patterns, API clients, config, renames). Update only STRUCTURE.md, STACK.md, CONVENTIONS.md, INTEGRATIONS.md as needed. Skip code-only/bugfix/content changes. Amend metadata commit.
 </step>
 
 <step name="offer_next">
-If `USER_SETUP_CREATED=true`: display `USER SETUP REQUIRED` with path + env/config tasks at TOP.
+If `USER_SETUP_CREATED=true`: display setup requirements at TOP.
 
-```bash
-ls -1 ${feature_dir}/*-PLAN.md 2>/dev/null | wc -l
-ls -1 ${feature_dir}/*-SUMMARY.md 2>/dev/null | wc -l
-```
-
-| Condition | Route | Action |
-|-----------|-------|--------|
-| summaries < plans | **A: More plans** | Find next PLAN without SUMMARY. Yolo: auto-continue. Interactive: show next plan, suggest continuing execution. STOP here. |
-| summaries = plans | **B: Feature done** | Show completion, suggest review workflow or next feature. |
+| Condition | Route |
+|-----------|-------|
+| summaries < plans | Find next PLAN without SUMMARY. Yolo: auto-continue. Interactive: show next plan. STOP. |
+| summaries = plans | Show completion, suggest review workflow or next feature. |
 
 All routes: `/clear` first for fresh context.
 </step>
@@ -405,12 +222,10 @@ All routes: `/clear` first for fresh context.
 </process>
 
 <success_criteria>
-
 - All tasks from PLAN.md completed
 - All verifications pass
 - USER-SETUP.md generated if user_setup in frontmatter
 - SUMMARY.md created with substantive content
 - STATE.md updated (position, decisions, issues, session)
-- If codebase map exists: map updated with execution changes (or skipped if no significant changes)
-- If USER-SETUP.md created: prominently surfaced in completion output
+- If codebase map exists: map updated (or skipped if no structural changes)
 </success_criteria>
