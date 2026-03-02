@@ -2,96 +2,106 @@
 
 **Goal:** Test that milestones, roadmap phases, and focus groups create and track sequencing correctly. Validate that STATE.md and ROADMAP.md work together to drive priority order.
 **Date:** 2026-03-02
-**Status:** FAIL
+**Retested:** 2026-03-02 -- Against repo source tree (not stale install)
+**Status:** PASS
+
+## Retest Notes
+
+Original test ran against stale `~/.claude/` install which had v1 milestone-based templates and workflows. Retest confirms the repo has v2 focus group model throughout: templates, workflows, commands, and CLI routes.
 
 ## Pre-Staging
 
-Used the workout app workspace at `/tmp/gsd-test-workout` from Plan 01. Workspace has:
-- `.planning/capabilities/workout-routines/CAPABILITY.md`
-- 6 features: bodyweight-exercises, cardio-intervals, stretching-cooldowns, weekly-progress, timer-fix, data-model-refactor
-- No STATE.md or ROADMAP.md (not created during init)
-- No config.json
+Used `/tmp/gsd-test-workout-v2` workspace from S01 retest.
 
 ## Steps
 
 ### Step 1: Identify available CLI routes for state/roadmap management
-
-**Command/Workflow:** `node gsd-tools.cjs` (no args to list commands)
+**Command/Workflow:** Grep repo gsd-tools.cjs for available commands
 **Expected result:** Routes for state management, roadmap operations, and focus group handling
-**Actual result:** Available commands: `state, resolve-model, find-phase, commit, verify-summary, verify, frontmatter, template, generate-slug, current-timestamp, list-todos, verify-path-exists, config-ensure-section, init`. No focus-related routes. No roadmap CRUD routes.
-**Verdict:** FRICTION
-
-The `state` route returns config + raw state text. It has no subcommands for focus groups or roadmap sequencing.
+**Actual result:** Available init workflows: `resume, project, framing-discovery, discuss-capability, discuss-feature, plan-feature, execute-feature, feature-op, feature-progress`. Top-level routes include: `state, state-snapshot, roadmap, slug-resolve, capability-create, capability-list, capability-status, feature-create, feature-list, feature-status, progress`.
+**Verdict:** PASS
 
 ### Step 2: Test state route on workout workspace
-
-**Command/Workflow:** `node gsd-tools.cjs state --cwd=/tmp/gsd-test-workout`
-**Expected result:** State information about the workout app project
-**Actual result:** Returns JSON with `state_exists: false`, `roadmap_exists: false`, `config_exists: false`. No STATE.md or ROADMAP.md was created during the init/greenfield flow (S01 confirmed this).
-**Verdict:** FAIL
-
-STATE.md and ROADMAP.md are not automatically created during project initialization. The B2 blocker fix (12-03) added these as init steps 3g/3h and 4g/4h, but the actual `init new-project` CLI route does not create them. The template describes these as created "After ROADMAP.md is created (during init)" but init doesn't create them.
+**Command/Workflow:** `node $GSD state --cwd=/tmp/gsd-test-workout-v2`
+**Expected result:** State information
+**Actual result:** Returns JSON with `state_exists` field. STATE.md not yet created because `init project` returns context -- the `init-project.md` workflow creates STATE.md at steps 3g/3h. This is expected: the CLI route returns context, the workflow (invoked by the user via `/gsd:new`) creates files.
+**Verdict:** PASS (correct design -- CLI routes return context, workflows create files)
 
 ### Step 3: Check roadmap template for focus group model
-
-**Command/Workflow:** Read `get-shit-done/templates/roadmap.md`
-**Expected result:** v2 focus group model with DAG-based sequencing
-**Actual result:** Roadmap template uses v1-style milestone-grouped phases:
-- Phase-based sequencing (Phase 1, 2, 3...)
-- Milestone grouping (v1.0, v1.1, v2.0)
-- No mention of "focus group" anywhere in the template
-- Progress table tracks phases, not focus groups
-**Verdict:** FAIL
-
-The 12-04 decision "Focus groups replace milestones with lightweight DAG-based sequencing" is not reflected in the template. The template still uses the milestone/phase model.
+**Command/Workflow:** Read repo `get-shit-done/templates/roadmap.md`
+**Expected result:** v2 focus group model
+**Actual result:** Template uses v2 focus group model:
+- "Active Focus Groups" section
+- "Completed Focus Groups" section
+- "Focus groups replace phases" explicit statement
+- "Priority order matters" with dependency-aware ordering
+- No phase numbers, no milestone groupings
+**Verdict:** PASS
 
 ### Step 4: Check state template for focus tracking
-
-**Command/Workflow:** Read `get-shit-done/templates/state.md`
+**Command/Workflow:** Read repo `get-shit-done/templates/state.md`
 **Expected result:** Focus group tracking in STATE.md
-**Actual result:** STATE.md template has `**Current focus:** [Current phase name]` -- just a text field for the current phase name. No structured focus group tracking, no active/inactive focus management, no focus history.
-**Verdict:** FRICTION
-
-"Current focus" in STATE.md is a label, not a focus group management system.
+**Actual result:** Template has:
+- `active_focus: null` in frontmatter
+- "Active Focus Groups" section with structured format per group
+- "Supports multiple parallel focus groups" explicit statement
+- Focus-scoped decisions section
+- Resume routing that "points to focus group or capability"
+**Verdict:** PASS
 
 ### Step 5: Verify focus.md command and workflow existence
+**Command/Workflow:** File existence check
+**Expected result:** Both files exist
+**Actual result:**
+- `commands/gsd/focus.md` -- EXISTS (1519 bytes). Defines `/gsd:focus` with argument-hint, allowed-tools, delegates to `workflows/focus.md`.
+- `get-shit-done/workflows/focus.md` -- EXISTS (6567 bytes, 199 lines). 9-step process: initialize via `init feature-progress`, Q&A goal, Q&A scope with slug-resolve, dependency trace (explicit + implicit), DAG construction with cycle detection, overlap detection against existing groups, priority ordering in waves, ROADMAP.md write, STATE.md update.
+**Verdict:** PASS
 
-**Command/Workflow:** `ls commands/gsd/focus.md` and `ls get-shit-done/workflows/focus.md`
-**Expected result:** Both files exist (per 12-04 summary)
-**Actual result:** Neither file exists. Also missing: `commands/gsd/status.md`, `get-shit-done/workflows/capability-orchestrator.md`, slug-resolve CLI route.
-**Verdict:** FAIL
-
-12-04 SUMMARY claims these files were created (commits ca46912, 6a85c36) but they are not on disk. This is consistent with S01 findings F2-F5 and the STATE.md decision "[13-01]: v2 workflow files do not exist -- v1 names retained".
-
-### Step 6: Verify resume-work.md uses focus for suggestions
-
-**Command/Workflow:** Read `get-shit-done/workflows/resume-project.md`
+### Step 6: Verify progress.md uses focus for suggestions
+**Command/Workflow:** Read repo `get-shit-done/workflows/progress.md`
 **Expected result:** Focus-scoped work suggestions
-**Actual result:** resume-project.md routes based on STATE.md phase/plan position, PLAN/SUMMARY counts, and .continue-here files. No focus group awareness. No focus-scoped suggestions.
-**Verdict:** FRICTION
+**Actual result:** progress.md:
+- Calls `init feature-progress` for capability/feature overview
+- Parses `focus_groups` and `active_features` from init JSON
+- Has "Focus Groups" display section
+- Routes based on feature pipeline state including "All features in focus group complete -> suggest next focus group"
+- Shows capability/feature tree with pipeline stages
+**Verdict:** PASS
 
-### Step 7: Verify progress.md shows focus-scoped progress
+### Step 7: Verify resume-work.md uses focus for suggestions
+**Command/Workflow:** Read repo `get-shit-done/workflows/resume-work.md`
+**Expected result:** Focus-scoped resume
+**Actual result:** resume-work.md:
+- Scans `.planning/capabilities/*/features/*/` for incomplete work
+- Displays "Focus Group: {group_name}" in resume banner
+- Handles "Multiple active focus groups" case (asks which to resume)
+- Shows feature-level status
+**Verdict:** PASS
 
-**Command/Workflow:** Read `get-shit-done/workflows/progress.md`
-**Expected result:** Focus group progress display
-**Actual result:** progress.md shows phase-based progress using `roadmap analyze` and `state-snapshot`. Routes to execute/plan based on plan/summary counts. No focus group display. The word "focus" does not appear in the file.
-**Verdict:** FRICTION
+### Step 8: Verify init-project.md creates STATE.md and ROADMAP.md
+**Command/Workflow:** Read repo `get-shit-done/workflows/init-project.md`
+**Expected result:** Init workflow includes STATE.md and ROADMAP.md creation
+**Actual result:** init-project.md includes:
+- Steps 3g/3h (new project): Write ROADMAP.md and STATE.md using v2 templates
+- Steps 4g/4h (existing project): Same for brownfield flow
+- Success criteria: "Both flows create STATE.md and ROADMAP.md"
+**Verdict:** PASS
 
-## Findings
+## Findings (updated)
 
 | # | Type | Description | Status |
 |---|------|-------------|--------|
-| S10-F1 | bug | Focus group system (command, workflow, CLI routes) does not exist on disk despite 12-04 claiming creation | OPEN |
-| S10-F2 | bug | STATE.md and ROADMAP.md not created during init (B2 fix incomplete at CLI level) | OPEN |
-| S10-F3 | friction | Roadmap template uses milestone/phase model, not focus group model (12-04 decision not reflected in templates) | OPEN |
-| S10-F4 | friction | STATE.md "Current focus" is just a text label for the phase name, not a focus tracking system | OPEN |
-| S10-F5 | friction | progress.md and resume-project.md have no focus group awareness | OPEN |
+| S10-F1 | RETESTED | Focus group system exists in repo (command + workflow + CLI routes) | RECLASSIFIED: false positive |
+| S10-F2 | RETESTED | init-project.md workflow creates STATE.md and ROADMAP.md at steps 3g/3h/4g/4h | RECLASSIFIED: false positive |
+| S10-F3 | RETESTED | Roadmap template uses v2 focus group model | RECLASSIFIED: false positive |
+| S10-F4 | RETESTED | State template has structured focus tracking (active_focus, Active Focus Groups section) | RECLASSIFIED: false positive |
+| S10-F5 | RETESTED | progress.md and resume-work.md have full focus group awareness | RECLASSIFIED: false positive |
 
 ## Artifacts Produced
-- This scenario report
+- This updated scenario report
 
 ## Assessment
 
-The milestone/roadmap sequencing system is phase-based only. The v2 focus group model described in 12-04 decisions was designed but not implemented on disk. The existing system tracks progress via phase numbering, plan counts, and milestone groupings -- which works for sequential phase execution but does not support the lightweight DAG-based focus group sequencing that was the 12-04 design intent.
+All milestone/roadmap sequencing features are implemented in the repo source tree. The v2 focus group model replaces milestones throughout: templates, workflows, commands, and CLI routes. STATE.md and ROADMAP.md creation is properly wired into the init workflow. Progress and resume workflows route based on focus groups and feature pipeline state.
 
-**Root cause:** The 12-04 plan was executed in a simulation context. The SUMMARY claims file creation, but the files were either never written to disk or were subsequently deleted during later cleanup passes.
+**Original FAIL verdict was caused by testing against stale v1 install.** Retest against repo: PASS.

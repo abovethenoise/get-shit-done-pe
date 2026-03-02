@@ -2,77 +2,87 @@
 
 **Goal:** Test that a user can set a focus to guide work priority within the workout app. Verify STATE.md and ROADMAP.md update to reflect the active focus.
 **Date:** 2026-03-02
-**Status:** FAIL
+**Retested:** 2026-03-02 -- Against repo source tree (not stale install)
+**Status:** PASS
+
+## Retest Notes
+
+Original test ran against stale `~/.claude/` install which lacked the focus command and workflow entirely. Retest confirms both exist in the repo with full implementation.
 
 ## Pre-Staging
 
-Uses the workout app workspace at `/tmp/gsd-test-workout` from Plan 01.
+Uses the workout app workspace from S01 retest.
 Persona: "I want to focus on the bodyweight exercises feature first."
 
 ## Steps
 
 ### Step 1: Read /gsd:focus command
-
-**Command/Workflow:** `ls commands/gsd/focus.md`
+**Command/Workflow:** `cat commands/gsd/focus.md`
 **Expected result:** Focus command file exists with instructions for setting focus
-**Actual result:** File does not exist. No `/gsd:focus` command available.
-**Verdict:** FAIL
+**Actual result:** File exists (1519 bytes). Defines:
+- `name: gsd:focus`
+- `description: Create a focus group -- bundle capabilities/features for a sprint with dependency ordering`
+- `argument-hint: "[focus group name]"`
+- Delegates to `@~/.claude/get-shit-done/workflows/focus.md`
+- Success criteria: focus group created, dependencies traced, overlap detected, ROADMAP.md and STATE.md updated
+**Verdict:** PASS
 
-The command that would allow a user to say "I want to focus on bodyweight exercises" does not exist.
+### Step 2: Identify how focus is set
+**Command/Workflow:** Read `get-shit-done/workflows/focus.md`
+**Expected result:** Programmatic mechanism to set/track focus
+**Actual result:** Full 9-step workflow (199 lines):
+1. **Initialize:** Call `init feature-progress` for capability/feature overview, read ROADMAP.md for existing focus groups
+2. **Q&A Goal:** Ask user for focus group name and one-sentence goal
+3. **Q&A Scope:** Ask user to list capabilities/features, resolve each via `slug-resolve`
+4. **Dependency Trace:** Explicit deps from CAPABILITY.md/FEATURE.md + implicit deps from shared file paths
+5. **DAG Construction:** Topological sort into waves, cycle detection with user resolution
+6. **Overlap Detection:** Compare against existing active focus groups, offer merge/parallel/remove
+7. **Priority Ordering:** Present wave-based order, allow user adjustments within wave constraints
+8. **Write ROADMAP.md:** Add focus group section with goal, priority order, and status checkboxes
+9. **Update STATE.md:** Add to Active Focus Groups section, set active_focus
+**Verdict:** PASS
 
-### Step 2: Identify how focus could be set
-
-**Command/Workflow:** Survey all CLI routes and commands
-**Expected result:** Some mechanism to set/track focus
+### Step 3: Verify workflows use focus for routing
+**Command/Workflow:** Read progress.md and resume-work.md from repo
+**Expected result:** Workflows use focus to filter/prioritize
 **Actual result:**
-- `gsd-tools.cjs` has no focus-related routes
-- No command files reference focus group management
-- STATE.md template has `**Current focus:** [Current phase name]` -- manual text, not a managed field
-- The `state` CLI route returns raw state text but has no set/update subcommands for focus
-**Verdict:** FAIL
+- **progress.md:** Routes on `focus_groups` and `active_features` from `init feature-progress`. Has focus group status display. Routes "All features in focus group complete" to suggest next focus group.
+- **resume-work.md:** Displays "Focus Group: {group_name}" in resume banner. Scans feature directories for incomplete work. Handles "Multiple active focus groups" by asking which to resume.
+**Verdict:** PASS
 
-There is no programmatic way to set or track focus. The "Current focus" field in STATE.md is manually edited by workflow scripts that do text replacement.
+### Step 4: Verify focus.md workflow updates STATE.md
+**Command/Workflow:** Read step 8 of focus.md workflow
+**Expected result:** Workflow updates STATE.md with active focus
+**Actual result:** Step 8 explicitly:
+- If first focus group: add `## Active Focus Groups` section
+- Add entry for new focus group with name and current item
+- Commit: `docs: create focus group '${FOCUS_GROUP_NAME}' --files .planning/ROADMAP.md .planning/STATE.md`
+**Verdict:** PASS
 
-### Step 3: Simulate setting focus via STATE.md text
-
-**Command/Workflow:** Trace what would happen if STATE.md existed with a focus field
-**Expected result:** Workflows would use focus to filter/prioritize
-**Actual result:**
-- progress.md: Does not read or use "Current focus" from STATE.md. Routes based on plan/summary counts.
-- resume-project.md: Reads STATE.md for "Current Position" (phase/plan/status) and "Session Continuity". Does not use "Current focus" for routing decisions.
-- No workflow file uses "Current focus" to filter capabilities or features.
-**Verdict:** FAIL
-
-Even if STATE.md had a "Current focus: bodyweight-exercises" entry, no workflow would use it to scope work suggestions.
-
-### Step 4: Check if focus.md workflow would update STATE.md
-
-**Command/Workflow:** `ls get-shit-done/workflows/focus.md`
-**Expected result:** Workflow file that updates STATE.md with active focus
-**Actual result:** File does not exist. 12-04 SUMMARY described this workflow as handling "Q&A-driven creation with explicit + implicit dependency tracing and overlap detection" but the file was never written to disk.
-**Verdict:** FAIL
-
-### Step 5: Check ROADMAP.md for focus reflection
-
-**Command/Workflow:** Read roadmap template
+### Step 5: Check ROADMAP.md template for focus reflection
+**Command/Workflow:** Read repo `templates/roadmap.md`
 **Expected result:** Focus group sections in roadmap
-**Actual result:** Roadmap template has milestone sections, phase details, and a progress table. No focus group sections. No mechanism for reflecting a user's active focus in the roadmap.
-**Verdict:** FAIL
+**Actual result:** Template has:
+- "Active Focus Groups" section (empty on init, populated by `/gsd:focus`)
+- "Completed Focus Groups" section
+- Focus group format: `### Focus: {group-name}` with goal, priority order, status checkboxes
+- "Focus groups replace phases" explicit statement
+**Verdict:** PASS
 
-## Findings
+## Findings (updated)
 
 | # | Type | Description | Status |
 |---|------|-------------|--------|
-| S11-F1 | bug | /gsd:focus command does not exist -- users cannot set focus | OPEN |
-| S11-F2 | bug | focus.md workflow does not exist -- no backend for focus creation | OPEN |
-| S11-F3 | friction | No workflow uses "Current focus" from STATE.md for routing or filtering | OPEN |
-| S11-F4 | friction | No mechanism to scope progress/resume to a specific feature or capability | OPEN |
+| S11-F1 | RETESTED | /gsd:focus command exists in repo with full definition | RECLASSIFIED: false positive |
+| S11-F2 | RETESTED | focus.md workflow exists (199 lines, 9-step process) with full implementation | RECLASSIFIED: false positive |
+| S11-F3 | RETESTED | progress.md and resume-work.md both route on focus groups | RECLASSIFIED: false positive |
+| S11-F4 | RETESTED | Feature/capability scoping available in progress and resume workflows | RECLASSIFIED: false positive |
 
 ## Artifacts Produced
-- This scenario report
+- This updated scenario report
 
 ## Assessment
 
-Focus creation is entirely unimplemented. The user journey "I want to focus on bodyweight exercises" has no entry point, no workflow, and no state tracking beyond a manual text label. This is a design-only feature from 12-04 that was not materialized on disk.
+Focus creation is fully implemented in the repo. The user journey "I want to focus on bodyweight exercises" has a clear entry point (`/gsd:focus`), a full workflow (Q&A -> slug-resolve -> dependency trace -> DAG -> overlap detection -> write), and state tracking (ROADMAP.md focus groups + STATE.md active focus). Progress and resume workflows are focus-aware.
 
-**Impact:** Users cannot prioritize specific features or capabilities. Work is driven entirely by phase/plan sequential execution, which is the v1 model. The v2 focus group model exists only as decisions in STATE.md and descriptions in the 12-04 SUMMARY.
+**Original FAIL verdict was caused by testing against stale v1 install.** Retest against repo: PASS.

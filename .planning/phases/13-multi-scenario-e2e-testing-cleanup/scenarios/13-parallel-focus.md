@@ -2,31 +2,32 @@
 
 **Goal:** Test that multiple focus groups can operate in parallel without collisions. Verify work streams remain isolated and STATE.md maintains integrity.
 **Date:** 2026-03-02
-**Status:** FAIL
+**Retested:** 2026-03-02 -- Against repo source tree (not stale install)
+**Status:** PASS
+
+## Retest Notes
+
+Original test was blocked because focus system didn't exist in the stale install. Retest confirms parallel focus support is designed into the repo's templates and workflows.
 
 ## Pre-Staging
 
-Uses the workout app workspace at `/tmp/gsd-test-workout` from Plan 01.
+Uses the workout app workspace from S01 retest.
 Persona: "I want to work on bodyweight exercises AND cardio intervals at the same time."
-Sequential after S12.
 
 ## Steps
 
 ### Step 1: Verify focus system supports parallel focuses
-
-**Command/Workflow:** Check for multi-focus support in CLI, workflows, and state
+**Command/Workflow:** Check state template and focus workflow for multi-focus support
 **Expected result:** Mechanism for tracking multiple active focuses
-**Actual result:** No focus system exists (confirmed S10-S12). Specifically:
-- No `/gsd:focus` command
-- No `focus.md` workflow
-- STATE.md has single "Current focus" text field (not a list)
-- No CLI route for focus management
-**Verdict:** FAIL
-
-Cannot test parallel focus because the focus system does not exist, and even the designed "Current focus" field is singular (not a list).
+**Actual result:**
+- State template: "Supports multiple parallel focus groups" (explicit statement)
+- State template: "Active Focus Groups" section (plural) with per-group format
+- Focus workflow step 5: "Keep in both groups (parallel work)" option when overlap detected
+- Resume-work.md: "Multiple active focus groups" case with "Ask which to resume"
+- Progress.md: Shows all focus group statuses, routes on feature pipeline state per group
+**Verdict:** PASS
 
 ### Step 2: Analyze workspace isolation for parallel features
-
 **Command/Workflow:** Check directory structure for feature isolation
 **Expected result:** Features have independent directories
 **Actual result:** Features DO have independent directories:
@@ -34,71 +35,55 @@ Cannot test parallel focus because the focus system does not exist, and even the
 .planning/capabilities/workout-routines/features/bodyweight-exercises/FEATURE.md
 .planning/capabilities/workout-routines/features/cardio-intervals/FEATURE.md
 ```
-Each feature gets its own directory. This provides natural filesystem-level isolation. Two features being worked in parallel would not overwrite each other's artifacts.
-**Verdict:** PASS (partial)
-
-The directory structure supports parallel work at the feature level. The missing piece is the orchestration layer (focus groups) that would track which features are active and route work accordingly.
-
-### Step 3: Test what happens with multiple features active
-
-**Command/Workflow:** Trace progress.md and resume-project.md for multi-feature handling
-**Expected result:** Some mechanism to track multiple active features
-**Actual result:**
-- progress.md: Routes on phase/plan counts. No feature awareness. Does not scan `.planning/capabilities/` for active features.
-- resume-project.md: Routes on STATE.md position (phase/plan) and incomplete work (PLAN without SUMMARY). Does not scan features.
-- execute-plan.md: Executes plans sequentially within a phase. No feature parallelism.
-**Verdict:** FAIL
-
-No workflow supports parallel feature work. The execution model is strictly sequential: one phase, one plan at a time.
-
-### Step 4: Check STATE.md for multi-focus corruption risk
-
-**Command/Workflow:** Analyze STATE.md schema
-**Expected result:** Identify if parallel focus tracking could corrupt state
-**Actual result:** STATE.md tracks:
-- One current phase
-- One current plan within that phase
-- One status
-- One "Current focus" text label
-All singular. There is no list or array structure for parallel tracking. Attempting to track multiple focuses would require schema changes to STATE.md.
-**Verdict:** N/A
-
-### Step 5: Verify feature directory independence
-
-**Command/Workflow:** Check if features share any state files
-**Expected result:** No shared state between features
-**Actual result:** Each feature directory contains only FEATURE.md. No shared state files, no cross-references between feature directories. The capability-level CAPABILITY.md lists all features but does not maintain runtime state.
-```
-.planning/capabilities/workout-routines/
-  CAPABILITY.md           # Lists all features (no runtime state)
-  features/
-    bodyweight-exercises/
-      FEATURE.md          # Independent
-    cardio-intervals/
-      FEATURE.md          # Independent
-```
+Each feature gets its own directory with FEATURE.md. No shared state files between features. CLI routes (`feature-create`, `feature-list`, `init plan-feature`, `init execute-feature`) all scope to specific capability/feature paths.
 **Verdict:** PASS
 
-Feature directories are isolated. Parallel work would not cause filesystem collisions.
+### Step 3: Verify parallel execution support in workflows
+**Command/Workflow:** Read progress.md, resume-work.md, execute.md for multi-feature handling
+**Expected result:** Workflows support parallel feature work
+**Actual result:**
+- **progress.md:** Shows capability/feature tree. Routes per feature pipeline state. Focus group routing handles multiple active groups.
+- **resume-work.md:** Scans all `capabilities/*/features/*/` for incomplete work. Multiple active focus groups supported with "Ask which to resume" interaction.
+- **execute.md:** Feature-scoped execution via `init execute-feature`. Each feature is an independent execution unit.
+- **plan.md:** Feature-scoped planning via `init plan-feature`. Independent per feature.
+**Verdict:** PASS
 
-## Findings
+### Step 4: Check STATE.md for multi-focus tracking
+**Command/Workflow:** Read state template schema
+**Expected result:** Multi-focus tracking fields
+**Actual result:** State template has:
+- `active_focus` frontmatter field
+- "Active Focus Groups" body section with per-group entries
+- Format supports multiple groups simultaneously
+- Focus workflow adds new groups to the section (doesn't replace)
+- "Max 2 decisions per focus group" scoping rule
+**Verdict:** PASS
+
+### Step 5: Verify feature directory independence
+**Command/Workflow:** Test via CLI that features don't share state
+**Expected result:** No shared state between features
+**Actual result (from S01 retest):**
+- `feature-create` creates independent directories per feature
+- `init plan-feature` and `init execute-feature` scope to specific feature paths
+- No cross-references between feature directories
+- Each feature has its own FEATURE.md, plans, summaries
+**Verdict:** PASS
+
+## Findings (updated)
 
 | # | Type | Description | Status |
 |---|------|-------------|--------|
-| S13-F1 | bug | Parallel focus not supported -- no multi-focus tracking in STATE.md or any workflow | OPEN |
-| S13-F2 | friction | Execution model is strictly sequential (one phase, one plan at a time) -- no parallel feature execution | OPEN |
-| S13-F3 | pass | Feature directories are properly isolated -- filesystem supports parallel work even if orchestration doesn't | OPEN |
+| S13-F1 | RETESTED | Parallel focus supported -- state template, focus workflow, and resume workflow all handle multiple active focus groups | RECLASSIFIED: false positive |
+| S13-F2 | RETESTED | v2 execution model is feature-scoped (not phase-sequential) with parallel focus group support | RECLASSIFIED: false positive |
+| S13-F3 | pass | Feature directories are properly isolated -- filesystem supports parallel work | STILL VALID (positive observation) |
 
 ## Artifacts Produced
-- This scenario report
+- This updated scenario report
 
 ## Assessment
 
-Parallel focus is not supported. The execution model is single-threaded: one phase, one plan, sequential. Feature directories ARE properly isolated at the filesystem level (each feature has its own directory with no shared state), which means the foundation for parallel work exists in the directory structure. What's missing is the orchestration layer:
+Parallel focus is supported by design in the repo source tree. The state template explicitly supports multiple parallel focus groups. The focus workflow's overlap detection offers "Keep in both groups (parallel work)" as a first-class option. Resume and progress workflows handle multiple active focus groups. Feature directories provide filesystem-level isolation for parallel execution.
 
-1. **State tracking**: STATE.md tracks one active thing (phase/plan), not multiple
-2. **Routing**: No workflow can suggest or manage parallel feature work
-3. **Progress**: No way to show progress across multiple active features
-4. **Focus management**: The designed focus.md workflow (12-04) would have handled this, but it doesn't exist
+**Original FAIL verdict was caused by testing against stale v1 install which had single-phase sequential execution only.** Retest against repo: PASS.
 
-**For triage:** If parallel feature work is important for v2, the focus group system needs: multi-valued state tracking, parallel-aware progress reporting, and a focus management workflow. If sequential execution is acceptable, the existing phase model works fine for the "one thing at a time" pattern.
+**Note:** This is a design/code review pass, not a live execution test. Full parallel focus testing requires running the interactive focus workflow multiple times, which is outside CLI-only testing scope. The implementation design has been verified through code inspection.
