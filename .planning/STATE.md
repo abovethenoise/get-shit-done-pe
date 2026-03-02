@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-03-02T15:13:54.115Z"
+last_updated: "2026-03-02T15:21:40.602Z"
 progress:
   total_phases: 13
-  completed_phases: 11
+  completed_phases: 12
   total_plans: 50
-  completed_plans: 49
+  completed_plans: 50
 ---
 
 # Project State
@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 Phase: 12 of 14 (Workflow Optimization & Wiring)
 Plan: 9 of 9
 Status: In progress
-Last activity: 2026-03-02 -- Plan 12-06 complete. install.js Claude-only (2376->771 lines), v1 terminology swept, USER-GUIDE rewritten for v2.
+Last activity: 2026-03-02 -- Plan 12-07 complete. Dead v1 code removed: phase.cjs deleted, dead CLI routes removed, v1 config defaults removed, 1,388 lines deleted.
 
 Progress: [===============-----] 79% (11/14 phases complete)
 
@@ -70,6 +70,7 @@ Progress: [===============-----] 79% (11/14 phases complete)
 | Phase 12 P05 | 8min | 2 tasks | 8 files |
 | Phase 12 P06 | 13min | 3 tasks | 26 files |
 | Phase 12 P08 | 4min | 2 tasks | 1 files |
+| Phase 12 P07 | 9min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -125,6 +126,7 @@ Recent decisions affecting current work:
 - [Phase 12]: install.js reduced from 2376 to 771 lines by removing all multi-runtime support
 - [Phase 12]: templates/requirements.md and templates/UAT.md deleted (v1 artifacts with no v2 references)
 - [Phase 12]: All 32 @file references resolve -- no fixes needed after Plans 01-07
+- [Phase 12-07]: phase.cjs deleted entirely, cmdStateAdvancePlan/cmdStateRecordMetric kept (still used by v2 execute-plan.md)
 
 ### Blockers/Concerns
 
@@ -133,6 +135,6 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 12-08-PLAN.md (final verification sweep -- INTG-01/02/03, CMD-01 all PASS)
-Resume: Complete Phase 12 (12-07 may still need SUMMARY)
-Next action: Finalize Phase 12, begin Phase 13 E2E testing
+Stopped at: Completed 12-07-PLAN.md (dead v1 code removal: phase.cjs deleted, dead CLI routes removed, 1388 lines deleted)
+Resume: Phase 12 complete (all 9 plans have summaries)
+Next action: Begin Phase 13 E2E testing

@@ -20,7 +20,7 @@ Milestone v2.0 "Install-Ready Launch" takes everything built in milestone 1 (pha
 - [x] **Phase 9: Structure & Integration** - Establish v2 directory model and wire orphaned components (research gatherers, hooks) into the surviving chain (completed 2026-03-01)
 - [x] **Phase 10: Remaining Cleanup & Polish** - Harder cleanup that depends on knowing the v2 structure: CLI audit, template/reference audits, file reference validation (completed 2026-03-01)
 - [x] **Phase 11: Automated Testing** - Verify every surviving command fires without error and all file references resolve before attempting install (completed 2026-03-01)
-- [ ] **Phase 12: Workflow Optimization & Wiring** - Fix B1-B3 blockers, wire all v2 flows (new/brownfield/after-start), establish capability→feature lifecycle, simplify ROADMAP.md model
+- [x] **Phase 12: Workflow Optimization & Wiring** - Fix B1-B3 blockers, wire all v2 flows (new/brownfield/after-start), establish capability→feature lifecycle, simplify ROADMAP.md model (completed 2026-03-02)
 - [ ] **Phase 13: Multi-Scenario E2E Testing & Cleanup** - Test all flows end-to-end across multiple scenarios, fix what breaks, final cleanup pass
 - [ ] **Phase 14: Install & Validate** - Make it installable via npm install -g, then prove it works end-to-end on real projects
 
@@ -127,6 +127,6 @@ Phases execute in numeric order: 8 → 9 → 10 → 11 → 12 → 13 → 14
 | 9. Structure & Integration | 3/3 | Complete | 2026-03-01 |
 | 10. Remaining Cleanup & Polish | 8/8 | Complete | 2026-03-01 |
 | 11. Automated Testing | 3/3 | Complete | 2026-03-01 |
-| 12. Workflow Optimization & Wiring | 8/9 | In Progress|  |
+| 12. Workflow Optimization & Wiring | 9/9 | Complete   | 2026-03-02 |
 | 13. Multi-Scenario E2E Testing & Cleanup | 0/TBD | Not started | - |
 | 14. Install & Validate | 0/TBD | Not started | - |
