@@ -23,9 +23,9 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 12 of 14 (Workflow Optimization & Wiring)
-Plan: 2 of TBD
+Plan: 3 of TBD
 Status: In progress
-Last activity: 2026-03-02 -- Plan 12-02 complete. Rewrote review.md, doc.md, framing-pipeline.md for v2 feature model with lens propagation.
+Last activity: 2026-03-02 -- Plan 12-03 complete. Init bootstrap + template v2 rewrites (state.md, roadmap.md, capability.md).
 
 Progress: [===============-----] 79% (11/14 phases complete)
 
@@ -64,6 +64,7 @@ Progress: [===============-----] 79% (11/14 phases complete)
 | Phase 11 P01 | 3min | 2 tasks | 2 files |
 | Phase 12 P01 | 7min | 2 tasks | 3 files |
 | Phase 12 P02 | 7min | 2 tasks | 8 files |
+| Phase 12 P03 | 4min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -104,6 +105,9 @@ Recent decisions affecting current work:
 - [12-02]: Synthesizer conflict resolution priority: end-user > functional > technical > quality
 - [12-02]: Execute->Review->Doc auto-chains with human checkpoints only for issues
 - [12-02]: LENS and ANCHOR_QUESTIONS_PATH propagated to all 6 pipeline stages
+- [12-03]: STATE.md and ROADMAP.md created as final init steps (3g/3h, 4g/4h) -- B2 blocker resolved
+- [12-03]: Completion message directs to /gsd:discuss-capability, not /gsd:new or /gsd:focus
+- [12-03]: Templates rewritten for v2 focus group model (no phases, no performance metrics)
 
 ### Blockers/Concerns
 
@@ -112,6 +116,6 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 12-02-PLAN.md (review.md, doc.md, framing-pipeline.md rewritten for v2 feature model)
+Stopped at: Completed 12-03-PLAN.md (init bootstrap + state/roadmap/capability template v2 rewrites)
 Resume: Continue with next Phase 12 plan
 Next action: Execute remaining Phase 12 plans
