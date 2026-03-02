@@ -23,9 +23,9 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 12 of 14 (Workflow Optimization & Wiring)
-Plan: 3 of TBD
+Plan: 4 of TBD
 Status: In progress
-Last activity: 2026-03-02 -- Plan 12-03 complete. Init bootstrap + template v2 rewrites (state.md, roadmap.md, capability.md).
+Last activity: 2026-03-02 -- Plan 12-04 complete. 4 new slash commands (plan, review, status, focus), capability-orchestrator, focus.md, universal slug-resolve.
 
 Progress: [===============-----] 79% (11/14 phases complete)
 
@@ -65,6 +65,7 @@ Progress: [===============-----] 79% (11/14 phases complete)
 | Phase 12 P01 | 7min | 2 tasks | 3 files |
 | Phase 12 P02 | 7min | 2 tasks | 8 files |
 | Phase 12 P03 | 4min | 2 tasks | 5 files |
+| Phase 12 P04 | 6min | 2 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -108,6 +109,9 @@ Recent decisions affecting current work:
 - [12-03]: STATE.md and ROADMAP.md created as final init steps (3g/3h, 4g/4h) -- B2 blocker resolved
 - [12-03]: Completion message directs to /gsd:discuss-capability, not /gsd:new or /gsd:focus
 - [12-03]: Templates rewritten for v2 focus group model (no phases, no performance metrics)
+- [12-04]: slug-resolve is universal -- all commands use 3-tier CLI route, no inline resolution
+- [12-04]: Focus groups replace milestones with lightweight DAG-based sequencing
+- [12-04]: Capability orchestrator reuses framing-pipeline per feature (not custom pipeline)
 
 ### Blockers/Concerns
 
@@ -116,6 +120,6 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 12-03-PLAN.md (init bootstrap + state/roadmap/capability template v2 rewrites)
+Stopped at: Completed 12-04-PLAN.md (4 new slash commands, capability-orchestrator, focus.md, universal slug-resolve)
 Resume: Continue with next Phase 12 plan
 Next action: Execute remaining Phase 12 plans
