@@ -5,82 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
-const { loadConfig, resolveModelInternal, findPhaseInternal, getRoadmapPhaseInternal, pathExistsInternal, generateSlugInternal, getMilestoneInfo, normalizePhaseName, toPosixPath, findCapabilityInternal, findFeatureInternal, output, error } = require('./core.cjs');
-
-function cmdInitExecutePhase(cwd, phase, raw) {
-  if (!phase) {
-    error('phase required for init execute-phase');
-  }
-
-  const config = loadConfig(cwd);
-  const phaseInfo = findPhaseInternal(cwd, phase);
-  const milestone = getMilestoneInfo(cwd);
-
-  const roadmapPhase = getRoadmapPhaseInternal(cwd, phase);
-  const reqMatch = roadmapPhase?.section?.match(/^\*\*Requirements\*\*:[^\S\n]*([^\n]*)$/m);
-  const reqExtracted = reqMatch
-    ? reqMatch[1].replace(/[\[\]]/g, '').split(',').map(s => s.trim()).filter(Boolean).join(', ')
-    : null;
-  const phase_req_ids = (reqExtracted && reqExtracted !== 'TBD') ? reqExtracted : null;
-
-  const result = {
-    // Models
-    executor_model: resolveModelInternal(cwd, 'gsd-executor'),
-    verifier_model: resolveModelInternal(cwd, 'gsd-verifier'),
-
-    // Config flags
-    commit_docs: config.commit_docs,
-    parallelization: config.parallelization,
-    branching_strategy: config.branching_strategy,
-    phase_branch_template: config.phase_branch_template,
-    milestone_branch_template: config.milestone_branch_template,
-    verifier_enabled: config.verifier,
-
-    // Phase info
-    phase_found: !!phaseInfo,
-    phase_dir: phaseInfo?.directory || null,
-    phase_number: phaseInfo?.phase_number || null,
-    phase_name: phaseInfo?.phase_name || null,
-    phase_slug: phaseInfo?.phase_slug || null,
-    phase_req_ids,
-
-    // Plan inventory
-    plans: phaseInfo?.plans || [],
-    summaries: phaseInfo?.summaries || [],
-    incomplete_plans: phaseInfo?.incomplete_plans || [],
-    plan_count: phaseInfo?.plans?.length || 0,
-    incomplete_count: phaseInfo?.incomplete_plans?.length || 0,
-
-    // Branch name (pre-computed)
-    branch_name: config.branching_strategy === 'phase' && phaseInfo
-      ? config.phase_branch_template
-          .replace('{phase}', phaseInfo.phase_number)
-          .replace('{slug}', phaseInfo.phase_slug || 'phase')
-      : config.branching_strategy === 'milestone'
-        ? config.milestone_branch_template
-            .replace('{milestone}', milestone.version)
-            .replace('{slug}', generateSlugInternal(milestone.name) || 'milestone')
-        : null,
-
-    // Milestone info
-    milestone_version: milestone.version,
-    milestone_name: milestone.name,
-    milestone_slug: generateSlugInternal(milestone.name),
-
-    // File existence
-    state_exists: pathExistsInternal(cwd, '.planning/STATE.md'),
-    roadmap_exists: pathExistsInternal(cwd, '.planning/ROADMAP.md'),
-    config_exists: pathExistsInternal(cwd, '.planning/config.json'),
-    // File paths
-    state_path: '.planning/STATE.md',
-    roadmap_path: '.planning/ROADMAP.md',
-    config_path: '.planning/config.json',
-  };
-
-  output(result, raw);
-}
-
-// init plan-phase: DELETED — v1 command removed in Phase 10
+const { loadConfig, resolveModelInternal, pathExistsInternal, generateSlugInternal, getMilestoneInfo, toPosixPath, findCapabilityInternal, findFeatureInternal, output, error } = require('./core.cjs');
 
 function cmdInitResume(cwd, raw) {
   const config = loadConfig(cwd);
@@ -318,104 +243,6 @@ function cmdInitFramingDiscovery(cwd, lens, capability, raw) {
 
     // File paths
     state_path: '.planning/STATE.md',
-  };
-
-  output(result, raw);
-}
-
-function cmdInitProgress(cwd, raw) {
-  const config = loadConfig(cwd);
-  const milestone = getMilestoneInfo(cwd);
-
-  // Analyze phases
-  const phasesDir = path.join(cwd, '.planning', 'phases');
-  const phases = [];
-  let currentPhase = null;
-  let nextPhase = null;
-
-  try {
-    const entries = fs.readdirSync(phasesDir, { withFileTypes: true });
-    const dirs = entries.filter(e => e.isDirectory()).map(e => e.name).sort();
-
-    for (const dir of dirs) {
-      const match = dir.match(/^(\d+(?:\.\d+)*)-?(.*)/);
-      const phaseNumber = match ? match[1] : dir;
-      const phaseName = match && match[2] ? match[2] : null;
-
-      const phasePath = path.join(phasesDir, dir);
-      const phaseFiles = fs.readdirSync(phasePath);
-
-      const plans = phaseFiles.filter(f => f.endsWith('-PLAN.md') || f === 'PLAN.md');
-      const summaries = phaseFiles.filter(f => f.endsWith('-SUMMARY.md') || f === 'SUMMARY.md');
-      const hasResearch = phaseFiles.some(f => f.endsWith('-RESEARCH.md') || f === 'RESEARCH.md');
-
-      const status = summaries.length >= plans.length && plans.length > 0 ? 'complete' :
-                     plans.length > 0 ? 'in_progress' :
-                     hasResearch ? 'researched' : 'pending';
-
-      const phaseInfo = {
-        number: phaseNumber,
-        name: phaseName,
-        directory: '.planning/phases/' + dir,
-        status,
-        plan_count: plans.length,
-        summary_count: summaries.length,
-        has_research: hasResearch,
-      };
-
-      phases.push(phaseInfo);
-
-      // Find current (first incomplete with plans) and next (first pending)
-      if (!currentPhase && (status === 'in_progress' || status === 'researched')) {
-        currentPhase = phaseInfo;
-      }
-      if (!nextPhase && status === 'pending') {
-        nextPhase = phaseInfo;
-      }
-    }
-  } catch {}
-
-  // Check for paused work
-  let pausedAt = null;
-  try {
-    const state = fs.readFileSync(path.join(cwd, '.planning', 'STATE.md'), 'utf-8');
-    const pauseMatch = state.match(/\*\*Paused At:\*\*\s*(.+)/);
-    if (pauseMatch) pausedAt = pauseMatch[1].trim();
-  } catch {}
-
-  const result = {
-    // Models
-    executor_model: resolveModelInternal(cwd, 'gsd-executor'),
-    planner_model: resolveModelInternal(cwd, 'gsd-planner'),
-
-    // Config
-    commit_docs: config.commit_docs,
-
-    // Milestone
-    milestone_version: milestone.version,
-    milestone_name: milestone.name,
-
-    // Phase overview
-    phases,
-    phase_count: phases.length,
-    completed_count: phases.filter(p => p.status === 'complete').length,
-    in_progress_count: phases.filter(p => p.status === 'in_progress').length,
-
-    // Current state
-    current_phase: currentPhase,
-    next_phase: nextPhase,
-    paused_at: pausedAt,
-    has_work_in_progress: !!currentPhase,
-
-    // File existence
-    project_exists: pathExistsInternal(cwd, '.planning/PROJECT.md'),
-    roadmap_exists: pathExistsInternal(cwd, '.planning/ROADMAP.md'),
-    state_exists: pathExistsInternal(cwd, '.planning/STATE.md'),
-    // File paths
-    state_path: '.planning/STATE.md',
-    roadmap_path: '.planning/ROADMAP.md',
-    project_path: '.planning/PROJECT.md',
-    config_path: '.planning/config.json',
   };
 
   output(result, raw);
@@ -876,14 +703,11 @@ function cmdInitFeatureProgress(cwd, raw) {
 }
 
 module.exports = {
-  cmdInitExecutePhase,
   cmdInitResume,
-  cmdInitProgress,
   cmdInitProject,
   cmdInitFramingDiscovery,
   cmdInitDiscussCapability,
   cmdInitDiscussFeature,
-  // v2 capability/feature init functions
   cmdInitPlanFeature,
   cmdInitExecuteFeature,
   cmdInitFeatureOp,

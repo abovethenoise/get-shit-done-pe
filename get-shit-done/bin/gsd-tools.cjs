@@ -14,23 +14,17 @@
  *   state update <field> <value>       Update a STATE.md field
  *   state get [section]                Get STATE.md content or section
  *   state patch --field val ...        Batch update STATE.md fields
- *   find-phase <phase>                 Find phase directory by number
  *   commit <message> [--files f1 f2]   Commit planning docs
  *   summary-extract <path> [--fields]  Extract structured data from SUMMARY.md
  *   state-snapshot                     Structured parse of STATE.md
- *   phase-plan-index <phase>           Index plans with waves and status
- *
- * Phase Operations:
- *   phase complete <phase>             Mark phase done, update state + roadmap
  *
  * Roadmap Operations:
  *   roadmap get-phase <phase>          Extract phase section from ROADMAP.md
  *   roadmap analyze                    Full roadmap parse with disk status
- *   roadmap update-plan-progress <N>   Update progress table row from disk (PLAN vs SUMMARY counts)
+ *   roadmap update-plan-progress <N>   Update progress table row from disk
  *
  * Requirements Operations:
- *   requirements mark-complete <ids>   Mark requirement IDs as complete in REQUIREMENTS.md
- *                                      Accepts: REQ-01,REQ-02 or REQ-01 REQ-02 or [REQ-01, REQ-02]
+ *   requirements mark-complete <ids>   Mark requirement IDs as complete
  *
  * Progress:
  *   progress [json|table|bar]          Render progress in various formats
@@ -42,53 +36,48 @@
  *   verify artifacts <plan-file>       Check must_haves.artifacts
  *   verify key-links <plan-file>       Check must_haves.key_links
  *
- * Template Fill:
- *   template fill summary --phase N    Create pre-filled SUMMARY.md
- *     [--plan M] [--name "..."]
- *     [--fields '{json}']
- *   template fill plan --phase N       Create pre-filled PLAN.md
- *     [--plan M] [--type execute]
- *     [--wave N] [--fields '{json}']
- *   template fill verification         Create pre-filled VERIFICATION.md
- *     --phase N [--fields '{json}']
+ * Template:
+ *   template fill <type> [--fields]    Fill a template with variables
  *
  * State Progression:
  *   state advance-plan                 Increment plan counter
  *   state record-metric --phase N      Record execution metrics
- *     --plan M --duration Xmin
- *     [--tasks N] [--files N]
  *   state update-progress              Recalculate progress bar
  *   state add-decision --summary "..."  Add decision to STATE.md
- *     [--phase N] [--rationale "..."]
- *     [--summary-file path] [--rationale-file path]
  *   state add-blocker --text "..."     Add blocker
- *     [--text-file path]
  *   state record-session               Update session continuity
- *     --stopped-at "..."
- *     [--resume-file path]
  *
  * Config:
  *   config-get <key>                   Get config value
  *   config-set <key> <value>           Set config value
  *
  * Compound Commands (workflow-specific initialization):
- *   init execute-phase <phase>         All context for execute-phase workflow
  *   init resume                        All context for resume-work workflow
- *   init progress                      All context for progress workflow
- *   init project                       All context for init-project workflow (auto-detect mode)
+ *   init project                       All context for init-project workflow
  *   init discuss-capability             All context for discuss-capability workflow
  *   init discuss-feature                All context for discuss-feature workflow
  *   init framing-discovery <lens> [cap] All context for framing-discovery workflow
+ *   init plan-feature <cap> <feat>     All context for plan workflow
+ *   init execute-feature <cap> <feat>  All context for execute workflow
+ *   init feature-op <cap> <feat> [op]  All context for feature operations
+ *   init feature-progress              All context for progress workflow
  *
  * Slug Resolution:
- *   slug-resolve <input> [--type cap|feat|auto]  3-tier slug resolution (exact->fuzzy->fall-through)
+ *   slug-resolve <input> [--type cap|feat|auto]  3-tier slug resolution
+ *
+ * Capability/Feature CRUD:
+ *   capability-create <slug>           Create capability directory
+ *   capability-list                    List all capabilities
+ *   capability-status <slug>           Get capability status
+ *   feature-create <cap> <slug>        Create feature directory
+ *   feature-list <cap>                 List features for capability
+ *   feature-status <cap> <feat>        Get feature status
  */
 
 const fs = require('fs');
 const path = require('path');
 const { error } = require('./lib/core.cjs');
 const state = require('./lib/state.cjs');
-const phase = require('./lib/phase.cjs');
 const roadmap = require('./lib/roadmap.cjs');
 const verify = require('./lib/verify.cjs');
 const config = require('./lib/config.cjs');
@@ -131,7 +120,7 @@ async function main() {
   const command = args[0];
 
   if (!command) {
-    error('Usage: gsd-tools <command> [args] [--raw] [--cwd <path>]\nCommands: state, find-phase, commit, verify, frontmatter, template, config-get, config-set, init, plan-validate, progress, roadmap, requirements, phases, phase, summary-extract, state-snapshot, phase-plan-index');
+    error('Usage: gsd-tools <command> [args] [--raw] [--cwd <path>]\nCommands: state, commit, verify, frontmatter, template, config-get, config-set, init, plan-validate, progress, roadmap, requirements, summary-extract, state-snapshot, slug-resolve, capability-create, capability-list, capability-status, feature-create, feature-list, feature-status');
   }
 
   switch (command) {
@@ -203,11 +192,6 @@ async function main() {
       break;
     }
 
-    case 'find-phase': {
-      phase.cmdFindPhase(cwd, args[1], raw);
-      break;
-    }
-
     case 'commit': {
       const amend = args.includes('--amend');
       const message = args[1];
@@ -276,23 +260,6 @@ async function main() {
       break;
     }
 
-    case 'phases': {
-      const subcommand = args[1];
-      if (subcommand === 'list') {
-        const typeIndex = args.indexOf('--type');
-        const phaseIndex = args.indexOf('--phase');
-        const options = {
-          type: typeIndex !== -1 ? args[typeIndex + 1] : null,
-          phase: phaseIndex !== -1 ? args[phaseIndex + 1] : null,
-          includeArchived: args.includes('--include-archived'),
-        };
-        phase.cmdPhasesList(cwd, options, raw);
-      } else {
-        error('Unknown phases subcommand. Available: list');
-      }
-      break;
-    }
-
     case 'roadmap': {
       const subcommand = args[1];
       if (subcommand === 'get-phase') {
@@ -317,16 +284,6 @@ async function main() {
       break;
     }
 
-    case 'phase': {
-      const subcommand = args[1];
-      if (subcommand === 'complete') {
-        phase.cmdPhaseComplete(cwd, args[2], raw);
-      } else {
-        error('Unknown phase subcommand. Available: complete');
-      }
-      break;
-    }
-
     case 'progress': {
       const subcommand = args[1] || 'json';
       commands.cmdProgressRender(cwd, subcommand, raw);
@@ -336,17 +293,11 @@ async function main() {
     case 'init': {
       const workflow = args[1];
       switch (workflow) {
-        case 'execute-phase':
-          init.cmdInitExecutePhase(cwd, args[2], raw);
-          break;
         case 'resume':
           init.cmdInitResume(cwd, raw);
           break;
         case 'phase-op':
           error('init phase-op has been removed. Use v2 framing commands instead.');
-          break;
-        case 'progress':
-          init.cmdInitProgress(cwd, raw);
           break;
         case 'review-phase':
           error('init review-phase has been removed. Use v2 framing commands instead.');
@@ -380,13 +331,8 @@ async function main() {
           init.cmdInitFeatureProgress(cwd, raw);
           break;
         default:
-          error(`Unknown init workflow: ${workflow}\nAvailable: execute-phase, resume, phase-op, progress, project, framing-discovery, discuss-capability, discuss-feature, plan-feature, execute-feature, feature-op, feature-progress`);
+          error(`Unknown init workflow: ${workflow}\nAvailable: resume, project, framing-discovery, discuss-capability, discuss-feature, plan-feature, execute-feature, feature-op, feature-progress`);
       }
-      break;
-    }
-
-    case 'phase-plan-index': {
-      phase.cmdPhasePlanIndex(cwd, args[1], raw);
       break;
     }
 

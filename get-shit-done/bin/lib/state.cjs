@@ -35,8 +35,6 @@ function cmdStateLoad(cwd, raw) {
       `model_profile=${c.model_profile}`,
       `commit_docs=${c.commit_docs}`,
       `branching_strategy=${c.branching_strategy}`,
-      `phase_branch_template=${c.phase_branch_template}`,
-      `milestone_branch_template=${c.milestone_branch_template}`,
       `parallelization=${c.parallelization}`,
       `research=${c.research}`,
       `plan_checker=${c.plan_checker}`,

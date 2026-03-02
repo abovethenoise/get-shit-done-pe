@@ -72,8 +72,6 @@ function loadConfig(cwd) {
     commit_docs: true,
     search_gitignored: false,
     branching_strategy: 'none',
-    phase_branch_template: 'gsd/phase-{phase}-{slug}',
-    milestone_branch_template: 'gsd/{milestone}-{slug}',
     research: true,
     plan_checker: true,
     verifier: true,
@@ -106,8 +104,6 @@ function loadConfig(cwd) {
       commit_docs: get('commit_docs', { section: 'planning', field: 'commit_docs' }) ?? defaults.commit_docs,
       search_gitignored: get('search_gitignored', { section: 'planning', field: 'search_gitignored' }) ?? defaults.search_gitignored,
       branching_strategy: get('branching_strategy', { section: 'git', field: 'branching_strategy' }) ?? defaults.branching_strategy,
-      phase_branch_template: get('phase_branch_template', { section: 'git', field: 'phase_branch_template' }) ?? defaults.phase_branch_template,
-      milestone_branch_template: get('milestone_branch_template', { section: 'git', field: 'milestone_branch_template' }) ?? defaults.milestone_branch_template,
       research: get('research', { section: 'workflow', field: 'research' }) ?? defaults.research,
       plan_checker: get('plan_checker', { section: 'workflow', field: 'plan_check' }) ?? defaults.plan_checker,
       verifier: get('verifier', { section: 'workflow', field: 'verifier' }) ?? defaults.verifier,
@@ -279,41 +275,6 @@ function findPhaseInternal(cwd, phase) {
   } catch {}
 
   return null;
-}
-
-function getArchivedPhaseDirs(cwd) {
-  const milestonesDir = path.join(cwd, '.planning', 'milestones');
-  const results = [];
-
-  if (!fs.existsSync(milestonesDir)) return results;
-
-  try {
-    const milestoneEntries = fs.readdirSync(milestonesDir, { withFileTypes: true });
-    // Find v*-phases directories, sort newest first
-    const phaseDirs = milestoneEntries
-      .filter(e => e.isDirectory() && /^v[\d.]+-phases$/.test(e.name))
-      .map(e => e.name)
-      .sort()
-      .reverse();
-
-    for (const archiveName of phaseDirs) {
-      const version = archiveName.match(/^(v[\d.]+)-phases$/)[1];
-      const archivePath = path.join(milestonesDir, archiveName);
-      const entries = fs.readdirSync(archivePath, { withFileTypes: true });
-      const dirs = entries.filter(e => e.isDirectory()).map(e => e.name).sort((a, b) => comparePhaseNum(a, b));
-
-      for (const dir of dirs) {
-        results.push({
-          name: dir,
-          milestone: version,
-          basePath: path.join('.planning', 'milestones', archiveName),
-          fullPath: path.join(archivePath, dir),
-        });
-      }
-    }
-  } catch {}
-
-  return results;
 }
 
 // ─── Roadmap & model utilities ────────────────────────────────────────────────
@@ -616,7 +577,6 @@ module.exports = {
   comparePhaseNum,
   searchPhaseInDir,
   findPhaseInternal,
-  getArchivedPhaseDirs,
   getRoadmapPhaseInternal,
   resolveModelInternal,
   resolveModelFromRole,
