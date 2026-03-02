@@ -19,8 +19,9 @@ Run architect-mode discovery for a new capability or feature. Defines the proble
 **Flow:** Fuzzy resolve capability -> lens-specific discovery Q&A -> MVU tracking (problem + who + done criteria + constraints) -> Discovery Brief
 
 **MVU (Minimum Viable Understanding):**
-- The problem stated in one sentence with audience identified
+- The problem or goal stated in one sentence with audience identified
 - Who experiences this problem (specific, not "users")
+- A list of scenarios or examples that illustrate the problem or goal
 - At least one observable, testable done criterion
 - Non-negotiable constraints identified (or explicitly unconstrained)
 </objective>

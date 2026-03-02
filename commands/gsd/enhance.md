@@ -16,10 +16,10 @@ Run editor-mode discovery for enhancing an existing capability or feature. Under
 
 **Thinking mode:** Outward -- from current state to extended state. Pragmatic, surgical. Find the seam, extend through it.
 
-**Flow:** Fuzzy resolve capability -> lens-specific discovery Q&A -> MVU tracking (current behavior + desired behavior + delta) -> Discovery Brief
+**Flow:** Fuzzy resolve capability -> lens-specific discovery Q&A -> MVU tracking (observed behavior + desired behavior + delta) -> Discovery Brief
 
 **MVU (Minimum Viable Understanding):**
-- Current behavior concretely described (not aspirational)
+- Observed behavior concretely described (not aspirational)
 - Desired behavior clearly distinguishable from current
 - The specific delta identified with the seam where modification occurs
 </objective>
