@@ -100,6 +100,16 @@ None - no external service configuration required.
 - Escalation protocol provides safety net at every stage boundary
 - 06-04 (project initialization) and 06-05 (discussion commands) can reference the pipeline
 
+## Self-Check: PASSED
+
+- FOUND: get-shit-done/workflows/framing-pipeline.md
+- FOUND: get-shit-done/references/escalation-protocol.md
+- FOUND: get-shit-done/workflows/framing-discovery.md (modified)
+- FOUND: .planning/phases/06-workflows-and-commands/06-03-SUMMARY.md
+- FOUND: commit 38fb7a4 (Task 1)
+- FOUND: commit 117a29f (Task 2)
+- FOUND: commit 525b789 (metadata)
+
 ---
 *Phase: 06-workflows-and-commands*
 *Completed: 2026-02-28*
