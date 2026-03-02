@@ -85,8 +85,8 @@ Requirements for Install-Ready Launch milestone. Each maps to roadmap phases.
 ### Install & Deploy
 
 - [ ] **INST-01**: All v2 commands, workflows, agents, templates, references deploy via `npm install -g`
-- [ ] **INST-02**: Source files use `{GSD_ROOT}` path references — install.js resolves at install time (no hardcoded absolute paths)
-- [ ] **INST-03**: All v2 files follow `gsd-*` prefix convention (commands: `gsd-*.md`, agents: `gsd-*.md`, hooks: `gsd-*.js`)
+- [x] **INST-02**: Source files use `{GSD_ROOT}` path references — install.js resolves at install time (no hardcoded absolute paths)
+- [x] **INST-03**: All v2 files follow `gsd-*` prefix convention (commands: `gsd-*.md`, agents: `gsd-*.md`, hooks: `gsd-*.js`)
 - [ ] **INST-04**: v2 files placed in correct install.js directories: `commands/gsd/`, `agents/`, `get-shit-done/` (workflows/references/templates)
 - [ ] **INST-05**: `install.js` stripped to Claude Code only (remove Codex/Gemini/OpenCode adapters and runtime conversions)
 - [ ] **INST-06**: `install.js`: remove patch backup system (`gsd-local-patches/`), manifest (`gsd-file-manifest.json`), changelog/version metadata
@@ -229,8 +229,8 @@ Deferred to post-v2.0. Tracked but not in current roadmap.
 | INTG-03 | Phase 10 | Complete |
 | CMD-03 | Phase 11 | Complete |
 | INST-01 | Phase 14 | Pending |
-| INST-02 | Phase 14 | Pending |
-| INST-03 | Phase 14 | Pending |
+| INST-02 | Phase 14 | Complete |
+| INST-03 | Phase 14 | Complete |
 | INST-04 | Phase 14 | Pending |
 | INST-05 | Phase 14 | Pending |
 | INST-06 | Phase 14 | Pending |

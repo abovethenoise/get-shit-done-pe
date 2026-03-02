@@ -2,8 +2,8 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: milestone
-status: phase-13-complete
-last_updated: "2026-03-02T16:35:00Z"
+status: phase-14-in-progress
+last_updated: "2026-03-02T20:55:00Z"
 progress:
   total_phases: 14
   completed_phases: 13
@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-28)
 
 **Core value:** Every piece of executed work traces back to a specific requirement, and every requirement is verified against the actual code.
-**Current focus:** Phase 13 -- Multi-Scenario E2E Testing & Cleanup (milestone v2.0)
+**Current focus:** Phase 14 -- Install & Validate (milestone v2.0)
 
 ## Current Position
 
-Phase: 13 of 14 (Multi-Scenario E2E Testing & Cleanup)
-Plan: 6 of 6
-Status: Phase 13 complete
-Last activity: 2026-03-02 -- Plan 13-06 complete. Install-sync retest: 22 of 24 findings reclassified as false positives (testing used stale install, not repo). Final: 2 fixed inline, 22 false positives, 1 ignored, 1 noted. 0 real deferred issues.
+Phase: 14 of 14 (Install & Validate)
+Plan: 1 of 3
+Status: Plan 14-01 complete
+Last activity: 2026-03-02 -- Plan 14-01 complete. Replaced 70 ~/.claude/ paths with {GSD_ROOT}/ tokens across 26 deployable source files. All agent files verified gsd-* prefix.
 
-Progress: [=================---] 85% (13/14 phases complete)
+Progress: [==================--] 90% (13/14 phases, 1/3 plans in phase 14)
 
 ## Performance Metrics
 
@@ -77,6 +77,7 @@ Progress: [=================---] 85% (13/14 phases complete)
 | Phase 13 P04 | 4min | 2 tasks | 4 files |
 | Phase 13 P05 | 4min | 2 tasks | 5 files |
 | Phase 13 P06 | 7min | 2 tasks | 3 files |
+| Phase 14 P01 | 3min | 2 tasks | 26 files |
 
 ## Accumulated Context
 
@@ -150,6 +151,7 @@ Recent decisions affecting current work:
 - [13-retest]: 22 of 24 findings reclassified as install-sync false positives -- testing used stale ~/.claude/ install instead of repo source tree
 - [13-retest]: All v2 CRUD routes, workflow files, focus system, and v2 wiring confirmed working in repo
 - [13-retest]: 0 real deferred issues remain from Phase 13
+- [14-01]: Only replaced ~/.claude/ paths (not $HOME/.claude/) -- $HOME patterns are shell variable expansions, handled separately in Plan 02
 
 ### Blockers/Concerns
 
@@ -158,6 +160,6 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Final v1 remnant sweep -- 4-agent parallel scan found and fixed 18 items (dead code, stale refs, template text). 297 tests pass, 0 fail. Zero legacy patterns in deployed code.
-Resume: Phase 14
-Next action: Begin Phase 14 planning (install packaging) -- codebase is fully v2-clean
+Stopped at: Completed 14-01-PLAN.md
+Resume: Phase 14, Plan 02
+Next action: Execute Plan 14-02 (install.js token regex update)
