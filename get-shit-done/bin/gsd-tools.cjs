@@ -296,15 +296,6 @@ async function main() {
         case 'resume':
           init.cmdInitResume(cwd, raw);
           break;
-        case 'phase-op':
-          error('init phase-op has been removed. Use v2 framing commands instead.');
-          break;
-        case 'review-phase':
-          error('init review-phase has been removed. Use v2 framing commands instead.');
-          break;
-        case 'doc-phase':
-          error('init doc-phase has been removed. Use v2 framing commands instead.');
-          break;
         case 'project':
           init.cmdInitProject(cwd, raw);
           break;
