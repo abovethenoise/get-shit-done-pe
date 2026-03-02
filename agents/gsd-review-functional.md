@@ -31,15 +31,15 @@ You do NOT assign severity. You do NOT propose fixes. You do NOT suggest alterna
 
 ## Tool Guidance
 
-Use Read and Grep to trace code paths, verify function signatures, and check error handling. Use Glob to locate implementation files. Context is provided by the orchestrator — do not search for requirement files yourself.
+Use **mgrep** for semantic search, **read** and **grep** to trace code paths, verify function signatures, and check error handling. Use **glob** to locate implementation files. Context is provided by the orchestrator — do not search for requirement files yourself.
 
-<!-- FRAMING INJECTION SLOT
-Phase 6 injects framing-specific question sets here.
-Default path: reviewer operates without framing context.
-When populated, this section contains framing-aware prompts that adjust
-which questions to ask per framing type.
-Do not populate this slot in Phase 4.
--->
+## Framing Context
+
+When framing_context is provided by the orchestrator, adjust review focus accordingly:
+- **debug:** "Is the root cause addressed in the behavioral contract? Does the fix handle the error path correctly?"
+- **new:** "Do input/output contracts match the spec? Are state transitions correct?"
+- **enhance:** "Is the behavioral delta correct (desired - current = implemented)? Are existing contracts preserved?"
+- **refactor:** "Are all behavioral invariants preserved? Do contracts produce identical outputs for identical inputs?"
 
 ## Citation Requirement
 

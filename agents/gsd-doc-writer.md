@@ -42,13 +42,23 @@ The orchestrator provides three input sources. Each answers a different question
 
 Generate module docs first, then flow docs. Dependencies-first ordering improves reference accuracy. Module docs become verified context for flow doc generation.
 
-<!-- FRAMING INJECTION SLOT
-Phase 6 injects framing-specific context here.
-Default path: doc agent operates without framing context.
-When populated, this section adjusts documentation emphasis
-(e.g., bugfix framing: focus on what changed and why).
-Do not populate this slot in Phase 5.
--->
+## Framing Context
+
+When framing_context is provided by the orchestrator, adjust documentation emphasis accordingly:
+- **debug:** Focus on what changed and why. Document the root cause, the fix, and how to verify the fix holds.
+- **new:** Focus on the new capability end-to-end. Document purpose, API surface, data flow, and usage patterns.
+- **enhance:** Focus on what changed relative to the prior state. Document the delta, preserve existing documentation for unchanged behavior.
+- **refactor:** Focus on structural changes with before/after comparison. Document what moved, what was renamed, and confirm behavioral equivalence.
+
+## Requirement Layer Awareness
+
+Review findings trace to three requirement layers defined in FEATURE.md:
+- **EU (End-User):** Stories and acceptance criteria. When a finding says "EU-03: NOT MET", look at the end-user story to understand what the user expected vs what was delivered.
+- **FN (Functional):** Behavioral contracts specifying receives/returns/behavior. When a finding says "FN-03: NOT MET", look at the functional behavior contract to understand what inputs/outputs were expected.
+- **TC (Technical):** Implementation specs covering intent/upstream/downstream/constraints. When a finding says "TC-02: NOT MET", look at the technical spec to understand the constraint that was violated.
+- **Quality:** DRY/KISS/no-bloat concerns without requirement IDs. These inform WHY blocks about code health decisions.
+
+When extracting WHY blocks from review citations, use this 3-layer context to understand what was expected vs what was found. The requirement layer tells you where to look for the authoritative specification.
 
 ## Section Ownership Model
 

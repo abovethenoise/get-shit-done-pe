@@ -1,5 +1,5 @@
 <purpose>
-Orchestrate the full documentation pipeline for a feature or capability: initialize context, locate artifacts, spawn a single doc-writer agent, verify output files exist, present generated docs to user one-at-a-time via Q&A review, commit on approval.
+Orchestrate the full documentation pipeline for a feature: initialize context, locate artifacts, spawn a single doc-writer agent, verify output files exist, present generated docs to user one-at-a-time via Q&A review, commit on approval. Auto-chains from review when review is clean.
 </purpose>
 
 <required_reading>
@@ -8,22 +8,34 @@ Read all files referenced by the invoking prompt's execution_context before star
 @~/.claude/get-shit-done/references/ui-brand.md
 </required_reading>
 
+<inputs>
+The invoking workflow passes these as context:
+- `CAPABILITY_SLUG`: The capability containing this feature
+- `FEATURE_SLUG`: The feature being documented
+- `LENS`: Primary lens identifier (debug | new | enhance | refactor)
+</inputs>
+
 <process>
 
 ## 1. Initialize
 
 ```bash
-INIT=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" init doc-phase "${PHASE}" --raw)
+INIT=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" init feature-op "$CAPABILITY_SLUG" "$FEATURE_SLUG" doc --raw)
 ```
 
-Parse JSON for: `doc_agent_model`, `doc_agent_path`, `phase_dir`, `phase_number`, `phase_name`, `summary_files`, `documentation_dir`, `gate_docs_exist`, `feature_paths`, `capability_paths`, `commit_docs`, `state_path`, `roadmap_path`.
+Parse JSON for: `commit_docs`, `capability_slug`, `capability_dir`, `feature_found`, `feature_slug`, `feature_dir`, `has_research`, `has_context`, `has_plans`, `state_path`, `roadmap_path`.
 
-**If `phase_found` is false:** Error -- phase not found.
+**If `feature_found` is false:** Error -- feature not found.
+
+Derive doc-specific context:
+- `doc_agent_path`: agents/gsd-doc-writer.md
+- `documentation_dir`: .documentation
 
 Create documentation output directory if it does not exist:
 ```bash
 mkdir -p "${DOCUMENTATION_DIR}/modules"
 mkdir -p "${DOCUMENTATION_DIR}/flows"
+mkdir -p "${DOCUMENTATION_DIR}/capabilities"
 ```
 
 ## 2. Context Assembly
@@ -37,10 +49,13 @@ Read and include:
 - `.planning/ROADMAP.md`
 
 **Layer 2: Capability Context**
-If `capability_paths` is non-empty, read each.
+Read `${capability_dir}/CAPABILITY.md` if it exists.
 
 **Layer 3: Feature Context**
-If `feature_paths` is non-empty, read each. Also include `.planning/REQUIREMENTS.md`.
+Read `${feature_dir}/FEATURE.md`. This contains 3-layer requirements (EU/FN/TC) -- the primary source for understanding what was supposed to be built.
+
+**Layer 4: Framing Context**
+If `LENS` is provided, include lens-specific documentation focus guidance.
 
 Assemble payload:
 
@@ -50,23 +65,37 @@ Assemble payload:
 </core_context>
 
 <capability_context>
-{contents of CAPABILITY.md files -- omit block if not applicable}
+{contents of CAPABILITY.md -- omit block if not applicable}
 </capability_context>
 
 <feature_context>
-{contents of FEATURE.md files + requirements -- omit block if not applicable}
+{contents of FEATURE.md with EU/FN/TC requirements}
 </feature_context>
+
+<framing_context>
+Lens: {LENS}
+Documentation focus:
+- debug: Document the fix and root cause analysis
+- new: Document the new capability end-to-end
+- enhance: Document what changed and why, preserving existing docs
+- refactor: Document structural changes with before/after comparison
+</framing_context>
 ```
 
-## 3. Locate Phase Artifacts
+## 3. Locate Feature Artifacts
 
-Identify what was built in this phase. Read SUMMARY.md files from the phase directory to understand what files were created/modified:
+Identify what was built for this feature. Read SUMMARY.md files from the feature directory to understand what files were created/modified:
 
 ```bash
-ls "${PHASE_DIR}"/*-SUMMARY.md 2>/dev/null
+ls "${FEATURE_DIR}"/*-SUMMARY.md 2>/dev/null
 ```
 
 Build a list of key files from all summaries -- these are the files the doc agent will read and document.
+
+Also read review synthesis if available:
+```bash
+test -f "${FEATURE_DIR}/review/synthesis.md" && echo "Review synthesis available"
+```
 
 Supplement with git diff if available:
 ```bash
@@ -80,7 +109,7 @@ Merge and deduplicate the file list.
 Display banner:
 ```
 -------------------------------------------------------
- GSD > DOCUMENTING PHASE {X}
+ GSD > DOCUMENTING FEATURE: {capability_slug}/{feature_slug}
 -------------------------------------------------------
 
 * Spawning doc-writer agent...
@@ -92,17 +121,17 @@ Construct the doc agent prompt:
 First, read {doc_agent_path} for your role and goal.
 
 <subject>
-Document Phase {phase_number}: {phase_name}
+Document Feature: {capability_slug}/{feature_slug}
 </subject>
 
 {context_payload}
 
 <task_context>
-Phase artifacts to document (key files from summaries):
-{list of key files created/modified in this phase}
+Feature artifacts to document (key files from summaries):
+{list of key files created/modified for this feature}
 
 Review artifacts (if available):
-{phase_dir}/review/synthesis.md
+{feature_dir}/review/synthesis.md
 
 Gate docs:
 - Constraints: .documentation/gate/constraints.md (exists: {gate_docs_exist.constraints})
@@ -111,11 +140,20 @@ Gate docs:
 
 Documentation directory: {documentation_dir}
 
-Write module docs to: {documentation_dir}/modules/
-Write flow docs to: {documentation_dir}/flows/
-Write doc report to: {phase_dir}/doc-report.md
+Section ownership model:
+- [derived] sections: auto-regenerated from code inspection every doc pass
+- [authored] sections: written with human judgment, preserved on subsequent passes
 
 Processing order: modules first, then flows (dependencies-first).
+
+Write module docs to: {documentation_dir}/modules/{capability_slug}-{feature_slug}.md
+Write flow docs to: {documentation_dir}/flows/{capability_slug}-{feature_slug}.md
+Write doc report to: {feature_dir}/doc-report.md
+
+3-pass self-validation required:
+- Pass 1 (Structural compliance): Verify all required heading templates exist per schema
+- Pass 2 (Referential integrity): Every code reference points to a file that exists
+- Pass 3 (Gate consistency): Doc content consistent with FEATURE.md requirements and review synthesis
 </task_context>
 ```
 
@@ -125,8 +163,7 @@ Spawn the doc agent:
 Task(
   prompt=doc_agent_prompt,
   subagent_type="general-purpose",
-  model="{doc_agent_model}",
-  description="Document Phase {phase_number}"
+  description="Document Feature: {capability_slug}/{feature_slug}"
 )
 ```
 
@@ -138,13 +175,13 @@ Check that the doc agent produced output files:
 
 ```bash
 # Check for doc report
-test -f "${PHASE_DIR}/doc-report.md" && test -s "${PHASE_DIR}/doc-report.md"
+test -f "${FEATURE_DIR}/doc-report.md" && test -s "${FEATURE_DIR}/doc-report.md"
 
 # List generated module docs
 ls "${DOCUMENTATION_DIR}/modules/"*.md 2>/dev/null
 
 # List generated flow docs
-find "${DOCUMENTATION_DIR}/flows/" -name "*.md" 2>/dev/null
+ls "${DOCUMENTATION_DIR}/flows/"*.md 2>/dev/null
 ```
 
 Build a manifest of generated doc files:
@@ -227,7 +264,11 @@ Review them manually for accuracy:
 
 This is informational only -- no action required from the user during this step.
 
-## 9. Commit Approved Docs
+## 9. Update FEATURE.md Trace Table
+
+After doc completion, update the FEATURE.md Trace Table to mark the "Docs" column as complete for all requirements that have been documented.
+
+## 10. Commit Approved Docs
 
 **Skip if:** No approved docs.
 
@@ -235,23 +276,33 @@ Stage and commit approved documentation files:
 
 ```bash
 git add {each approved doc file}
-git add "${PHASE_DIR}/doc-report.md"
-git commit -m "docs(${PHASE}): add generated documentation for phase ${PHASE_NUMBER}
+git add "${FEATURE_DIR}/doc-report.md"
+git commit -m "docs(${CAPABILITY_SLUG}/${FEATURE_SLUG}): add generated documentation
 
 - {count} module docs
 - {count} flow docs
 "
 ```
 
-## 10. Completion
+## 11. Output Path Targets
+
+The doc agent should update these paths as appropriate:
+- `.documentation/architecture.md`: update if architectural changes made
+- `.documentation/domain.md`: update if domain model changed
+- `.documentation/mapping.md`: update file-to-concept mappings
+- `.documentation/modules/{capability_slug}-{feature_slug}.md`: module-level docs
+- `.documentation/flows/{capability_slug}-{feature_slug}.md`: data flow docs
+- `.documentation/capabilities/{capability_slug}.md`: update capability-level overview if needed
+
+## 12. Completion
 
 Display:
 ```
 -------------------------------------------------------
- GSD > PHASE {X} DOCUMENTED
+ GSD > FEATURE DOCUMENTED: {capability_slug}/{feature_slug}
 -------------------------------------------------------
 
-Phase {X}: {name}
+Feature: {capability_slug}/{feature_slug}
 
 Docs generated: {total}
   Approved: {count}
@@ -263,7 +314,7 @@ Impact flags: {count} existing docs may need review
 Documentation artifacts:
   {documentation_dir}/modules/
   {documentation_dir}/flows/
-  {phase_dir}/doc-report.md
+  {feature_dir}/doc-report.md
 ```
 
 </process>
@@ -277,5 +328,8 @@ Documentation artifacts:
 - The doc agent writes files to disk. The workflow verifies file existence, then presents for Q&A.
 - Gate docs are read-only validation inputs for the agent -- the workflow never modifies them.
 - User approval is required before committing any generated documentation.
-- Model allocation: doc agent uses role_type executor (Sonnet via doc_agent_model from init).
+- Requirements sourced from FEATURE.md (3-layer EU/FN/TC), not a separate REQUIREMENTS.md.
+- Review->Doc auto-chain: if review passes cleanly, doc stage starts automatically.
+- FEATURE.md trace table updated after documentation completion.
+- Section ownership model: [derived] sections regenerated, [authored] sections preserved.
 </key_constraints>

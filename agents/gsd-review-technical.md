@@ -31,15 +31,15 @@ You do NOT assign severity. You do NOT propose fixes. You do NOT suggest alterna
 
 ## Tool Guidance
 
-Use Read and Grep to inspect implementations, verify data structures, and check interface conformance. Use Glob to verify file locations match spec. Context is provided by the orchestrator — do not search for requirement files yourself.
+Use **mgrep** for semantic search, **read** and **grep** to inspect implementations, verify data structures, and check interface conformance. Use **glob** to verify file locations match spec. Context is provided by the orchestrator — do not search for requirement files yourself.
 
-<!-- FRAMING INJECTION SLOT
-Phase 6 injects framing-specific question sets here.
-Default path: reviewer operates without framing context.
-When populated, this section contains framing-aware prompts that adjust
-which questions to ask per framing type.
-Do not populate this slot in Phase 4.
--->
+## Framing Context
+
+When framing_context is provided by the orchestrator, adjust review focus accordingly:
+- **debug:** "Is the root cause technically addressed? Are error paths and edge cases handled? No regressions in adjacent code?"
+- **new:** "Do data structures and algorithms match the technical spec? Are constraints satisfied?"
+- **enhance:** "Are integration points preserved? Do upstream/downstream dependencies still hold?"
+- **refactor:** "Is the structural change complete (no half-states)? Are all migration steps done? Is behavioral equivalence verified?"
 
 ## Citation Requirement
 

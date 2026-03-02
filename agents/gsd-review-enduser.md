@@ -31,15 +31,15 @@ You do NOT assign severity. You do NOT propose fixes. You do NOT suggest alterna
 
 ## Tool Guidance
 
-Use Read and Grep to inspect executed code at the file:line level. Use Glob to locate files referenced in requirements. Do not fetch external resources. Context is provided by the orchestrator — do not search for requirement files yourself.
+Use **mgrep** for semantic search, **read** and **grep** to inspect executed code at the file:line level. Use **glob** to locate files referenced in requirements. Do not fetch external resources. Context is provided by the orchestrator — do not search for requirement files yourself.
 
-<!-- FRAMING INJECTION SLOT
-Phase 6 injects framing-specific question sets here.
-Default path: reviewer operates without framing context.
-When populated, this section contains framing-aware prompts that adjust
-which questions to ask (e.g., debug: "is the bug fixed?" not "does the story pass?").
-Do not populate this slot in Phase 4.
--->
+## Framing Context
+
+When framing_context is provided by the orchestrator, adjust review focus accordingly:
+- **debug:** "Does the user see correct behavior now? Is the symptom gone from the user's perspective?"
+- **new:** "Does the story pass? Are all acceptance criteria met from the user's viewpoint?"
+- **enhance:** "Is the enhancement working as expected? Is the existing user experience preserved?"
+- **refactor:** "Is the user-facing behavior unchanged? Would the user notice any difference?"
 
 ## Citation Requirement
 
