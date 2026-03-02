@@ -204,7 +204,6 @@ function cleanupOrphanedFiles(configDir) {
     const fullPath = path.join(configDir, relPath);
     if (fs.existsSync(fullPath)) {
       fs.unlinkSync(fullPath);
-      console.log(`  ${green}✓${reset} Removed orphaned ${relPath}`);
     }
   }
 }
@@ -246,9 +245,7 @@ function cleanupOrphanedHooks(settings) {
     }
   }
 
-  if (cleanedHooks) {
-    console.log(`  ${green}✓${reset} Removed orphaned hook registrations`);
-  }
+  // Orphaned hooks cleaned silently
 
   // Fix #330: Update statusLine if it points to old GSD statusline.js path
   if (settings.statusLine && settings.statusLine.command &&
@@ -257,7 +254,7 @@ function cleanupOrphanedHooks(settings) {
       /hooks([\/\\])statusline\.js/,
       'hooks$1gsd-statusline.js'
     );
-    console.log(`  ${green}✓${reset} Updated statusline path (hooks/statusline.js → hooks/gsd-statusline.js)`);
+    // Statusline path updated silently
   }
 
   return settings;
@@ -452,6 +449,31 @@ function verifyInstalled(dirPath, description) {
 }
 
 /**
+ * Scan installed directories for unresolved {GSD_ROOT} tokens
+ * @param {string[]} dirs - Directories to scan
+ * @returns {string[]} Files containing unresolved tokens
+ */
+function validateNoUnresolvedTokens(dirs) {
+  const failures = [];
+  function scan(d) {
+    if (!fs.existsSync(d)) return;
+    for (const entry of fs.readdirSync(d, { withFileTypes: true })) {
+      const full = path.join(d, entry.name);
+      if (entry.isDirectory()) {
+        scan(full);
+      } else if (entry.name.endsWith('.md') || entry.name.endsWith('.js') || entry.name.endsWith('.json')) {
+        const content = fs.readFileSync(full, 'utf8');
+        if (content.includes('{GSD_ROOT}')) failures.push(full);
+      }
+    }
+  }
+  for (const dir of dirs) {
+    scan(dir);
+  }
+  return failures;
+}
+
+/**
  * Install to the specified directory for Claude Code
  * @param {boolean} isGlobal - Whether to install globally or locally
  */
@@ -486,9 +508,7 @@ function install(isGlobal) {
   const gsdSrc = path.join(src, 'commands', 'gsd');
   const gsdDest = path.join(commandsDir, 'gsd');
   copyWithPathReplacement(gsdSrc, gsdDest, pathPrefix);
-  if (verifyInstalled(gsdDest, 'commands/gsd')) {
-    console.log(`  ${green}✓${reset} Installed commands/gsd`);
-  } else {
+  if (!verifyInstalled(gsdDest, 'commands/gsd')) {
     failures.push('commands/gsd');
   }
 
@@ -496,9 +516,7 @@ function install(isGlobal) {
   const skillSrc = path.join(src, 'get-shit-done');
   const skillDest = path.join(targetDir, 'get-shit-done');
   copyWithPathReplacement(skillSrc, skillDest, pathPrefix);
-  if (verifyInstalled(skillDest, 'get-shit-done')) {
-    console.log(`  ${green}✓${reset} Installed get-shit-done`);
-  } else {
+  if (!verifyInstalled(skillDest, 'get-shit-done')) {
     failures.push('get-shit-done');
   }
 
@@ -529,9 +547,7 @@ function install(isGlobal) {
         fs.writeFileSync(path.join(agentsDest, entry.name), content);
       }
     }
-    if (verifyInstalled(agentsDest, 'agents')) {
-      console.log(`  ${green}✓${reset} Installed agents`);
-    } else {
+    if (!verifyInstalled(agentsDest, 'agents')) {
       failures.push('agents');
     }
   }
@@ -539,7 +555,6 @@ function install(isGlobal) {
   // Write package.json to force CommonJS mode for GSD scripts
   const pkgJsonDest = path.join(targetDir, 'package.json');
   fs.writeFileSync(pkgJsonDest, '{"type":"commonjs"}\n');
-  console.log(`  ${green}✓${reset} Wrote package.json (CommonJS mode)`);
 
   // Copy hooks
   const hooksSrc = path.join(src, 'hooks');
@@ -574,6 +589,21 @@ function install(isGlobal) {
 
   if (failures.length > 0) {
     console.error(`\n  ${yellow}Installation incomplete!${reset} Failed: ${failures.join(', ')}`);
+    process.exit(1);
+  }
+
+  // Validate no unresolved {GSD_ROOT} tokens in installed files
+  const tokenFailures = validateNoUnresolvedTokens([
+    path.join(targetDir, 'commands', 'gsd'),
+    path.join(targetDir, 'agents'),
+    path.join(targetDir, 'get-shit-done'),
+    path.join(targetDir, 'hooks'),
+  ]);
+  if (tokenFailures.length > 0) {
+    console.error(`\n  ${yellow}Installation failed!${reset} Unresolved {GSD_ROOT} tokens found in:`);
+    for (const f of tokenFailures) {
+      console.error(`    - ${f}`);
+    }
     process.exit(1);
   }
 
@@ -613,7 +643,7 @@ function install(isGlobal) {
         }
       ]
     });
-    console.log(`  ${green}✓${reset} Configured context window monitor hook`);
+    // Context monitor hook configured silently
   }
 
   return { settingsPath, settings, statuslineCommand };
@@ -628,7 +658,7 @@ function finishInstall(settingsPath, settings, statuslineCommand, shouldInstallS
       type: 'command',
       command: statuslineCommand
     };
-    console.log(`  ${green}✓${reset} Configured statusline`);
+    // Statusline configured silently
   }
 
   writeSettings(settingsPath, settings);
