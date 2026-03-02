@@ -443,6 +443,116 @@ function getMilestoneInfo(cwd) {
   }
 }
 
+// ─── Slug Resolution (3-tier: exact -> fuzzy -> fall-through) ────────────────
+
+function resolveSlugInternal(cwd, input, typeHint) {
+  if (!input || !input.trim()) {
+    return { resolved: false, tier: 0, type: null, capability_slug: null, feature_slug: null, full_path: null, candidates: [], reason: 'empty_input' };
+  }
+
+  const trimmed = input.trim().toLowerCase();
+
+  // ── Tier 1: Exact match ──
+  if (trimmed.includes('/')) {
+    // cap/feat format
+    const [capPart, featPart] = trimmed.split('/', 2);
+    if (typeHint !== 'capability') {
+      const featResult = findFeatureInternal(cwd, capPart, featPart);
+      if (featResult.found) {
+        return { resolved: true, tier: 1, type: 'feature', capability_slug: capPart, feature_slug: featResult.slug, full_path: capPart + '/' + featResult.slug, candidates: [], reason: 'exact' };
+      }
+    }
+    // Even with /, could be a capability slug that contains a hyphen misread; fall through to fuzzy
+  } else {
+    // Single slug — try capability first (unless type hint says feature)
+    if (typeHint !== 'feature') {
+      const capResult = findCapabilityInternal(cwd, trimmed);
+      if (capResult.found) {
+        return { resolved: true, tier: 1, type: 'capability', capability_slug: capResult.slug, feature_slug: null, full_path: capResult.slug, candidates: [], reason: 'exact' };
+      }
+    }
+    // Try as feature across all capabilities (if not capability-only)
+    if (typeHint !== 'capability') {
+      const allFeatures = listAllFeaturesInternal(cwd);
+      const exactFeat = allFeatures.find(f => f.feature_slug === trimmed);
+      if (exactFeat) {
+        return { resolved: true, tier: 1, type: 'feature', capability_slug: exactFeat.capability_slug, feature_slug: exactFeat.feature_slug, full_path: exactFeat.capability_slug + '/' + exactFeat.feature_slug, candidates: [], reason: 'exact' };
+      }
+    }
+  }
+
+  // ── Tier 2: Fuzzy (substring) match ──
+  const candidates = [];
+
+  if (typeHint !== 'feature') {
+    // Search capabilities
+    const capabilitiesDir = path.join(cwd, '.planning', 'capabilities');
+    try {
+      const capEntries = fs.readdirSync(capabilitiesDir, { withFileTypes: true })
+        .filter(e => e.isDirectory() && fs.existsSync(path.join(capabilitiesDir, e.name, 'CAPABILITY.md')))
+        .map(e => e.name);
+      for (const slug of capEntries) {
+        if (slug.includes(trimmed) || trimmed.includes(slug)) {
+          candidates.push({ type: 'capability', capability_slug: slug, feature_slug: null, full_path: slug });
+        }
+      }
+    } catch { /* no capabilities dir */ }
+  }
+
+  if (typeHint !== 'capability') {
+    // Search all features
+    const allFeatures = listAllFeaturesInternal(cwd);
+    for (const f of allFeatures) {
+      const fullPath = f.capability_slug + '/' + f.feature_slug;
+      if (f.feature_slug.includes(trimmed) || trimmed.includes(f.feature_slug) || fullPath.includes(trimmed)) {
+        // Avoid duplicates if already found as capability
+        if (!candidates.some(c => c.full_path === fullPath)) {
+          candidates.push({ type: 'feature', capability_slug: f.capability_slug, feature_slug: f.feature_slug, full_path: fullPath });
+        }
+      }
+    }
+  }
+
+  if (candidates.length === 1) {
+    const c = candidates[0];
+    return { resolved: true, tier: 2, type: c.type, capability_slug: c.capability_slug, feature_slug: c.feature_slug, full_path: c.full_path, candidates: [], reason: 'fuzzy_unique' };
+  }
+
+  if (candidates.length > 1) {
+    return { resolved: false, tier: 2, type: null, capability_slug: null, feature_slug: null, full_path: null, candidates, reason: 'ambiguous' };
+  }
+
+  // ── Tier 3: Fall-through (no match) ──
+  return { resolved: false, tier: 3, type: null, capability_slug: null, feature_slug: null, full_path: null, candidates: [], reason: 'no_match' };
+}
+
+/** List all features across all capabilities. Returns [{capability_slug, feature_slug}] */
+function listAllFeaturesInternal(cwd) {
+  const results = [];
+  const capabilitiesDir = path.join(cwd, '.planning', 'capabilities');
+  try {
+    const capEntries = fs.readdirSync(capabilitiesDir, { withFileTypes: true })
+      .filter(e => e.isDirectory())
+      .map(e => e.name)
+      .sort();
+    for (const capSlug of capEntries) {
+      const featuresDir = path.join(capabilitiesDir, capSlug, 'features');
+      try {
+        const featEntries = fs.readdirSync(featuresDir, { withFileTypes: true })
+          .filter(e => e.isDirectory())
+          .map(e => e.name)
+          .sort();
+        for (const featSlug of featEntries) {
+          if (fs.existsSync(path.join(featuresDir, featSlug, 'FEATURE.md'))) {
+            results.push({ capability_slug: capSlug, feature_slug: featSlug });
+          }
+        }
+      } catch { /* no features dir */ }
+    }
+  } catch { /* no capabilities dir */ }
+  return results;
+}
+
 // ─── Capability & Feature utilities ──────────────────────────────────────────
 
 function findCapabilityInternal(cwd, capabilityInput) {
@@ -516,4 +626,6 @@ module.exports = {
   toPosixPath,
   findCapabilityInternal,
   findFeatureInternal,
+  resolveSlugInternal,
+  listAllFeaturesInternal,
 };

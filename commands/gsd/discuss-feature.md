@@ -37,8 +37,8 @@ Context resolved in-workflow using `init discuss-feature` and `feature-list` too
 
 <process>
 1. Initialize via `init discuss-feature`
-2. Fuzzy-resolve user's reference to a feature (substring match on feature-list output)
-3. Confirm resolved feature with user (auto-select on unique, top-3 on multiple, clarify on none)
+2. Resolve user's reference via `gsd-tools slug-resolve "$ARGUMENTS" --type feature` (3-tier: exact -> fuzzy -> fall-through)
+3. Confirm resolved feature with user (auto-select on unique, present candidates on ambiguous, clarify on no match)
 4. Load feature file and parent capability context
 5. Check feature status (killed/deferred: show reasoning, offer override)
 6. Guided exploration: implementation approach, edge cases, dependencies, data flow
@@ -48,7 +48,7 @@ Context resolved in-workflow using `init discuss-feature` and `feature-list` too
 10. Present summary and next steps
 
 **Key behaviors:**
-- Fuzzy resolution: substring/slug matching across all features, not semantic search
+- Resolution: uses universal slug-resolve CLI route (3-tier)
 - Backward routing: can route to discuss-capability or replan when feature reveals upstream issues
 - Kill/defer: persists reasoning in feature file
 - Grounded in capability context: references parent capability's exploration notes

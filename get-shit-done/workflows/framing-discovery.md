@@ -23,9 +23,9 @@ Parse JSON for: `lens`, `mvu_slots`, `anchor_questions_path`, `anchor_questions_
 
 **If `anchor_questions_exists` is false:** Error -- framing question files missing for this lens.
 
-## 2. Fuzzy Capability Resolution
+## 2. Slug Resolution
 
-**If `capability` is already resolved (non-null):** Skip to Step 3.
+**If `capability` is already resolved (non-null) from init:** Skip to Step 3.
 
 **If no fuzzy reference was provided in $ARGUMENTS:**
 
@@ -35,14 +35,25 @@ Use AskUserQuestion:
 
 Take the user's response as the fuzzy reference.
 
-**Fuzzy resolution using `capability_list` from init:**
+**Resolve using slug-resolve CLI route:**
 
-Run substring matching against slugs and names from `capability_list`:
-1. Normalize the fuzzy reference to lowercase
-2. Check each capability's slug and name for substring match
-3. If exactly 1 match -> auto-select, display confirmation
-4. If 2-3 matches -> present options, user picks
-5. If 0 matches -> offer to create new capability or re-describe
+```bash
+RESOLVED=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" slug-resolve "$INPUT")
+```
+
+Parse JSON result for: `resolved`, `tier`, `type`, `capability_slug`, `feature_slug`, `candidates`, `reason`.
+
+**If resolved (unique match):**
+- Auto-select, display confirmation
+- Set CAPABILITY_SLUG from result
+
+**If not resolved and reason is "ambiguous":**
+- Present candidates to user (2-3 matches), user picks
+- Re-resolve with selected slug
+
+**If not resolved and reason is "no_match":**
+- Offer to create new capability or re-describe (same as current zero-match behavior)
+- Falls through to Claude interpretation of user intent
 
 **After resolution, confirm with user:**
 

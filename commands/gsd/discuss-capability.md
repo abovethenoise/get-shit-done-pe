@@ -37,8 +37,8 @@ Context resolved in-workflow using `init discuss-capability` and `capability-lis
 
 <process>
 1. Initialize via `init discuss-capability`
-2. Fuzzy-resolve user's reference to a capability (substring match on capability-list output)
-3. Confirm resolved capability with user (auto-select on unique, top-3 on multiple, clarify on none)
+2. Resolve user's reference via `gsd-tools slug-resolve "$ARGUMENTS" --type capability` (3-tier: exact -> fuzzy -> fall-through)
+3. Confirm resolved capability with user (auto-select on unique, present candidates on ambiguous, clarify on no match)
 4. Load capability file, check status (killed/deferred: show reasoning, offer override)
 5. Scan capability map for cross-cutting concerns
 6. Guided exploration: core idea, why it matters, boundaries, open questions, suggested lens
@@ -47,7 +47,7 @@ Context resolved in-workflow using `init discuss-capability` and `capability-lis
 9. Present summary and next steps
 
 **Key behaviors:**
-- Fuzzy resolution: substring/slug matching, not semantic search
+- Resolution: uses universal slug-resolve CLI route (3-tier)
 - Cross-capability awareness: raise overlaps naturally during discussion
 - Kill/defer: persists reasoning in capability file
 - Repeatable: can re-explore any capability at any time

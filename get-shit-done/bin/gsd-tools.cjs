@@ -79,6 +79,9 @@
  *   init discuss-capability             All context for discuss-capability workflow
  *   init discuss-feature                All context for discuss-feature workflow
  *   init framing-discovery <lens> [cap] All context for framing-discovery workflow
+ *
+ * Slug Resolution:
+ *   slug-resolve <input> [--type cap|feat|auto]  3-tier slug resolution (exact->fuzzy->fall-through)
  */
 
 const fs = require('fs');
@@ -405,6 +408,17 @@ async function main() {
       const reqSource = args[1];
       const planFiles = args.slice(2).filter(a => a !== '--raw');
       cmdPlanValidate(cwd, reqSource, planFiles, raw);
+      break;
+    }
+
+    // ─── Slug resolution ─────────────────────────────────────────────────────
+    case 'slug-resolve': {
+      const { resolveSlugInternal, output: coreOutput } = require('./lib/core.cjs');
+      const input = args[1];
+      const typeIdx = args.indexOf('--type');
+      const typeHint = typeIdx !== -1 ? args[typeIdx + 1] : 'auto';
+      const result = resolveSlugInternal(cwd, input, typeHint === 'auto' ? null : typeHint);
+      coreOutput(result, raw);
       break;
     }
 
