@@ -95,7 +95,7 @@ Requirements for Install-Ready Launch milestone. Each maps to roadmap phases.
 
 ### Command Surface
 
-- [ ] **CMD-01**: 11-command surface works end-to-end: init, debug, new, enhance, refactor, discuss-capability, discuss-feature, status, resume, plan, review
+- [x] **CMD-01**: 11-command surface works end-to-end: init, debug, new, enhance, refactor, discuss-capability, discuss-feature, status, resume, plan, review
 - [x] **CMD-02**: 26 unused commands removed (phase management, milestone lifecycle, utilities)
 - [x] **CMD-03**: Every surviving command fires without error (full command audit)
 
@@ -236,7 +236,7 @@ Deferred to post-v2.0. Tracked but not in current roadmap.
 | INST-06 | Phase 12 | Pending |
 | INST-07 | Phase 12 | Pending |
 | INST-08 | Phase 12 | Pending |
-| CMD-01 | Phase 12 | Pending |
+| CMD-01 | Phase 12 | Complete |
 | VAL-01 | Phase 12 | Pending |
 | VAL-02 | Phase 12 | Pending |
 | VAL-03 | Phase 12 | Pending |

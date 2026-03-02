@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-03-01T18:33:34.586Z"
+last_updated: "2026-03-02T14:40:36Z"
 progress:
   total_phases: 14
   completed_phases: 11
@@ -23,9 +23,9 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 12 of 14 (Workflow Optimization & Wiring)
-Plan: 0 of TBD
-Status: Not started
-Last activity: 2026-03-01 -- Phase 11 complete. Roadmap restructured: Phase 12 (wiring) → 13 (E2E testing) → 14 (install)
+Plan: 2 of TBD
+Status: In progress
+Last activity: 2026-03-02 -- Plan 12-02 complete. Rewrote review.md, doc.md, framing-pipeline.md for v2 feature model with lens propagation.
 
 Progress: [===============-----] 79% (11/14 phases complete)
 
@@ -62,6 +62,8 @@ Progress: [===============-----] 79% (11/14 phases complete)
 | Phase 10 P07 | 4min | 2 tasks | 6 files |
 | Phase 10 P06 | 13min | 2 tasks | 17 files |
 | Phase 11 P01 | 3min | 2 tasks | 2 files |
+| Phase 12 P01 | 7min | 2 tasks | 3 files |
+| Phase 12 P02 | 7min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -95,6 +97,8 @@ Recent decisions affecting current work:
 - [10-08]: Replaced /gsd:plan-phase slash command refs with generic "plan workflow" language since v2 commands deleted
 - [11-02]: All 21 CLI routes smoke tested -- 19 PASS, 2 WARN (cosmetic arg requirements), 0 FAIL
 - [Phase 11-01]: All 66 @file references resolve; plan and review are pipeline-internal stages, not missing commands
+- [12-01]: Pure v2 rewrite of plan.md, execute.md, execute-plan.md -- all call feature-scoped init routes, ~185 lines of v1-only code removed
+- [12-01]: Lens framing injection added to planner context (LENS + anchor questions per WKFL-07)
 
 ### Blockers/Concerns
 
@@ -102,8 +106,7 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-03-01
-Stopped at: Phase 12 research COMPLETE (6 parallel researchers + synthesis). User Q&A done. Ready to spawn planner.
-Resume: /gsd:plan-phase 12 --skip-research
-Next action: Spawn gsd-planner agent with 12-RESEARCH-SYNTHESIS.md + all 6 RESEARCH-*.md files + 12-CONTEXT.md
-Key decisions from Q&A: (1) Requirements populate FEATURE.md directly, (2) install.js cleanup in Phase 12, (3) Wire v2 first then delete v1
+Last session: 2026-03-02
+Stopped at: Completed 12-01-PLAN.md (pipeline workflow v2 init wiring)
+Resume: Execute next plan in Phase 12
+Next action: Run 12-02-PLAN.md

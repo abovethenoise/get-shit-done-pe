@@ -7,20 +7,22 @@ Milestone v2.0 "Install-Ready Launch" takes everything built in milestone 1 (pha
 ## Milestones
 
 - Milestone 1 (Phases 1-7): Design and build v2 pipeline -- COMPLETE
-- Milestone 2 (Phases 8-12): Install-Ready Launch -- IN PROGRESS
+- Milestone 2 (Phases 8-14): Install-Ready Launch -- IN PROGRESS
 
 ## Phases
 
 **Phase Numbering:**
 - Phases 1-7: Milestone 1 (complete)
-- Phases 8-12: Milestone 2 (current)
+- Phases 8-14: Milestone 2 (current)
 - Decimal phases (e.g., 8.1): Urgent insertions if needed
 
 - [x] **Phase 8: Low Risk Cleanup** - Remove things we obviously won't use: dead commands, orphaned workflows/agents, dropped hooks and metadata files (completed 2026-03-01)
 - [x] **Phase 9: Structure & Integration** - Establish v2 directory model and wire orphaned components (research gatherers, hooks) into the surviving chain (completed 2026-03-01)
 - [x] **Phase 10: Remaining Cleanup & Polish** - Harder cleanup that depends on knowing the v2 structure: CLI audit, template/reference audits, file reference validation (completed 2026-03-01)
 - [x] **Phase 11: Automated Testing** - Verify every surviving command fires without error and all file references resolve before attempting install (completed 2026-03-01)
-- [ ] **Phase 12: Install & Try New Project** - Make it installable via npm install -g, then prove it works end-to-end on real projects
+- [ ] **Phase 12: Workflow Optimization & Wiring** - Fix B1-B3 blockers, wire all v2 flows (new/brownfield/after-start), establish capability→feature lifecycle, simplify ROADMAP.md model
+- [ ] **Phase 13: Multi-Scenario E2E Testing & Cleanup** - Test all flows end-to-end across multiple scenarios, fix what breaks, final cleanup pass
+- [ ] **Phase 14: Install & Validate** - Make it installable via npm install -g, then prove it works end-to-end on real projects
 
 ## Phase Details
 
@@ -73,9 +75,37 @@ Plans:
 - [ ] 11-02-PLAN.md -- CLI route smoke tests against synthetic fixtures
 - [ ] 11-03-PLAN.md -- E2E simulation + friction log consolidation + user Q&A + fix agreed items
 
-### Phase 12: Install & Try New Project
+### Phase 12: Workflow Optimization & Wiring
+**Goal**: All v2 flows work end-to-end — new project, brownfield, and after-start (capability/feature execution). B1-B3 blockers resolved. Pipeline speaks v2 throughout.
+**Depends on**: Phase 11 (must know what's broken before fixing)
+**Requirements**: INTG-01, INTG-02, INTG-03, CMD-01
+**Success Criteria** (what must be TRUE):
+  1. `/gsd:init` handles both new and brownfield via 3-step detect/branch/converge — new projects get full Q&A + scaffolding, brownfield gets research + discovery of existing capabilities/features
+  2. Pipeline workflows (plan, execute, review, doc) call v2 feature routes, not v1 phase routes (B1 resolved)
+  3. STATE.md and simplified ROADMAP.md are bootstrapped during init (B2 resolved)
+  4. Capability → feature decomposition exists in the pipeline — capabilities break into features before plan/execute (B3 resolved)
+  5. After-start flow works: discuss capability → discovery → requirements → research → plan (with Q&A) → execute → review → document
+  6. Feature-level entry works: discuss feature → discovery → research → plan → execute → review → document
+  7. Milestone/roadmap is light sequencing scaffold — informs resume/state, execution happens at capability/feature level
+  8. Can jump into pipeline at any point (not forced to start from discovery)
+**Plans**: TBD
+
+### Phase 13: Multi-Scenario E2E Testing & Cleanup
+**Goal**: Every flow is tested across realistic scenarios. Anything that breaks gets fixed. Final cleanup before install packaging.
+**Depends on**: Phase 12 (must wire everything before testing it)
+**Success Criteria** (what must be TRUE):
+  1. New project flow tested: init → discuss capability → full pipeline through to documentation
+  2. Brownfield flow tested: init on existing repo → detect existing code → capability/feature discovery → pipeline
+  3. All 4 framings tested (new/enhance/debug/refactor) on at least one scenario each
+  4. Mid-pipeline entry tested: jump into plan, execute, or review without running prior stages
+  5. Milestone/roadmap sequencing tested: create milestone, add capabilities/features, verify state tracking
+  6. All failures found during testing are fixed
+  7. No dead references, broken routes, or v1 remnants in any exercised path
+**Plans**: TBD
+
+### Phase 14: Install & Validate
 **Goal**: Running `npm install -g` deploys all v2 artifacts, and the full pipeline works end-to-end on both fresh and existing projects
-**Depends on**: Phase 11 (must verify components work before packaging for install)
+**Depends on**: Phase 13 (must verify all flows work before packaging for install)
 **Requirements**: INST-01, INST-02, INST-03, INST-04, INST-05, INST-06, INST-07, INST-08, CMD-01, VAL-01, VAL-02, VAL-03
 **Success Criteria** (what must be TRUE):
   1. `npm install -g` copies all v2 commands, workflows, agents, templates, references, and framings to their correct install.js target directories
@@ -89,12 +119,14 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 8 -> 9 -> 10 -> 11 -> 12
+Phases execute in numeric order: 8 → 9 → 10 → 11 → 12 → 13 → 14
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 8. Low Risk Cleanup | 5/5 | Complete   | 2026-03-01 |
-| 9. Structure & Integration | 3/3 | Complete   | 2026-03-01 |
-| 10. Remaining Cleanup & Polish | 8/8 | Complete    | 2026-03-01 |
-| 11. Automated Testing | 3/3 | Complete   | 2026-03-01 |
-| 12. Install & Try New Project | 0/TBD | Not started | - |
+| 8. Low Risk Cleanup | 5/5 | Complete | 2026-03-01 |
+| 9. Structure & Integration | 3/3 | Complete | 2026-03-01 |
+| 10. Remaining Cleanup & Polish | 8/8 | Complete | 2026-03-01 |
+| 11. Automated Testing | 3/3 | Complete | 2026-03-01 |
+| 12. Workflow Optimization & Wiring | 2/9 | In Progress|  |
+| 13. Multi-Scenario E2E Testing & Cleanup | 0/TBD | Not started | - |
+| 14. Install & Validate | 0/TBD | Not started | - |
