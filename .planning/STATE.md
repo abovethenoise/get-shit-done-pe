@@ -117,6 +117,9 @@ Recent decisions affecting current work:
 - [12-09]: 7 workflows condensed 56% (2676->1186 lines), all v1 cruft removed
 - [12-09]: progress.md rewritten for feature/capability/focus group routing model
 - [12-09]: resume-work.md scans .planning/capabilities/ instead of .planning/phases/
+- [12-05]: 4 core agents rewritten to goldilocks size (2542->291 lines), v2 FEATURE.md/CAPABILITY.md/EU-FN-TC aware
+- [12-05]: Nyquist dimension removed from plan-checker (disabled in config, not applicable to feature model)
+- [12-05]: 4 reference files created with all extracted tables, examples, procedures
 
 ### Blockers/Concerns
 
@@ -125,6 +128,6 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 12-09-PLAN.md (7 workflow files condensed, v2-clean, feature/capability model)
+Stopped at: Completed 12-05-PLAN.md (4 core agents goldilocks rewrite, 4 reference files)
 Resume: Continue with remaining Phase 12 plans
 Next action: Execute remaining Phase 12 plans
