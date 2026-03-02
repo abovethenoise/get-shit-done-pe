@@ -156,8 +156,8 @@ function cmdInitProject(cwd, raw) {
 
       // Determine next section based on mode
       const allSections = stateData.mode === 'existing'
-        ? ['scan', 'validation', 'gap_fill', 'project_md', 'capability_map', 'documentation']
-        : ['goals', 'tech_stack', 'architecture', 'project_md', 'capability_map', 'documentation'];
+        ? ['scan', 'validation', 'gap_fill', 'design_style', 'project_md', 'capability_map', 'documentation', 'roadmap_md', 'state_md']
+        : ['goals', 'tech_stack', 'architecture', 'design_style', 'project_md', 'capability_map', 'documentation', 'roadmap_md', 'state_md'];
 
       const completed = new Set(stateData.completed_sections);
       partialRun.next_section = allSections.find(s => !completed.has(s)) || null;

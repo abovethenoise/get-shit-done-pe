@@ -121,6 +121,29 @@ Use AskUserQuestion for structured choices where appropriate, freeform for open 
 
 **Incremental write -- update init-state.json** with `completed_sections: ["goals", "tech_stack", "architecture"]`.
 
+### 3c.5. Design & Styling Q&A
+
+Display stage banner:
+```
+GSD > INIT > NEW PROJECT > DESIGN & STYLE
+```
+
+Light Q&A (2-4 questions) to capture design opinions that affect downstream planning.
+
+**For UI projects:**
+- Visual style preferences: minimalist vs feature-rich, design system/brand guidelines
+- UI framework preferences (component library, design tokens, theming)
+- Styling approach: CSS framework, utility-first vs semantic, dark mode, responsive breakpoints
+
+**For non-UI projects:**
+- API design philosophy (REST vs GraphQL vs RPC, versioning approach)
+- Output formatting preferences (JSON structure, error formats, logging style)
+- Developer experience priorities (CLI ergonomics, documentation style, tooling)
+
+Use AskUserQuestion for structured choices, freeform for open exploration.
+
+**Incremental write -- update init-state.json** with `completed_sections: ["goals", "tech_stack", "architecture", "design_style"]`.
+
 ### 3d. Write PROJECT.md
 
 When enough context is gathered (goals + opinions + constraints + architecture understood):
@@ -144,11 +167,29 @@ mkdir -p .planning
 node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs: initialize project" --files .planning/PROJECT.md
 ```
 
-**Incremental write -- update init-state.json** with `completed_sections: ["goals", "tech_stack", "architecture", "project_md"]`.
+**Incremental write -- update init-state.json** with `completed_sections: ["goals", "tech_stack", "architecture", "design_style", "project_md"]`.
+
+### 3e.0. Capabilities Q&A
+
+Display stage banner:
+```
+GSD > INIT > NEW PROJECT > CAPABILITIES
+```
+
+Present the capabilities inferred from the Q&A context so far. Use AskUserQuestion:
+- header: "Capabilities"
+- question: "Based on our conversation, I see these potential capabilities:\n\n[numbered list of inferred capabilities with one-line descriptions]\n\nDoes this look right?"
+- options:
+  - "Looks good" -- Proceed with this list
+  - "I want to adjust" -- Add, remove, or reorder capabilities
+
+If "I want to adjust": ask follow-up about specific changes, then re-present the updated list for confirmation.
+
+Once confirmed, proceed to write capability files.
 
 ### 3e. Write Capability Map
 
-Derive capabilities from the Q&A context. For each capability:
+Derive capabilities from the confirmed list. For each capability:
 
 ```bash
 node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" capability-create "[capability-name]"
@@ -158,7 +199,7 @@ This creates `.planning/capabilities/{slug}/CAPABILITY.md` with the standard tem
 
 Update each CAPABILITY.md with exploration notes from the Q&A.
 
-**Incremental write -- update init-state.json** with `completed_sections: ["goals", "tech_stack", "architecture", "project_md", "capability_map"]`.
+**Incremental write -- update init-state.json** with `completed_sections: ["goals", "tech_stack", "architecture", "design_style", "project_md", "capability_map"]`.
 
 ### 3f. Seed .documentation/
 
@@ -180,7 +221,47 @@ mkdir -p .documentation/capabilities .documentation/decisions
 node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs: seed documentation structure" --files .documentation/architecture.md .documentation/domain.md .documentation/mapping.md
 ```
 
-**Incremental write -- update init-state.json** with `completed_sections: ["goals", "tech_stack", "architecture", "project_md", "capability_map", "documentation"]`.
+**Incremental write -- update init-state.json** with `completed_sections: ["goals", "tech_stack", "architecture", "design_style", "project_md", "capability_map", "documentation"]`.
+
+### 3g. Write ROADMAP.md
+
+Display stage banner:
+```
+GSD > INIT > NEW PROJECT > ROADMAP
+```
+
+Write `.planning/ROADMAP.md` using the v2 roadmap template (`templates/roadmap.md`).
+
+For new projects:
+- Include Overview section with project name from PROJECT.md
+- Empty Active Focus Groups section (no active focus yet -- user hasn't run /gsd:focus)
+- Empty Completed Focus Groups section
+
+```bash
+node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs: initialize roadmap" --files .planning/ROADMAP.md
+```
+
+**Incremental write -- update init-state.json** with `completed_sections: ["goals", "tech_stack", "architecture", "design_style", "project_md", "capability_map", "documentation", "roadmap_md"]`.
+
+### 3h. Write STATE.md
+
+Display stage banner:
+```
+GSD > INIT > NEW PROJECT > STATE
+```
+
+Write `.planning/STATE.md` using the v2 state template (`templates/state.md`).
+
+- Empty Active Focus Groups (no active work yet)
+- Project reference points to PROJECT.md
+- Core value from PROJECT.md
+- Session continuity: "Project initialized"
+
+```bash
+node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs: initialize state" --files .planning/STATE.md
+```
+
+**Incremental write -- update init-state.json** with `completed_sections: ["goals", "tech_stack", "architecture", "design_style", "project_md", "capability_map", "documentation", "roadmap_md", "state_md"]`.
 
 **Proceed to Step 5 (Completion).**
 
@@ -276,6 +357,23 @@ Use mix of AskUserQuestion (for structured choices) and freeform (for open explo
 
 **Incremental write -- update init-state.json** with `completed_sections: ["scan", "validation", "gap_fill"]`.
 
+### 4c.5. Design & Styling Q&A (Brownfield)
+
+Display stage banner:
+```
+GSD > INIT > EXISTING PROJECT > DESIGN & STYLE
+```
+
+During gap-fill context, add design/styling questions:
+- "What design patterns or styling conventions exist in this codebase?"
+- "Any design opinions or standards you want to enforce going forward?"
+- For UI projects: component library, CSS approach, theming, responsive strategy
+- For non-UI projects: API design conventions, output formats, DX priorities
+
+Fold answers into PROJECT.md under a Design & Standards section.
+
+**Incremental write -- update init-state.json** with `completed_sections: ["scan", "validation", "gap_fill", "design_style"]`.
+
 ### 4d. Write PROJECT.md
 
 Synthesize all three phases into `.planning/PROJECT.md`:
@@ -290,7 +388,7 @@ mkdir -p .planning
 node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs: initialize project from existing codebase" --files .planning/PROJECT.md
 ```
 
-**Incremental write -- update init-state.json** with `completed_sections: ["scan", "validation", "gap_fill", "project_md"]`.
+**Incremental write -- update init-state.json** with `completed_sections: ["scan", "validation", "gap_fill", "design_style", "project_md"]`.
 
 ### 4e. Write Capability Map
 
@@ -304,7 +402,7 @@ node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" capability-create "[capabil
 
 Update each CAPABILITY.md with validated scan findings.
 
-**Incremental write -- update init-state.json** with `completed_sections: ["scan", "validation", "gap_fill", "project_md", "capability_map"]`.
+**Incremental write -- update init-state.json** with `completed_sections: ["scan", "validation", "gap_fill", "design_style", "project_md", "capability_map"]`.
 
 ### 4f. Seed .documentation/
 
@@ -324,7 +422,46 @@ mkdir -p .documentation/capabilities .documentation/decisions
 node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs: seed documentation from codebase scan" --files .documentation/architecture.md .documentation/domain.md .documentation/mapping.md
 ```
 
-**Incremental write -- update init-state.json** with `completed_sections: ["scan", "validation", "gap_fill", "project_md", "capability_map", "documentation"]`.
+**Incremental write -- update init-state.json** with `completed_sections: ["scan", "validation", "gap_fill", "design_style", "project_md", "capability_map", "documentation"]`.
+
+### 4g. Write ROADMAP.md
+
+Display stage banner:
+```
+GSD > INIT > EXISTING PROJECT > ROADMAP
+```
+
+Write `.planning/ROADMAP.md` using the v2 roadmap template (`templates/roadmap.md`).
+
+For brownfield projects:
+- Include Overview section with project name and current state from PROJECT.md
+- Pre-populate one focus group from inferred capabilities (user can refine via /gsd:focus later)
+
+```bash
+node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs: initialize roadmap from codebase scan" --files .planning/ROADMAP.md
+```
+
+**Incremental write -- update init-state.json** with `completed_sections: ["scan", "validation", "gap_fill", "design_style", "project_md", "capability_map", "documentation", "roadmap_md"]`.
+
+### 4h. Write STATE.md
+
+Display stage banner:
+```
+GSD > INIT > EXISTING PROJECT > STATE
+```
+
+Write `.planning/STATE.md` using the v2 state template (`templates/state.md`).
+
+- Empty Active Focus Groups (no active work started yet)
+- Project reference points to PROJECT.md
+- Core value from PROJECT.md
+- Session continuity: "Project initialized"
+
+```bash
+node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs: initialize state" --files .planning/STATE.md
+```
+
+**Incremental write -- update init-state.json** with `completed_sections: ["scan", "validation", "gap_fill", "design_style", "project_md", "capability_map", "documentation", "roadmap_md", "state_md"]`.
 
 **Proceed to Step 5 (Completion).**
 
@@ -352,15 +489,24 @@ Mode: [New / Existing]
 |--------------------|-----------------------------------|
 | Project            | .planning/PROJECT.md              |
 | Capabilities       | .planning/capabilities/           |
+| Roadmap            | .planning/ROADMAP.md              |
+| State              | .planning/STATE.md                |
 | Architecture       | .documentation/architecture.md    |
 | Domain             | .documentation/domain.md          |
 | Mapping            | .documentation/mapping.md         |
 | Decisions          | .documentation/decisions/         |
 
-[N] capabilities mapped
+Project initialized with [N] capabilities and [M] feature stubs.
 
-Next: Run /gsd:new to set up requirements and roadmap
-      (or /gsd:discuss-capability to explore a specific capability first)
+Next step:
+- Run /gsd:discuss-capability <name> to flesh out a capability stub
+  (this creates feature stubs within the capability)
+
+Later, once you have features:
+- Run /gsd:discuss-feature <cap/feat> to detail a specific feature
+- Run /gsd:focus to create a focus group and prioritize what to build
+
+(The capabilities above are stubs -- discuss them to discover features before planning.)
 ```
 
 </process>
@@ -385,5 +531,6 @@ Next: Run /gsd:new to set up requirements and roadmap
 - [ ] Existing-project gap fill captures domain context and tech debt
 - [ ] Incremental writes persist state after each section
 - [ ] Partial-run detection works on re-run
+- [ ] Both flows create STATE.md and ROADMAP.md
 - [ ] Both flows produce identical output artifact set
 </success_criteria>
