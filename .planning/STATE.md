@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-28)
 
 **Core value:** Every piece of executed work traces back to a specific requirement, and every requirement is verified against the actual code.
-**Current focus:** Phase 12 -- Workflow Optimization & Wiring (milestone v2.0)
+**Current focus:** Phase 13 -- Multi-Scenario E2E Testing & Cleanup (milestone v2.0)
 
 ## Current Position
 
-Phase: 12 of 14 (Workflow Optimization & Wiring)
-Plan: 9 of 9
+Phase: 13 of 14 (Multi-Scenario E2E Testing & Cleanup)
+Plan: 1 of 5
 Status: In progress
-Last activity: 2026-03-02 -- Plan 12-07 complete. Dead v1 code removed: phase.cjs deleted, dead CLI routes removed, v1 config defaults removed, 1,388 lines deleted.
+Last activity: 2026-03-02 -- Plan 13-01 complete. S01 greenfield + S02 single-feature tested. 11 findings logged: 5 missing CRUD routes, 6 missing v2 workflows, orphaned v2 init routes.
 
-Progress: [===============-----] 79% (11/14 phases complete)
+Progress: [================----] 80% (12/14 phases complete)
 
 ## Performance Metrics
 
@@ -71,6 +71,7 @@ Progress: [===============-----] 79% (11/14 phases complete)
 | Phase 12 P06 | 13min | 3 tasks | 26 files |
 | Phase 12 P08 | 4min | 2 tasks | 1 files |
 | Phase 12 P07 | 9min | 2 tasks | 8 files |
+| Phase 13 P01 | 5min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -127,6 +128,9 @@ Recent decisions affecting current work:
 - [Phase 12]: templates/requirements.md and templates/UAT.md deleted (v1 artifacts with no v2 references)
 - [Phase 12]: All 32 @file references resolve -- no fixes needed after Plans 01-07
 - [Phase 12-07]: phase.cjs deleted entirely, cmdStateAdvancePlan/cmdStateRecordMetric kept (still used by v2 execute-plan.md)
+- [13-01]: v2 CRUD routes (capability-create, feature-create, etc.) do not exist -- capabilities/features require manual mkdir + file write
+- [13-01]: v2 workflow files (init-project.md, discuss-capability.md, etc.) do not exist -- v1 names retained
+- [13-01]: v2 init routes (plan-feature, execute-feature, feature-op) are orphaned -- no workflow calls them
 
 ### Blockers/Concerns
 
@@ -135,6 +139,6 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 12-07-PLAN.md (dead v1 code removal: phase.cjs deleted, dead CLI routes removed, 1388 lines deleted)
-Resume: Phase 12 complete (all 9 plans have summaries)
-Next action: Begin Phase 13 E2E testing
+Stopped at: Completed 13-01-PLAN.md (S01 greenfield + S02 single-feature scenarios)
+Resume: Phase 13 Plan 02 (S03-S05 framing scenarios)
+Next action: Execute 13-02-PLAN.md
