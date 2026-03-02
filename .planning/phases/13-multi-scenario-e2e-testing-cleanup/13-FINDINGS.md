@@ -4,9 +4,9 @@
 **Scenarios completed:** 11/13
 
 ## Summary
-- Total findings: 20
+- Total findings: 25
 - Fixed inline: 0
-- Open for triage: 20
+- Open for triage: 25
 - From targeted sweep: 0
 
 ## Findings
@@ -35,6 +35,11 @@
 | F18 | S11 | bug | focus.md workflow does not exist -- no backend for focus creation/management | OPEN | - |
 | F19 | S11 | friction | No workflow reads or uses "Current focus" from STATE.md for routing or filtering decisions | OPEN | - |
 | F20 | S11 | friction | No mechanism to scope progress/resume to a specific feature or capability -- all phase-level only | OPEN | - |
+| F21 | S12 | bug | Cannot test conflicting focus -- focus system does not exist (blocked by F12, F17, F18) | OPEN | - |
+| F22 | S12 | friction | "Current focus" text field is ignored by all workflows -- changing it has no system effect | OPEN | - |
+| F23 | S13 | bug | Parallel focus not supported -- no multi-focus tracking in STATE.md or any workflow | OPEN | - |
+| F24 | S13 | friction | Execution model is strictly sequential (one phase, one plan) -- no parallel feature execution support | OPEN | - |
+| F25 | S13 | pass | Feature directories are properly isolated at filesystem level -- foundation for parallel work exists | OPEN | - |
 
 ### From Targeted Sweep
 
