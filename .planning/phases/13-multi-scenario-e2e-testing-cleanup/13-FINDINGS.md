@@ -1,12 +1,12 @@
 # Phase 13: Findings
 
 **Date:** 2026-03-02
-**Scenarios completed:** 6/13
+**Scenarios completed:** 7/13
 
 ## Summary
-- Total findings: 11
+- Total findings: 20
 - Fixed inline: 0
-- Open for triage: 11
+- Open for triage: 20
 - From targeted sweep: 0
 
 ## Findings
@@ -26,6 +26,15 @@
 | F9 | S02 | bug | `discuss-feature.md` workflow does not exist. No separate feature discussion flow. | OPEN | - |
 | F10 | S02 | bug | No workflow file calls `init plan-feature`, `init execute-feature`, or `init feature-op`. These v2 init routes are orphaned. | OPEN | - |
 | F11 | S02 | friction | Single-feature pipeline entry requires manual directory creation and has no workflow path to planning without going through the phase model. | OPEN | - |
+| F12 | S10 | bug | Focus group system (command, workflow, CLI routes) does not exist on disk despite 12-04 summary claiming creation (commits ca46912, 6a85c36) | OPEN | - |
+| F13 | S10 | bug | STATE.md and ROADMAP.md not created during init -- B2 fix (12-03) described steps 3g/3h/4g/4h but `init new-project` does not create them | OPEN | - |
+| F14 | S10 | friction | Roadmap template uses milestone/phase model, not focus group model (12-04 decision not reflected in templates) | OPEN | - |
+| F15 | S10 | friction | STATE.md "Current focus" is a text label for current phase name, not a structured focus tracking system | OPEN | - |
+| F16 | S10 | friction | progress.md and resume-project.md have no focus group awareness -- route only on phase/plan counts | OPEN | - |
+| F17 | S11 | bug | /gsd:focus command does not exist -- users cannot set focus | OPEN | - |
+| F18 | S11 | bug | focus.md workflow does not exist -- no backend for focus creation/management | OPEN | - |
+| F19 | S11 | friction | No workflow reads or uses "Current focus" from STATE.md for routing or filtering decisions | OPEN | - |
+| F20 | S11 | friction | No mechanism to scope progress/resume to a specific feature or capability -- all phase-level only | OPEN | - |
 
 ### From Targeted Sweep
 
