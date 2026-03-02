@@ -1,13 +1,13 @@
 # Phase 13: Findings
 
 **Date:** 2026-03-02
-**Scenarios completed:** 11/13
+**Scenarios completed:** 13/13
 
 ## Summary
-- Total findings: 25
+- Total findings: 26
 - Fixed inline: 0
-- Open for triage: 25
-- From targeted sweep: 0
+- Open for triage: 26
+- From targeted sweep: 1
 
 ## Findings
 
@@ -45,7 +45,28 @@
 
 | # | Pattern | Location | Description | Status | Triage |
 |---|---------|----------|-------------|--------|--------|
-| *(none yet -- sweep in Plan 06)* | | | | | |
+| T1 | `gsd:new-project` | bin/install.js:635 | Install success message references `/gsd:new-project` -- should be `/gsd:new` | OPEN | - |
+
+**Sweep patterns with zero hits in deployed code (commands/, agents/, workflows/, references/, templates/, bin/):**
+- `gsd:new-project` in commands/agents/workflows/refs/templates: 0 hits (fixed in commit 2f9ad5a)
+- `gsd:discuss-phase`: 0 hits (fixed in Phase 9)
+- `gsd:verify-work`: 0 hits (fixed; UAT.md deleted; VALIDATION.md cleaned)
+- `plan-phase` in workflow logic: 0 functional hits (only in executor-reference.md as CLI route name `init execute-phase` -- functional per 10-08 decision)
+- `review-phase` / `doc-phase`: only tombstone error messages in gsd-tools.cjs (intentional)
+- `init progress`: 0 hits in deployed code (route deleted in Phase 12)
+- `.planning/phases/`: 2 hits in example/template paths (gather-synthesize.md, executor-reference.md) -- acceptable, v1 phase model still active
+- `milestone_branch_template` / `phase_branch_template`: 0 hits in deployed code
+- `gsd-codebase-mapper`: 0 hits in deployed code
+- `gsd-check-update`: only in install.js cleanup logic (correct -- removing old hooks)
+- `PRD`: 0 hits in workflows
+
+**Phase 11 re-verification:**
+- F1-F3 (`/gsd:new-project` in init.md, init-project.md, plan.md): VERIFIED FIXED (commit 2f9ad5a)
+- F4 (`/gsd:discuss-phase` in research.md template): VERIFIED FIXED (commit 2f9ad5a)
+- F5 (other friction): No remaining friction items in deployed code
+- C1 (`/gsd:verify-work` in UAT.md): VERIFIED FIXED (template deleted in Phase 12)
+- C2 (`/gsd:verify-work` in VALIDATION.md): VERIFIED FIXED (reference removed)
+- C3-C4: No remaining cosmetic items in deployed code
 
 ## Triage Results
 *(After human Q&A pass)*

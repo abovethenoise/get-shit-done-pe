@@ -228,18 +228,18 @@ Deferred to post-v2.0. Tracked but not in current roadmap.
 | CLN-05 | Phase 10 | Complete |
 | INTG-03 | Phase 10 | Complete |
 | CMD-03 | Phase 11 | Complete |
-| INST-01 | Phase 12 | Pending |
-| INST-02 | Phase 12 | Pending |
-| INST-03 | Phase 12 | Pending |
-| INST-04 | Phase 12 | Pending |
-| INST-05 | Phase 12 | Pending |
-| INST-06 | Phase 12 | Pending |
-| INST-07 | Phase 12 | Pending |
-| INST-08 | Phase 12 | Pending |
+| INST-01 | Phase 14 | Pending |
+| INST-02 | Phase 14 | Pending |
+| INST-03 | Phase 14 | Pending |
+| INST-04 | Phase 14 | Pending |
+| INST-05 | Phase 14 | Pending |
+| INST-06 | Phase 14 | Pending |
+| INST-07 | Phase 14 | Pending |
+| INST-08 | Phase 14 | Pending |
 | CMD-01 | Phase 12 | Complete |
-| VAL-01 | Phase 12 | Pending |
-| VAL-02 | Phase 12 | Pending |
-| VAL-03 | Phase 12 | Pending |
+| VAL-01 | Phase 14 | Pending |
+| VAL-02 | Phase 14 | Pending |
+| VAL-03 | Phase 14 | Pending |
 
 **Coverage:**
 - v1 requirements: 46 total -- all complete
