@@ -99,6 +99,11 @@ Recent decisions affecting current work:
 - [Phase 11-01]: All 66 @file references resolve; plan and review are pipeline-internal stages, not missing commands
 - [12-01]: Pure v2 rewrite of plan.md, execute.md, execute-plan.md -- all call feature-scoped init routes, ~185 lines of v1-only code removed
 - [12-01]: Lens framing injection added to planner context (LENS + anchor questions per WKFL-07)
+- [12-02]: review.md and doc.md call init feature-op instead of dead v1 init routes
+- [12-02]: Static framing injection slots replaced with dynamic framing context in 4 review agents + doc-writer
+- [12-02]: Synthesizer conflict resolution priority: end-user > functional > technical > quality
+- [12-02]: Execute->Review->Doc auto-chains with human checkpoints only for issues
+- [12-02]: LENS and ANCHOR_QUESTIONS_PATH propagated to all 6 pipeline stages
 
 ### Blockers/Concerns
 
@@ -107,6 +112,6 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 12-01-PLAN.md (pipeline workflow v2 init wiring)
-Resume: Execute next plan in Phase 12
-Next action: Run 12-02-PLAN.md
+Stopped at: Completed 12-02-PLAN.md (review.md, doc.md, framing-pipeline.md rewritten for v2 feature model)
+Resume: Continue with next Phase 12 plan
+Next action: Execute remaining Phase 12 plans
