@@ -17,7 +17,7 @@ Parse JSON for: `project_exists`, `roadmap_exists`, `state_exists`, `capabilitie
 
 If `project_exists` is false: suggest `/gsd:new`. Exit.
 If missing STATE.md: suggest `/gsd:new`.
-If missing ROADMAP.md but PROJECT.md exists: between milestones -> Route F.
+If missing ROADMAP.md but PROJECT.md exists: between focus groups -> Route F.
 </step>
 
 <step name="load_context">
@@ -88,7 +88,7 @@ Determine next action from feature pipeline state:
 | Feature needs planning | **C: Plan** -- `/gsd:plan {cap/feat}` or `/gsd:new` |
 | All features in focus group complete | **D: Focus group done** -- suggest next focus group |
 | All capabilities complete | **E: Milestone complete** -- archive and next |
-| Between milestones | **F: Start next** -- `/gsd:new` |
+| Between focus groups | **F: Start next** -- `/gsd:new` |
 
 Present route with `/clear` first suggestion for fresh context.
 
