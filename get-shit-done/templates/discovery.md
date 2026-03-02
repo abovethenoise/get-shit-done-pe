@@ -1,6 +1,6 @@
 # Discovery Template
 
-Template for `.planning/phases/XX-name/DISCOVERY.md` - shallow research for library/option decisions.
+Template for `.planning/capabilities/{cap}/features/{feat}/DISCOVERY.md` - shallow research for library/option decisions.
 
 **Purpose:** Answer "which library/option should we use" questions during mandatory discovery in the planning workflow.
 
@@ -70,7 +70,7 @@ Before completing discovery, verify:
 
 
 <output_structure>
-Create `.planning/phases/XX-name/DISCOVERY.md`:
+Create `.planning/capabilities/{cap}/features/{feat}/DISCOVERY.md`:
 
 ```markdown
 # [Topic] Discovery

@@ -267,7 +267,7 @@ Template for `.planning/codebase/INTEGRATIONS.md` - captures external service de
 - Document environment-specific differences (dev/staging/prod)
 - Include auth patterns for each service
 
-**Useful for phase planning when:**
+**Useful for planning when:**
 - Adding new external service integrations
 - Debugging authentication issues
 - Understanding data flow outside the application

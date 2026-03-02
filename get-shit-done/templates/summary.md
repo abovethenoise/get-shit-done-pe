@@ -1,6 +1,6 @@
 # Summary Template
 
-Template for `.planning/phases/XX-name/{phase}-{plan}-SUMMARY.md` - plan completion documentation.
+Template for `.planning/capabilities/{cap}/features/{feat}/{plan}-SUMMARY.md` - plan completion documentation.
 
 ---
 

@@ -17,11 +17,11 @@ Use for major workflow transitions.
 - `RESEARCHING`
 - `DEFINING REQUIREMENTS`
 - `CREATING ROADMAP`
-- `PLANNING PHASE {N}`
+- `PLANNING {FEATURE}`
 - `EXECUTING WAVE {N}`
 - `VERIFYING`
-- `PHASE {N} COMPLETE ✓`
-- `MILESTONE COMPLETE 🎉`
+- `FEATURE {FEAT} COMPLETE ✓`
+- `FOCUS GROUP COMPLETE 🎉`
 
 ---
 
@@ -64,7 +64,7 @@ User action required. 62-character width.
 
 ## Progress Display
 
-**Phase/milestone level:**
+**Capability/feature level:**
 ```
 Progress: ████████░░ 80%
 ```
@@ -140,11 +140,11 @@ Always at end of major completions.
 ## Tables
 
 ```
-| Phase | Status | Plans | Progress |
-|-------|--------|-------|----------|
-| 1     | ✓      | 3/3   | 100%     |
-| 2     | ◆      | 1/4   | 25%      |
-| 3     | ○      | 0/2   | 0%       |
+| Feature | Status | Plans | Progress |
+|---------|--------|-------|----------|
+| Auth    | ✓      | 3/3   | 100%     |
+| Search  | ◆      | 1/4   | 25%      |
+| Export  | ○      | 0/2   | 0%       |
 ```
 
 ---

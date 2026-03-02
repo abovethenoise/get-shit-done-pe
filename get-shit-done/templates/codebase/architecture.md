@@ -247,7 +247,7 @@ Include file paths as concrete examples of abstractions. Use backtick formatting
 - Note recurring patterns (services, controllers, repositories)
 - Keep descriptions conceptual, not mechanical
 
-**Useful for phase planning when:**
+**Useful for planning when:**
 - Adding new features (where does it fit in the layers?)
 - Refactoring (understanding current patterns)
 - Identifying where to add code (which layer handles X?)

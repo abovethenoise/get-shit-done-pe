@@ -297,7 +297,7 @@ Template for `.planning/codebase/CONCERNS.md` - captures known issues and areas 
 - Risk-focused ("Could expose user data" not "security is bad")
 - Factual ("3.5s load time" not "really slow")
 
-**Useful for phase planning when:**
+**Useful for planning when:**
 - Deciding what to work on next
 - Estimating risk of changes
 - Understanding where to be careful

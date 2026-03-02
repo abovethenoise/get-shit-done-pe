@@ -277,7 +277,7 @@ root/
 └── file.ts        # Purpose
 ```
 
-**Useful for phase planning when:**
+**Useful for planning when:**
 - Adding new features (where should files go?)
 - Understanding project organization
 - Finding where specific logic lives

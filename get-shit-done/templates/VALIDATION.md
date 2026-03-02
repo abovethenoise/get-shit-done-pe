@@ -1,5 +1,5 @@
 ---
-feature: {N}
+feature: {feature-slug}
 slug: {feature-slug}
 status: draft
 nyquist_compliant: false
@@ -7,7 +7,7 @@ wave_0_complete: false
 created: {date}
 ---
 
-# Feature {N} — Validation Strategy
+# Feature {feature-slug} — Validation Strategy
 
 > Per-feature validation contract for feedback sampling during execution.
 
@@ -50,7 +50,7 @@ created: {date}
 - [ ] `{tests/conftest.py}` — shared fixtures
 - [ ] `{framework install}` — if no framework detected
 
-*If none: "Existing infrastructure covers all phase requirements."*
+*If none: "Existing infrastructure covers all feature requirements."*
 
 ---
 
@@ -60,7 +60,7 @@ created: {date}
 |----------|-------------|------------|-------------------|
 | {behavior} | REQ-{XX} | {reason} | {steps} |
 
-*If none: "All phase behaviors have automated verification."*
+*If none: "All feature behaviors have automated verification."*
 
 ---
 
