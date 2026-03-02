@@ -61,7 +61,7 @@ Expected results:
 
 ## When to Generate
 
-Generate `{phase}-USER-SETUP.md` when plan frontmatter contains `user_setup` field.
+Generate `USER-SETUP.md` when plan frontmatter contains `user_setup` field.
 
 **Trigger:** `user_setup` exists in PLAN.md frontmatter and has items.
 
@@ -306,6 +306,6 @@ curl -X POST http://localhost:3000/api/test-email \
 
 **Never include:** Actual secret values. Steps Claude can automate (package installs, code changes).
 
-**Naming:** `{phase}-USER-SETUP.md` matches the phase number pattern.
+**Naming:** `USER-SETUP.md` lives alongside PLAN.md and SUMMARY.md in the feature directory.
 **Status tracking:** User marks checkboxes and updates status line when complete.
-**Searchability:** `grep -r "USER-SETUP" .planning/` finds all phases with user requirements.
+**Searchability:** `grep -r "USER-SETUP" .planning/` finds all features with user requirements.

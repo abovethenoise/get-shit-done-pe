@@ -106,7 +106,7 @@ Each task was committed atomically:
 ## User Setup Required
 
 [If USER-SETUP.md was generated:]
-**External services require manual configuration.** See [{phase}-USER-SETUP.md](./{phase}-USER-SETUP.md) for:
+**External services require manual configuration.** See [USER-SETUP.md](./USER-SETUP.md) for:
 - Environment variables to add
 - Dashboard configuration steps
 - Verification commands

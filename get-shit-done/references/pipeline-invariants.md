@@ -26,9 +26,9 @@
 
 **Where:**
 - `get-shit-done/workflows/execute.md` -- `discover_and_group_plans` step
-- `get-shit-done/bin/gsd-tools.cjs` -- `phase-plan-index` CLI command reads plan frontmatter
+- Plan frontmatter `wave` and `depends_on` fields determine execution order
 
-**Verify:** `node gsd-tools.cjs phase-plan-index {phase}` returns plans grouped by wave with correct dependency chains.
+**Verify:** Plans in feature directory are grouped by wave with correct dependency chains.
 
 ---
 

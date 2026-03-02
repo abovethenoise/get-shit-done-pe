@@ -9,10 +9,10 @@ Detailed dimension definitions, scoring rubrics, examples, and issue formats for
 ### Step 1: Load Context
 
 ```bash
-INIT=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" init phase-op "${PHASE_ARG}")
+INIT=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" init feature-op "${CAP_SLUG}" "${FEAT_SLUG}")
 ```
 
-Extract: `phase_dir`, `phase_number`, `has_plans`, `plan_count`.
+Extract: `feature_dir`, `has_plans`, `plan_count`.
 
 Load FEATURE.md for requirements, CONTEXT.md for user decisions, ROADMAP.md for phase goal.
 
@@ -293,7 +293,7 @@ issue:
 | Plan | Tasks | Files | Wave | Status |
 |------|-------|-------|------|--------|
 
-Plans verified. Run `/gsd:execute {phase}` to proceed.
+Plans verified. Run `/gsd:execute {cap/feat}` to proceed.
 ```
 
 ### ISSUES FOUND

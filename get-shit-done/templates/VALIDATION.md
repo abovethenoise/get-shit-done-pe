@@ -2,7 +2,6 @@
 feature: {feature-slug}
 slug: {feature-slug}
 status: draft
-nyquist_compliant: false
 wave_0_complete: false
 created: {date}
 ---
@@ -71,6 +70,4 @@ created: {date}
 - [ ] Wave 0 covers all MISSING references
 - [ ] No watch-mode flags
 - [ ] Feedback latency < {N}s
-- [ ] `nyquist_compliant: true` set in frontmatter
-
 **Approval:** {pending / approved YYYY-MM-DD}

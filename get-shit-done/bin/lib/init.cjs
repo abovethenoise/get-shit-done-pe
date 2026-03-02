@@ -5,7 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
-const { loadConfig, resolveModelInternal, pathExistsInternal, generateSlugInternal, getMilestoneInfo, toPosixPath, findCapabilityInternal, findFeatureInternal, output, error } = require('./core.cjs');
+const { loadConfig, resolveModelInternal, resolveModelFromRole, pathExistsInternal, generateSlugInternal, getMilestoneInfo, toPosixPath, findCapabilityInternal, findFeatureInternal, output, error } = require('./core.cjs');
 
 function cmdInitResume(cwd, raw) {
   const config = loadConfig(cwd);
@@ -406,7 +406,7 @@ function cmdInitPlanFeature(cwd, capSlug, featSlug, raw) {
 
   const result = {
     // Models
-    researcher_model: resolveModelInternal(cwd, 'gsd-phase-researcher'),
+    researcher_model: resolveModelFromRole(cwd, path.join(cwd, '..', 'agents', 'gsd-researcher.md')),
     planner_model: resolveModelInternal(cwd, 'gsd-planner'),
     checker_model: resolveModelInternal(cwd, 'gsd-plan-checker'),
 

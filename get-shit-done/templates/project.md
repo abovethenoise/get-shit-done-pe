@@ -119,7 +119,7 @@ Common types: Tech stack, Timeline, Budget, Dependencies, Compatibility, Perform
 
 **Last Updated:**
 - Always note when and why the document was updated
-- Format: `after authentication feature` or `after v1.0 milestone`
+- Format: `after authentication feature` or `after v1.0 focus group`
 - Triggers review of whether content is still accurate
 
 </guidelines>
@@ -135,7 +135,7 @@ PROJECT.md evolves throughout the project lifecycle.
 4. Decisions to log? → Add to Key Decisions
 5. "What This Is" still accurate? → Update if drifted
 
-**After each milestone:**
+**After each focus group completion:**
 1. Full review of all sections
 2. Core Value check — still the right priority?
 3. Audit Out of Scope — reasons still valid?
@@ -176,7 +176,7 @@ STATE.md references PROJECT.md:
 See: .planning/PROJECT.md (updated [date])
 
 **Core value:** [One-liner from Core Value section]
-**Current focus:** [Current phase name]
+**Current focus:** [Current capability or focus group]
 ```
 
 This ensures Claude reads current PROJECT.md context.

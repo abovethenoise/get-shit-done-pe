@@ -6,72 +6,6 @@ const fs = require('fs');
 const path = require('path');
 const { output, error } = require('./core.cjs');
 
-function cmdConfigEnsureSection(cwd, raw) {
-  const configPath = path.join(cwd, '.planning', 'config.json');
-  const planningDir = path.join(cwd, '.planning');
-
-  // Ensure .planning directory exists
-  try {
-    if (!fs.existsSync(planningDir)) {
-      fs.mkdirSync(planningDir, { recursive: true });
-    }
-  } catch (err) {
-    error('Failed to create .planning directory: ' + err.message);
-  }
-
-  // Check if config already exists
-  if (fs.existsSync(configPath)) {
-    const result = { created: false, reason: 'already_exists' };
-    output(result, raw, 'exists');
-    return;
-  }
-
-  // Detect Brave Search API key availability
-  const homedir = require('os').homedir();
-  const braveKeyFile = path.join(homedir, '.gsd', 'brave_api_key');
-  const hasBraveSearch = !!(process.env.BRAVE_API_KEY || fs.existsSync(braveKeyFile));
-
-  // Load user-level defaults from ~/.gsd/defaults.json if available
-  const globalDefaultsPath = path.join(homedir, '.gsd', 'defaults.json');
-  let userDefaults = {};
-  try {
-    if (fs.existsSync(globalDefaultsPath)) {
-      userDefaults = JSON.parse(fs.readFileSync(globalDefaultsPath, 'utf-8'));
-    }
-  } catch (err) {
-    // Ignore malformed global defaults, fall back to hardcoded
-  }
-
-  // Create default config (user-level defaults override hardcoded defaults)
-  const hardcoded = {
-    model_profile: 'balanced',
-    commit_docs: true,
-    search_gitignored: false,
-    branching_strategy: 'none',
-    workflow: {
-      research: true,
-      plan_check: true,
-      verifier: true,
-      nyquist_validation: false,
-    },
-    parallelization: true,
-    brave_search: hasBraveSearch,
-  };
-  const defaults = {
-    ...hardcoded,
-    ...userDefaults,
-    workflow: { ...hardcoded.workflow, ...(userDefaults.workflow || {}) },
-  };
-
-  try {
-    fs.writeFileSync(configPath, JSON.stringify(defaults, null, 2), 'utf-8');
-    const result = { created: true, path: '.planning/config.json' };
-    output(result, raw, 'created');
-  } catch (err) {
-    error('Failed to create config.json: ' + err.message);
-  }
-}
-
 function cmdConfigSet(cwd, keyPath, value, raw) {
   const configPath = path.join(cwd, '.planning', 'config.json');
 
@@ -154,7 +88,6 @@ function cmdConfigGet(cwd, keyPath, raw) {
 }
 
 module.exports = {
-  cmdConfigEnsureSection,
   cmdConfigSet,
   cmdConfigGet,
 };

@@ -9,10 +9,10 @@ Detailed deviation handling rules, commit protocol, state update procedures, and
 ### 1. Load Project State
 
 ```bash
-INIT=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" init execute-phase "${PHASE}")
+INIT=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" init execute-feature "${CAP_SLUG}" "${FEAT_SLUG}")
 ```
 
-Extract: `executor_model`, `commit_docs`, `phase_dir`, `plans`, `incomplete_plans`.
+Extract: `executor_model`, `commit_docs`, `feature_dir`, `plans`, `incomplete_plans`.
 
 Read STATE.md for position, decisions, blockers.
 
@@ -138,7 +138,7 @@ git add src/types/user.ts
 
 **4. Commit:**
 ```bash
-git commit -m "{type}({phase}-{plan}): {concise task description}
+git commit -m "{type}({feature}-{plan}): {concise task description}
 
 - {key change 1}
 - {key change 2}
@@ -168,7 +168,7 @@ When auto mode is active:
 ## CHECKPOINT REACHED
 
 **Type:** [human-verify | decision | human-action]
-**Plan:** {phase}-{plan}
+**Plan:** {feature}-{plan}
 **Progress:** {completed}/{total} tasks complete
 
 ### Completed Tasks
@@ -278,8 +278,8 @@ node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" requirements mark-complete 
 ## Final Commit
 
 ```bash
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs({phase}-{plan}): complete [plan-name] plan" \
-  --files .planning/phases/XX-name/{phase}-{plan}-SUMMARY.md .planning/STATE.md .planning/ROADMAP.md .planning/REQUIREMENTS.md
+node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs({feature}-{plan}): complete [plan-name] plan" \
+  --files .planning/capabilities/{cap}/{feat}/{feature}-{plan}-SUMMARY.md .planning/STATE.md .planning/ROADMAP.md
 ```
 
 Separate from per-task commits -- captures execution results only.
@@ -291,7 +291,7 @@ Separate from per-task commits -- captures execution results only.
 ```markdown
 ## PLAN COMPLETE
 
-**Plan:** {phase}-{plan}
+**Plan:** {feature}-{plan}
 **Tasks:** {completed}/{total}
 **SUMMARY:** {path to SUMMARY.md}
 

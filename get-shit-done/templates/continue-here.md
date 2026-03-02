@@ -65,7 +65,7 @@ Required YAML frontmatter:
 
 - `feature`: Directory name (e.g., `02-authentication`)
 - `task`: Current task number
-- `total_tasks`: How many tasks in phase
+- `total_tasks`: How many tasks in feature
 - `status`: `in_progress`, `blocked`, `almost_done`
 - `last_updated`: ISO timestamp
 </yaml_fields>

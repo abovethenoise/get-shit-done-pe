@@ -14,7 +14,6 @@ const os = require('os');
 const {
   loadConfig,
   resolveModelInternal,
-  MODEL_PROFILES,
   escapeRegex,
   generateSlugInternal,
   normalizePhaseName,
@@ -179,13 +178,13 @@ describe('resolveModelInternal', () => {
       assert.strictEqual(resolveModelInternal(tmpDir, 'gsd-executor'), 'inherit');
     });
 
-    test('agents not in override fall back to profile', () => {
+    test('agents not in override fall back to default sonnet', () => {
       writeConfig({
         model_profile: 'quality',
         model_overrides: { 'gsd-executor': 'haiku' },
       });
-      // gsd-planner not overridden, should use quality profile -> opus -> inherit
-      assert.strictEqual(resolveModelInternal(tmpDir, 'gsd-planner'), 'inherit');
+      // gsd-planner not overridden, v2 defaults to sonnet (role-based resolution is primary path)
+      assert.strictEqual(resolveModelInternal(tmpDir, 'gsd-planner'), 'sonnet');
     });
   });
 
@@ -195,10 +194,10 @@ describe('resolveModelInternal', () => {
       assert.strictEqual(resolveModelInternal(tmpDir, 'gsd-nonexistent'), 'sonnet');
     });
 
-    test('defaults to balanced profile when model_profile missing', () => {
+    test('defaults to sonnet when model_profile missing', () => {
       writeConfig({});
-      // balanced profile, gsd-planner -> opus -> inherit
-      assert.strictEqual(resolveModelInternal(tmpDir, 'gsd-planner'), 'inherit');
+      // v2 defaults to sonnet for all agents (role-based resolution is primary path)
+      assert.strictEqual(resolveModelInternal(tmpDir, 'gsd-planner'), 'sonnet');
     });
   });
 });

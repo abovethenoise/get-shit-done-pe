@@ -8,7 +8,7 @@ The calling workflow provides:
 - `gatherers[]` — Array of:
   - `agent_path` — Path to the gatherer agent definition (e.g., `get-shit-done/agents/gsd-research-domain-truth.md`)
   - `dimension_name` — Human label for this gatherer's focus (e.g., "Domain Truth", "Edge Cases")
-  - `output_path` — Where the gatherer writes its output (e.g., `.planning/phases/XX-name/research/domain-truth.md`)
+  - `output_path` — Where the gatherer writes its output (e.g., `.planning/capabilities/{cap}/{feat}/research/domain-truth.md`)
 
 - `synthesizer` — Object:
   - `agent_path` — Path to the synthesizer agent definition (e.g., `get-shit-done/agents/gsd-research-synthesizer.md`)

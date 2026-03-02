@@ -396,7 +396,7 @@ Interface context: embed key types in `<interfaces>` block when plans depend on 
 {findings from Round 2, or "None -- all issues resolved in Round 1"}
 
 ### Next Steps
-Execute: `/gsd:execute {phase}`
+Execute: `/gsd:execute {cap/feat}`
 ```
 
 ### Gap Closure Plans Created

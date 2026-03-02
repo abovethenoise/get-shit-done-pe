@@ -13,15 +13,6 @@ function toPosixPath(p) {
   return p.split(path.sep).join('/');
 }
 
-// ─── Model Profile Table (DEPRECATED — v1 fallback only) ─────────────────────
-// v2 agents use ROLE_MODEL_MAP via role_type frontmatter.
-// Only gsd-planner and gsd-executor remain as v1 fallbacks.
-
-const MODEL_PROFILES = {
-  'gsd-planner':              { quality: 'opus', balanced: 'opus',   budget: 'sonnet' },
-  'gsd-executor':             { quality: 'opus', balanced: 'sonnet', budget: 'sonnet' },
-};
-
 // ─── v2 Role-Based Model Resolution ──────────────────────────────────────────
 
 const ROLE_MODEL_MAP = {
@@ -75,7 +66,6 @@ function loadConfig(cwd) {
     research: true,
     plan_checker: true,
     verifier: true,
-    nyquist_validation: false,
     parallelization: true,
     brave_search: false,
   };
@@ -107,7 +97,6 @@ function loadConfig(cwd) {
       research: get('research', { section: 'workflow', field: 'research' }) ?? defaults.research,
       plan_checker: get('plan_checker', { section: 'workflow', field: 'plan_check' }) ?? defaults.plan_checker,
       verifier: get('verifier', { section: 'workflow', field: 'verifier' }) ?? defaults.verifier,
-      nyquist_validation: get('nyquist_validation', { section: 'workflow', field: 'nyquist_validation' }) ?? defaults.nyquist_validation,
       parallelization,
       brave_search: get('brave_search') ?? defaults.brave_search,
       model_overrides: parsed.model_overrides || null,
@@ -322,12 +311,8 @@ function resolveModelInternal(cwd, agentType) {
     return override === 'opus' ? 'inherit' : override;
   }
 
-  // Fall back to profile lookup
-  const profile = config.model_profile || 'balanced';
-  const agentModels = MODEL_PROFILES[agentType];
-  if (!agentModels) return 'sonnet';
-  const resolved = agentModels[profile] || agentModels['balanced'] || 'sonnet';
-  return resolved === 'opus' ? 'inherit' : resolved;
+  // Default: sonnet for all agents (v2 uses resolveModelFromRole with role_type frontmatter)
+  return 'sonnet';
 }
 
 function resolveModelFromRole(cwd, agentPath) {
@@ -564,7 +549,6 @@ function findFeatureInternal(cwd, capabilitySlug, featureInput) {
 }
 
 module.exports = {
-  MODEL_PROFILES,
   ROLE_MODEL_MAP,
   output,
   error,
