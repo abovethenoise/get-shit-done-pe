@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-03-02T15:02:14Z"
+last_updated: "2026-03-02T15:08:09.992Z"
 progress:
-  total_phases: 14
+  total_phases: 13
   completed_phases: 11
-  total_plans: 41
-  completed_plans: 41
+  total_plans: 50
+  completed_plans: 48
 ---
 
 # Project State
@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 Phase: 12 of 14 (Workflow Optimization & Wiring)
 Plan: 9 of 9
 Status: In progress
-Last activity: 2026-03-02 -- Plan 12-05 complete. 4 core agents rewritten to goldilocks size (~89% reduction), v2 aware, 4 reference files created.
+Last activity: 2026-03-02 -- Plan 12-06 complete. install.js Claude-only (2376->771 lines), v1 terminology swept, USER-GUIDE rewritten for v2.
 
 Progress: [===============-----] 79% (11/14 phases complete)
 
@@ -68,6 +68,7 @@ Progress: [===============-----] 79% (11/14 phases complete)
 | Phase 12 P04 | 6min | 2 tasks | 11 files |
 | Phase 12 P09 | 8min | 2 tasks | 7 files |
 | Phase 12 P05 | 8min | 2 tasks | 8 files |
+| Phase 12 P06 | 13min | 3 tasks | 26 files |
 
 ## Accumulated Context
 
@@ -120,6 +121,8 @@ Recent decisions affecting current work:
 - [12-05]: 4 core agents rewritten to goldilocks size (2542->291 lines), v2 FEATURE.md/CAPABILITY.md/EU-FN-TC aware
 - [12-05]: Nyquist dimension removed from plan-checker (disabled in config, not applicable to feature model)
 - [12-05]: 4 reference files created with all extracted tables, examples, procedures
+- [Phase 12]: install.js reduced from 2376 to 771 lines by removing all multi-runtime support
+- [Phase 12]: templates/requirements.md and templates/UAT.md deleted (v1 artifacts with no v2 references)
 
 ### Blockers/Concerns
 
@@ -128,6 +131,6 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 12-05-PLAN.md (4 core agents goldilocks rewrite, 4 reference files)
+Stopped at: Completed 12-06-PLAN.md (install.js Claude-only, v1 terminology swept, USER-GUIDE rewritten)
 Resume: Continue with remaining Phase 12 plans
 Next action: Execute remaining Phase 12 plans
