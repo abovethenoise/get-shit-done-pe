@@ -632,7 +632,7 @@ function finishInstall(settingsPath, settings, statuslineCommand, shouldInstallS
   writeSettings(settingsPath, settings);
 
   console.log(`
-  ${green}Done!${reset} Open a blank directory in Claude Code and run ${cyan}/gsd:new-project${reset}.
+  ${green}Done!${reset} Open a blank directory in Claude Code and run ${cyan}/gsd:new${reset}.
 
   ${cyan}Join the community:${reset} https://discord.gg/gsd
 `);
