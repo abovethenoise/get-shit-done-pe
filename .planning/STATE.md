@@ -157,26 +157,25 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: install-and-deploy 4/4 features executed + reviewed, refactor plan ready
+Stopped at: 02-PLAN executed + reviewed, 3/6 review fixes committed, 3 remaining
 
 ### Completed this session:
-1. Executed Wave 1: package-identity (3 commits), install-feedback (3 commits)
-2. Executed Wave 2: cc-replacement (3 commits), auto-latest (2 commits)
-3. Reviewed all 4 features: 16 reviewers + 4 synthesizers
-4. Created refactor plan (02-PLAN.md) for blocker + major findings
+1. Executed 02-PLAN.md (refactor): 2 tasks, commits da00919, 2704cef, 7a793ce
+2. Reviewed 02-PLAN output: 4 reviewers + synthesizer → 3 major, 3 minor, 0 blockers
+3. Fixed finding 1 (readSettings returns { settings, wasCorrupt } — detects missing AND corrupt)
+4. Fixed finding 4 (removed redundant validateNoUnresolvedTokens inline scan)
+5. Fixed finding 5 (empty if-branch → negation pattern)
+6. Committed: 29df81e
 
-### Review findings (02-PLAN.md addresses all):
-- BLOCKER: readSettings() returns {} on corrupt settings.json (need known-good baseline)
-- MAJOR: README has 20+ stale get-shit-done-cc refs
-- MAJOR: package-lock.json not regenerated
-- MAJOR: Console monkey-patch → should use options.quiet
-- MAJOR: ccWarnings dead code
-- MAJOR: Auto-update hook has no error logging
+### Remaining review fixes (3):
+- MAJOR finding 2: Validation runs before settings.json fully written (reorder validation after finishInstall)
+- MAJOR finding 3: Banner -PE identity not prominent (update ASCII art style)
+- MINOR finding 6: Auto-update error handler re-reads cache from disk (use in-scope object)
 
 ### Pending deployment:
-- `node bin/install.js --global` to deploy AskUserQuestion fix + all new features
+- `node bin/install.js --global` to deploy AskUserQuestion fix + all install-and-deploy features
 
 ### Resume:
-- Execute 02-PLAN.md: `.planning/capabilities/install-and-deploy/features/install-feedback/02-PLAN.md`
+- Fix remaining 3 findings in bin/install.js and hooks/gsd-auto-update.js
 - Then: `node bin/install.js --global` to deploy everything
-- Plan is autonomous (2 tasks), follow execute-plan.md workflow
+- Review decisions at: `.planning/capabilities/install-and-deploy/features/install-feedback/review/review-decisions.md`
