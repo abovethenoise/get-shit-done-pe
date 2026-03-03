@@ -1,33 +1,26 @@
 ---
 gsd_state_version: 1.0
 milestone: v2.0
-milestone_name: milestone
-status: phase-14-in-progress
-last_updated: "2026-03-02T20:55:00Z"
-progress:
-  total_phases: 14
-  completed_phases: 13
-  total_plans: 56
-  completed_plans: 56
+status: capability-model-active
+last_updated: "2026-03-03T05:35:00Z"
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-02-28)
+See: .planning/PROJECT.md (updated 2026-03-03)
 
 **Core value:** Every piece of executed work traces back to a specific requirement, and every requirement is verified against the actual code.
-**Current focus:** Phase 14 -- Install & Validate (milestone v2.0)
+**Current focus:** Post-launch — capability model active, ready for debug/enhance/refactor work
 
 ## Current Position
 
-Phase: 14 of 14 (Install & Validate)
-Plan: 2 of 3
-Status: Plan 14-02 complete
-Last activity: 2026-03-02 -- Plan 14-02 complete. install.js updated for v2: {GSD_ROOT}/ token replacement, hooks path fix, legacy cleanup, post-install validation, silent output.
+Milestone 2 (phases 1-14): COMPLETE
+Model: Capability/feature (v2 model active)
+Last activity: 2026-03-03 — /init migrated planning to capability model. 7 capabilities created. PROJECT.md rewritten.
 
-Progress: [===================-] 95% (13/14 phases, 2/3 plans in phase 14)
+Next: /clear, then use /gsd:discuss-capability or /gsd:debug|enhance|refactor to start work on a capability.
 
 ## Performance Metrics
 
