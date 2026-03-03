@@ -1,7 +1,7 @@
 ---
 type: capability
 name: install-and-deploy
-status: complete
+status: exploring
 created: "2026-03-03"
 ---
 
@@ -44,7 +44,10 @@ npm install -g
 
 | Feature | Priority | Depends-On | Status |
 |---------|----------|------------|--------|
-| clearer-install-ux | P1 | none | planning |
+| package-identity | P1 | none | exploring |
+| cc-replacement | P1 | package-identity | exploring |
+| install-feedback | P2 | none | exploring |
+| auto-latest | P1 | package-identity | exploring |
 
 ## Decisions
 
