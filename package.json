@@ -1,16 +1,16 @@
 {
-  "name": "get-shit-done-cc",
+  "name": "get-shit-done-pe",
   "version": "1.22.0",
-  "description": "A meta-prompting, context engineering and spec-driven development system for Claude Code by TÂCHES.",
+  "description": "A meta-prompting system optimized for product management insight and detailed capabilities — enhanced AI automation and agentic development. Focus on getting it right, not just advancing the project forward. Built on GSD by TÂCHES.",
   "bin": {
-    "get-shit-done-cc": "bin/install.js"
+    "get-shit-done-pe": "bin/install.js"
   },
   "files": [
     "bin",
     "commands",
     "get-shit-done",
     "agents",
-    "hooks/dist",
+    "hooks",
     "scripts"
   ],
   "keywords": [
@@ -19,17 +19,18 @@
     "ai",
     "meta-prompting",
     "context-engineering",
+    "product-management",
     "spec-driven-development"
   ],
-  "author": "TÂCHES",
+  "author": "abovethenoise",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/glittercowboy/get-shit-done.git"
+    "url": "git+https://github.com/abovethenoise/get-shit-done-pe.git"
   },
-  "homepage": "https://github.com/glittercowboy/get-shit-done",
+  "homepage": "https://github.com/abovethenoise/get-shit-done-pe",
   "bugs": {
-    "url": "https://github.com/glittercowboy/get-shit-done/issues"
+    "url": "https://github.com/abovethenoise/get-shit-done-pe/issues"
   },
   "engines": {
     "node": ">=16.7.0"
@@ -39,8 +40,6 @@
     "esbuild": "^0.24.0"
   },
   "scripts": {
-    "build:hooks": "node scripts/build-hooks.js",
-    "prepublishOnly": "npm run build:hooks",
     "test": "node scripts/run-tests.cjs",
     "test:coverage": "c8 --check-coverage --lines 70 --reporter text --include 'get-shit-done/bin/lib/*.cjs' --exclude 'tests/**' --all node scripts/run-tests.cjs"
   }
