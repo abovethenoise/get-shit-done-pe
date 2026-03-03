@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const readline = require('readline');
+const { execSync } = require('child_process');
 const { runValidation } = require('../scripts/validate-install');
 
 // Colors
@@ -58,6 +59,7 @@ function parseConfigDirArg() {
   }
   return null;
 }
+const ccWarnings = [];
 const explicitConfigDir = parseConfigDirArg();
 const hasHelp = args.includes('--help') || args.includes('-h');
 const forceStatusline = args.includes('--force-statusline');
@@ -219,6 +221,7 @@ function cleanupOrphanedHooks(settings) {
     'gsd-intel-index.js',  // Removed in v1.9.2
     'gsd-intel-session.js',  // Removed in v1.9.2
     'gsd-intel-prune.js',  // Removed in v1.9.2
+    'gsd-check-update',  // cc orphan — removed in pe
   ];
 
   let cleanedHooks = false;
@@ -259,6 +262,66 @@ function cleanupOrphanedHooks(settings) {
   }
 
   return settings;
+}
+
+/**
+ * Detect and remove get-shit-done-cc artifacts before pe install
+ * @param {string} configDir - The target config directory (~/.claude or explicit)
+ * @returns {{ ccWarnings: string[] }}
+ */
+function replaceCc(configDir) {
+  // 1. Detect cc global install
+  let ccInstalled = false;
+  try {
+    execSync('npm list -g get-shit-done-cc --depth=0', { stdio: 'pipe' });
+    ccInstalled = true;
+  } catch (e) {
+    ccInstalled = false; // exit 1 = not installed
+  }
+
+  // 2. Uninstall upstream package (best-effort)
+  if (ccInstalled) {
+    try {
+      execSync('npm uninstall -g get-shit-done-cc', { stdio: 'pipe' });
+    } catch (e) {
+      ccWarnings.push('cc uninstall failed — manual cleanup may be needed');
+    }
+  }
+
+  // 3. Remnant file scan — run unconditionally
+  // Remove gsd:* commands (files named gsd:*)
+  const commandsDir = path.join(configDir, 'commands');
+  if (fs.existsSync(commandsDir)) {
+    for (const entry of fs.readdirSync(commandsDir, { withFileTypes: true })) {
+      if (entry.isFile() && entry.name.startsWith('gsd:')) {
+        fs.unlinkSync(path.join(commandsDir, entry.name));
+      }
+    }
+  }
+
+  // Remove gsd-* agents (files named gsd-*.md at agents/ level only, not subdirs)
+  const agentsDir = path.join(configDir, 'agents');
+  if (fs.existsSync(agentsDir)) {
+    for (const entry of fs.readdirSync(agentsDir, { withFileTypes: true })) {
+      if (entry.isFile() && entry.name.startsWith('gsd-')) {
+        fs.unlinkSync(path.join(agentsDir, entry.name));
+      }
+    }
+  }
+
+  // Remove get-shit-done/ directory (cc artifact — pe uses same name, will be freshly installed)
+  const gsdDir = path.join(configDir, 'get-shit-done');
+  if (fs.existsSync(gsdDir)) {
+    fs.rmSync(gsdDir, { recursive: true });
+  }
+
+  // Remove hooks/dist/ (cc build artifact)
+  const hooksDist = path.join(configDir, 'hooks', 'dist');
+  if (fs.existsSync(hooksDist)) {
+    fs.rmSync(hooksDist, { recursive: true });
+  }
+
+  return { ccWarnings };
 }
 
 /**
@@ -496,6 +559,9 @@ function install(isGlobal) {
 
   // Track installation failures
   const failures = [];
+
+  // Detect and remove any prior cc installation
+  replaceCc(targetDir);
 
   // Clean up orphaned files from previous versions
   cleanupOrphanedFiles(targetDir);
