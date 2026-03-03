@@ -125,6 +125,7 @@ function buildHookCommand(configDir, hookName) {
 
 /**
  * Read and parse settings.json, returning known-good baseline if missing/corrupt
+ * @returns {{ settings: object, wasCorrupt: boolean }}
  */
 function readSettings(settingsPath) {
   try {
@@ -134,10 +135,10 @@ function readSettings(settingsPath) {
     if (!parsed.hooks) parsed.hooks = {};
     if (!Array.isArray(parsed.hooks.PostToolUse)) parsed.hooks.PostToolUse = [];
     if (!Array.isArray(parsed.hooks.SessionStart)) parsed.hooks.SessionStart = [];
-    return parsed;
+    return { settings: parsed, wasCorrupt: false };
   } catch (e) {
     // Missing or corrupt — return known-good baseline, not {}
-    return JSON.parse(JSON.stringify(GSD_BASELINE_SETTINGS));
+    return { settings: JSON.parse(JSON.stringify(GSD_BASELINE_SETTINGS)), wasCorrupt: true };
   }
 }
 
@@ -153,7 +154,7 @@ function writeSettings(settingsPath, settings) {
  * @returns {null|undefined|string} null = remove, undefined = keep default, string = custom
  */
 function getCommitAttribution() {
-  const settings = readSettings(path.join(getGlobalDir(explicitConfigDir), 'settings.json'));
+  const { settings } = readSettings(path.join(getGlobalDir(explicitConfigDir), 'settings.json'));
   if (!settings.attribution || settings.attribution.commit === undefined) {
     return undefined;
   } else if (settings.attribution.commit === '') {
@@ -495,7 +496,7 @@ function uninstall(isGlobal) {
   // 6. Clean up settings.json (remove GSD hooks and statusline)
   const settingsPath = path.join(targetDir, 'settings.json');
   if (fs.existsSync(settingsPath)) {
-    let settings = readSettings(settingsPath);
+    let { settings } = readSettings(settingsPath);
     let settingsModified = false;
 
     // Remove GSD statusline if it references our hook
@@ -603,31 +604,6 @@ function verifyInstalled(dirPath, description) {
 }
 
 /**
- * Scan installed directories for unresolved {GSD_ROOT} tokens
- * @param {string[]} dirs - Directories to scan
- * @returns {string[]} Files containing unresolved tokens
- */
-function validateNoUnresolvedTokens(dirs) {
-  const failures = [];
-  function scan(d) {
-    if (!fs.existsSync(d)) return;
-    for (const entry of fs.readdirSync(d, { withFileTypes: true })) {
-      const full = path.join(d, entry.name);
-      if (entry.isDirectory()) {
-        scan(full);
-      } else if (entry.name.endsWith('.md') || entry.name.endsWith('.js') || entry.name.endsWith('.json')) {
-        const content = fs.readFileSync(full, 'utf8');
-        if (content.includes('{GSD_ROOT}')) failures.push(full);
-      }
-    }
-  }
-  for (const dir of dirs) {
-    scan(dir);
-  }
-  return failures;
-}
-
-/**
  * Install to the specified directory for Claude Code
  * @param {boolean} isGlobal - Whether to install globally or locally
  */
@@ -723,9 +699,7 @@ function install(isGlobal) {
         fs.copyFileSync(srcFile, path.join(hooksDest, hookFile));
       }
     }
-    if (verifyInstalled(hooksDest, 'hooks')) {
-      // hooks installed successfully
-    } else {
+    if (!verifyInstalled(hooksDest, 'hooks')) {
       failures.push('hooks');
     }
   }
@@ -746,16 +720,7 @@ function install(isGlobal) {
     return { ok: false, step: failures[0], reason: 'directory missing or empty after copy' };
   }
 
-  // Validate no unresolved {GSD_ROOT} tokens in installed files
-  const tokenFailures = validateNoUnresolvedTokens([
-    path.join(targetDir, 'commands', 'gsd'),
-    path.join(targetDir, 'agents'),
-    path.join(targetDir, 'get-shit-done'),
-    path.join(targetDir, 'hooks'),
-  ]);
-  if (tokenFailures.length > 0) {
-    return { ok: false, step: 'token replacement', reason: `unresolved {GSD_ROOT} in ${tokenFailures[0]}` };
-  }
+  // Token validation handled by runValidation() in runInstall()
 
   // Initialize auto-update cache with current version
   const cacheDir = path.join(os.homedir(), '.claude', 'get-shit-done');
@@ -780,9 +745,8 @@ function install(isGlobal) {
   // Configure statusline and hooks in settings.json
   try {
     const settingsPath = path.join(targetDir, 'settings.json');
-    const settingsExistedBefore = fs.existsSync(settingsPath);
-    const settings = cleanupOrphanedHooks(readSettings(settingsPath));
-    const settingsWasCorrupt = !settingsExistedBefore;
+    const { settings: rawSettings, wasCorrupt: settingsWasCorrupt } = readSettings(settingsPath);
+    const settings = cleanupOrphanedHooks(rawSettings);
     const statuslineCommand = isGlobal
       ? buildHookCommand(targetDir, 'gsd-statusline.js')
       : 'node .claude/hooks/gsd-statusline.js';

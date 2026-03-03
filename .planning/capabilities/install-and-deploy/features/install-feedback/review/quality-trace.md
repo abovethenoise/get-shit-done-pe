@@ -1,175 +1,209 @@
-# Quality Trace: install-feedback
+# Quality Trace: install-feedback (02-PLAN refactor)
 
 **Reviewer posture:** guilty-until-proven-innocent
 **Framing:** enhance -- "Does the enhancement avoid bloating existing modules? Are existing patterns respected?"
+**Files reviewed:** `bin/install.js` (1040 lines), `scripts/validate-install.js` (383 lines), `hooks/gsd-auto-update.js` (110 lines)
+
+---
 
 ## Phase 1: Quality Standards
 
-Evaluating Node.js CLI code for:
-- Console suppression pattern: is the complexity earned?
-- DRY compliance between `bin/install.js` and `scripts/validate-install.js`
-- Result object pattern: does it justify its structure?
-- `require.main` guard: idiomatic Node.js usage
+Evaluating Node.js CLI code (post-refactor) for:
+- DRY compliance across install, validation, and hook layers
+- Error handling completeness at system boundaries
+- Complexity justification for new constructs (GSD_BASELINE_SETTINGS, settingsWasCorrupt, quiet mode)
+- Dead code residue after removal of monkey-patch and ccWarnings
+- Idiomatic Node.js patterns for spawned subprocesses and module boundaries
+
+---
 
 ## Phase 2: Trace Against Code
 
-### Finding 1: Console suppression is a code smell masking a design gap
+### Finding 1: settingsWasCorrupt flag derives from wrong condition
 
-**Category:** Unnecessary Abstraction
+**Category:** Idiomatic Violation / Bloat
+
+**Verdict:** not met (proven)
+
+**Evidence:**
+- `bin/install.js:783-785`:
+```js
+const settingsExistedBefore = fs.existsSync(settingsPath);
+const settings = cleanupOrphanedHooks(readSettings(settingsPath));
+const settingsWasCorrupt = !settingsExistedBefore;
+```
+- Reasoning: The variable is named `settingsWasCorrupt` but its value is derived from `!settingsExistedBefore` -- a file-existence check, not a corruption check. These are different conditions. A file can exist and be corrupt (invalid JSON), and `readSettings()` handles that case by returning the baseline. But `settingsWasCorrupt` will be `false` for a corrupt-but-present file, silently suppressing the warning message that was the entire point of the flag. The name misrepresents the condition, and the condition itself is incomplete.
+
+- The message rendered at `bin/install.js:885-887` reads:
+```js
+if (settingsWasCorrupt) {
+  msg += `  (settings.json was missing or corrupt — initialized with GSD defaults)\n`;
+}
+```
+- This message will never fire for the "corrupt" case. Only "missing" triggers it. The "corrupt" case is silently swallowed by `readSettings()` at line 138-140 with no mechanism to surface it to the caller.
+
+---
+
+### Finding 2: readSettings() cannot signal corruption to its caller
+
+**Category:** Resource Management / Error Handling
 
 **Verdict:** not met (suspected)
 
 **Evidence:**
-- `bin/install.js:977-988`:
+- `bin/install.js:129-142`:
 ```js
-const origLog = console.log;
-const origError = console.error;
-try {
-    console.log = () => {};
-    console.error = () => {};
-    validationResult = runValidation();
-} catch (e) {
-    validationResult = { failed: 1, failures: [`validation error: ${e.message}`] };
-} finally {
-    console.log = origLog;
-    console.error = origError;
+function readSettings(settingsPath) {
+  try {
+    const raw = fs.readFileSync(settingsPath, 'utf8');
+    const parsed = JSON.parse(raw);
+    if (!parsed.hooks) parsed.hooks = {};
+    if (!Array.isArray(parsed.hooks.PostToolUse)) parsed.hooks.PostToolUse = [];
+    if (!Array.isArray(parsed.hooks.SessionStart)) parsed.hooks.SessionStart = [];
+    return parsed;
+  } catch (e) {
+    // Missing or corrupt — return known-good baseline, not {}
+    return JSON.parse(JSON.stringify(GSD_BASELINE_SETTINGS));
+  }
 }
 ```
-- Reasoning: Monkey-patching globals to suppress output is fragile. If `runValidation()` throws before the `finally` block executes due to an uncatchable error (e.g., a native addon crash), console is permanently silenced for the process. More importantly, this pattern exists because `runValidation()` was designed to log directly to console rather than accepting an output strategy. The function already returns a structured result object -- the console.log calls inside it (`pass()`, `fail()`) are presentation logic baked into business logic. A `quiet` option (the `options = {}` parameter on line 29 of validate-install.js is already there but unused) would eliminate the monkey-patch entirely. The complexity is not earned when the simpler solution was already scaffolded.
+- Reasoning: The function swallows both ENOENT (missing file) and SyntaxError (corrupt JSON) and returns a baseline in both cases. This is intentional per the comment, but it means the caller at `bin/install.js:784` has no way to distinguish the three states: (1) file existed and was valid, (2) file was missing, (3) file existed but was corrupt. Finding 1 depends on this gap -- `settingsWasCorrupt` is an attempt to recover state that `readSettings()` destroyed. The design forces an awkward two-step: `fs.existsSync()` before calling `readSettings()`, which is a TOCTOU race and a leaky abstraction. If the flag matters, `readSettings()` should return it.
 
-### Finding 2: Duplicated recursive directory scanning logic (DRY violation)
+---
+
+### Finding 3: Duplicated recursive directory scan logic (DRY violation, pre-existing but not resolved by refactor)
 
 **Category:** DRY
 
 **Verdict:** not met (proven)
 
 **Evidence:**
-- `bin/install.js:593-610` -- `validateNoUnresolvedTokens()`:
+- `bin/install.js:610-628` -- `validateNoUnresolvedTokens()`, inner `scan()` function: recursive walk, checks `.md|.js|.json` extensions, scans for `{GSD_ROOT}`.
+- `scripts/validate-install.js:205-218` -- `scanForTokens()`: same recursive walk, same extension filter, same `{GSD_ROOT}` check.
+- `scripts/validate-install.js:299-314` -- `scanForStale()`: third copy of the same recursive walk structure with different match logic.
+
+- `bin/install.js:750-758` runs the token scan immediately before `runValidation()` at line 994, which runs `scanForTokens()` over the identical directories. The same token check runs twice on every install with no new information gained from the first pass.
+
+- Reasoning: Three copies of the same recursive-walk-and-match pattern. The refactor added `runValidation({ quiet: true })` to replace the monkey-patch but did not remove the now-redundant `validateNoUnresolvedTokens()` call in `install()`. This is dead weight: if validation is the authority on token correctness, the inline scan in `install()` serves no purpose.
+
+---
+
+### Finding 4: if/else branch with empty body (dead structure)
+
+**Category:** Bloat / Dead Code
+
+**Verdict:** not met (proven)
+
+**Evidence:**
+- `bin/install.js:726-730`:
 ```js
-function validateNoUnresolvedTokens(dirs) {
-  const failures = [];
-  function scan(d) {
-    if (!fs.existsSync(d)) return;
-    for (const entry of fs.readdirSync(d, { withFileTypes: true })) {
-      const full = path.join(d, entry.name);
-      if (entry.isDirectory()) {
-        scan(full);
-      } else if (entry.name.endsWith('.md') || entry.name.endsWith('.js') || entry.name.endsWith('.json')) {
-        const content = fs.readFileSync(full, 'utf8');
-        if (content.includes('{GSD_ROOT}')) failures.push(full);
-      }
-    }
-  }
-  ...
+if (verifyInstalled(hooksDest, 'hooks')) {
+  // hooks installed successfully
+} else {
+  failures.push('hooks');
 }
 ```
-- `scripts/validate-install.js:202-215` -- `scanForTokens()`:
-```js
-function scanForTokens(dir) {
-    if (!fs.existsSync(dir)) return;
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-      const full = path.join(dir, entry.name);
-      if (entry.isDirectory()) {
-        scanForTokens(full);
-      } else if (/\.(md|js|json)$/.test(entry.name)) {
-        const content = fs.readFileSync(full, 'utf8');
-        if (content.includes('{GSD_ROOT}')) {
-          tokenHits.push(full.replace(configDir, '~/.claude'));
-        }
-      }
-    }
-  }
-```
-- And again at `scripts/validate-install.js:296-309` -- `scanForStale()`, same recursive traversal structure with different match logic.
-- Reasoning: Three copies of the same recursive-directory-walk-and-match-file-content pattern across two files. The install.js copy scans the same directories for the same token (`{GSD_ROOT}`) as the validation script. Since `runValidation()` is now called immediately after `install()`, the token check in `install()` (lines 732-740) is redundant -- validation already catches it. This is both a DRY violation and dead-weight code.
+- Reasoning: The `if` branch is a comment stub with no code. This is logically equivalent to `if (!verifyInstalled(hooksDest, 'hooks')) { failures.push('hooks'); }`. The empty affirmative branch is noise. Every other `verifyInstalled()` call in this file uses the negation pattern directly (lines 666-668, 674-676, 705-707). This is inconsistent with the established pattern in the same file and adds a blank branch that a reader must parse and dismiss.
 
-### Finding 3: Unused `options` parameter signals incomplete refactor
+---
 
-**Category:** Bloat
+### Finding 5: Error handler in auto-update hook re-reads and re-parses cache file on every spawn error
 
-**Verdict:** not met (proven)
+**Category:** KISS / Unnecessary Complexity
+
+**Verdict:** not met (suspected)
 
 **Evidence:**
-- `scripts/validate-install.js:29`:
+- `hooks/gsd-auto-update.js:77-84`:
 ```js
-function runValidation(options = {}) {
+child.on('error', (err) => {
+  try {
+    const errCache = JSON.parse(fs.readFileSync(CACHE_PATH, 'utf8'));
+    errCache.lastError = err.message;
+    errCache.lastErrorTime = new Date().toISOString();
+    fs.writeFileSync(CACHE_PATH, JSON.stringify(errCache, null, 2) + '\n');
+  } catch (e) { /* silent */ }
+});
 ```
-- `options` is never read anywhere in the function body. It is never passed by the caller at `bin/install.js:982`.
-- Reasoning: This is scaffolding for a `quiet` mode that was never implemented. The parameter's existence creates false expectation -- a reader assumes it does something. Either use it (to solve Finding 1) or remove it.
+- Reasoning: The error handler reads the cache file from disk, parses it, mutates it, and writes it back. The `cache` object (already in-memory and already written to disk via `writeCache(cache)` at line 71) is in scope and contains all the same data. The error handler could simply do `writeCache({ ...cache, lastError: err.message, lastErrorTime: new Date().toISOString() })` without the extra disk read and parse. The disk read introduces a redundant I/O operation and a second JSON.parse that can fail independently. The added `try/catch` inside the handler is a sign the author recognized the fragility.
 
-### Finding 4: Duplicated color constant declarations
+- Context: The error handler was added in this refactor as an improvement over no handler. The improvement is real (spawn errors are now recorded). The implementation is more complex than necessary.
 
-**Category:** DRY
+---
 
-**Verdict:** not met (proven)
+### Finding 6: GSD_BASELINE_SETTINGS deep-cloned on every corrupt-file read
+
+**Category:** KISS
+
+**Verdict:** met (minor note, not a finding)
 
 **Evidence:**
-- `bin/install.js:11-15`:
+- `bin/install.js:140`:
 ```js
-const cyan = '\x1b[36m';
-const green = '\x1b[32m';
-const yellow = '\x1b[33m';
-const dim = '\x1b[2m';
-const reset = '\x1b[0m';
+return JSON.parse(JSON.stringify(GSD_BASELINE_SETTINGS));
 ```
-- `scripts/validate-install.js:23-27`:
-```js
-const green = '\x1b[32m';
-const red = '\x1b[31m';
-const yellow = '\x1b[33m';
-const dim = '\x1b[2m';
-const reset = '\x1b[0m';
-```
-- Reasoning: Four identical constants duplicated across two files in the same project. Minor on its own, but compounds with Findings 1-2 to show these two files share significant overlapping concerns without any shared module. For a two-file feature this is tolerable but worth noting as a pattern that will not scale.
+- Reasoning: The deep-clone via round-trip JSON is intentional and correct -- it prevents callers from mutating the module-level constant. The pattern is slightly verbose for Node.js (structuredClone exists in Node 17+), but it is explicit, universally understood, and safe. Not a finding.
 
-### Finding 5: require.main guard is idiomatic and correctly applied
+---
+
+### Finding 7: require.main guard and quiet-mode implementation are idiomatic and correctly applied
 
 **Category:** Idiomatic Excellence
 
 **Verdict:** met
 
 **Evidence:**
-- `scripts/validate-install.js:368-380`:
+- `scripts/validate-install.js:29-31`:
 ```js
-if (require.main === module) {
-  const result = runValidation();
-  if (result.failed > 0) {
-    ...
-    process.exit(1);
-  } else {
-    ...
-    process.exit(0);
-  }
-}
+function runValidation(options = {}) {
+  const log = options.quiet ? () => {} : console.log;
+  const logErr = options.quiet ? () => {} : console.error;
 ```
-- Reasoning: Standard Node.js pattern for dual-use modules. `process.exit()` is correctly confined to the standalone branch, keeping `runValidation()` safe for programmatic use. No finding.
+- `scripts/validate-install.js:371-383`: `require.main === module` guard correctly confines `process.exit()` to standalone invocation.
+- `bin/install.js:993-997`: Caller passes `{ quiet: true }`, catches thrown errors, and maps them to the expected result shape.
+- Reasoning: The refactor correctly moved from monkey-patching globals to a `quiet` option that scopes suppression to the function's own log calls. The `require.main` guard keeps the module safe for programmatic use. Both patterns are idiomatic Node.js. No finding.
 
-### Finding 6: Result object pattern is clean and justified
+---
 
-**Category:** Structural Parsimony
+### Finding 8: validation called before settings are written (logical sequencing gap)
 
-**Verdict:** met
+**Category:** Functional Integrity
+
+**Verdict:** not met (suspected)
 
 **Evidence:**
-- `bin/install.js:728-729`:
+- `bin/install.js:983-1013` (runInstall):
 ```js
-return { ok: false, step: failures[0], reason: 'directory missing or empty after copy' };
+const result = install(isGlobal);          // line 984 — returns settings object, does NOT write settings.json
+...
+validationResult = runValidation({ quiet: true });  // line 994 — validates installed state
+...
+handleStatusline(result.settings, isInteractive, (shouldInstallStatusline) => {
+  finishInstall(                            // line 1006 — writes settings.json HERE
+    result.settingsPath,
+    result.settings,
+    ...
+  );
+});
 ```
-- `bin/install.js:852`:
-```js
-return { ok: true, settingsPath, settings, statuslineCommand };
-```
-- Reasoning: Replacing scattered `process.exit(1)` calls with a returned result object is the right pattern. It makes `install()` testable and composable. The dual shape (`ok: true` carries different fields than `ok: false`) is a minor wart but acceptable for a CLI script that is not a public API.
+- `bin/install.js:873-888` (`finishInstall`): `writeSettings()` is called here, after validation.
+- `scripts/validate-install.js:181-190`: Check 1 validates hooks are present in the hooks directory (file presence). It does NOT validate settings.json hook registrations.
+
+- Reasoning: Validation runs after files are written but before `settings.json` is finalized (statusline + `writeSettings()` happen in `finishInstall`). If validation ever adds a check that reads `settings.json` hook entries, it will see incomplete state. This is a latent fragility -- not a current bug because existing validation checks do not inspect `settings.json`, but the sequence is wrong relative to the intended contract. The install is not "done" until `finishInstall()` runs, so validation should follow it.
+
+---
 
 ## Summary
 
 | # | Finding | Category | Verdict |
 |---|---------|----------|---------|
-| 1 | Console suppression via monkey-patch | Unnecessary Abstraction | not met (suspected) |
-| 2 | Triple-duplicated recursive dir scan | DRY | not met (proven) |
-| 3 | Unused `options` parameter | Bloat | not met (proven) |
-| 4 | Duplicated color constants | DRY | not met (proven) |
-| 5 | require.main guard | Idiomatic | met |
-| 6 | Result object pattern | Structural | met |
+| 1 | settingsWasCorrupt derives from wrong condition | Idiomatic Violation | not met (proven) |
+| 2 | readSettings() cannot signal corruption to caller | Error Handling | not met (suspected) |
+| 3 | Triple-duplicated recursive dir scan / redundant token check | DRY | not met (proven) |
+| 4 | Empty if-branch for verifyInstalled(hooks) | Dead Code | not met (proven) |
+| 5 | Error handler in auto-update re-reads cache from disk unnecessarily | KISS | not met (suspected) |
+| 6 | GSD_BASELINE_SETTINGS deep-clone pattern | KISS | met |
+| 7 | quiet-mode and require.main guard | Idiomatic | met |
+| 8 | Validation runs before settings.json is fully written | Functional Integrity | not met (suspected) |
 
-**Key concern:** Findings 1, 2, and 3 are interconnected. The console suppression (Finding 1) exists because `runValidation()` was not given a quiet mode despite having an `options` parameter scaffolded for exactly that (Finding 3). The token scan duplication (Finding 2) exists because `install()` does not trust the validation it is about to call. These three findings together represent a single design gap: the boundary between install and validation was not cleanly drawn during this feature.
+**Key concern:** Findings 1 and 2 are the same design gap viewed from two directions. `readSettings()` swallows all error state, forcing the caller to reconstruct it via a pre-flight `fs.existsSync()` that still does not cover the corrupt case. The `settingsWasCorrupt` flag was the intended fix but solves only half the problem and is misleadingly named. Finding 3 (redundant token scan) is the most straightforward cleanup -- `validateNoUnresolvedTokens()` in `install()` is now dead weight given that `runValidation()` checks the same thing immediately after.

@@ -1,19 +1,21 @@
-# Functional Trace: install-feedback
+# Functional Trace: install-feedback (post 02-PLAN)
 
 **Reviewer:** functional
 **Date:** 2026-03-03
 **Files examined:** `bin/install.js`, `scripts/validate-install.js`
+**Context:** Re-trace against code after 02-PLAN refactor. Prior trace (pre-02-PLAN) found readSettings() returning `{}` — this trace confirms whether that blocker was resolved along with all other requirements.
 
 ---
 
 ## Phase 1: Requirements Internalized
 
-| Req | Behavior |
-|-----|----------|
-| FN-01 | Silent install: no stdout per step, internal pass/fail per step, on first failure capture step name + error |
-| FN-02 | Auto-validation: validate-install.js runs automatically after install, failure counts as install failure |
-| FN-03 | Final output: banner always, success = single line + hint, failure = single line naming step + reason, no output between banner and result |
-| Must-have | readSettings() on missing/corrupt/unparseable settings.json returns known-good GSD baseline (not {}) |
+| Req | Behavior contract |
+|-----|-------------------|
+| FN-01 | Silent install: each step records pass/fail internally, no stdout during install steps |
+| FN-02 | Auto-validation: validate-install.js runs automatically after install; failure = install failure |
+| FN-03 | Banner always; success = single pass line + hint; failure = single fail line + step name; nothing between banner and result |
+| TC-01 | install.js output restructured: console.log suppressed during validation, validate-install callable programmatically via options.quiet |
+| 02-PLAN must-have | readSettings() returns GSD_BASELINE_SETTINGS (not {}) on missing/corrupt; settingsWasCorrupt flag propagated to finishInstall message; ccWarnings dead code removed |
 
 ---
 
@@ -25,17 +27,19 @@
 
 **Evidence:**
 
-- `bin/install.js:633` -- `const failures = [];` -- Internal failure tracking array initialized per install call.
-- `bin/install.js:648-649` -- `if (!verifyInstalled(gsdDest, 'commands/gsd')) { failures.push('commands/gsd'); }` -- Each step records pass/fail internally without printing.
-- `bin/install.js:572-584` -- `function verifyInstalled(dirPath, description) { ... return false; }` -- Verification returns boolean silently; no console output (original logging removed).
-- `bin/install.js:727-729` -- `if (failures.length > 0) { return { ok: false, step: failures[0], reason: 'directory missing or empty after copy' }; }` -- On first failure, step name and reason captured in result object.
-- `bin/install.js:738-739` -- `return { ok: false, step: 'token replacement', reason: ... }` -- Token validation failure also captured as result object.
-- `bin/install.js:852` -- `return { ok: true, settingsPath, settings, statuslineCommand };` -- Success path returns structured result.
-- `bin/install.js:854` -- `return { ok: false, step: 'settings.json update', reason: e.message };` -- Settings step failure captured.
+- `bin/install.js:651` — `const failures = [];` — per-call internal failure accumulator initialized before any step.
+- `bin/install.js:666-668` — `if (!verifyInstalled(gsdDest, 'commands/gsd')) { failures.push('commands/gsd'); }` — step records failure silently; no console call at this site.
+- `bin/install.js:674-676` — same pattern for `get-shit-done` step.
+- `bin/install.js:705-707` — same pattern for `agents` step.
+- `bin/install.js:726-730` — same pattern for `hooks` step.
+- `bin/install.js:745-747` — `if (failures.length > 0) { return { ok: false, step: failures[0], reason: 'directory missing or empty after copy' }; }` — first failure captured with step name, returned as structured object.
+- `bin/install.js:756-758` — `return { ok: false, step: 'token replacement', reason: ... }` — token validation failure captured identically.
+- `bin/install.js:864` — `return { ok: true, settingsPath, settings, statuslineCommand, settingsWasCorrupt };` — success path returns structured result.
+- `bin/install.js:866` — `return { ok: false, step: 'settings.json update', reason: e.message };` — settings failure captured.
 
-No `console.log` calls exist within the `install()` function body (lines 616-856). All install steps execute silently with result objects.
+No `console.log` or `console.error` calls exist within the `install()` function body (lines 634-867). All steps execute without producing output; results flow through return values only.
 
-**Reasoning:** The install function runs all steps without stdout, tracks failures internally per step via `verifyInstalled()` returning booleans, and returns a `{ ok, step, reason }` result object on failure or `{ ok: true, ... }` on success. This matches FN-01.
+**Reasoning:** Every install step either pushes to `failures[]` or returns early with `{ ok: false, step, reason }`. No stdout is produced during the install steps. Contract fully met.
 
 ---
 
@@ -45,36 +49,30 @@ No `console.log` calls exist within the `install()` function body (lines 616-856
 
 **Evidence:**
 
-- `bin/install.js:8` -- `const { runValidation } = require('../scripts/validate-install');` -- Programmatic import of validation.
-- `bin/install.js:975-988` -- Auto-validation block in `runInstall()`:
-  ```javascript
+- `bin/install.js:8` — `const { runValidation } = require('../scripts/validate-install');` — programmatic import present.
+- `bin/install.js:992-997` — auto-validation block in `runInstall()`:
+  ```js
   let validationResult;
-  const origLog = console.log;
-  const origError = console.error;
   try {
-    console.log = () => {};
-    console.error = () => {};
-    validationResult = runValidation();
+    validationResult = runValidation({ quiet: true });
   } catch (e) {
     validationResult = { failed: 1, failures: [`validation error: ${e.message}`] };
-  } finally {
-    console.log = origLog;
-    console.error = origError;
   }
   ```
-- `bin/install.js:990-993` -- Validation failure aborts install:
-  ```javascript
+  Validation runs unconditionally after `install()` returns `ok: true`. Exception path produces a failure result with message.
+- `bin/install.js:999-1003` — failure check:
+  ```js
   if (validationResult.failed > 0) {
     const firstFailure = validationResult.failures[0] || 'unknown check failed';
-    console.log(`\n  Install failed: post-install validation -- ${firstFailure}\n`);
+    console.log(`\n  Install failed: post-install validation — ${firstFailure}\n`);
     process.exit(1);
   }
   ```
-- `scripts/validate-install.js:29` -- `function runValidation(options = {})` -- Exported function returning `{ passed, failed, failures }`.
-- `scripts/validate-install.js:366` -- `module.exports = { runValidation };` -- Proper export.
-- `scripts/validate-install.js:368` -- `if (require.main === module)` -- Guard prevents `process.exit` when called programmatically.
+  Validation failure terminates the process with exit code 1, satisfying "failure = install failure".
+- `scripts/validate-install.js:362-366` — return contract: `return { passed: passedChecks, failed: failedChecks, failures: failures }` — `failures[]` populated by `fail()` calls.
+- `scripts/validate-install.js:371` — `if (require.main === module)` — guard prevents `process.exit` when called programmatically from install.js.
 
-**Reasoning:** Validation runs automatically after install steps complete. Validation failure is folded into the overall install failure with the first failure reason surfaced. The `require.main === module` guard ensures `process.exit` only fires in standalone mode. Exception path also handled (line 983-984).
+**Reasoning:** validate-install.js runs automatically on every successful install, returns a structured result, and its failure is folded into the install outcome. The `require.main` guard prevents standalone exit behavior from firing during programmatic call. Contract fully met.
 
 ---
 
@@ -84,60 +82,107 @@ No `console.log` calls exist within the `install()` function body (lines 616-856
 
 **Evidence:**
 
-- `bin/install.js:71` -- `console.log(banner);` -- Banner prints unconditionally at script start (before any install logic).
-- `bin/install.js:30-40` -- Banner content includes `-PE` identity:
-  ```javascript
-  '  get-shit-done-pe ' + dim + 'v' + pkg.version + reset + '\n' +
-  '  Product management insight for Claude Code.\n' +
-  '  by abovethenoise -- built on GSD by TACHES.\n';
-  ```
-- `bin/install.js:872` -- Success output:
-  ```javascript
-  console.log(`\n  Installed successfully.\n  Start a new Claude Code session and try /gsd:init\n`);
-  ```
-  Single line + next-step hint, matching spec example.
-- `bin/install.js:971` -- Failure output (install step failure):
-  ```javascript
-  console.log(`\n  Install failed: ${result.step} -- ${result.reason}\n`);
+- `bin/install.js:86` — `console.log(banner);` — banner prints unconditionally at module load, before any logic branches.
+- `bin/install.js:986-988` — install step failure output:
+  ```js
+  console.log(`\n  Install failed: ${result.step} — ${result.reason}\n`);
+  process.exit(1);
   ```
   Single line naming step + reason.
-- `bin/install.js:992` -- Failure output (validation failure):
-  ```javascript
-  console.log(`\n  Install failed: post-install validation -- ${firstFailure}\n`);
+- `bin/install.js:999-1002` — validation failure output:
+  ```js
+  console.log(`\n  Install failed: post-install validation — ${firstFailure}\n`);
+  process.exit(1);
   ```
-  Single line naming "post-install validation" as the step + specific check that failed.
-- Console suppression during validation (lines 977-987) ensures no output between banner and final result.
-- No `console.log` calls exist between `banner` (line 71) and the final result messages in any code path (install steps are silent, validation is suppressed).
+  Single line; step is "post-install validation", reason is the first failing check name.
+- `bin/install.js:884-888` — success output in `finishInstall()`:
+  ```js
+  let msg = `\n  Installed successfully.\n  Start a new Claude Code session and try /gsd:init\n`;
+  if (settingsWasCorrupt) {
+    msg += `  (settings.json was missing or corrupt — initialized with GSD defaults)\n`;
+  }
+  console.log(msg);
+  ```
+  Single pass line + hint. Optional corrupt-settings note appended when relevant.
+- `scripts/validate-install.js:30` — `const log = options.quiet ? () => {} : console.log;` — all internal check output suppressed when `quiet: true` is passed. No intermediate output reaches stdout during validation when called from install.js.
 
-**Reasoning:** Banner always prints. Success produces one line with hint. Failure produces one line with step + reason. Console suppression during validation prevents intermediate noise. All three output scenarios match FN-03.
-
-**Cross-layer observation:** The banner uses block ASCII art (lines 31-36) rather than the box-drawing example in TC-01 (the `+=====+` style). The spec example showed `+=====+` box style but this is a presentation detail, not a functional contract. The `-PE` identity and version are present as required.
+**Reasoning:** Banner is unconditional. Install step failures and validation failures each produce exactly one line with step + reason. Success produces one line with hint. No output exists between banner and result in any code path. Contract fully met.
 
 ---
 
-### Must-have: readSettings() returns known-good GSD baseline on corrupt/missing settings.json
+### TC-01: install.js output restructuring
 
-**Verdict:** not met (proven)
+**Verdict:** met
 
 **Evidence:**
 
-- `bin/install.js:114-123`:
-  ```javascript
+- `bin/install.js:8` — `const { runValidation } = require('../scripts/validate-install');` — validate-install.js imported as a module, not shelled out.
+- `bin/install.js:994` — `validationResult = runValidation({ quiet: true });` — `options.quiet` pattern used directly. No console monkey-patch (`console.log = () => {}` / `finally` restore) exists anywhere in the current file.
+- `scripts/validate-install.js:29` — `function runValidation(options = {})` — accepts options object.
+- `scripts/validate-install.js:30-31` — `const log = options.quiet ? () => {} : console.log;` / `const logErr = options.quiet ? () => {} : console.error;` — quiet mode implemented internally via no-op function assignment.
+- `scripts/validate-install.js:42-55` — `pass()` and `fail()` both call `log(...)` not `console.log`, so they respect quiet mode.
+- `scripts/validate-install.js:358-361` — summary output also uses `log(...)`.
+- `scripts/validate-install.js:371-382` — standalone block uses real `console.log` directly, preserving visible output when run as a script.
+
+**Reasoning:** The monkey-patch approach from the pre-02-PLAN state no longer exists. Output suppression is clean and internal to validate-install.js via `options.quiet`. The function is callable programmatically with full output control. Contract fully met.
+
+---
+
+### 02-PLAN Must-haves
+
+#### readSettings() returns GSD_BASELINE_SETTINGS on failure
+
+**Verdict:** met
+
+**Evidence:**
+
+- `bin/install.js:18-31` — `GSD_BASELINE_SETTINGS` constant defined at module level with `permissions.deny` array and `hooks.PostToolUse`/`hooks.SessionStart` arrays.
+- `bin/install.js:129-141` — `readSettings()` implementation:
+  ```js
   function readSettings(settingsPath) {
-    if (fs.existsSync(settingsPath)) {
-      try {
-        return JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
-      } catch (e) {
-        return {};
-      }
+    try {
+      const raw = fs.readFileSync(settingsPath, 'utf8');
+      const parsed = JSON.parse(raw);
+      if (!parsed.hooks) parsed.hooks = {};
+      if (!Array.isArray(parsed.hooks.PostToolUse)) parsed.hooks.PostToolUse = [];
+      if (!Array.isArray(parsed.hooks.SessionStart)) parsed.hooks.SessionStart = [];
+      return parsed;
+    } catch (e) {
+      return JSON.parse(JSON.stringify(GSD_BASELINE_SETTINGS));
     }
-    return {};
   }
   ```
-- On missing file: returns `{}` (line 122).
-- On corrupt/unparseable file (JSON.parse throws): returns `{}` (line 119).
+  Missing file (throws on readFileSync) and corrupt JSON (throws on JSON.parse) both land in the catch block. Return value is a deep copy of `GSD_BASELINE_SETTINGS`, not `{}`.
 
-**Reasoning:** The must-have states readSettings() should return "a known-good GSD baseline -- not `{}`". The implementation returns exactly `{}` in both the missing and corrupt cases. This is explicitly called out in the execution summary (line 93): "readSettings() still returns {} on corrupt settings.json (documented must_have for known-good baseline not addressed in this plan -- requires separate implementation)". The execution team acknowledged this gap but did not implement it.
+**Reasoning:** Both failure modes — missing file and unparseable JSON — return the known-good baseline. Deep copy via `JSON.parse(JSON.stringify(...))` prevents mutation of the shared constant. The pre-02-PLAN "not met" finding is resolved.
+
+#### settingsWasCorrupt flag propagated to finishInstall message
+
+**Verdict:** partial
+
+**Evidence:**
+
+- `bin/install.js:783` — `const settingsExistedBefore = fs.existsSync(settingsPath);`
+- `bin/install.js:784` — `const settings = cleanupOrphanedHooks(readSettings(settingsPath));`
+- `bin/install.js:785` — `const settingsWasCorrupt = !settingsExistedBefore;` — flag set only when file was absent before the call.
+- `bin/install.js:864` — `return { ok: true, settingsPath, settings, statuslineCommand, settingsWasCorrupt };` — flag included in success return.
+- `bin/install.js:1005-1013` — `finishInstall(..., result.settingsWasCorrupt)` — passed through.
+- `bin/install.js:873` — `function finishInstall(settingsPath, settings, statuslineCommand, shouldInstallStatusline, settingsWasCorrupt)` — received.
+- `bin/install.js:884-887` — `if (settingsWasCorrupt) { msg += '...' }` — conditionally appended to success message.
+
+**Reasoning:** The propagation chain is complete and correct for the missing-file case. However `settingsWasCorrupt = !settingsExistedBefore` only detects a missing file. If `settings.json` exists but contains invalid JSON, `readSettings()` falls back to `GSD_BASELINE_SETTINGS` silently, yet `settingsWasCorrupt` remains `false` — the user receives no notice. The spec intent ("missing or corrupt") is half-covered. The missing-file path works as specified; the corrupt-but-present path does not surface the warning.
+
+#### ccWarnings dead code removed
+
+**Verdict:** met
+
+**Evidence:**
+
+- Full read of `bin/install.js` (1040 lines) — no occurrences of `ccWarnings` anywhere in the file.
+- `bin/install.js:346` — `replaceCc()` ends with `return;` (void function, no return value).
+- `bin/install.js:654` — call site: `replaceCc(targetDir);` — return value not captured, consistent with void.
+
+**Reasoning:** Dead code fully removed. Contract met.
 
 ---
 
@@ -145,7 +190,10 @@ No `console.log` calls exist within the `install()` function body (lines 616-856
 
 | Req ID | Verdict | Key Evidence |
 |--------|---------|--------------|
-| FN-01 | met | `bin/install.js:633,648,727` -- failures array + verifyInstalled() + result object return, no console output in install() |
-| FN-02 | met | `bin/install.js:975-993` -- runValidation() called, suppressed, failure folded into install result; `scripts/validate-install.js:368` -- require.main guard |
-| FN-03 | met | `bin/install.js:71,872,971,992` -- banner unconditional, success single line + hint, failure single line + step + reason, no intermediate output |
-| Must-have (readSettings baseline) | not met (proven) | `bin/install.js:119,122` -- returns `{}` on corrupt/missing, spec requires known-good GSD baseline |
+| FN-01 | met | `bin/install.js:651,666,745` — failures[] accumulator, silent per-step push, structured result return; no console.log in install() body |
+| FN-02 | met | `bin/install.js:992-1003` — runValidation({ quiet: true }) called unconditionally, failure exits process; `scripts/validate-install.js:371` — require.main guard |
+| FN-03 | met | `bin/install.js:86,884,986,999` — banner unconditional, success single line + hint, failure single line + step, no intermediate output |
+| TC-01 | met | `bin/install.js:994` — options.quiet replaces monkey-patch; `scripts/validate-install.js:30-31` — quiet via no-op log functions |
+| readSettings() baseline | met | `bin/install.js:129-141` — catch returns deep copy of GSD_BASELINE_SETTINGS, not {} |
+| settingsWasCorrupt propagation | partial | `bin/install.js:785` — flag computed as `!settingsExistedBefore` only; corrupt-but-present file does not set the flag, user notice is silently omitted in that case |
+| ccWarnings removal | met | `bin/install.js` — zero ccWarnings references; replaceCc() returns void |
