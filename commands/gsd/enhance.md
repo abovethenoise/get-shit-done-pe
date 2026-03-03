@@ -9,7 +9,6 @@ allowed-tools:
   - Glob
   - Grep
   - Task
-  - AskUserQuestion
 ---
 <objective>
 Run editor-mode discovery for enhancing an existing capability or feature. Understands what exists, finds the seam, and plans the extension.

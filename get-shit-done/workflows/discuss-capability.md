@@ -132,7 +132,15 @@ Store cross-capability insights internally for use during guided exploration. Su
 <step name="guided_exploration">
 Conduct guided Q&A exploring WHAT and WHY for this capability.
 
-**Exploration areas (adapt based on capability state):**
+MANDATORY: Every question MUST go through AskUserQuestion. NEVER output a question as plain text.
+NEVER narrate what you are about to do or what just happened between tool calls.
+Do NOT output filler like "Let me load...", "The user selected...", "Good, let me...".
+Go DIRECTLY from one tool call to the next. The only text output allowed between
+AskUserQuestion calls is the stage banner or a brief (1-line) context note embedded
+in the next AskUserQuestion's question field.
+After EVERY AskUserQuestion return, write results to capability working state before the next question.
+
+**Background checklist (not sequential stages — use to assess gaps):**
 
 1. **Core idea** — What is this capability at its essence? One sentence.
 2. **Why it matters** — What problem does it solve? Who benefits?
@@ -141,17 +149,28 @@ Conduct guided Q&A exploring WHAT and WHY for this capability.
 5. **Suggested lens** — Based on the discussion, which framing lens fits? (debug/new/enhance/refactor)
 6. **Cross-capability concerns** — Surface insights from cross_capability_awareness when relevant
 
-**Discussion loop:**
+**Round loop:**
 
-For each exploration area:
+1. Call AskUserQuestion (1-4 questions informed by what's unknown from the checklist)
+2. Write answers to capability working notes (in the capability file's Exploration section)
+4. Assess: do I have enough to stub initial feature structure?
+   - YES → AskUserQuestion: "I think I have what I need for this capability. Anything else?"
+     - User says done → proceed to update_capability_file
+     - User has more → back to step 1
+   - NO → back to step 1 with questions targeting gaps
 
-1. Ask a focused question using AskUserQuestion (or direct question for open-ended topics)
-2. Listen to the answer
-3. Follow up if the answer reveals new information or ambiguity
-4. After 3-4 questions per area, check: "More on this, or move to next area?"
+No round limit — model self-assesses against done threshold.
+
+**Done threshold:** enough clarity to stub initial feature structure (feature names + one-line descriptions).
 
 **If previous exploration exists:**
-Show what was captured previously. Ask: "Has anything changed? Should we update?"
+Embed the previous exploration summary IN the AskUserQuestion question field:
+- header: "Prior Notes"
+- question: "Previous exploration captured:\n\n{summary of prior exploration}\n\nHas anything changed?"
+- options:
+  - "Still accurate" — Keep prior notes, continue exploring gaps
+  - "Something changed" — Let me update specific points
+Do NOT output the summary as separate plain text before the AskUserQuestion.
 
 **Cross-capability surfacing:**
 When discussion touches on something that overlaps with another capability, raise it naturally:
@@ -210,6 +229,18 @@ Suggested lens: {debug | new | enhance | refactor | undecided}
 ```
 
 Write the file. If the file already existed, preserve Brief and Requirements sections — only update status, Exploration, and kill/defer reasoning.
+
+**Scaffold feature directories and stubs:**
+
+After updating the capability file, create feature directories and FEATURE.md stubs for each feature identified during discussion. For each feature:
+
+```bash
+node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" feature-create "{cap-slug}" "{feature-name}"
+```
+
+This creates `.planning/capabilities/{cap-slug}/features/{feat-slug}/FEATURE.md` using the standard template with EU/FN/TC placeholder sections. These placeholders get filled during discuss-feature.
+
+Skip this step if the capability was killed or deferred.
 </step>
 
 <step name="summarize_and_next">

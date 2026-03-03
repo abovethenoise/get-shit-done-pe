@@ -6,6 +6,32 @@ Initialize a project through auto-detected flow. Handles both new (greenfield) a
 Read all files referenced by the invoking prompt's execution_context before starting.
 </required_reading>
 
+<question_protocol>
+MANDATORY: Every question to the user MUST go through the AskUserQuestion tool.
+NEVER output a question as plain text expecting a response.
+NEVER generate or assume the user's answer — wait for AskUserQuestion to return.
+
+NEVER narrate between tool calls. No filler text like:
+- "The user selected X. Let me..."
+- "Good, let me now..."
+- "Let me load/check/ask..."
+Go DIRECTLY from one tool call to the next. If you need to provide context,
+embed it in the next AskUserQuestion's question field, not as separate text output.
+The only allowed text output is stage banners.
+
+After EVERY AskUserQuestion call, IMMEDIATELY write results to the incremental state file
+before asking the next question.
+
+Within each stage, use a round loop:
+1. Call AskUserQuestion (1-4 questions informed by what's unknown)
+2. Write answers to init-state.json (tool call, not text output)
+4. Assess internally (no text output): do I have enough for this stage's output?
+   - YES → AskUserQuestion: "I think I have what I need for [stage]. Anything else?"
+     - User says done → proceed to next stage
+     - User has more → back to step 1
+   - NO → back to step 1 with questions targeting gaps
+</question_protocol>
+
 <process>
 
 ## 1. Setup and Auto-Detection
@@ -61,17 +87,16 @@ Display stage banner:
 GSD > INIT > NEW PROJECT > GOALS
 ```
 
-Ask inline (freeform, NOT AskUserQuestion):
-
-"What are you building and why? What problem does this solve?"
-
-Wait for response. Follow threads naturally:
+Use the round loop from `<question_protocol>`. Target areas:
+- What they're building and why
 - What excited them about this idea
 - Who is the target user
 - What does success look like
 - What's already decided vs open
 
-**Incremental write -- persist immediately:**
+Done threshold: clear enough to explain the project to a stranger in 2-3 sentences.
+
+**Incremental write -- persist after every round:**
 
 Write `.planning/init-state.json`:
 ```json
@@ -83,14 +108,38 @@ Write `.planning/init-state.json`:
 }
 ```
 
-### 3b. Deep Q&A -- Tech Stack Opinions
+### 3b. Capabilities Q&A
+
+Display stage banner:
+```
+GSD > INIT > NEW PROJECT > CAPABILITIES
+```
+
+Use the round loop from `<question_protocol>`. Present capabilities inferred from goals context, then refine via rounds.
+
+First round: Use AskUserQuestion to present inferred capabilities:
+- header: "Capabilities"
+- question: "Based on our conversation, I see these potential capabilities:\n\n[numbered list of inferred capabilities with one-line descriptions]\n\nDoes this look right?"
+- options:
+  - "Looks good" -- Proceed with this list
+  - "I want to adjust" -- Add, remove, or reorder capabilities
+
+If "I want to adjust": continue round loop targeting specific changes, then re-present.
+
+Done threshold: confirmed capability list that the user is satisfied with.
+
+**Incremental write -- update init-state.json** with `completed_sections: ["goals", "capabilities"]`.
+
+### 3c. Deep Q&A -- Tech Stack Opinions
 
 Display stage banner:
 ```
 GSD > INIT > NEW PROJECT > TECH STACK
 ```
 
-Use AskUserQuestion to probe opinions:
+Use the round loop from `<question_protocol>`. First round:
+
+Use AskUserQuestion:
 - header: "Stack"
 - question: "Do you have strong preferences on tech stack, or should I recommend based on your goals?"
 - options:
@@ -98,37 +147,39 @@ Use AskUserQuestion to probe opinions:
   - "Recommend for me" -- Suggest based on the project goals
   - "Mix" -- I have some preferences, open on others
 
-If "I have preferences" or "Mix": Ask follow-up about specific choices (language, framework, database, deployment).
+If "I have preferences" or "Mix": continue rounds targeting specific choices (language, framework, database, deployment).
 If "Recommend for me": Note that recommendations will come after understanding the full picture.
 
-**Incremental write -- update init-state.json** with `completed_sections: ["goals", "tech_stack"]`.
+Done threshold: stack decisions captured or explicitly deferred to later.
 
-### 3c. Deep Q&A -- Architecture and Constraints
+**Incremental write -- update init-state.json** with `completed_sections: ["goals", "capabilities", "tech_stack"]`.
+
+### 3d. Deep Q&A -- Architecture and Constraints
 
 Display stage banner:
 ```
 GSD > INIT > NEW PROJECT > ARCHITECTURE
 ```
 
-Ask about:
+Use the round loop from `<question_protocol>`. Target areas:
 - Scale expectations (users, data volume)
 - Performance constraints
 - Budget/timeline constraints
 - Integration requirements (APIs, services)
 - Deployment target (cloud, self-hosted, edge)
 
-Use AskUserQuestion for structured choices where appropriate, freeform for open exploration.
+Done threshold: enough constraints captured to inform architecture section of PROJECT.md.
 
-**Incremental write -- update init-state.json** with `completed_sections: ["goals", "tech_stack", "architecture"]`.
+**Incremental write -- update init-state.json** with `completed_sections: ["goals", "capabilities", "tech_stack", "architecture"]`.
 
-### 3c.5. Design & Styling Q&A
+### 3d.5. Design & Styling Q&A
 
 Display stage banner:
 ```
 GSD > INIT > NEW PROJECT > DESIGN & STYLE
 ```
 
-Light Q&A (2-4 questions) to capture design opinions that affect downstream planning.
+Use the round loop from `<question_protocol>`. Light Q&A (2-4 questions) to capture design opinions.
 
 **For UI projects:**
 - Visual style preferences: minimalist vs feature-rich, design system/brand guidelines
@@ -140,13 +191,13 @@ Light Q&A (2-4 questions) to capture design opinions that affect downstream plan
 - Output formatting preferences (JSON structure, error formats, logging style)
 - Developer experience priorities (CLI ergonomics, documentation style, tooling)
 
-Use AskUserQuestion for structured choices, freeform for open exploration.
+Done threshold: design opinions captured that affect downstream planning.
 
-**Incremental write -- update init-state.json** with `completed_sections: ["goals", "tech_stack", "architecture", "design_style"]`.
+**Incremental write -- update init-state.json** with `completed_sections: ["goals", "capabilities", "tech_stack", "architecture", "design_style"]`.
 
-### 3d. Write PROJECT.md
+### 3e. Write PROJECT.md
 
-When enough context is gathered (goals + opinions + constraints + architecture understood):
+When enough context is gathered (goals + capabilities + tech stack + architecture + design understood):
 
 Display stage banner:
 ```
@@ -167,29 +218,11 @@ mkdir -p .planning
 node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs: initialize project" --files .planning/PROJECT.md
 ```
 
-**Incremental write -- update init-state.json** with `completed_sections: ["goals", "tech_stack", "architecture", "design_style", "project_md"]`.
+**Incremental write -- update init-state.json** with `completed_sections: ["goals", "capabilities", "tech_stack", "architecture", "design_style", "project_md"]`.
 
-### 3e.0. Capabilities Q&A
+### 3e.5. Write Capability Map
 
-Display stage banner:
-```
-GSD > INIT > NEW PROJECT > CAPABILITIES
-```
-
-Present the capabilities inferred from the Q&A context so far. Use AskUserQuestion:
-- header: "Capabilities"
-- question: "Based on our conversation, I see these potential capabilities:\n\n[numbered list of inferred capabilities with one-line descriptions]\n\nDoes this look right?"
-- options:
-  - "Looks good" -- Proceed with this list
-  - "I want to adjust" -- Add, remove, or reorder capabilities
-
-If "I want to adjust": ask follow-up about specific changes, then re-present the updated list for confirmation.
-
-Once confirmed, proceed to write capability files.
-
-### 3e. Write Capability Map
-
-Derive capabilities from the confirmed list. For each capability:
+Derive capabilities from the confirmed list (from step 3b). For each capability:
 
 ```bash
 node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" capability-create "[capability-name]"
@@ -199,7 +232,7 @@ This creates `.planning/capabilities/{slug}/CAPABILITY.md` with the standard tem
 
 Update each CAPABILITY.md with exploration notes from the Q&A.
 
-**Incremental write -- update init-state.json** with `completed_sections: ["goals", "tech_stack", "architecture", "design_style", "project_md", "capability_map"]`.
+**Incremental write -- update init-state.json** with `completed_sections: ["goals", "capabilities", "tech_stack", "architecture", "design_style", "project_md", "capability_map"]`.
 
 ### 3f. Seed .documentation/
 
@@ -221,7 +254,7 @@ mkdir -p .documentation/capabilities .documentation/decisions
 node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs: seed documentation structure" --files .documentation/architecture.md .documentation/domain.md .documentation/mapping.md
 ```
 
-**Incremental write -- update init-state.json** with `completed_sections: ["goals", "tech_stack", "architecture", "design_style", "project_md", "capability_map", "documentation"]`.
+**Incremental write -- update init-state.json** with `completed_sections: ["goals", "capabilities", "tech_stack", "architecture", "design_style", "project_md", "capability_map", "documentation"]`.
 
 ### 3g. Write ROADMAP.md
 
@@ -241,7 +274,7 @@ For new projects:
 node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs: initialize roadmap" --files .planning/ROADMAP.md
 ```
 
-**Incremental write -- update init-state.json** with `completed_sections: ["goals", "tech_stack", "architecture", "design_style", "project_md", "capability_map", "documentation", "roadmap_md"]`.
+**Incremental write -- update init-state.json** with `completed_sections: ["goals", "capabilities", "tech_stack", "architecture", "design_style", "project_md", "capability_map", "documentation", "roadmap_md"]`.
 
 ### 3h. Write STATE.md
 
@@ -261,7 +294,7 @@ Write `.planning/STATE.md` using the v2 state template (`templates/state.md`).
 node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs: initialize state" --files .planning/STATE.md
 ```
 
-**Incremental write -- update init-state.json** with `completed_sections: ["goals", "tech_stack", "architecture", "design_style", "project_md", "capability_map", "documentation", "roadmap_md", "state_md"]`.
+**Incremental write -- update init-state.json** with `completed_sections: ["goals", "capabilities", "tech_stack", "architecture", "design_style", "project_md", "capability_map", "documentation", "roadmap_md", "state_md"]`.
 
 **Proceed to Step 5 (Completion).**
 
@@ -311,28 +344,27 @@ Display stage banner:
 GSD > INIT > EXISTING PROJECT > VALIDATION
 ```
 
-Present the scan results as independent sections. Each section can be confirmed, corrected, or flagged independently. Confirming one section does NOT depend on confirming another.
+Present a consolidated text summary of ALL scan findings organized by section:
 
-**Section order (each independent):**
+1. **Tech Stack** -- languages, frameworks, dependencies, versions
+2. **Architecture** -- directory layout, module boundaries, patterns
+3. **Data Models** -- schemas, types, data flow
+4. **Entry Points** -- CLI commands, API routes, UI entry, event handlers
+5. **External Dependencies** -- services, APIs, integrations
+6. **Patterns and Conventions** -- code style, architecture patterns
 
-1. **Tech Stack** -- "Here's what I found. Correct?"
-2. **Architecture** -- "Here's how the code is structured. Accurate?"
-3. **Data Models** -- "Here are the key data structures. Right?"
-4. **Entry Points** -- "These are the main entry points. Missing any?"
-5. **External Dependencies** -- "These are the integrations. Complete?"
-6. **Patterns and Conventions** -- "These patterns seem established. Agree?"
-
-For each section, use AskUserQuestion:
-- header: "[Section]" (max 12 chars)
-- question: "[Summary of findings for this section]\n\nIs this accurate?"
+Then use a single AskUserQuestion:
+- header: "Scan Results"
+- question: "[consolidated summary above]\n\nAnything wrong or missing?"
 - options:
-  - "Correct" -- Confirmed as-is
-  - "Needs correction" -- Let me fix some details
-  - "Low confidence" -- I'm not sure either, flag for later
+  - "Looks accurate" -- Proceed to gap fill
+  - "Some corrections needed" -- Let me flag specific issues
+  - "Major issues" -- Significant findings are wrong
 
-Flag low-confidence areas for gap fill in Phase 3.
+If "Looks accurate": proceed directly to gap fill.
+If "Some corrections needed" or "Major issues": use round loop from `<question_protocol>` to drill into flagged sections only. Done threshold: user confirms corrections are captured.
 
-**Targeted intent questions** -- after validation, ask 2-3 questions about WHY things are structured this way:
+**Targeted intent questions** -- after validation, ask 2-3 questions about WHY things are structured this way (via AskUserQuestion round loop):
 - "What drove the choice of [framework]?"
 - "Is [pattern] intentional or inherited?"
 - "What's the history behind [architectural decision]?"
@@ -346,14 +378,14 @@ Display stage banner:
 GSD > INIT > EXISTING PROJECT > GAP FILL
 ```
 
-Address what the scan couldn't determine:
+Use the round loop from `<question_protocol>`. Target areas:
 
 1. **Domain context** -- "What domain is this? What are the key business concepts?"
 2. **Known tech debt** -- "What's broken or fragile that I should know about?"
 3. **Intent gaps** -- "For the low-confidence areas flagged earlier: [list them]"
 4. **Project direction** -- "What are you trying to accomplish next? What's the goal for this session?"
 
-Use mix of AskUserQuestion (for structured choices) and freeform (for open exploration).
+Done threshold: domain context, known issues, and project direction captured.
 
 **Incremental write -- update init-state.json** with `completed_sections: ["scan", "validation", "gap_fill"]`.
 
@@ -364,11 +396,13 @@ Display stage banner:
 GSD > INIT > EXISTING PROJECT > DESIGN & STYLE
 ```
 
-During gap-fill context, add design/styling questions:
+Use the round loop from `<question_protocol>`. Target areas:
 - "What design patterns or styling conventions exist in this codebase?"
 - "Any design opinions or standards you want to enforce going forward?"
 - For UI projects: component library, CSS approach, theming, responsive strategy
 - For non-UI projects: API design conventions, output formats, DX priorities
+
+Done threshold: design conventions captured for PROJECT.md.
 
 Fold answers into PROJECT.md under a Design & Standards section.
 
@@ -513,7 +547,7 @@ Later, once you have features:
 
 <key_constraints>
 - Auto-detection uses filesystem evidence only: .planning/ existence + code file presence
-- New-project flow is conversational Q&A using AskUserQuestion and freeform inline questions
+- New-project flow is conversational Q&A using AskUserQuestion exclusively (see question_protocol)
 - Existing-project flow uses gather-synthesize for parallel scan (6 dimensions)
 - Validation sections are independent -- confirming stack does not depend on confirming architecture
 - Incremental writes: each section is persisted to init-state.json immediately after completion

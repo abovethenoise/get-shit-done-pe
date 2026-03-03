@@ -8,7 +8,6 @@ allowed-tools:
   - Bash
   - Glob
   - Grep
-  - AskUserQuestion
 ---
 
 <objective>

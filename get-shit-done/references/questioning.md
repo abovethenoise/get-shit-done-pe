@@ -1,3 +1,33 @@
+<anti_hallucination>
+NEVER output a question as plain text expecting a response. ALL questions go through AskUserQuestion.
+NEVER generate or assume the user's answer — wait for AskUserQuestion to return.
+NEVER simulate an AskUserQuestion response in your output.
+
+NEVER narrate between tool calls. No filler text like:
+- "The user selected X. Let me..."
+- "Good, let me now..."
+- "Let me load/check/ask..."
+- "Based on their answer..."
+Go DIRECTLY from one tool call to the next. If you need to provide context,
+embed it in the next AskUserQuestion's question field, not as separate text output.
+
+After EVERY AskUserQuestion call, IMMEDIATELY write results to the relevant state file
+before asking the next question.
+
+**Round loop pattern (shared across all discussion workflows):**
+
+1. Call AskUserQuestion (1-4 questions informed by what's unknown)
+2. Write answers to state/working file (tool call, not text output)
+4. Assess internally (no text output): do I have enough for this stage's done threshold?
+   - YES → AskUserQuestion: "I think I have what I need for [stage]. Anything else?"
+     - User says done → proceed
+     - User has more → back to step 1
+   - NO → back to step 1 with questions targeting gaps
+
+No round limit. The model self-assesses against the stage's done threshold.
+The entire round loop should be tool calls only — zero narrative text between rounds.
+</anti_hallucination>
+
 Project initialization is dream extraction, not requirements gathering. You're helping the user discover and articulate what they want to build. This isn't a contract negotiation — it's collaborative thinking.
 
 <philosophy>
@@ -121,7 +151,7 @@ When you could write a clear PROJECT.md, offer to proceed:
   - "Create PROJECT.md" — Let's move forward
   - "Keep exploring" — I want to share more / ask me more
 
-If "Keep exploring" — ask what they want to add or identify gaps and probe naturally.
+If "Keep exploring" — continue with AskUserQuestion round loop targeting gaps or areas the user wants to expand.
 
 Loop until "Create PROJECT.md" selected.
 

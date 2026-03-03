@@ -39,7 +39,10 @@ RESOLVED=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" slug-resolve "$I
 ```
 
 - **If resolved:** Add to `resolved_items[]` with type, capability_slug, feature_slug, full_path.
-- **If ambiguous:** Present candidates inline, user picks.
+- **If ambiguous:** Use AskUserQuestion to present top candidates:
+  - header: "Which one?"
+  - question: "'{ITEM}' matched multiple items. Which did you mean?"
+  - options: [top 3 candidates by match quality]
 - **If no_match:** Ask user: create new capability/feature, re-describe, or skip.
 
 Build the final `resolved_items` list.

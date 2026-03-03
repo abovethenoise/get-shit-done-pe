@@ -9,7 +9,6 @@ allowed-tools:
   - Glob
   - Grep
   - Task
-  - AskUserQuestion
 ---
 <objective>
 Run architect-mode discovery for a new capability or feature. Defines the problem space before solutioning through exploratory but disciplined questioning.

@@ -9,7 +9,6 @@ allowed-tools:
   - Glob
   - Grep
   - Task
-  - AskUserQuestion
 ---
 <objective>
 Run surgeon-mode discovery for refactoring an existing capability or feature. Understands load-bearing walls before proposing structural changes.

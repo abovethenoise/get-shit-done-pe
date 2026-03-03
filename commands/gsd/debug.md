@@ -9,7 +9,6 @@ allowed-tools:
   - Glob
   - Grep
   - Task
-  - AskUserQuestion
 ---
 <objective>
 Run detective-mode discovery for a capability or feature. Narrows from symptom to root cause through convergent questioning.

@@ -111,7 +111,15 @@ Continue to guided exploration.
 <step name="guided_exploration">
 Conduct guided Q&A exploring HOW this feature works.
 
-**Exploration areas (adapt based on feature state and capability context):**
+MANDATORY: Every question MUST go through AskUserQuestion. NEVER output a question as plain text.
+NEVER narrate what you are about to do or what just happened between tool calls.
+Do NOT output filler like "Let me load...", "The user selected...", "Good, let me...".
+Go DIRECTLY from one tool call to the next. The only text output allowed between
+AskUserQuestion calls is the stage banner or a brief (1-line) context note embedded
+in the next AskUserQuestion's question field.
+After EVERY AskUserQuestion return, write results to feature working state before the next question.
+
+**Background checklist (not sequential stages — use to assess gaps):**
 
 1. **Implementation approach** — How should this feature work at a high level?
 2. **Edge cases** — What happens in unusual situations? Error states? Empty data?
@@ -120,14 +128,19 @@ Conduct guided Q&A exploring HOW this feature works.
 5. **Data flow** — What data does this feature consume and produce?
 6. **Constraints** — Performance requirements? Compatibility? Platform limitations?
 
-**Discussion loop:**
+**Round loop:**
 
-For each exploration area:
+1. Call AskUserQuestion (1-4 questions informed by what's unknown from the checklist)
+2. Write answers to feature working notes (in the FEATURE.md Decisions section)
+4. Assess: do I have enough to fill out EU, FN, and TC requirements in FEATURE.md?
+   - YES → AskUserQuestion: "I think I have what I need for this feature. Anything else?"
+     - User says done → proceed to update_feature_notes
+     - User has more → back to step 1
+   - NO → back to step 1 with questions targeting gaps
 
-1. Ask a focused question using AskUserQuestion (or direct question for open-ended topics)
-2. Listen to the answer
-3. Follow up if the answer reveals new information or ambiguity
-4. After 3-4 questions per area, check: "More on this, or move to next area?"
+No round limit — model self-assesses against done threshold.
+
+**Done threshold:** enough clarity to fill out EU (user stories + acceptance criteria), FN (input/output contracts + behavior rules + edge cases), and TC (constraints + upstream/downstream + approach) requirements in FEATURE.md.
 
 **Grounding in capability context:**
 Reference the parent capability's exploration notes during discussion. "The capability suggests {lens} framing — does that align with how you see this feature?"
@@ -192,17 +205,35 @@ If "Continue here": Note the issue but proceed with feature exploration.
 <step name="update_feature_notes">
 After exploration is complete (or kill/defer/backward-route decided), update feature artifacts.
 
-**Requirements directory:** `.planning/capabilities/{cap-slug}/features/{feat-slug}/requirements/`
+**If kill/defer:** Update the feature file status and add reasoning. Skip requirement generation.
 
-Create the requirements directory if it doesn't exist.
+**If exploration complete:** Write actual EU, FN, TC content into FEATURE.md.
 
-**Write exploration notes to feature requirements location.** If requirements files already exist, preserve them — only add/update exploration notes.
+The template at `get-shit-done/templates/feature.md` already has the right structure. Fill the sections from discussion:
 
-**If kill/defer:** Update the feature file status and add reasoning.
+**End-User Requirements (EU):**
+- Write user stories with acceptance criteria gathered during discussion
+- Format: `As a {who}, I want {what}, so that {why}`
+- Each story gets observable acceptance criteria as checkboxes
+- Include out-of-scope notes where discussed
 
-**Feature file update:** Update status in `.planning/capabilities/{cap-slug}/features/{feat-slug}/FEATURE.md` if status changed.
+**Functional Requirements (FN):**
+- Write input/output contracts from discussion
+- Behavior rules and logic
+- Edge case handling identified during exploration
+- Error conditions and responses
 
-**Note:** Full EU, FN, TC requirement generation happens during the pipeline's requirements stage (auto-generated from brief). This step captures discussion notes that will inform that generation.
+**Technical Specs (TC):**
+- Technical constraints discussed (language, libs, patterns, performance)
+- Upstream: what feeds into this feature
+- Downstream: what consumes this feature's output
+- Implementation approach from discussion
+
+**Update the Trace Table** at the top of FEATURE.md to reflect the requirements written (EU-01, EU-02, FN-01, etc.).
+
+**Feature file location:** `.planning/capabilities/{cap-slug}/features/{feat-slug}/FEATURE.md`
+
+Update status to `specified` if requirements were written.
 </step>
 
 <step name="summarize_and_next">
