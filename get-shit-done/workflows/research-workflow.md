@@ -67,10 +67,18 @@ Read and include:
 Read and include:
 - CAPABILITY.md at `capability_path`
 
-**Layer 3: Feature Context (when feature_path provided)**
-Read and include:
-- FEATURE.md at `feature_path`
+**Layer 3: Scope Context (level-aware)**
+
+**If capability-level (no `feature_path` provided):**
+- Scan ALL feature directories under the capability: `.planning/capabilities/{cap}/features/*/FEATURE.md`
+- For each feature found, extract: status, requirement count (EU/FN/TC IDs), dependencies
+- Include summaries of all features' status/plans/requirements
+- This gives gatherers the full capability scope to research across all features
+
+**If feature-level (`feature_path` provided):**
+- Read and include FEATURE.md at `feature_path`
 - REQUIREMENTS.md at `context_paths.requirements_path` (if exists)
+- Single feature scope — current behavior
 
 **Layer 4: Framing Context (when framing_context provided)**
 Read and include framing metadata:

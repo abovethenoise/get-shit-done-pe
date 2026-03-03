@@ -264,10 +264,16 @@ Reasoning: {reasoning}
 
 ## Next Steps
 
-{If exploring/specified:}
-- `/gsd:{suggested-lens} {capability-slug}` — Start framing with suggested lens
-- `/gsd:discuss-feature {capability-slug}/{feature}` — Explore specific features
-- `/gsd:discuss-capability {capability-slug}` — Continue exploring (repeatable)
+{If exploring/specified — scan feature statuses in capability dir:}
+
+  {List undiscussed features:}
+  - `/gsd:discuss-feature {cap}/{feat}` — for each undiscussed feature
+
+  {If related/cross-cutting capabilities surfaced during discussion:}
+  - `/gsd:discuss-capability {related-cap}` — Explore related capability
+
+  {Always:}
+  - "If you'd like me to assume requirements for undiscussed features, just say so."
 
 {If killed:}
 - Capability marked as killed. Can be overridden later via `/gsd:discuss-capability {slug}`.

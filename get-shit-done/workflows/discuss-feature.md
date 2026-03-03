@@ -262,10 +262,16 @@ Action: {discuss-capability or replan}
 
 ## Next Steps
 
-{If exploring/specified:}
-- Continue with framing: `/gsd:{lens} {capability-slug}`
-- Discuss another feature: `/gsd:discuss-feature {capability-slug}/{other-feature}`
-- Return to capability: `/gsd:discuss-capability {capability-slug}`
+{If specified (EU/FN/TC written):}
+
+  {If undiscussed sibling features exist:}
+  - `/gsd:discuss-feature {cap}/{next-undiscussed}` — for each
+
+  {If ALL features in capability specified:}
+  - `/gsd:plan {cap}` — Plan the full capability
+
+  {Otherwise:}
+  - `/gsd:plan {cap}/{this-feat}` — Plan this feature
 
 {If killed:}
 - Feature marked as killed. Can be overridden later.

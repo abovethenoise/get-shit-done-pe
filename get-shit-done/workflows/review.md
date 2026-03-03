@@ -112,6 +112,24 @@ Review artifacts:
   {feature_dir}/review/
 ```
 
+## 12. Auto-Advance
+
+After completion:
+
+**If 0 blocker/major findings remaining:**
+- Auto-invoke doc workflow: `@{GSD_ROOT}/get-shit-done/workflows/doc.md`
+- Pass: CAPABILITY_SLUG, FEATURE_SLUG
+- Display: "No blockers remaining. Auto-advancing to documentation generation."
+
+**If deferred findings but no blockers:**
+- Auto-invoke doc workflow with deferrals noted
+- Display: "Deferred findings noted. Auto-advancing to documentation generation."
+
+**If blockers remain:**
+- Do NOT auto-advance
+- Display: "Blockers remain. Resolve before documentation can be generated."
+- Surface blocker list for manual resolution
+
 </process>
 
 <key_constraints>
@@ -124,4 +142,5 @@ Review artifacts:
 - Max 2 re-review cycles
 - Requirements from FEATURE.md (EU/FN/TC), not separate REQUIREMENTS.md
 - Review traces in feature_dir/review/ (feature-scoped paths)
+- Auto-advances to doc workflow when no blockers remain (step 12)
 </key_constraints>

@@ -135,6 +135,27 @@ Wave 3:
   4. coaching/session-summary -> depends: grading, session-analysis
 ```
 
+**Wave readiness validation:**
+
+For Wave 1 items:
+- Confirm each feature has been discussed (FEATURE.md exists with EU/FN/TC sections populated)
+- If not discussed: flag as gap — "Feature '{feat}' in Wave 1 has no requirements yet. Run `/gsd:discuss-feature {cap}/{feat}` first."
+
+For Wave 2+ items:
+- Confirm upstream dependencies (in earlier waves) are at least planned (have PLAN.md files)
+- If upstream not planned: flag as gap — "Feature '{feat}' depends on '{dep}' which hasn't been planned yet."
+
+Surface all gaps before writing to ROADMAP.md:
+
+If gaps found:
+```
+⚠️ Readiness gaps detected:
+
+{list of gaps}
+
+These don't block focus group creation, but should be addressed before execution.
+```
+
 Use AskUserQuestion:
 - header: "Priority Order"
 - question: "Does this order look right? You can reorder within waves (cross-wave reordering would break dependencies)."

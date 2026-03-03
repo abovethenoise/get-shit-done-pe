@@ -77,7 +77,7 @@ Use AskUserQuestion:
 
 ### 4b. Process Each Feature in Wave
 
-For each feature in the current wave:
+For each feature in the current wave (sequentially, DAG order):
 
 1. **Check DISCOVERY-BRIEF.md existence:**
    ```bash
@@ -88,6 +88,9 @@ For each feature in the current wave:
    - Pass: LENS, CAPABILITY_SLUG (derived from feature directory path)
 
 2. **Invoke framing-pipeline.md:**
+
+   **Sequential execution:** Process one feature at a time within each wave. Each feature: single planner → Q&A → finalize → next feature. Do NOT spawn parallel planners for features within the same wave.
+
    ```
    @{GSD_ROOT}/get-shit-done/workflows/framing-pipeline.md
    ```

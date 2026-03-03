@@ -83,11 +83,39 @@ Flag findings: mid-plan checkpoint, incomplete execution, interrupted agent.
 <step name="determine_next_action">
 Based on project state:
 
+**Git-based task resume (when PLAN exists without SUMMARY):**
+
+For each incomplete plan (PLAN without matching SUMMARY):
+1. Extract plan ID from filename (e.g., `01-PLAN.md` → `01`)
+2. Scan git log for commits matching the plan's task commit pattern:
+   ```bash
+   git log --oneline --grep="${CAPABILITY_SLUG}/${FEATURE_SLUG}" --since="7 days ago" | head -20
+   ```
+3. Count commits that match task patterns (feat, fix, refactor, test, chore with the cap/feat scope)
+4. Read the PLAN.md to count total tasks
+5. Determine last completed task from commit messages (look for `[task N/M]` pattern in commits)
+
+Present resume context:
+```
+Plan {plan_id} for {cap}/{feat}: {completed_tasks}/{total_tasks} tasks committed.
+Last commit: {last_commit_message} ({time_ago})
+
+Resume from task {next_task}?
+```
+
+Use AskUserQuestion:
+- header: "Resume"
+- question: "Plan {plan_id}: {completed}/{total} tasks done. Resume from task {next}?"
+- options:
+  - "Resume from task {next}" — pass task offset to execute workflow
+  - "Start plan fresh" — re-execute from task 1
+  - "Skip this plan" — move to next incomplete plan or next action
+
 | Condition | Primary | Option |
 |-----------|---------|--------|
 | Interrupted agent | Resume agent (Task resume) | Start fresh |
 | Continue-here file | Resume from checkpoint | Start fresh on plan |
-| PLAN without SUMMARY | Complete incomplete plan | Abandon and move on |
+| PLAN without SUMMARY | Complete incomplete plan (use git-based resume above) | Abandon and move on |
 | Feature fully planned, not executed | `/gsd:execute {cap/feat}` | Review plans first |
 | Feature needs planning | `/gsd:new` or `/gsd:enhance` | `/gsd:discuss` first |
 | Feature executed, not reviewed | `/gsd:review {cap/feat}` | Skip to next feature |
@@ -103,6 +131,11 @@ What would you like to do?
 1. {Primary action}
 2. Review current feature status
 3. Something else
+```
+
+If resume detected, replace primary action with:
+```
+1. Resume {cap}/{feat} from task {N} — `/gsd:execute {cap/feat}` (with resume_from_task={N})
 ```
 
 When offering planning, check CONTEXT.md first -- if missing, suggest discuss before planning.

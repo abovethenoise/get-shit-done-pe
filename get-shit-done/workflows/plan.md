@@ -22,7 +22,7 @@ Read all files referenced by the invoking prompt's execution_context before star
 INIT=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" init plan-feature "$CAPABILITY_SLUG" "$FEATURE_SLUG")
 ```
 
-Parse JSON for: `researcher_model`, `planner_model`, `checker_model`, `research_enabled`, `plan_checker_enabled`, `commit_docs`, `feature_found`, `feature_dir`, `feature_slug`, `capability_slug`, `capability_dir`, `has_research`, `has_context`, `has_plans`, `plan_count`, `planning_exists`, `roadmap_exists`, `state_path`, `roadmap_path`, `requirements_path`, `context_path`, `research_path`.
+Parse JSON for: `researcher_model`, `planner_model`, `checker_model`, `research_enabled`, `plan_checker_enabled`, `commit_docs`, `feature_found`, `feature_dir`, `feature_slug`, `capability_slug`, `capability_dir`, `has_research`, `has_context`, `has_brief`, `has_plans`, `plan_count`, `planning_exists`, `roadmap_exists`, `state_path`, `roadmap_path`, `requirements_path`, `context_path`, `brief_path`, `design_path`, `research_path`.
 
 **If `planning_exists` is false:** Error -- run `/gsd:new` first.
 
@@ -41,10 +41,16 @@ Read `${feature_dir}/FEATURE.md`. **If missing:** Error -- run `/gsd:discuss-fea
 
 Extract: feature name, requirements (EU/FN/TC IDs), goal/description.
 
-## 4. Load CONTEXT.md
+## 4. Load Context
 
-If `context_path` is not null: use it.
-If null: ask user -- "Continue without context" or "Run discuss-feature first".
+Scan capability/feature hierarchy:
+1. Read CAPABILITY.md at ${capability_dir}/CAPABILITY.md
+2. Scan sibling features: list ${capability_dir}/features/*/FEATURE.md
+   - For each: extract status, requirement count, dependencies
+3. Read current FEATURE.md (validated in step 3)
+4. If BRIEF.md exists at ${capability_dir}/BRIEF.md: include Discovery Brief
+5. If RESEARCH.md exists in feature dir: include it
+6. No gate. No user prompt. Hierarchy scan is sufficient.
 
 ## 5. Handle Research
 
@@ -72,9 +78,11 @@ Planner prompt:
 <files_to_read>
 - {state_path} (Project State)
 - {roadmap_path} (Roadmap)
+- {capability_dir}/CAPABILITY.md (Capability context + feature landscape)
 - {FEATURE_PATH} (Feature Requirements -- EU/FN/TC layers)
-- {context_path} (USER DECISIONS from /gsd:discuss-feature)
-- {research_path} (Technical Research)
+- {brief_path} (Discovery Brief -- if exists)
+- {research_path} (Technical Research -- if exists)
+- {design_path} (Design & Style Guide -- if exists)
 </files_to_read>
 
 **Feature requirement IDs (every ID MUST appear in a plan's `requirements` field):** {feature_req_ids from FEATURE.md}
@@ -106,47 +114,63 @@ Task(
 )
 ```
 
-## 8. Handle Planner Return
+**ONE planner per feature.** No parallel planner spawns. If capability-level planning is needed, the capability-orchestrator handles feature sequencing — each feature still gets exactly one planner invocation.
 
-- **PLANNING COMPLETE:** Extract plan paths and findings. If findings -> step 8.5. If none -> step 8.7.
-- **CHECKPOINT REACHED:** Present to user, get response, spawn continuation.
-- **PLANNING INCONCLUSIVE:** Show attempts, offer: add context / retry / manual.
+## 8. Draft/Refine Loop
 
-## 8.5. Present Findings (Q&A)
+### 8.1. Receive Planner Output
 
-For each finding (one at a time):
+Planner returns draft plans + self-critique findings.
 
-```
-Finding {N}/{total}: [{category}]
-{description}
-Suggestion: {suggestion}
-Affected REQs: {reqs_affected}
-
-Options:
-  1. Accept -- suggestion is good
-  2. Provide feedback -- tell planner what to change
-  3. Research guidance -- point to what needs investigating
-```
-
-Accept -> next. Feedback -> re-spawn planner in revision mode. Research -> spawn researcher with guidance, revise affected tasks. After all resolved -> step 8.7.
-
-## 8.7. CLI Validation
+### 8.2. CLI Validation
 
 ```bash
 VALIDATE=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" plan-validate "${REQ_SOURCE}" ${PLAN_FILES} --raw)
 ```
 
-If errors: display with fix guidance, re-spawn planner (max 2 attempts). If warnings: informational only. If passed: step 8.9.
+Validation errors are added to findings list. **Do NOT auto-re-spawn planner on validation errors.**
 
-## 8.9. Finalize Plans
+### 8.3. Surface ALL to User
 
-Display summary (feature, plan count, task count, waves, validation status). Ask: "Finalize this plan?"
+Present everything to user via AskUserQuestion:
 
-Confirmed -> step 9 (plan-checker if enabled, else step 12). Not confirmed -> ask what to change, re-spawn.
+For each finding (validation errors + planner self-critique):
 
-## 9. Spawn gsd-plan-checker
+Use AskUserQuestion:
+- header: "Finding {N}/{total}"
+- question: "[{category}] {description}\n\nSuggestion: {suggestion}\nAffected REQs: {reqs_affected}"
+- options:
+  - "Accept suggestion" — apply as-is
+  - "Edit" — provide modified guidance
+  - "Provide guidance" — tell planner what to change
+  - "Dismiss" — not applicable
 
-Focuses on execution feasibility: can an executor implement these tasks? Valid paths? Realistic data shapes?
+### 8.4. Collect Feedback
+
+Aggregate all user responses: accepted suggestions, edits, guidance, dismissals.
+
+### 8.5. Re-spawn if Needed
+
+If any findings received guidance or edits: re-spawn planner with collected feedback → back to 8.1.
+If all findings accepted or dismissed: proceed to 8.6.
+
+Max 3 iterations of the 8.1-8.5 loop. If max reached with unresolved issues: surface for manual resolution.
+
+### 8.6. User Approval
+
+Present final plan summary:
+- Feature, plan count, task count, waves
+- Validation status
+- Key decisions made during Q&A
+
+Use AskUserQuestion:
+- header: "Finalize"
+- question: "Finalize this plan?"
+- options: "Yes, finalize", "I want changes" (back to 8.5 with guidance), "Abort"
+
+### 8.7. Plan Checker (if enabled)
+
+If `plan_checker_enabled`:
 
 ```
 Task(
@@ -157,14 +181,13 @@ Task(
 )
 ```
 
-## 10. Handle Checker Return
+### 8.8. Handle Checker Findings
 
-- **VERIFICATION PASSED:** Proceed to step 12.
-- **ISSUES FOUND:** Display issues, proceed to step 11.
+Checker findings are ALSO surfaced to user (same Q&A format as 8.3). **No auto-re-spawn on checker issues.**
 
-## 11. Revision Loop (Max 3)
+If checker found issues: present via AskUserQuestion, collect feedback, re-spawn planner if guidance given. Back to 8.7 for re-check.
 
-Re-spawn planner in revision mode with checker issues (targeted updates, not full replan). Re-run checker. If max reached with remaining issues: offer force proceed, provide guidance, or abandon.
+Repeat until user approves or max 3 checker cycles reached.
 
 ## 12. Present Final Status
 
@@ -196,7 +219,7 @@ Also: cat {feature_dir}/*-PLAN.md -- review plans
 <success_criteria>
 - .planning/ directory validated
 - Feature validated (FEATURE.md exists with requirements)
-- CONTEXT.md loaded early and passed to ALL agents
+- Context hierarchy scanned and passed to ALL agents
 - Research completed (unless skipped or existing)
 - Plans created with self-critique findings resolved
 - CLI validation passed

@@ -28,6 +28,15 @@ If `.planning/` missing: error.
 <step name="identify_plan">
 Find first PLAN without matching SUMMARY (match by ID prefix, e.g., 01-PLAN.md -> 01-SUMMARY.md).
 
+**If `resume_from_task` parameter provided:**
+- Skip tasks 1 through (resume_from_task - 1)
+- Display: "Resuming from task {resume_from_task} of {total}. Tasks 1-{resume_from_task-1} already committed."
+- Verify skipped tasks have corresponding git commits (sanity check):
+  ```bash
+  git log --oneline --grep="${CAPABILITY_SLUG}/${FEATURE_SLUG}" --grep="task" --all-match | head -20
+  ```
+- Begin execution from the specified task
+
 <if mode="yolo">Auto-approve: `Execute {plan_file} [Plan X of Y for Feature ${FEATURE_SLUG}]` -> parse_segments.</if>
 <if mode="interactive">Present plan identification, wait for confirmation.</if>
 </step>
@@ -80,6 +89,8 @@ cat ${feature_dir}/{plan_file}
 ```
 This IS the execution instructions. Follow exactly. If plan references CONTEXT.md: honor user's vision throughout.
 
+**If DESIGN.md exists at `.planning/DESIGN.md`:** Read and apply design constraints throughout execution. Follow color system, typography, component patterns, and anti-patterns defined in the design guide.
+
 **If plan contains `<interfaces>` block:** Use pre-extracted type definitions directly -- do NOT re-read source files.
 </step>
 
@@ -121,7 +132,7 @@ After each task (verification passed, done criteria met), commit immediately.
 
 1. `git status --short`
 2. Stage individually (NEVER `git add .`)
-3. Commit: `{type}({CAPABILITY_SLUG}/{FEATURE_SLUG}): {description}` with bullet points
+3. Commit: `{type}({CAPABILITY_SLUG}/{FEATURE_SLUG}): [task {N}/{total}] {description}` with bullet points
 4. Record: `TASK_COMMIT=$(git rev-parse --short HEAD)`
 
 | Type | When |

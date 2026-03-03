@@ -16,10 +16,10 @@ Read all files referenced by the invoking prompt's execution_context before star
 ## 1. Initialize
 
 ```bash
-INIT=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" init framing-discovery "${LENS}" "${CAPABILITY_SLUG}" --raw)
+INIT=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" init framing-discovery "${LENS}" "${CAPABILITY_SLUG}" "${FEATURE_SLUG}" --raw)
 ```
 
-Parse JSON for: `lens`, `mvu_slots`, `anchor_questions_path`, `anchor_questions_exists`, `framing_lenses_path`, `brief_template_path`, `capability` (object or null), `capability_status`, `brief_path`, `capability_list[]`, `capability_count`, `commit_docs`.
+Parse JSON for: `lens`, `mvu_slots`, `anchor_questions_path`, `anchor_questions_exists`, `framing_lenses_path`, `brief_template_path`, `capability` (object or null), `capability_status`, `brief_path`, `capability_list[]`, `capability_count`, `commit_docs`, `feature` (object or null), `feature_slug`, `feature_dir`.
 
 **If `anchor_questions_exists` is false:** Error -- framing question files missing for this lens.
 
@@ -46,6 +46,16 @@ Parse JSON result for: `resolved`, `tier`, `type`, `capability_slug`, `feature_s
 **If resolved (unique match):**
 - Auto-select, display confirmation
 - Set CAPABILITY_SLUG from result
+
+**Branch on resolution type:**
+
+**If type is "capability":** Current behavior — capability-level MVU, discover features during Q&A.
+  - Set CAPABILITY_SLUG from result
+
+**If type is "feature":** Feature-level discovery.
+  - Set both CAPABILITY_SLUG and FEATURE_SLUG from result
+  - Load parent capability passively (for context, not as primary anchor)
+  - Scope anchor Q&A to the specific feature — questions target feature-level understanding, not capability-level
 
 **If not resolved and reason is "ambiguous":**
 - Present candidates to user (2-3 matches), user picks
@@ -255,6 +265,8 @@ Pass the following context to framing-pipeline:
 - `SECONDARY_LENS`: Secondary lens if compound work was detected (from Step 5)
 - `CAPABILITY_SLUG`: The resolved capability slug (from Step 2)
 - `CAPABILITY_NAME`: The resolved capability name (from Step 2)
+- `FEATURE_SLUG`: The resolved feature slug (null if capability-level)
+- `FEATURE_DIR`: The feature directory path (null if capability-level)
 
 The pipeline workflow handles all subsequent stages. Discovery is complete.
 

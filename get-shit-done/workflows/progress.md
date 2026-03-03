@@ -53,6 +53,14 @@ PROGRESS_BAR=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" progress bar
 | {cap_slug} | {feat_slug} | execute | 3/5 | In progress |
 | {cap_slug} | {feat_slug} | review | 2/2 | Ready for review |
 
+**For in-progress plans (PLAN without SUMMARY):**
+Scan git log for task-level commits:
+```bash
+git log --oneline --grep="{cap_slug}/{feat_slug}" --grep="task" --all-match --since="30 days ago" | wc -l
+```
+
+Display in Status column as: "In progress (3/5 tasks committed)" instead of just "In progress".
+
 ## Focus Groups
 
 | Group | Features | Status |
@@ -79,6 +87,24 @@ PROGRESS_BAR=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" progress bar
 </step>
 
 <step name="route">
+**Dependency readiness check (before routing):**
+
+1. Read active focus group from STATE.md (if exists)
+2. Read dependency edges from ROADMAP.md focus group section (the `-> depends:` entries)
+3. For the candidate "next" feature (the one that would be routed to):
+   - Walk dependency edges
+   - For each dependency: check if that feature has a SUMMARY.md (complete) or is in the same/earlier wave
+   - If any dependency is incomplete → override route with warning:
+
+```
+⚠️ Dependency not ready: {next-feature} depends on {dep-feature} which is {dep-status}.
+
+Suggested action: Complete {dep-feature} first.
+  `/gsd:execute {dep-cap}/{dep-feature}`
+```
+
+4. If all dependencies satisfied → proceed with normal routing below
+
 Determine next action from feature pipeline state:
 
 | Condition | Route |

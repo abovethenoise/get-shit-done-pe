@@ -300,7 +300,7 @@ async function main() {
           init.cmdInitProject(cwd, raw);
           break;
         case 'framing-discovery':
-          init.cmdInitFramingDiscovery(cwd, args[2], args[3], raw);
+          init.cmdInitFramingDiscovery(cwd, args[2], args[3], args[4], raw);
           break;
         case 'discuss-capability':
           init.cmdInitDiscussCapability(cwd, raw);

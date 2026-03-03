@@ -133,7 +133,19 @@ function cmdInitProject(cwd, raw) {
   output(result, raw);
 }
 
-function cmdInitFramingDiscovery(cwd, lens, capability, raw) {
+function cmdInitFramingDiscovery(cwd, lens, capability, featureOrRaw, raw) {
+  // Handle backward compat: featureOrRaw might be '--raw', undefined, or a feature slug
+  let feature = null;
+  if (featureOrRaw === '--raw') {
+    raw = true;
+    featureOrRaw = null;
+  } else if (featureOrRaw === 'true') {
+    // raw was already parsed globally, this is a leftover
+    raw = true;
+    featureOrRaw = null;
+  } else {
+    feature = featureOrRaw || null;
+  }
   if (!lens) {
     error('lens required for init framing-discovery (debug|new|enhance|refactor)');
   }
@@ -179,6 +191,19 @@ function cmdInitFramingDiscovery(cwd, lens, capability, raw) {
       } catch {
         capabilityStatus = 'exploring';
       }
+    }
+  }
+
+  // Feature resolution -- if a feature slug was provided, look it up
+  let featureInfo = null;
+  if (feature && capability) {
+    const featResult = findFeatureInternal(cwd, capability, feature);
+    if (featResult && featResult.found) {
+      featureInfo = {
+        slug: feature,
+        path: toPosixPath(path.join('.planning', 'capabilities', capability, 'features', feature, 'FEATURE.md')),
+        directory: toPosixPath(path.join('.planning', 'capabilities', capability, 'features', feature)),
+      };
     }
   }
 
@@ -229,6 +254,11 @@ function cmdInitFramingDiscovery(cwd, lens, capability, raw) {
     capability: capabilityInfo,
     capability_status: capabilityStatus,
     brief_path: briefPath,
+
+    // Feature context (null if not resolved yet)
+    feature: featureInfo,
+    feature_slug: feature || null,
+    feature_dir: featureInfo ? featureInfo.directory : null,
 
     // Capability list for fuzzy resolution
     capability_list: capabilityList,
@@ -428,6 +458,7 @@ function cmdInitPlanFeature(cwd, capSlug, featSlug, raw) {
     // Existing artifacts
     has_research: false,
     has_context: false,
+    has_brief: false,
     has_plans: false,
     plan_count: 0,
     plans: [],
@@ -443,6 +474,21 @@ function cmdInitPlanFeature(cwd, capSlug, featSlug, raw) {
     requirements_path: '.planning/REQUIREMENTS.md',
   };
 
+  // BRIEF.md detection (capability-level)
+  if (capInfo?.found) {
+    const briefFullPath = path.join(capInfo.directory, 'BRIEF.md');
+    if (fs.existsSync(briefFullPath)) {
+      result.has_brief = true;
+      result.brief_path = toPosixPath(path.join(result.capability_dir, 'BRIEF.md'));
+    }
+  }
+
+  // DESIGN.md detection (project-level)
+  const designFullPath = path.join(cwd, '.planning', 'DESIGN.md');
+  if (fs.existsSync(designFullPath)) {
+    result.design_path = '.planning/DESIGN.md';
+  }
+
   // Populate artifacts from feature directory
   if (featInfo?.found) {
     const featDirFull = featInfo.directory;
@@ -457,9 +503,11 @@ function cmdInitPlanFeature(cwd, capSlug, featSlug, raw) {
       result.plans = plans;
       result.summaries = summaries;
 
+      // Legacy context path (backward compat)
       const contextFile = files.find(f => f.endsWith('-CONTEXT.md') || f === 'CONTEXT.md');
       if (contextFile) {
         result.context_path = toPosixPath(path.join(result.feature_dir, contextFile));
+        result.legacy_context_path = result.context_path;
       }
       const researchFile = files.find(f => f.endsWith('-RESEARCH.md') || f === 'RESEARCH.md');
       if (researchFile) {
@@ -573,6 +621,7 @@ function cmdInitFeatureOp(cwd, capSlug, featSlug, op, raw) {
     // Existing artifacts
     has_research: false,
     has_context: false,
+    has_brief: false,
     has_plans: false,
     plan_count: 0,
 
@@ -585,6 +634,21 @@ function cmdInitFeatureOp(cwd, capSlug, featSlug, op, raw) {
     roadmap_path: '.planning/ROADMAP.md',
     requirements_path: '.planning/REQUIREMENTS.md',
   };
+
+  // BRIEF.md detection (capability-level)
+  if (capInfo?.found) {
+    const briefFullPath = path.join(capInfo.directory, 'BRIEF.md');
+    if (fs.existsSync(briefFullPath)) {
+      result.has_brief = true;
+      result.brief_path = toPosixPath(path.join(result.capability_dir, 'BRIEF.md'));
+    }
+  }
+
+  // DESIGN.md detection (project-level)
+  const designFullPathOp = path.join(cwd, '.planning', 'DESIGN.md');
+  if (fs.existsSync(designFullPathOp)) {
+    result.design_path = '.planning/DESIGN.md';
+  }
 
   // Populate artifacts from feature directory
   if (featInfo?.found) {

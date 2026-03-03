@@ -179,19 +179,31 @@ Display stage banner:
 GSD > INIT > NEW PROJECT > DESIGN & STYLE
 ```
 
-Use the round loop from `<question_protocol>`. Light Q&A (2-4 questions) to capture design opinions.
+Use the round loop from `<question_protocol>`. Deep probing for design decisions.
 
-**For UI projects:**
-- Visual style preferences: minimalist vs feature-rich, design system/brand guidelines
-- UI framework preferences (component library, design tokens, theming)
-- Styling approach: CSS framework, utility-first vs semantic, dark mode, responsive breakpoints
+**First round -- personality and context:**
+- What personality should this project have? (Professional, playful, technical, friendly, etc.)
+- What is the primary user environment? (Desktop browser, mobile, terminal, API consumer, etc.)
+- Any existing brand guidelines, design system, or reference apps?
 
-**For non-UI projects:**
-- API design philosophy (REST vs GraphQL vs RPC, versioning approach)
-- Output formatting preferences (JSON structure, error formats, logging style)
-- Developer experience priorities (CLI ergonomics, documentation style, tooling)
+**For UI projects (additional rounds):**
+- Color preferences: primary brand color, light/dark mode, color philosophy
+- Typography: font preferences, hierarchy style, reading experience goals
+- Layout: shell structure, sidebar/topnav, spacing philosophy, density
+- Component patterns: cards, tables, data displays, interaction patterns
+- What should it NEVER look like? (Anti-patterns)
 
-Done threshold: design opinions captured that affect downstream planning.
+**For non-UI projects (additional rounds):**
+- API voice: error message style, response structure philosophy
+- Output formatting: JSON structure, logging conventions, CLI output style
+- DX priorities: documentation style, tooling preferences, onboarding experience
+
+**If user declines to specify any area:**
+- Make assumptions based on project type + tech stack
+- Document assumptions explicitly as defaults in DESIGN.md
+- Mark assumed sections with "(Default -- assumed from {reasoning})"
+
+Done threshold: enough design context to write a structured DESIGN.md.
 
 **Incremental write -- update init-state.json** with `completed_sections: ["goals", "capabilities", "tech_stack", "architecture", "design_style"]`.
 
@@ -219,6 +231,18 @@ node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs: initialize pr
 ```
 
 **Incremental write -- update init-state.json** with `completed_sections: ["goals", "capabilities", "tech_stack", "architecture", "design_style", "project_md"]`.
+
+**Write DESIGN.md:**
+
+Synthesize design & style Q&A results into `.planning/DESIGN.md` using the template from `templates/design-style.md`.
+
+- Fill sections from Q&A answers
+- Mark assumed/defaulted sections explicitly
+- For non-UI projects: collapse visual sections, expand API/DX sections
+
+```bash
+node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs: initialize design guide" --files .planning/DESIGN.md
+```
 
 ### 3e.5. Write Capability Map
 
@@ -396,15 +420,35 @@ Display stage banner:
 GSD > INIT > EXISTING PROJECT > DESIGN & STYLE
 ```
 
-Use the round loop from `<question_protocol>`. Target areas:
-- "What design patterns or styling conventions exist in this codebase?"
-- "Any design opinions or standards you want to enforce going forward?"
-- For UI projects: component library, CSS approach, theming, responsive strategy
-- For non-UI projects: API design conventions, output formats, DX priorities
+Use the round loop from `<question_protocol>`. Deep probing for design decisions.
 
-Done threshold: design conventions captured for PROJECT.md.
+**First round -- personality and context:**
+- What personality should this project have? (Professional, playful, technical, friendly, etc.)
+- What is the primary user environment? (Desktop browser, mobile, terminal, API consumer, etc.)
+- Any existing brand guidelines, design system, or reference apps?
 
-Fold answers into PROJECT.md under a Design & Standards section.
+**For UI projects (additional rounds):**
+- Color preferences: primary brand color, light/dark mode, color philosophy
+- Typography: font preferences, hierarchy style, reading experience goals
+- Layout: shell structure, sidebar/topnav, spacing philosophy, density
+- Component patterns: cards, tables, data displays, interaction patterns
+- What should it NEVER look like? (Anti-patterns)
+
+**For non-UI projects (additional rounds):**
+- API voice: error message style, response structure philosophy
+- Output formatting: JSON structure, logging conventions, CLI output style
+- DX priorities: documentation style, tooling preferences, onboarding experience
+
+**If user declines to specify any area:**
+- Make assumptions based on project type + tech stack
+- Document assumptions explicitly as defaults in DESIGN.md
+- Mark assumed sections with "(Default -- assumed from {reasoning})"
+
+Done threshold: enough design context to write a structured DESIGN.md.
+
+Write answers into `.planning/DESIGN.md` using the template from `templates/design-style.md`.
+- For brownfield projects: also reference existing patterns detected during scan
+- Mark sections where existing patterns were detected vs user preferences
 
 **Incremental write -- update init-state.json** with `completed_sections: ["scan", "validation", "gap_fill", "design_style"]`.
 
