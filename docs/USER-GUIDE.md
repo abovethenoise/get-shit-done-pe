@@ -91,19 +91,17 @@ Each framing command creates a **DISCOVERY-BRIEF.md** that anchors all subsequen
          |
   /gsd:discuss-capability <cap>      <- Define capability scope
          |
-  /gsd:discuss-feature <cap> <feat>  <- Lock in feature preferences
+  /gsd:discuss-feature <cap/feat>    <- Lock in feature preferences
          |
   /gsd:focus <cap>                   <- Create focus group (sequence features)
          |
-  /gsd:plan <feat>                   <- Research + plan + verify
+  /gsd:debug|new|enhance|refactor    <- Frame the work (creates Discovery Brief)
          |
-  /gsd:execute <feat>                <- Execute plans (parallel waves)
-         |
+  /gsd:plan <slug>                   <- Research + plan + verify
+         |                              (execute auto-chains from plan)
   /gsd:review <feat>                 <- Review executed code
          |
-  /gsd:doc <feat>                    <- Generate documentation
-         |
-  Next feature?  ---> Repeat from /gsd:plan
+  Next feature?  ---> Repeat from framing
          |
   All features done ---> Next capability
 ```
@@ -115,10 +113,10 @@ Each feature passes through a pipeline. The framing lens weights every stage dif
 | Stage | What Happens | Lens Influence |
 |-------|-------------|----------------|
 | **Discuss** | Capture user decisions, lock preferences | Shapes what questions are asked |
-| **Research** | Investigate ecosystem, prior art, patterns | Anchor questions vary by lens |
+| **Research** | 6 parallel gatherers + synthesizer | Anchor questions vary by lens |
 | **Plan** | Break feature into executable tasks | Task granularity and verification approach |
 | **Execute** | Run tasks in parallel waves, commit atomically | Deviation rules and auto-fix behavior |
-| **Review** | 4 specialized reviewers evaluate code | Review priorities weighted by lens |
+| **Review** | 4 specialized reviewers + synthesizer | Review priorities weighted by lens |
 | **Doc** | Generate documentation from executed work | Documentation focus varies by lens |
 
 ### Research Pipeline
@@ -126,17 +124,15 @@ Each feature passes through a pipeline. The framing lens weights every stage dif
 ```
   /gsd:plan <feat>
          |
-         +-- Researcher (x4-6 parallel gatherers)
-         |     +-- Stack research
-         |     +-- Features research
-         |     +-- Architecture research
-         |     +-- Pitfalls research
-         |     +-- Prior art research
-         |     +-- Codebase analysis
+         +-- 6 parallel research gatherers:
+         |     +-- User intent
+         |     +-- Domain truth
+         |     +-- Existing system
+         |     +-- Tech constraints
+         |     +-- Prior art
+         |     +-- Edge cases
          |           |
-         |     Synthesizer
-         |           |
-         |     RESEARCH.md
+         |     Synthesizer -> RESEARCH.md
          |
          +-- Planner (reads CONTEXT.md, RESEARCH.md, FEATURE.md)
          |           |
@@ -147,34 +143,36 @@ Each feature passes through a pipeline. The framing lens weights every stage dif
          Done
 ```
 
-### Execution Waves
+### Execution
+
+Execution is triggered internally after planning completes, or can be continued via `/gsd:progress`. Plans execute in dependency-ordered waves:
 
 ```
-  /gsd:execute <feat>
-         |
-         +-- Analyze plan dependencies
-         |
-         +-- Wave 1 (independent plans):
-         |     +-- Executor A (fresh context) -> commit per task
-         |     +-- Executor B (fresh context) -> commit per task
-         |
-         +-- Wave 2 (depends on Wave 1):
-         |     +-- Executor C (fresh context) -> commit per task
-         |
-         +-- Auto-chain: Review -> Doc (if no issues)
+  Wave 1 (independent plans):
+    +-- Executor A (fresh context) -> commit per task
+    +-- Executor B (fresh context) -> commit per task
+
+  Wave 2 (depends on Wave 1):
+    +-- Executor C (fresh context) -> commit per task
 ```
+
+After all plans execute, run `/gsd:review` to evaluate the code.
 
 ### Brownfield Workflow (Existing Codebase)
 
+`/gsd:init` auto-detects existing code and runs codebase mapping before project questions:
+
 ```
-  /gsd:map-codebase                 <- Analyze what exists (parallel agents)
+  /gsd:init
          |
-         +-- Stack Mapper     -> codebase/STACK.md
-         +-- Arch Mapper      -> codebase/ARCHITECTURE.md
-         +-- Convention Mapper -> codebase/CONVENTIONS.md
-         +-- Concern Mapper   -> codebase/CONCERNS.md
-                |
-        /gsd:init                    <- Questions focus on what you're ADDING
+         +-- Detects existing code
+         +-- Maps codebase (parallel agents):
+         |     +-- Stack      -> codebase/STACK.md
+         |     +-- Architecture -> codebase/ARCHITECTURE.md
+         |     +-- Conventions -> codebase/CONVENTIONS.md
+         |     +-- Concerns   -> codebase/CONCERNS.md
+         |
+         +-- Project questions focus on what you're ADDING
 ```
 
 ---
@@ -185,8 +183,7 @@ Each feature passes through a pipeline. The framing lens weights every stage dif
 
 | Command | Purpose | When to Use |
 |---------|---------|-------------|
-| `/gsd:init` | Initialize project: questions, research, requirements, roadmap | Start of a new project |
-| `/gsd:map-codebase` | Analyze existing codebase structure and patterns | Before `/gsd:init` on existing code |
+| `/gsd:init` | Initialize project: questions, research, requirements, roadmap. Auto-detects brownfield codebases. | Start of a new project |
 
 ### Framing (Start Here)
 
@@ -202,22 +199,22 @@ Each feature passes through a pipeline. The framing lens weights every stage dif
 | Command | Purpose | When to Use |
 |---------|---------|-------------|
 | `/gsd:discuss-capability <cap>` | Define capability scope and boundaries | Before planning features in a capability |
-| `/gsd:discuss-feature <cap> <feat>` | Capture implementation decisions for a feature | Before planning, to shape how it gets built |
+| `/gsd:discuss-feature <cap/feat>` | Capture implementation decisions for a feature | Before planning, to shape how it gets built |
 
-### Planning & Execution
+### Planning & Review
 
 | Command | Purpose | When to Use |
 |---------|---------|-------------|
 | `/gsd:focus <cap>` | Create a focus group: sequence features for execution | After discussing features, before planning |
-| `/gsd:plan <feat>` | Research + plan + verify for a feature | Before executing a feature |
-| `/gsd:execute <feat>` | Execute plans in parallel waves | After planning is complete |
-| `/gsd:review <feat>` | Code review by specialized reviewers | After execution completes |
+| `/gsd:plan <slug>` | Research + plan + verify for a feature (or all features in a capability) | Before execution |
+| `/gsd:review <feat>` | Code review by 4 specialized reviewers + synthesizer | After execution completes |
 
 ### Navigation & Status
 
 | Command | Purpose | When to Use |
 |---------|---------|-------------|
-| `/gsd:status` | Show current state and next steps | Anytime -- "where am I?" |
+| `/gsd:status` | Show capability/feature dashboard with progress | Anytime -- "where am I?" |
+| `/gsd:progress` | Check progress and route to next action (execute or plan) | Mid-pipeline -- "what's next?" |
 | `/gsd:resume-work` | Restore full context from last session | Starting a new session |
 
 ---
@@ -296,7 +293,6 @@ GSD stores project settings in `.planning/config.json`. Configure during `/gsd:i
 | `workflow.research` | `true`, `false` | `true` | Domain investigation before planning |
 | `workflow.plan_check` | `true`, `false` | `true` | Plan verification loop (up to 3 iterations) |
 | `workflow.verifier` | `true`, `false` | `true` | Post-execution verification |
-| `workflow.nyquist_validation` | `true`, `false` | `false` | Validation architecture during planning |
 
 ### Planning Settings
 
@@ -310,7 +306,29 @@ GSD stores project settings in `.planning/config.json`. Configure during `/gsd:i
 | Setting | Options | Default | What it Controls |
 |---------|---------|---------|------------------|
 | `parallelization.enabled` | `true`, `false` | `true` | Parallel plan execution |
+| `parallelization.plan_level` | `true`, `false` | `true` | Run independent plans in parallel |
+| `parallelization.task_level` | `true`, `false` | `false` | Run tasks within a plan in parallel |
+| `parallelization.skip_checkpoints` | `true`, `false` | `true` | Skip human checkpoints between waves |
 | `parallelization.max_concurrent_agents` | 1-5 | 3 | Max parallel executors |
+| `parallelization.min_plans_for_parallel` | 1-10 | 2 | Minimum plans needed to trigger parallel mode |
+
+### Gates
+
+| Setting | Default | What it Controls |
+|---------|---------|------------------|
+| `gates.confirm_project` | `true` | Confirm PROJECT.md before proceeding |
+| `gates.confirm_roadmap` | `true` | Confirm ROADMAP.md before proceeding |
+| `gates.confirm_breakdown` | `true` | Confirm feature breakdown before planning |
+| `gates.confirm_plan` | `true` | Confirm plans before execution |
+| `gates.execute_next_plan` | `true` | Confirm before executing each plan |
+| `gates.issues_review` | `true` | Pause for human review when issues found |
+
+### Safety
+
+| Setting | Default | What it Controls |
+|---------|---------|------------------|
+| `safety.always_confirm_destructive` | `true` | Require confirmation for destructive operations |
+| `safety.always_confirm_external_services` | `true` | Require confirmation for external service calls |
 
 ---
 
@@ -322,11 +340,14 @@ GSD stores project settings in `.planning/config.json`. Configure during `/gsd:i
 /gsd:init                              # Answer questions, configure, approve roadmap
 /clear
 /gsd:discuss-capability Authentication  # Define capability scope
-/gsd:discuss-feature auth jwt-login     # Lock in preferences
+/gsd:discuss-feature auth/jwt-login     # Lock in preferences
 /gsd:focus Authentication               # Create focus group
 /clear
-/gsd:plan jwt-login                     # Research + plan + verify
-/gsd:execute jwt-login                  # Parallel execution -> review -> doc
+/gsd:new auth/jwt-login                 # Frame the work
+/clear
+/gsd:plan jwt-login                     # Research + plan + verify + execute
+/clear
+/gsd:review jwt-login                   # Review executed code
 /clear
 /gsd:plan password-reset                # Next feature in focus group
 ...
@@ -337,8 +358,9 @@ GSD stores project settings in `.planning/config.json`. Configure during `/gsd:i
 ```bash
 /gsd:debug login-timeout               # Creates discovery brief, frames debugging
 /clear
-/gsd:plan login-timeout                 # Minimal fix plan
-/gsd:execute login-timeout              # Apply fix
+/gsd:plan login-timeout                 # Minimal fix plan + execute
+/clear
+/gsd:review login-timeout               # Verify the fix
 ```
 
 ### Enhance Existing Feature
@@ -346,24 +368,24 @@ GSD stores project settings in `.planning/config.json`. Configure during `/gsd:i
 ```bash
 /gsd:enhance search-filters            # Frame the enhancement
 /clear
-/gsd:plan search-filters               # Plan preserving existing patterns
-/gsd:execute search-filters             # Apply enhancement
+/gsd:plan search-filters               # Plan preserving existing patterns + execute
+/clear
+/gsd:review search-filters              # Review the enhancement
 ```
 
 ### Existing Codebase
 
 ```bash
-/gsd:map-codebase                       # Analyze what exists
-/gsd:init                               # Questions focus on what you're ADDING
+/gsd:init                               # Auto-detects existing code, maps codebase first
 # (normal capability workflow from here)
 ```
 
 ### Resuming After a Break
 
 ```bash
-/gsd:status                             # See where you left off
+/gsd:resume-work                        # Full context restoration + next action routing
 # or
-/gsd:resume-work                        # Full context restoration
+/gsd:status                             # Quick dashboard view
 ```
 
 ---
@@ -406,15 +428,17 @@ Set `commit_docs: false` during `/gsd:init`. Add `.planning/` to your `.gitignor
   STATE.md                      # Decisions, blockers, session memory
   config.json                   # Workflow configuration
   research/                     # Domain research from /gsd:init
-  codebase/                     # Brownfield codebase mapping
+  codebase/                     # Brownfield codebase mapping (auto-generated)
   capabilities/
     {cap-name}/
+      CAPABILITY.md             # Capability definition and scope
       features/
         {feat-name}/
           FEATURE.md            # Feature definition with EU/FN/TC requirements
           CONTEXT.md            # Implementation preferences from discussion
-          RESEARCH.md           # Ecosystem research findings
           DISCOVERY-BRIEF.md    # Framing output from debug/new/enhance/refactor
-          {plan}-PLAN.md        # Executable plans
-          {plan}-SUMMARY.md     # Execution outcomes and decisions
+          RESEARCH.md           # Ecosystem research findings
+          {nn}-PLAN.md          # Executable plans (01-PLAN.md, 02-PLAN.md, ...)
+          {nn}-SUMMARY.md       # Execution outcomes per plan
+          review/               # Review traces and synthesis
 ```
