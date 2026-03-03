@@ -14,6 +14,22 @@ const yellow = '\x1b[33m';
 const dim = '\x1b[2m';
 const reset = '\x1b[0m';
 
+// Known-good baseline for settings.json (used when file is missing/corrupt)
+const GSD_BASELINE_SETTINGS = {
+  permissions: {
+    allow: [],
+    deny: [
+      "Bash(rm -rf *)",
+      "Bash(git push --force*)",
+      "Bash(git reset --hard*)"
+    ]
+  },
+  hooks: {
+    PostToolUse: [],
+    SessionStart: []
+  }
+};
+
 // CLAUDE.md delimiters
 const CLAUDE_MD_START = '<!-- GSD-PE:START -->';
 const CLAUDE_MD_END = '<!-- GSD-PE:END -->';
@@ -109,17 +125,21 @@ function buildHookCommand(configDir, hookName) {
 }
 
 /**
- * Read and parse settings.json, returning empty object if it doesn't exist
+ * Read and parse settings.json, returning known-good baseline if missing/corrupt
  */
 function readSettings(settingsPath) {
-  if (fs.existsSync(settingsPath)) {
-    try {
-      return JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
-    } catch (e) {
-      return {};
-    }
+  try {
+    const raw = fs.readFileSync(settingsPath, 'utf8');
+    const parsed = JSON.parse(raw);
+    // Ensure hooks structure exists (partial corruption guard)
+    if (!parsed.hooks) parsed.hooks = {};
+    if (!Array.isArray(parsed.hooks.PostToolUse)) parsed.hooks.PostToolUse = [];
+    if (!Array.isArray(parsed.hooks.SessionStart)) parsed.hooks.SessionStart = [];
+    return parsed;
+  } catch (e) {
+    // Missing or corrupt — return known-good baseline, not {}
+    return JSON.parse(JSON.stringify(GSD_BASELINE_SETTINGS));
   }
-  return {};
 }
 
 /**
@@ -762,7 +782,9 @@ function install(isGlobal) {
   // Configure statusline and hooks in settings.json
   try {
     const settingsPath = path.join(targetDir, 'settings.json');
+    const settingsExistedBefore = fs.existsSync(settingsPath);
     const settings = cleanupOrphanedHooks(readSettings(settingsPath));
+    const settingsWasCorrupt = !settingsExistedBefore;
     const statuslineCommand = isGlobal
       ? buildHookCommand(targetDir, 'gsd-statusline.js')
       : 'node .claude/hooks/gsd-statusline.js';
@@ -849,7 +871,7 @@ function install(isGlobal) {
     const peClaudeMdContent = `# GSD — Get Shit Done\n\nInstalled by get-shit-done-pe. Run \`/gsd:new\` in a blank directory to get started.`;
     writeClaudeMd(targetDir, peClaudeMdContent);
 
-    return { ok: true, settingsPath, settings, statuslineCommand };
+    return { ok: true, settingsPath, settings, statuslineCommand, settingsWasCorrupt };
   } catch (e) {
     return { ok: false, step: 'settings.json update', reason: e.message };
   }
@@ -858,7 +880,7 @@ function install(isGlobal) {
 /**
  * Apply statusline config, then print completion message
  */
-function finishInstall(settingsPath, settings, statuslineCommand, shouldInstallStatusline) {
+function finishInstall(settingsPath, settings, statuslineCommand, shouldInstallStatusline, settingsWasCorrupt) {
   if (shouldInstallStatusline) {
     settings.statusLine = {
       type: 'command',
@@ -869,7 +891,11 @@ function finishInstall(settingsPath, settings, statuslineCommand, shouldInstallS
 
   writeSettings(settingsPath, settings);
 
-  console.log(`\n  Installed successfully.\n  Start a new Claude Code session and try /gsd:init\n`);
+  let msg = `\n  Installed successfully.\n  Start a new Claude Code session and try /gsd:init\n`;
+  if (settingsWasCorrupt) {
+    msg += `  (settings.json was missing or corrupt — initialized with GSD defaults)\n`;
+  }
+  console.log(msg);
 }
 
 /**
@@ -998,7 +1024,8 @@ function runInstall(isGlobal, isInteractive) {
       result.settingsPath,
       result.settings,
       result.statuslineCommand,
-      shouldInstallStatusline
+      shouldInstallStatusline,
+      result.settingsWasCorrupt
     );
   });
 }
