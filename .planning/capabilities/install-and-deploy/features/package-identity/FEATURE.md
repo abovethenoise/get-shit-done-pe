@@ -1,7 +1,7 @@
 ---
 type: feature
 capability: "install-and-deploy"
-status: planning
+status: specified
 created: "2026-03-03"
 ---
 
@@ -11,59 +11,116 @@ created: "2026-03-03"
 
 | REQ | Research | Plan | Execute | Review | Docs | Status |
 |-----|----------|------|---------|--------|------|--------|
-| EU-01 | - | - | - | - | - | draft |
-| FN-01 | - | - | - | - | - | draft |
-| TC-01 | - | - | - | - | - | draft |
+| EU-01 | - | - | - | - | - | specified |
+| EU-02 | - | - | - | - | - | specified |
+| FN-01 | - | - | - | - | - | specified |
+| FN-02 | - | - | - | - | - | specified |
+| TC-01 | - | - | - | - | - | specified |
 
 ## End-User Requirements
 
-### EU-01: {title}
+### EU-01: Package installs under new identity
 
-**Story:** As a {who}, I want {what}, so that {why}.
+**Story:** As a user, I want to install `get-shit-done-pe` via npm/npx, so that I get the fork — not the upstream `get-shit-done-cc`.
 
 **Acceptance Criteria:**
 
-- [ ] {Observable outcome 1}
-- [ ] {Observable outcome 2}
+- [ ] `npx get-shit-done-pe --global` installs and deploys to ~/.claude
+- [ ] `npm install -g get-shit-done-pe` works identically
+- [ ] The `get-shit-done-pe` binary is available after global install
+- [ ] Install banner shows fork identity (abovethenoise), not upstream (TÂCHES)
 
 **Out of Scope:**
 
-- {What this requirement explicitly does NOT cover.}
+- Actual npm publish (manual action by author)
+- GitHub repo creation (manual action)
+
+### EU-02: Attribution credits original and fork author
+
+**Story:** As a user (or upstream author), I want clear attribution in the package so that the lineage is transparent and respectful.
+
+**Acceptance Criteria:**
+
+- [ ] README credits TÂCHES/GSD as the upstream inspiration with appreciation
+- [ ] README asserts the product-management pivot and abovethenoise's vision
+- [ ] package.json author field shows abovethenoise
+- [ ] License file present (MIT)
+
+**Out of Scope:**
+
+- Full README content beyond attribution section (follow-up)
 
 ## Functional Requirements
 
-### FN-01: {title}
+### FN-01: package.json field updates
 
-**Receives:** {Inputs, triggers, data the feature consumes.}
+**Receives:** Existing package.json with get-shit-done-cc identity.
 
-**Returns:** {Outputs, side effects, data the feature produces.}
+**Returns:** Updated package.json with get-shit-done-pe identity.
 
 **Behavior:**
 
-- {Rule or logic}
-- {Edge case handling}
-- {Error condition and response}
+- `name` → `get-shit-done-pe`
+- `author` → `abovethenoise`
+- `description` → Updated to reflect product-management focus + built on GSD by TÂCHES
+- `repository.url` → `git+https://github.com/abovethenoise/get-shit-done-pe.git`
+- `homepage` → `https://github.com/abovethenoise/get-shit-done-pe`
+- `bugs.url` → `https://github.com/abovethenoise/get-shit-done-pe/issues`
+- `bin` → `{ "get-shit-done-pe": "bin/install.js" }`
+- `keywords` → updated for discoverability (keep claude, claude-code, ai; add product-management)
+- `license` → MIT (unchanged)
+
+### FN-02: Install banner update
+
+**Receives:** bin/install.js banner string.
+
+**Returns:** Updated banner reflecting fork identity.
+
+**Behavior:**
+
+- ASCII art text can stay or change — but subtitle must say `by abovethenoise` not `by TÂCHES`
+- Version line remains dynamic from package.json
+- Description line updated to match new package description direction
 
 ## Technical Specs
 
-### TC-01: {title}
+### TC-01: Static file edits
 
-**Intent:** {Why this approach, not just what.}
+**Intent:** Pure find-and-replace in two files. No logic changes, no new code paths.
 
-**Upstream:** {What feeds into this.}
+**Upstream:** Current package.json and bin/install.js banner.
 
-**Downstream:** {What consumes this output.}
+**Downstream:** npm registry (after manual publish), install output (banner shown to users).
 
 **Constraints:**
 
-- {Hard limits: language, libs, patterns, performance.}
+- package.json must remain valid JSON
+- bin field key must match the desired CLI command name (`get-shit-done-pe`)
+- Banner must fit within terminal width (~80 chars)
 
 **Example:**
 
-```
-{Concrete illustration of the spec in action.}
+```json
+{
+  "name": "get-shit-done-pe",
+  "bin": { "get-shit-done-pe": "bin/install.js" },
+  "author": "abovethenoise",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/abovethenoise/get-shit-done-pe.git"
+  }
+}
 ```
 
 ## Decisions
 
-{Notes, open questions, and decisions made during feature development.}
+- GitHub username: abovethenoise
+- Package name: get-shit-done-pe
+- Author: abovethenoise
+- Attribution style: "Built on GSD by TÂCHES — reimagined with capability/feature model." Tone: show love and appreciation for upstream while confidently asserting the product-management-focused pivot (vs upstream's project-management approach). Include high-level details on how the approach was reimagined.
+- Repo URL: github.com/abovethenoise/get-shit-done-pe
+- License: MIT (matching upstream)
+- Package description direction: Meta-prompting system optimized for product management insight and detailed capabilities — enhanced AI automation and agentic development. Focus on getting it right, not just advancing the project forward. Built on GSD by TÂCHES.
+- npm account: user has one already; publish is a manual action
+- Banner in install.js: needs updating from "by TÂCHES" to reflect fork identity
+- Keywords: may need updating for discoverability
