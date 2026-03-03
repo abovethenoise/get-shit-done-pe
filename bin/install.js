@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const readline = require('readline');
+const { runValidation } = require('../scripts/validate-install');
 
 // Colors
 const cyan = '\x1b[36m';
@@ -29,9 +30,9 @@ const banner = '\n' +
   '  ╚██████╔╝███████║██████╔╝\n' +
   '   ╚═════╝ ╚══════╝╚═════╝' + reset + '\n' +
   '\n' +
-  '  Get Shit Done ' + dim + 'v' + pkg.version + reset + '\n' +
-  '  A meta-prompting, context engineering and spec-driven\n' +
-  '  development system for Claude Code by TÂCHES.\n';
+  '  get-shit-done-pe ' + dim + 'v' + pkg.version + reset + '\n' +
+  '  Product management insight for Claude Code.\n' +
+  '  by abovethenoise — built on GSD by TÂCHES.\n';
 
 // Parse --config-dir argument
 function parseConfigDirArg() {
@@ -65,7 +66,7 @@ console.log(banner);
 
 // Show help if requested
 if (hasHelp) {
-  console.log(`  ${yellow}Usage:${reset} npx get-shit-done-cc [options]\n\n  ${yellow}Options:${reset}\n    ${cyan}-g, --global${reset}              Install globally (to config directory)\n    ${cyan}-l, --local${reset}               Install locally (to current directory)\n    ${cyan}-u, --uninstall${reset}           Uninstall GSD (remove all GSD files)\n    ${cyan}-c, --config-dir <path>${reset}   Specify custom config directory\n    ${cyan}-h, --help${reset}                Show this help message\n    ${cyan}--force-statusline${reset}        Replace existing statusline config\n\n  ${yellow}Examples:${reset}\n    ${dim}# Interactive install (prompts for location)${reset}\n    npx get-shit-done-cc\n\n    ${dim}# Install globally${reset}\n    npx get-shit-done-cc --global\n\n    ${dim}# Install to custom config directory${reset}\n    npx get-shit-done-cc --global --config-dir ~/.claude-work\n\n    ${dim}# Install to current project only${reset}\n    npx get-shit-done-cc --local\n\n    ${dim}# Uninstall GSD globally${reset}\n    npx get-shit-done-cc --global --uninstall\n\n  ${yellow}Notes:${reset}\n    The --config-dir option is useful when you have multiple configurations.\n    It takes priority over the CLAUDE_CONFIG_DIR environment variable.\n`);
+  console.log(`  ${yellow}Usage:${reset} npx get-shit-done-pe [options]\n\n  ${yellow}Options:${reset}\n    ${cyan}-g, --global${reset}              Install globally (to config directory)\n    ${cyan}-l, --local${reset}               Install locally (to current directory)\n    ${cyan}-u, --uninstall${reset}           Uninstall GSD (remove all GSD files)\n    ${cyan}-c, --config-dir <path>${reset}   Specify custom config directory\n    ${cyan}-h, --help${reset}                Show this help message\n    ${cyan}--force-statusline${reset}        Replace existing statusline config\n\n  ${yellow}Examples:${reset}\n    ${dim}# Interactive install (prompts for location)${reset}\n    npx get-shit-done-pe\n\n    ${dim}# Install globally${reset}\n    npx get-shit-done-pe --global\n\n    ${dim}# Install to custom config directory${reset}\n    npx get-shit-done-pe --global --config-dir ~/.claude-work\n\n    ${dim}# Install to current project only${reset}\n    npx get-shit-done-pe --local\n\n    ${dim}# Uninstall GSD globally${reset}\n    npx get-shit-done-pe --global --uninstall\n\n  ${yellow}Notes:${reset}\n    The --config-dir option is useful when you have multiple configurations.\n    It takes priority over the CLAUDE_CONFIG_DIR environment variable.\n`);
   process.exit(0);
 }
 
@@ -320,7 +321,7 @@ function uninstall(isGlobal) {
   // 4. Remove GSD hooks
   const hooksDir = path.join(targetDir, 'hooks');
   if (fs.existsSync(hooksDir)) {
-    const gsdHooks = ['gsd-statusline.js', 'gsd-context-monitor.js'];
+    const gsdHooks = ['gsd-statusline.js', 'gsd-context-monitor.js', 'gsd-askuserquestion-guard.js'];
     let hookCount = 0;
     for (const hook of gsdHooks) {
       const hookPath = path.join(hooksDir, hook);
@@ -391,7 +392,10 @@ function uninstall(isGlobal) {
       settings.hooks.PostToolUse = settings.hooks.PostToolUse.filter(entry => {
         if (entry.hooks && Array.isArray(entry.hooks)) {
           const hasGsdHook = entry.hooks.some(h =>
-            h.command && h.command.includes('gsd-context-monitor')
+            h.command && (
+              h.command.includes('gsd-context-monitor') ||
+              h.command.includes('gsd-askuserquestion-guard')
+            )
           );
           return !hasGsdHook;
         }
@@ -432,17 +436,14 @@ function uninstall(isGlobal) {
  */
 function verifyInstalled(dirPath, description) {
   if (!fs.existsSync(dirPath)) {
-    console.error(`  ${yellow}✗${reset} Failed to install ${description}: directory not created`);
     return false;
   }
   try {
     const entries = fs.readdirSync(dirPath);
     if (entries.length === 0) {
-      console.error(`  ${yellow}✗${reset} Failed to install ${description}: directory is empty`);
       return false;
     }
   } catch (e) {
-    console.error(`  ${yellow}✗${reset} Failed to install ${description}: ${e.message}`);
     return false;
   }
   return true;
@@ -492,8 +493,6 @@ function install(isGlobal) {
   const pathPrefix = isGlobal
     ? `${targetDir.replace(/\\/g, '/')}/`
     : './.claude/';
-
-  console.log(`  Installing for ${cyan}Claude Code${reset} to ${cyan}${locationLabel}${reset}\n`);
 
   // Track installation failures
   const failures = [];
@@ -561,7 +560,7 @@ function install(isGlobal) {
   if (fs.existsSync(hooksSrc)) {
     const hooksDest = path.join(targetDir, 'hooks');
     fs.mkdirSync(hooksDest, { recursive: true });
-    const hookFiles = ['gsd-context-monitor.js', 'gsd-statusline.js'];
+    const hookFiles = ['gsd-context-monitor.js', 'gsd-statusline.js', 'gsd-askuserquestion-guard.js'];
     for (const hookFile of hookFiles) {
       const srcFile = path.join(hooksSrc, hookFile);
       if (fs.existsSync(srcFile)) {
@@ -588,8 +587,7 @@ function install(isGlobal) {
   }
 
   if (failures.length > 0) {
-    console.error(`\n  ${yellow}Installation incomplete!${reset} Failed: ${failures.join(', ')}`);
-    process.exit(1);
+    return { ok: false, step: failures[0], reason: 'directory missing or empty after copy' };
   }
 
   // Validate no unresolved {GSD_ROOT} tokens in installed files
@@ -600,53 +598,72 @@ function install(isGlobal) {
     path.join(targetDir, 'hooks'),
   ]);
   if (tokenFailures.length > 0) {
-    console.error(`\n  ${yellow}Installation failed!${reset} Unresolved {GSD_ROOT} tokens found in:`);
-    for (const f of tokenFailures) {
-      console.error(`    - ${f}`);
-    }
-    process.exit(1);
+    return { ok: false, step: 'token replacement', reason: `unresolved {GSD_ROOT} in ${tokenFailures[0]}` };
   }
 
   // Configure statusline and hooks in settings.json
-  const settingsPath = path.join(targetDir, 'settings.json');
-  const settings = cleanupOrphanedHooks(readSettings(settingsPath));
-  const statuslineCommand = isGlobal
-    ? buildHookCommand(targetDir, 'gsd-statusline.js')
-    : 'node .claude/hooks/gsd-statusline.js';
-  const contextMonitorCommand = isGlobal
-    ? buildHookCommand(targetDir, 'gsd-context-monitor.js')
-    : 'node .claude/hooks/gsd-context-monitor.js';
+  try {
+    const settingsPath = path.join(targetDir, 'settings.json');
+    const settings = cleanupOrphanedHooks(readSettings(settingsPath));
+    const statuslineCommand = isGlobal
+      ? buildHookCommand(targetDir, 'gsd-statusline.js')
+      : 'node .claude/hooks/gsd-statusline.js';
+    const contextMonitorCommand = isGlobal
+      ? buildHookCommand(targetDir, 'gsd-context-monitor.js')
+      : 'node .claude/hooks/gsd-context-monitor.js';
+    const askUserQuestionGuardCommand = isGlobal
+      ? buildHookCommand(targetDir, 'gsd-askuserquestion-guard.js')
+      : 'node .claude/hooks/gsd-askuserquestion-guard.js';
 
-  // Configure SessionStart hook
-  if (!settings.hooks) {
-    settings.hooks = {};
+    // Configure SessionStart hook
+    if (!settings.hooks) {
+      settings.hooks = {};
+    }
+    if (!settings.hooks.SessionStart) {
+      settings.hooks.SessionStart = [];
+    }
+
+    // Configure PostToolUse hook for context window monitoring
+    if (!settings.hooks.PostToolUse) {
+      settings.hooks.PostToolUse = [];
+    }
+
+    const hasContextMonitorHook = settings.hooks.PostToolUse.some(entry =>
+      entry.hooks && entry.hooks.some(h => h.command && h.command.includes('gsd-context-monitor'))
+    );
+
+    if (!hasContextMonitorHook) {
+      settings.hooks.PostToolUse.push({
+        hooks: [
+          {
+            type: 'command',
+            command: contextMonitorCommand
+          }
+        ]
+      });
+    }
+
+    // Configure PostToolUse hook for AskUserQuestion empty-response guard
+    const hasAskGuardHook = settings.hooks.PostToolUse.some(entry =>
+      entry.hooks && entry.hooks.some(h => h.command && h.command.includes('gsd-askuserquestion-guard'))
+    );
+
+    if (!hasAskGuardHook) {
+      settings.hooks.PostToolUse.push({
+        matcher: 'AskUserQuestion',
+        hooks: [
+          {
+            type: 'command',
+            command: askUserQuestionGuardCommand
+          }
+        ]
+      });
+    }
+
+    return { ok: true, settingsPath, settings, statuslineCommand };
+  } catch (e) {
+    return { ok: false, step: 'settings.json update', reason: e.message };
   }
-  if (!settings.hooks.SessionStart) {
-    settings.hooks.SessionStart = [];
-  }
-
-  // Configure PostToolUse hook for context window monitoring
-  if (!settings.hooks.PostToolUse) {
-    settings.hooks.PostToolUse = [];
-  }
-
-  const hasContextMonitorHook = settings.hooks.PostToolUse.some(entry =>
-    entry.hooks && entry.hooks.some(h => h.command && h.command.includes('gsd-context-monitor'))
-  );
-
-  if (!hasContextMonitorHook) {
-    settings.hooks.PostToolUse.push({
-      hooks: [
-        {
-          type: 'command',
-          command: contextMonitorCommand
-        }
-      ]
-    });
-    // Context monitor hook configured silently
-  }
-
-  return { settingsPath, settings, statuslineCommand };
 }
 
 /**
@@ -663,11 +680,7 @@ function finishInstall(settingsPath, settings, statuslineCommand, shouldInstallS
 
   writeSettings(settingsPath, settings);
 
-  console.log(`
-  ${green}Done!${reset} Open a blank directory in Claude Code and run ${cyan}/gsd:new${reset}.
-
-  ${cyan}Join the community:${reset} https://discord.gg/gsd
-`);
+  console.log(`\n  Installed successfully.\n  Start a new Claude Code session and try /gsd:init\n`);
 }
 
 /**
@@ -687,8 +700,6 @@ function handleStatusline(settings, isInteractive, callback) {
   }
 
   if (!isInteractive) {
-    console.log(`  ${yellow}⚠${reset} Skipping statusline (already configured)`);
-    console.log(`    Use ${cyan}--force-statusline${reset} to replace\n`);
     callback(false);
     return;
   }
@@ -766,6 +777,32 @@ function promptLocation() {
  */
 function runInstall(isGlobal, isInteractive) {
   const result = install(isGlobal);
+
+  if (!result.ok) {
+    console.log(`\n  Install failed: ${result.step} — ${result.reason}\n`);
+    process.exit(1);
+  }
+
+  // Auto-validation (suppress validation's per-check console output)
+  let validationResult;
+  const origLog = console.log;
+  const origError = console.error;
+  try {
+    console.log = () => {};
+    console.error = () => {};
+    validationResult = runValidation();
+  } catch (e) {
+    validationResult = { failed: 1, failures: [`validation error: ${e.message}`] };
+  } finally {
+    console.log = origLog;
+    console.error = origError;
+  }
+
+  if (validationResult.failed > 0) {
+    const firstFailure = validationResult.failures[0] || 'unknown check failed';
+    console.log(`\n  Install failed: post-install validation — ${firstFailure}\n`);
+    process.exit(1);
+  }
 
   handleStatusline(result.settings, isInteractive, (shouldInstallStatusline) => {
     finishInstall(
