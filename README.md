@@ -703,3 +703,21 @@ MIT License. See [LICENSE](LICENSE) for details.
 **Claude Code is powerful. GSD makes it reliable.**
 
 </div>
+
+---
+
+# get-shit-done-pe
+
+A meta-prompting system optimized for product management insight — enhanced AI automation and agentic development. Focus on getting it right, not just advancing the project forward.
+
+## Attribution
+
+Built on [GSD by TÂCHES](https://github.com/glittercowboy/get-shit-done) — thank you for the foundational work.
+
+GSD (the upstream project) is a spec-driven development system for Claude Code with strong project management foundations. This fork reimagines GSD with a product management lens: the capability/feature model replaces phases, requirements carry EU/FN/TC traceability, and the planning pipeline is optimized for insight and correctness over forward momentum.
+
+**Upstream (GSD by TÂCHES):** Project management — structured phases, step-by-step delivery.
+**This fork (get-shit-done-pe):** Product management — capability/feature model, requirement traceability, getting it right.
+
+**Author:** abovethenoise
+**License:** MIT (matching upstream)
