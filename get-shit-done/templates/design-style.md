@@ -1,95 +1,33 @@
 ---
 type: design-style
-created: ${date}
-project: ${project_name}
 ---
 
 # Design & Style Guide
 
-## Brand Foundation
+## Purpose & Context
+What is this, who's it for, what's the primary action.
 
-### Identity
-- **What it is:** ${identity}
-- **What it isn't:** ${anti_identity}
+## Visual Direction
+Mood/tone, 2-3 reference sites or screenshots, color palette if known.
 
-### Voice & Tone
-- **Voice:** ${voice_description}
-- **Good examples:** ${good_examples}
-- **Bad examples:** ${bad_examples}
+## Layout & Hierarchy
+What's most important on the page, rough wireframe or ASCII sketch.
 
-## Color System
+## Key Components
+Interactive elements: buttons, forms, modals, tables, data displays, etc.
 
-### Palette
-| Role | Value | Usage |
-|------|-------|-------|
-| Primary | ${primary} | ${primary_usage} |
-| Secondary | ${secondary} | ${secondary_usage} |
-| Accent | ${accent} | ${accent_usage} |
-| Background | ${bg} | ${bg_usage} |
-| Surface | ${surface} | ${surface_usage} |
-| Error | ${error} | ${error_usage} |
+## Voice
+Personality of UI copy (playful? dry? formal?), example phrases or CTAs that capture the vibe.
 
-### Semantic Colors
-- Success, Warning, Error, Info mappings
+## State Philosophy
+How should the UI feel in transition? Generous with feedback or minimal? Forgiving or strict on validation? How much hand-holding vs trust-the-user?
 
-### Usage Rules
-- ${color_rules}
+## Constraints
+Tech stack, responsive requirements, accessibility needs, anything off the table.
 
-## Typography
-
-### Fonts
-- **Heading:** ${heading_font}
-- **Body:** ${body_font}
-- **Mono:** ${mono_font}
-
-### Scale
-| Level | Size | Weight | Usage |
-|-------|------|--------|-------|
-| h1 | ${h1_size} | ${h1_weight} | ${h1_usage} |
-| h2 | ${h2_size} | ${h2_weight} | ${h2_usage} |
-| body | ${body_size} | ${body_weight} | ${body_usage} |
-| small | ${small_size} | ${small_weight} | ${small_usage} |
-
-## Layout
-
-### Shell
-- ${shell_description}
-
-### Spacing
-- Base unit: ${spacing_base}
-- Scale: ${spacing_scale}
-
-### Border Radius
-- ${radius_rules}
-
-## Component Patterns
-
-### Cards
-- ${card_pattern}
-
-### Tables
-- ${table_pattern}
-
-### Buttons
-- ${button_pattern}
-
-### Data Displays
-- ${data_display_pattern}
-
-## Anti-Patterns
-- ${anti_patterns}
-
-## Implementation Notes
-
-### CSS Variables
-- ${css_var_strategy}
-
-### Font Loading
-- ${font_loading_strategy}
-
-### Non-UI Projects
-(For API/CLI projects -- replace visual sections with:)
-- **API Voice:** ${api_voice}
-- **Error Formats:** ${error_format}
-- **Output Style:** ${output_style}
-- **DX Priorities:** ${dx_priorities}
+## Non-UI Projects
+(For API/CLI projects — replace visual sections above with:)
+- **API Voice:** tone of error messages, responses, logs
+- **Error Formats:** structure and detail level
+- **Output Style:** verbosity, formatting, color
+- **DX Priorities:** what matters most for developer experience

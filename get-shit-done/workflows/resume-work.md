@@ -87,13 +87,13 @@ Based on project state:
 
 For each incomplete plan (PLAN without matching SUMMARY):
 1. Extract plan ID from filename (e.g., `01-PLAN.md` → `01`)
-2. Scan git log for commits matching the plan's task commit pattern:
+2. Scan git log for commits matching the `[task N/M]` pattern:
    ```bash
-   git log --oneline --grep="${CAPABILITY_SLUG}/${FEATURE_SLUG}" --since="7 days ago" | head -20
+   git log --oneline --grep="\[task [0-9]*/[0-9]*\]" --grep="${CAPABILITY_SLUG}/${FEATURE_SLUG}" --all-match --since="7 days ago" | head -20
    ```
-3. Count commits that match task patterns (feat, fix, refactor, test, chore with the cap/feat scope)
+3. Parse `[task N/M]` from each commit message to determine completed task numbers
 4. Read the PLAN.md to count total tasks
-5. Determine last completed task from commit messages (look for `[task N/M]` pattern in commits)
+5. Determine last completed task number (highest N from parsed commits)
 
 Present resume context:
 ```

@@ -56,7 +56,7 @@ PROGRESS_BAR=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" progress bar
 **For in-progress plans (PLAN without SUMMARY):**
 Scan git log for task-level commits:
 ```bash
-git log --oneline --grep="{cap_slug}/{feat_slug}" --grep="task" --all-match --since="30 days ago" | wc -l
+git log --oneline --grep="\[task [0-9]*/[0-9]*\]" --grep="{cap_slug}/{feat_slug}" --all-match --since="30 days ago" | wc -l
 ```
 
 Display in Status column as: "In progress (3/5 tasks committed)" instead of just "In progress".

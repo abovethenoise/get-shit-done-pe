@@ -299,9 +299,17 @@ async function main() {
         case 'project':
           init.cmdInitProject(cwd, raw);
           break;
-        case 'framing-discovery':
-          init.cmdInitFramingDiscovery(cwd, args[2], args[3], args[4], raw);
+        case 'framing-discovery': {
+          const fdLens = args[2];
+          const fdCap = args[3];
+          let fdFeat = null;
+          const featIdx = args.indexOf('--feature');
+          if (featIdx !== -1 && args[featIdx + 1]) {
+            fdFeat = args[featIdx + 1];
+          }
+          init.cmdInitFramingDiscovery(cwd, fdLens, fdCap, fdFeat, raw);
           break;
+        }
         case 'discuss-capability':
           init.cmdInitDiscussCapability(cwd, raw);
           break;

@@ -16,7 +16,7 @@ Read all files referenced by the invoking prompt's execution_context before star
 ## 1. Initialize
 
 ```bash
-INIT=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" init framing-discovery "${LENS}" "${CAPABILITY_SLUG}" "${FEATURE_SLUG}" --raw)
+INIT=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" init framing-discovery "${LENS}" "${CAPABILITY_SLUG}" --feature "${FEATURE_SLUG}" --raw)
 ```
 
 Parse JSON for: `lens`, `mvu_slots`, `anchor_questions_path`, `anchor_questions_exists`, `framing_lenses_path`, `brief_template_path`, `capability` (object or null), `capability_status`, `brief_path`, `capability_list[]`, `capability_count`, `commit_docs`, `feature` (object or null), `feature_slug`, `feature_dir`.

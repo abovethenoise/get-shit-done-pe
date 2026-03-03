@@ -32,6 +32,35 @@ Within each stage, use a round loop:
    - NO → back to step 1 with questions targeting gaps
 </question_protocol>
 
+<design_qa_protocol>
+Use the round loop from `<question_protocol>`. Probe design decisions aligned to the template sections.
+
+**Round 1 — Purpose & context:**
+- What personality should this project have? (Professional, playful, technical, friendly, etc.)
+- What is the primary user environment? (Desktop browser, mobile, terminal, API consumer, etc.)
+- Any existing brand guidelines, design system, or reference apps?
+
+**Round 2 — UI projects (skip for non-UI):**
+- Visual direction: mood/tone, reference sites, color palette
+- Layout & hierarchy: what's most important, shell structure, spacing philosophy
+- Key components: cards, tables, data displays, interaction patterns
+- Voice: UI copy personality, example phrases or CTAs
+- State philosophy: transition feel, feedback level, validation approach
+- What should it NEVER look like? (Anti-patterns)
+
+**Round 2 — Non-UI projects (skip for UI):**
+- API voice: error message style, response structure philosophy
+- Output formatting: JSON structure, logging conventions, CLI output style
+- DX priorities: documentation style, tooling preferences, onboarding experience
+
+**If user declines to specify any area:**
+- Make assumptions based on project type + tech stack
+- Document assumptions explicitly as defaults in DESIGN.md
+- Mark assumed sections with "(Default — assumed from {reasoning})"
+
+Done threshold: enough design context to write a structured DESIGN.md using `templates/design-style.md`.
+</design_qa_protocol>
+
 <process>
 
 ## 1. Setup and Auto-Detection
@@ -179,31 +208,7 @@ Display stage banner:
 GSD > INIT > NEW PROJECT > DESIGN & STYLE
 ```
 
-Use the round loop from `<question_protocol>`. Deep probing for design decisions.
-
-**First round -- personality and context:**
-- What personality should this project have? (Professional, playful, technical, friendly, etc.)
-- What is the primary user environment? (Desktop browser, mobile, terminal, API consumer, etc.)
-- Any existing brand guidelines, design system, or reference apps?
-
-**For UI projects (additional rounds):**
-- Color preferences: primary brand color, light/dark mode, color philosophy
-- Typography: font preferences, hierarchy style, reading experience goals
-- Layout: shell structure, sidebar/topnav, spacing philosophy, density
-- Component patterns: cards, tables, data displays, interaction patterns
-- What should it NEVER look like? (Anti-patterns)
-
-**For non-UI projects (additional rounds):**
-- API voice: error message style, response structure philosophy
-- Output formatting: JSON structure, logging conventions, CLI output style
-- DX priorities: documentation style, tooling preferences, onboarding experience
-
-**If user declines to specify any area:**
-- Make assumptions based on project type + tech stack
-- Document assumptions explicitly as defaults in DESIGN.md
-- Mark assumed sections with "(Default -- assumed from {reasoning})"
-
-Done threshold: enough design context to write a structured DESIGN.md.
+Follow `<design_qa_protocol>`.
 
 **Incremental write -- update init-state.json** with `completed_sections: ["goals", "capabilities", "tech_stack", "architecture", "design_style"]`.
 
@@ -420,35 +425,9 @@ Display stage banner:
 GSD > INIT > EXISTING PROJECT > DESIGN & STYLE
 ```
 
-Use the round loop from `<question_protocol>`. Deep probing for design decisions.
-
-**First round -- personality and context:**
-- What personality should this project have? (Professional, playful, technical, friendly, etc.)
-- What is the primary user environment? (Desktop browser, mobile, terminal, API consumer, etc.)
-- Any existing brand guidelines, design system, or reference apps?
-
-**For UI projects (additional rounds):**
-- Color preferences: primary brand color, light/dark mode, color philosophy
-- Typography: font preferences, hierarchy style, reading experience goals
-- Layout: shell structure, sidebar/topnav, spacing philosophy, density
-- Component patterns: cards, tables, data displays, interaction patterns
-- What should it NEVER look like? (Anti-patterns)
-
-**For non-UI projects (additional rounds):**
-- API voice: error message style, response structure philosophy
-- Output formatting: JSON structure, logging conventions, CLI output style
-- DX priorities: documentation style, tooling preferences, onboarding experience
-
-**If user declines to specify any area:**
-- Make assumptions based on project type + tech stack
-- Document assumptions explicitly as defaults in DESIGN.md
-- Mark assumed sections with "(Default -- assumed from {reasoning})"
-
-Done threshold: enough design context to write a structured DESIGN.md.
+Follow `<design_qa_protocol>`. Additionally: reference existing patterns detected during codebase scan. Mark sections where existing patterns were detected vs user preferences.
 
 Write answers into `.planning/DESIGN.md` using the template from `templates/design-style.md`.
-- For brownfield projects: also reference existing patterns detected during scan
-- Mark sections where existing patterns were detected vs user preferences
 
 **Incremental write -- update init-state.json** with `completed_sections: ["scan", "validation", "gap_fill", "design_style"]`.
 

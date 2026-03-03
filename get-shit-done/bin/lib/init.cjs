@@ -7,6 +7,22 @@ const path = require('path');
 const { execSync } = require('child_process');
 const { loadConfig, resolveModelInternal, resolveModelFromRole, pathExistsInternal, generateSlugInternal, getMilestoneInfo, toPosixPath, findCapabilityInternal, findFeatureInternal, output, error } = require('./core.cjs');
 
+function detectBriefAndDesign(cwd, capInfo, capDir) {
+  const result = { has_brief: false };
+  if (capInfo?.found) {
+    const briefFull = path.join(capInfo.directory, 'BRIEF.md');
+    if (fs.existsSync(briefFull)) {
+      result.has_brief = true;
+      result.brief_path = toPosixPath(path.join(capDir, 'BRIEF.md'));
+    }
+  }
+  const designFull = path.join(cwd, '.planning', 'DESIGN.md');
+  if (fs.existsSync(designFull)) {
+    result.design_path = '.planning/DESIGN.md';
+  }
+  return result;
+}
+
 function cmdInitResume(cwd, raw) {
   const config = loadConfig(cwd);
 
@@ -133,19 +149,7 @@ function cmdInitProject(cwd, raw) {
   output(result, raw);
 }
 
-function cmdInitFramingDiscovery(cwd, lens, capability, featureOrRaw, raw) {
-  // Handle backward compat: featureOrRaw might be '--raw', undefined, or a feature slug
-  let feature = null;
-  if (featureOrRaw === '--raw') {
-    raw = true;
-    featureOrRaw = null;
-  } else if (featureOrRaw === 'true') {
-    // raw was already parsed globally, this is a leftover
-    raw = true;
-    featureOrRaw = null;
-  } else {
-    feature = featureOrRaw || null;
-  }
+function cmdInitFramingDiscovery(cwd, lens, capability, feature, raw) {
   if (!lens) {
     error('lens required for init framing-discovery (debug|new|enhance|refactor)');
   }
@@ -474,20 +478,8 @@ function cmdInitPlanFeature(cwd, capSlug, featSlug, raw) {
     requirements_path: '.planning/REQUIREMENTS.md',
   };
 
-  // BRIEF.md detection (capability-level)
-  if (capInfo?.found) {
-    const briefFullPath = path.join(capInfo.directory, 'BRIEF.md');
-    if (fs.existsSync(briefFullPath)) {
-      result.has_brief = true;
-      result.brief_path = toPosixPath(path.join(result.capability_dir, 'BRIEF.md'));
-    }
-  }
-
-  // DESIGN.md detection (project-level)
-  const designFullPath = path.join(cwd, '.planning', 'DESIGN.md');
-  if (fs.existsSync(designFullPath)) {
-    result.design_path = '.planning/DESIGN.md';
-  }
+  // BRIEF.md + DESIGN.md detection
+  Object.assign(result, detectBriefAndDesign(cwd, capInfo, result.capability_dir));
 
   // Populate artifacts from feature directory
   if (featInfo?.found) {
@@ -635,20 +627,8 @@ function cmdInitFeatureOp(cwd, capSlug, featSlug, op, raw) {
     requirements_path: '.planning/REQUIREMENTS.md',
   };
 
-  // BRIEF.md detection (capability-level)
-  if (capInfo?.found) {
-    const briefFullPath = path.join(capInfo.directory, 'BRIEF.md');
-    if (fs.existsSync(briefFullPath)) {
-      result.has_brief = true;
-      result.brief_path = toPosixPath(path.join(result.capability_dir, 'BRIEF.md'));
-    }
-  }
-
-  // DESIGN.md detection (project-level)
-  const designFullPathOp = path.join(cwd, '.planning', 'DESIGN.md');
-  if (fs.existsSync(designFullPathOp)) {
-    result.design_path = '.planning/DESIGN.md';
-  }
+  // BRIEF.md + DESIGN.md detection
+  Object.assign(result, detectBriefAndDesign(cwd, capInfo, result.capability_dir));
 
   // Populate artifacts from feature directory
   if (featInfo?.found) {

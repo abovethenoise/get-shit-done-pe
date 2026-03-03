@@ -33,7 +33,7 @@ Find first PLAN without matching SUMMARY (match by ID prefix, e.g., 01-PLAN.md -
 - Display: "Resuming from task {resume_from_task} of {total}. Tasks 1-{resume_from_task-1} already committed."
 - Verify skipped tasks have corresponding git commits (sanity check):
   ```bash
-  git log --oneline --grep="${CAPABILITY_SLUG}/${FEATURE_SLUG}" --grep="task" --all-match | head -20
+  git log --oneline --grep="\[task [0-9]*/[0-9]*\]" --grep="${CAPABILITY_SLUG}/${FEATURE_SLUG}" --all-match | head -20
   ```
 - Begin execution from the specified task
 
