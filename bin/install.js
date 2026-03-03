@@ -547,6 +547,15 @@ function uninstall(isGlobal) {
     }
   }
 
+  // Strip GSD-PE content from CLAUDE.md
+  const claudeResult = stripClaudeMd(targetDir);
+  if (claudeResult.stripped) {
+    removedCount++;
+    console.log(`  ${green}✓${reset} Removed GSD content from CLAUDE.md`);
+  } else if (claudeResult.warned) {
+    console.log(`  ${yellow}⚠${reset} Cannot safely remove GSD content from CLAUDE.md — please remove manually`);
+  }
+
   if (removedCount === 0) {
     console.log(`  ${yellow}⚠${reset} No GSD files found to remove.`);
   }
