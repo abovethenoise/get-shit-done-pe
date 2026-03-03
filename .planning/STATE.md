@@ -157,22 +157,25 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: discuss-feature for install-and-deploy capability
+Stopped at: install-and-deploy capability fully planned, ready for execution
 
 ### Completed this session:
-1. AskUserQuestion bug fix (GH #29547): removed from 11 command frontmatters, created guard hook, updated install.js — **NOT YET DEPLOYED** (need `node bin/install.js --global`)
-2. Discovery brief for install-and-deploy (refactor+enhance compound lens) — BRIEF.md committed
-3. discuss-capability: 4 features scaffolded (package-identity, cc-replacement, install-feedback, auto-latest)
-4. discuss-feature: package-identity — specified (EU/FN/TC written)
-5. discuss-feature: cc-replacement — specified (EU/FN/TC written)
+1. discuss-feature: install-feedback — specified (EU/FN/TC written)
+2. discuss-feature: auto-latest — specified (EU/FN/TC written)
+3. Research: 6/6 gatherers completed + synthesized → RESEARCH.md
+4. Planning: all 4 features planned (8 tasks, 2 waves), CLI validated
 
-### Not yet discussed:
-- install-and-deploy/install-feedback
-- install-and-deploy/auto-latest
+### Key research findings applied:
+- hooks/dist build pipeline broken → ship source hooks directly
+- npm uninstall -g (not upstream's buggy npx) for cc-replacement
+- npm install -g (not npx) for auto-update (npx caches stale)
+- validate-install.js needs refactor to export function (process.exit blocks require)
+- gsd-check-update orphan in live settings.json needs cleanup
 
 ### Pending deployment:
-- `node bin/install.js --global` to deploy AskUserQuestion fix (removes from allowed-tools, adds guard hook)
+- `node bin/install.js --global` to deploy AskUserQuestion fix
 
 ### Resume:
-- `/gsd:discuss-feature install-and-deploy/install-feedback` then `auto-latest`
-- Or skip to `/gsd:plan install-and-deploy` if ready to plan without further discussion
+- `/gsd:execute install-and-deploy` or execute per-feature
+- Wave 1 first: package-identity + install-feedback
+- Wave 2 after: cc-replacement + auto-latest
