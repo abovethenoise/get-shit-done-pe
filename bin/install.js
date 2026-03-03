@@ -44,16 +44,10 @@ const hasLocal = args.includes('--local') || args.includes('-l');
 const hasUninstall = args.includes('--uninstall') || args.includes('-u');
 
 const banner = '\n' +
-  cyan + '   ██████╗ ███████╗██████╗\n' +
-  '  ██╔════╝ ██╔════╝██╔══██╗\n' +
-  '  ██║  ███╗███████╗██║  ██║\n' +
-  '  ██║   ██║╚════██║██║  ██║\n' +
-  '  ╚██████╔╝███████║██████╔╝\n' +
-  '   ╚═════╝ ╚══════╝╚═════╝' + reset + '\n' +
-  '\n' +
-  '  get-shit-done-pe ' + dim + 'v' + pkg.version + reset + '\n' +
-  '  Product management insight for Claude Code.\n' +
-  '  by abovethenoise — built on GSD by TÂCHES.\n';
+  cyan + '  ╔═══════════════════════════════════════╗\n' +
+  '  ║   Get Shit Done ' + reset + '-PE' + cyan + '                    ║\n' +
+  '  ║   ' + reset + dim + 'by abovethenoise     v' + pkg.version + reset + cyan + '         ║\n' +
+  '  ╚═══════════════════════════════════════╝' + reset + '\n';
 
 // Parse --config-dir argument
 function parseConfigDirArg() {
@@ -189,8 +183,9 @@ function processAttribution(content, attribution) {
  * @param {string} srcDir - Source directory
  * @param {string} destDir - Destination directory
  * @param {string} pathPrefix - Path prefix for file references
+ * @param {null|undefined|string} attribution - Commit attribution setting
  */
-function copyWithPathReplacement(srcDir, destDir, pathPrefix) {
+function copyWithPathReplacement(srcDir, destDir, pathPrefix, attribution) {
   // Clean install: remove existing destination to prevent orphaned files
   if (fs.existsSync(destDir)) {
     fs.rmSync(destDir, { recursive: true });
@@ -198,14 +193,13 @@ function copyWithPathReplacement(srcDir, destDir, pathPrefix) {
   fs.mkdirSync(destDir, { recursive: true });
 
   const entries = fs.readdirSync(srcDir, { withFileTypes: true });
-  const attribution = getCommitAttribution();
 
   for (const entry of entries) {
     const srcPath = path.join(srcDir, entry.name);
     const destPath = path.join(destDir, entry.name);
 
     if (entry.isDirectory()) {
-      copyWithPathReplacement(srcPath, destPath, pathPrefix);
+      copyWithPathReplacement(srcPath, destPath, pathPrefix, attribution);
     } else if (entry.name.endsWith('.md')) {
       let content = fs.readFileSync(srcPath, 'utf8');
       const gsdRootRegex = /\{GSD_ROOT\}\//g;
@@ -344,7 +338,6 @@ function replaceCc(configDir) {
     fs.rmSync(hooksDist, { recursive: true });
   }
 
-  return;
 }
 
 /**
@@ -588,7 +581,7 @@ function uninstall(isGlobal) {
 /**
  * Verify a directory exists and contains files
  */
-function verifyInstalled(dirPath, description) {
+function verifyInstalled(dirPath) {
   if (!fs.existsSync(dirPath)) {
     return false;
   }
@@ -626,6 +619,9 @@ function install(isGlobal) {
   // Track installation failures
   const failures = [];
 
+  // Cache attribution setting once (avoid re-reading settings.json per directory)
+  const attribution = getCommitAttribution();
+
   // Detect and remove any prior cc installation
   replaceCc(targetDir);
 
@@ -638,16 +634,16 @@ function install(isGlobal) {
 
   const gsdSrc = path.join(src, 'commands', 'gsd');
   const gsdDest = path.join(commandsDir, 'gsd');
-  copyWithPathReplacement(gsdSrc, gsdDest, pathPrefix);
-  if (!verifyInstalled(gsdDest, 'commands/gsd')) {
+  copyWithPathReplacement(gsdSrc, gsdDest, pathPrefix, attribution);
+  if (!verifyInstalled(gsdDest)) {
     failures.push('commands/gsd');
   }
 
   // Copy get-shit-done skill with path replacement
   const skillSrc = path.join(src, 'get-shit-done');
   const skillDest = path.join(targetDir, 'get-shit-done');
-  copyWithPathReplacement(skillSrc, skillDest, pathPrefix);
-  if (!verifyInstalled(skillDest, 'get-shit-done')) {
+  copyWithPathReplacement(skillSrc, skillDest, pathPrefix, attribution);
+  if (!verifyInstalled(skillDest)) {
     failures.push('get-shit-done');
   }
 
@@ -668,7 +664,6 @@ function install(isGlobal) {
 
     // Copy new agents
     const agentEntries = fs.readdirSync(agentsSrc, { withFileTypes: true });
-    const attribution = getCommitAttribution();
     for (const entry of agentEntries) {
       if (entry.isFile() && entry.name.endsWith('.md')) {
         let content = fs.readFileSync(path.join(agentsSrc, entry.name), 'utf8');
@@ -678,7 +673,7 @@ function install(isGlobal) {
         fs.writeFileSync(path.join(agentsDest, entry.name), content);
       }
     }
-    if (!verifyInstalled(agentsDest, 'agents')) {
+    if (!verifyInstalled(agentsDest)) {
       failures.push('agents');
     }
   }
@@ -699,7 +694,7 @@ function install(isGlobal) {
         fs.copyFileSync(srcFile, path.join(hooksDest, hookFile));
       }
     }
-    if (!verifyInstalled(hooksDest, 'hooks')) {
+    if (!verifyInstalled(hooksDest)) {
       failures.push('hooks');
     }
   }
@@ -832,24 +827,16 @@ function install(isGlobal) {
 }
 
 /**
- * Apply statusline config, then print completion message
+ * Apply statusline config and write settings.json
  */
-function finishInstall(settingsPath, settings, statuslineCommand, shouldInstallStatusline, settingsWasCorrupt) {
+function writeSettingsWithStatusline(settingsPath, settings, statuslineCommand, shouldInstallStatusline) {
   if (shouldInstallStatusline) {
     settings.statusLine = {
       type: 'command',
       command: statuslineCommand
     };
-    // Statusline configured silently
   }
-
   writeSettings(settingsPath, settings);
-
-  let msg = `\n  Installed successfully.\n  Start a new Claude Code session and try /gsd:init\n`;
-  if (settingsWasCorrupt) {
-    msg += `  (settings.json was missing or corrupt — initialized with GSD defaults)\n`;
-  }
-  console.log(msg);
 }
 
 /**
@@ -905,12 +892,6 @@ function handleStatusline(settings, isInteractive, callback) {
  * Prompt for install location
  */
 function promptLocation() {
-  if (!process.stdin.isTTY) {
-    console.log(`  ${yellow}Non-interactive terminal detected, defaulting to global install${reset}\n`);
-    runInstall(true, false);
-    return;
-  }
-
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
@@ -952,28 +933,34 @@ function runInstall(isGlobal, isInteractive) {
     process.exit(1);
   }
 
-  // Auto-validation (suppress per-check output via quiet option)
-  let validationResult;
-  try {
-    validationResult = runValidation({ quiet: true });
-  } catch (e) {
-    validationResult = { failed: 1, failures: [`validation error: ${e.message}`] };
-  }
-
-  if (validationResult.failed > 0) {
-    const firstFailure = validationResult.failures[0] || 'unknown check failed';
-    console.log(`\n  Install failed: post-install validation — ${firstFailure}\n`);
-    process.exit(1);
-  }
-
   handleStatusline(result.settings, isInteractive, (shouldInstallStatusline) => {
-    finishInstall(
+    // Write settings.json BEFORE validation (statusline + hooks fully written)
+    writeSettingsWithStatusline(
       result.settingsPath,
       result.settings,
       result.statuslineCommand,
-      shouldInstallStatusline,
-      result.settingsWasCorrupt
+      shouldInstallStatusline
     );
+
+    // Auto-validation (suppress per-check output via quiet option)
+    let validationResult;
+    try {
+      validationResult = runValidation({ quiet: true });
+    } catch (e) {
+      validationResult = { failed: 1, failures: [`validation error: ${e.message}`] };
+    }
+
+    if (validationResult.failed > 0) {
+      const firstFailure = validationResult.failures[0] || 'unknown check failed';
+      console.log(`\n  Install failed: post-install validation — ${firstFailure}\n`);
+      process.exit(1);
+    }
+
+    let msg = `\n  Installed successfully.\n  Start a new Claude Code session and try /gsd:init\n`;
+    if (result.settingsWasCorrupt) {
+      msg += `  (settings.json was missing or corrupt — initialized with GSD defaults)\n`;
+    }
+    console.log(msg);
   });
 }
 

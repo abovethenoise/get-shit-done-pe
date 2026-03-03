@@ -3,9 +3,10 @@ type: review
 role: enduser
 feature: install-feedback
 reviewed: "2026-03-03"
+round: 2
 ---
 
-# End-User Trace: install-feedback
+# End-User Trace: install-feedback (Re-review)
 
 ## Phase 1: Requirements Internalization
 
@@ -15,10 +16,10 @@ Six acceptance criteria. "Met" means a user running `npx get-shit-done-pe --glob
 
 1. A banner with -PE identity (ASCII art, consistent with existing style)
 2. Zero per-step output during the install phase (silence between banner and result)
-3. Post-install validation that fires automatically — not opt-in
+3. Post-install validation that fires automatically -- not opt-in
 4. On success: exactly one message confirming success plus a next-step hint
 5. On failure: exactly one message identifying which step failed
-6. No intermediate output between banner and final result (superset of AC2 — covers validation output too)
+6. No intermediate output between banner and final result (superset of AC2 -- covers validation output too)
 
 ---
 
@@ -26,27 +27,20 @@ Six acceptance criteria. "Met" means a user running `npx get-shit-done-pe --glob
 
 ### EU-01-AC1: Banner displays with -PE identity (ASCII art mirrors existing style)
 
-**Verdict:** not met (proven)
+**Verdict:** met (proven)
 
 **Evidence:**
 
-- `bin/install.js:46-56` —
+- `/Users/philliphall/get-shit-done-pe/bin/install.js:46-50` --
   ```js
   const banner = '\n' +
-    cyan + '   ██████╗ ███████╗██████╗\n' +
-    '  ██╔════╝ ██╔════╝██╔══██╗\n' +
-    '  ██║  ███╗███████╗██║  ██║\n' +
-    '  ██║   ██║╚════██║██║  ██║\n' +
-    '  ╚██████╔╝███████║██████╔╝\n' +
-    '   ╚═════╝ ╚══════╝╚═════╝' + reset + '\n' +
-    '\n' +
-    '  get-shit-done-pe ' + dim + 'v' + pkg.version + reset + '\n' +
-    '  Product management insight for Claude Code.\n' +
-    '  by abovethenoise — built on GSD by TÂCHES.\n';
+    cyan + '  ╔═══════════════════════════════════════╗\n' +
+    '  ║   Get Shit Done ' + reset + '-PE' + cyan + '                    ║\n' +
+    '  ║   ' + reset + dim + 'by abovethenoise     v' + pkg.version + reset + cyan + '         ║\n' +
+    '  ╚═══════════════════════════════════════╝' + reset + '\n';
   ```
-- `bin/install.js:86` — `console.log(banner);`
-
-- Reasoning: A banner is present and prints unconditionally. It includes the package name "get-shit-done-pe" and version. However, the acceptance criterion specifies "-PE identity" — the FEATURE.md TC-01 example explicitly shows `Get Shit Done -PE` as the product name in the banner title. The actual banner renders block-art spelling "GSD" (not "-PE"), with "-pe" appearing only in the lowercase tagline `get-shit-done-pe`. The spec example also shows a box-drawing border style (`╔═══╗`), while the implemented banner uses filled-block art characters (`██`). The rendered output does not present "-PE" as a visible product identity marker in the ASCII art itself. The style does not mirror the spec example. The product name appears ambiguously as "GSD" in the art and "get-shit-done-pe" in the subtitle.
+- `/Users/philliphall/get-shit-done-pe/bin/install.js:80` -- `console.log(banner);`
+- Reasoning: The banner now uses box-drawing border style matching TC-01 spec (`╔═══╗`). "Get Shit Done" renders in cyan, "-PE" renders in reset (white/default) for visual contrast, making the -PE identity prominent. Layout matches the TC-01 example exactly: product name on first line, author + version on second line, box border throughout. Previous review found block-art "GSD" style -- this has been fixed to the spec-compliant box-border style.
 
 ---
 
@@ -56,14 +50,10 @@ Six acceptance criteria. "Met" means a user running `npx get-shit-done-pe --glob
 
 **Evidence:**
 
-- `bin/install.js:634-868` — The entire `install()` function body contains no `console.log` or `console.error` calls. All steps execute and communicate through return values only.
-- `bin/install.js:275` — `// Orphaned hooks cleaned silently` — comment documents intent; no live output.
-- `bin/install.js:285` — `// Statusline path updated silently` — same pattern.
-- `bin/install.js:726-728` — Hooks success branch: `// hooks installed successfully` — comment only, no output.
-- `bin/install.js:776-778` — Cache init failure: `} catch (e) { // Silent — cache init failure must not block install }` — swallowed silently.
-- `bin/install.js:879` — `// Statusline configured silently` — no output on statusline write.
-- `bin/install.js:864` — `return { ok: true, settingsPath, settings, statuslineCommand, settingsWasCorrupt };` — success communicates through return value.
-- Reasoning: `install()` is entirely side-effect-free with respect to stdout. All pass/fail state flows through the structured return value. No intermediate progress is printed.
+- `/Users/philliphall/get-shit-done-pe/bin/install.js:604-826` -- The `install()` function contains zero `console.log` or `console.error` calls. Every step (file copy, settings read/write, hook configuration, legacy cleanup, cache init) communicates through return values only.
+- `/Users/philliphall/get-shit-done-pe/bin/install.js:735-737` -- Cache init failure swallowed: `} catch (e) { // Silent -- cache init failure must not block install }`
+- `/Users/philliphall/get-shit-done-pe/bin/install.js:822` -- Success returns structured object: `return { ok: true, settingsPath, settings, statuslineCommand, settingsWasCorrupt };`
+- Reasoning: All operations within install() are side-effect-free with respect to stdout/stderr. Pass/fail state flows exclusively through the return value.
 
 ---
 
@@ -73,8 +63,8 @@ Six acceptance criteria. "Met" means a user running `npx get-shit-done-pe --glob
 
 **Evidence:**
 
-- `bin/install.js:8` — `const { runValidation } = require('../scripts/validate-install');`
-- `bin/install.js:991-1003` —
+- `/Users/philliphall/get-shit-done-pe/bin/install.js:8` -- `const { runValidation } = require('../scripts/validate-install');`
+- `/Users/philliphall/get-shit-done-pe/bin/install.js:950-956` --
   ```js
   // Auto-validation (suppress per-check output via quiet option)
   let validationResult;
@@ -83,16 +73,10 @@ Six acceptance criteria. "Met" means a user running `npx get-shit-done-pe --glob
   } catch (e) {
     validationResult = { failed: 1, failures: [`validation error: ${e.message}`] };
   }
-
-  if (validationResult.failed > 0) {
-    const firstFailure = validationResult.failures[0] || 'unknown check failed';
-    console.log(`\n  Install failed: post-install validation — ${firstFailure}\n`);
-    process.exit(1);
-  }
   ```
-- `scripts/validate-install.js:29-30` — `function runValidation(options = {}) { const log = options.quiet ? () => {} : console.log;`
-- `scripts/validate-install.js:362-366` — `module.exports = { runValidation };` — exported for programmatic use.
-- Reasoning: `runValidation` is called unconditionally inside `runInstall()` after the copy phase returns `ok: true`. No user flag or action is required. The try/catch at lines 995-997 ensures even an unexpected exception in `runValidation` is converted to a fail result and surfaces as an install failure.
+- `/Users/philliphall/get-shit-done-pe/scripts/validate-install.js:29-30` -- `const log = options.quiet ? () => {} : console.log;`
+- `/Users/philliphall/get-shit-done-pe/scripts/validate-install.js:362-366` -- Returns `{ passed, failed, failures }` for programmatic consumption.
+- Reasoning: `runValidation` is called unconditionally inside `runInstall()` after settings write completes (line 942-948 writes settings, then 950-953 validates). No user flag required. The try/catch ensures even an unexpected exception surfaces as a structured fail result. Validation order is correct: settings written first, then validated.
 
 ---
 
@@ -102,15 +86,15 @@ Six acceptance criteria. "Met" means a user running `npx get-shit-done-pe --glob
 
 **Evidence:**
 
-- `bin/install.js:884-888` —
+- `/Users/philliphall/get-shit-done-pe/bin/install.js:964-968` --
   ```js
   let msg = `\n  Installed successfully.\n  Start a new Claude Code session and try /gsd:init\n`;
-  if (settingsWasCorrupt) {
-    msg += `  (settings.json was missing or corrupt — initialized with GSD defaults)\n`;
+  if (result.settingsWasCorrupt) {
+    msg += `  (settings.json was missing or corrupt -- initialized with GSD defaults)\n`;
   }
   console.log(msg);
   ```
-- Reasoning: On the success path, `finishInstall()` calls exactly one `console.log` at line 888. The base message is "Installed successfully." (pass confirmation) followed by "Start a new Claude Code session and try /gsd:init" (next-step hint). The conditional `settingsWasCorrupt` line is scoped to an exceptional input condition and is appended within the same `console.log` call — it does not constitute a separate per-step trace. No additional `console.log` calls appear between validation passing and this output.
+- Reasoning: On the success path, exactly one `console.log` call executes. The message contains "Installed successfully." (pass confirmation) and "Start a new Claude Code session and try /gsd:init" (next-step hint). The optional `settingsWasCorrupt` appendage is within the same log call and only appears for an exceptional input condition -- it does not constitute separate output.
 
 ---
 
@@ -120,26 +104,25 @@ Six acceptance criteria. "Met" means a user running `npx get-shit-done-pe --glob
 
 **Evidence:**
 
-- `bin/install.js:986-989` — File-copy/settings failure path:
+- `/Users/philliphall/get-shit-done-pe/bin/install.js:936-938` -- Copy/settings failure:
   ```js
   if (!result.ok) {
-    console.log(`\n  Install failed: ${result.step} — ${result.reason}\n`);
+    console.log(`\n  Install failed: ${result.step} -- ${result.reason}\n`);
     process.exit(1);
   }
   ```
-- `bin/install.js:999-1003` — Validation failure path:
+- `/Users/philliphall/get-shit-done-pe/bin/install.js:958-962` -- Validation failure:
   ```js
   if (validationResult.failed > 0) {
     const firstFailure = validationResult.failures[0] || 'unknown check failed';
-    console.log(`\n  Install failed: post-install validation — ${firstFailure}\n`);
+    console.log(`\n  Install failed: post-install validation -- ${firstFailure}\n`);
     process.exit(1);
   }
   ```
-- `bin/install.js:745-747` — Step name sourced from `failures[0]`, which is one of: `'commands/gsd'`, `'get-shit-done'`, `'agents'`, `'hooks'`.
-- `bin/install.js:756-758` — Token failure: `step: 'token replacement'`, `reason: 'unresolved {GSD_ROOT} in <file>'`.
-- `bin/install.js:865-866` — Settings failure: `step: 'settings.json update'`, `reason: e.message`.
-- `scripts/validate-install.js:48-55` — Validation failure entry is a human-readable `msg: detail` string surfaced as `firstFailure`.
-- Reasoning: Both failure branches emit exactly one `console.log` call. Each message names the failing step and the specific reason. The format "Install failed: {step} — {reason}" is consistent across both paths. No stack traces are included in normal operation — `e.message` at line 866 is the exception text only.
+- `/Users/philliphall/get-shit-done-pe/bin/install.js:713-714` -- Step names from copy failures: `failures[0]` is one of `'commands/gsd'`, `'get-shit-done'`, `'agents'`, `'hooks'`.
+- `/Users/philliphall/get-shit-done-pe/bin/install.js:824` -- Settings failure: `step: 'settings.json update'`, `reason: e.message`.
+- `/Users/philliphall/get-shit-done-pe/scripts/validate-install.js:48-55` -- Validation failures are human-readable strings like `"Missing command: commands/gsd/init.md"`.
+- Reasoning: Both failure branches emit exactly one `console.log`. Each message follows the format "Install failed: {step} -- {reason}" and names the specific component that failed. No stack traces in normal operation.
 
 ---
 
@@ -149,12 +132,11 @@ Six acceptance criteria. "Met" means a user running `npx get-shit-done-pe --glob
 
 **Evidence:**
 
-- `bin/install.js:86` — Banner is the first and only output until the result.
-- `bin/install.js:634-868` — `install()` produces no stdout (see AC2).
-- `bin/install.js:993-994` — `runValidation({ quiet: true })` — the `quiet` option converts all `log()` and `logErr()` calls inside `runValidation` to no-ops at `scripts/validate-install.js:30-31`. The summary block at `scripts/validate-install.js:358-361` also uses `log`, so it is suppressed.
-- `bin/install.js:983-1013` — `runInstall()` body: the only stdout calls are the failure exits (lines 987, 1001) and the success message via `finishInstall()` (line 888 via line 1006-1013). No output occurs between them on any path.
-
-**Cross-layer observation:** The interactive path (no `--global`/`--local` flag, TTY present) prints a location-choice prompt via `promptLocation()` at lines 966-978, and a statusline-choice prompt via `handleStatusline()` at lines 919-931, between the banner and the final result. The FEATURE.md "Out of Scope" section states "Interactive prompts during install" — indicating these prompts were explicitly excluded from scope. These prompts existed before this feature and are unchanged. They do not constitute intermediate noise introduced by this work.
+- `/Users/philliphall/get-shit-done-pe/bin/install.js:80` -- Banner is first output.
+- `/Users/philliphall/get-shit-done-pe/bin/install.js:604-826` -- `install()` produces no stdout (see AC2).
+- `/Users/philliphall/get-shit-done-pe/bin/install.js:953` -- `runValidation({ quiet: true })` suppresses all output. The `quiet` option converts `log()` and `logErr()` to no-ops at `/Users/philliphall/get-shit-done-pe/scripts/validate-install.js:30-31`. The summary block at line 358-361 also uses `log`, so it is suppressed.
+- `/Users/philliphall/get-shit-done-pe/bin/install.js:831-838` -- `writeSettingsWithStatusline()` contains no console output.
+- Reasoning: In the non-interactive path (`--global` or `--local`), zero stdout calls exist between banner (line 80) and final result (line 937/960/968). In the interactive path, location prompt (line 917) and statusline prompt (line 869) are user-facing interactive prompts explicitly excluded from scope per FEATURE.md "Out of Scope: Interactive prompts during install."
 
 ---
 
@@ -162,9 +144,9 @@ Six acceptance criteria. "Met" means a user running `npx get-shit-done-pe --glob
 
 | Req ID | Verdict | Key Evidence |
 |--------|---------|--------------|
-| EU-01 AC-1 (banner with -PE identity) | not met | `bin/install.js:46-56` — ASCII art spells "GSD"; "-PE" does not appear in the rendered art. TC-01 spec example shows `Get Shit Done -PE` box-border style. Style and identity marker diverge from spec. |
-| EU-01 AC-2 (silent install) | met | `bin/install.js:634-868` — zero console output in `install()` body; all steps silent. |
-| EU-01 AC-3 (auto-validation) | met | `bin/install.js:991-994` — `runValidation({ quiet: true })` called unconditionally post-copy. |
-| EU-01 AC-4 (single pass message + hint) | met | `bin/install.js:884-888` — "Installed successfully." + "/gsd:init" hint in one `console.log`. |
-| EU-01 AC-5 (single fail message naming step) | met | `bin/install.js:987`, `1001` — "Install failed: {step} — {reason}" on both failure branches. |
-| EU-01 AC-6 (no intermediate noise) | met | `bin/install.js:993-994` — `options.quiet` suppresses all validation output; `install()` produces no stdout. |
+| EU-01 AC-1 (banner -PE identity) | met | `bin/install.js:46-50` -- Box-border style, "Get Shit Done -PE" prominent, matches TC-01 spec |
+| EU-01 AC-2 (silent install) | met | `bin/install.js:604-826` -- zero console output in install() body |
+| EU-01 AC-3 (auto-validation) | met | `bin/install.js:950-953` -- runValidation({quiet:true}) called unconditionally after settings write |
+| EU-01 AC-4 (single pass + hint) | met | `bin/install.js:964-968` -- "Installed successfully." + "/gsd:init" hint in one console.log |
+| EU-01 AC-5 (single fail naming step) | met | `bin/install.js:937,960` -- "Install failed: {step} -- {reason}" on both failure branches |
+| EU-01 AC-6 (no intermediate noise) | met | `bin/install.js:953` -- quiet validation; install() silent; no output between banner and result |

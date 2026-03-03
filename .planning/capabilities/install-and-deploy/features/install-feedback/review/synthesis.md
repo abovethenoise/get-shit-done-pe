@@ -3,6 +3,7 @@ type: review-synthesis
 feature: install-feedback
 plan: 02-PLAN (refactor)
 synthesized: "2026-03-03"
+round: 2
 reviewers: end-user, functional, technical, quality
 ---
 
@@ -12,140 +13,138 @@ reviewers: end-user, functional, technical, quality
 
 | Reviewer | Citations Checked | Valid | Invalid | Notes |
 |----------|------------------|-------|---------|-------|
-| end-user | 5 | 5 | 0 | banner lines 46-56, silent install lines 634-868, runValidation line 993, success msg line 884, fail msg line 987 — all verified |
-| functional | 5 | 5 | 0 | settingsWasCorrupt chain lines 783-785/864/1011, readSettings lines 129-142, require.main guard line 371 — all verified |
-| technical | 4 | 4 | 0 | TC-01.2 suppress lines 30-31, TC-01.3 return shape lines 362-367, TC-01.6 gap lines 783-785, TC-01.8 ccWarnings lines 294-347 — all verified |
-| quality | 5 | 5 | 0 | settingsWasCorrupt lines 783-785, readSettings lines 129-142, empty if-branch lines 726-730, auto-update handler lines 77-84, validation sequence lines 983-1013 — all verified |
+| end-user | 4 | 4 | 0 | Banner :46-50, validation :950-956, success msg :964-968, fail msg :958-962 all verified |
+| functional | 4 | 4 | 0 | failures[] at :621, runValidation at :951-956, require.main guard at :371, readSettings :124-137 all confirmed |
+| technical | 4 | 4 | 0 | verifyInstalled :585-598, auto-update error handler :77-83, uninstall destructuring :493, silent contract :7-9 all match |
+| quality | 7 | 7 | 0 | All seven findings verified against source. expectedHooks at validate-install.js:182, dead guard :894-897, agent copy :664-674, getCommitAttribution :150-158, verifyInstalled :585, return at :341, string compare at :63 all confirmed |
 
-No citation failures across any reviewer. All four reports carry full confidence.
+All reviewers cite accurately. No demotions needed. Full confidence across all four reports.
 
 ---
 
 ### Findings
 
-#### Finding 1: settingsWasCorrupt flag detects only missing file, not corrupt JSON
+#### Finding 1: Validation script does not check for gsd-auto-update.js hook
 
 **Severity:** major
-**Source:** functional (partial verdict), technical (documented gap), quality (Finding 1 + Finding 2)
-**Requirement:** 02-PLAN must-have — settingsWasCorrupt flag propagated to finishInstall message
-**Verdict:** not met (proven)
-
-**Evidence (from reviewers):**
-- `bin/install.js:783-785`:
-  ```js
-  const settingsExistedBefore = fs.existsSync(settingsPath);
-  const settings = cleanupOrphanedHooks(readSettings(settingsPath));
-  const settingsWasCorrupt = !settingsExistedBefore;
-  ```
-  Flag is set from a file-existence check, not a corruption check. If settings.json exists but contains invalid JSON, `readSettings()` returns the baseline silently and `settingsWasCorrupt` remains `false`.
-- `bin/install.js:884-887` — warning message `"settings.json was missing or corrupt — initialized with GSD defaults"` never fires for the corrupt-but-present case.
-- `bin/install.js:129-142` — `readSettings()` swallows both ENOENT and SyntaxError in a single catch block, returning the baseline in both cases with no signal to the caller. The caller has no mechanism to distinguish "file missing" from "file existed but was corrupt."
-
-**Spot-check:** verified — `bin/install.js:783-785` and `bin/install.js:129-142` confirmed exactly as quoted by all three reviewers.
-
-**Quality reviewer framing (Finding 2):** The design forces a leaky two-step — `fs.existsSync()` before `readSettings()` — that still does not cover the corrupt case. If the flag matters, `readSettings()` should return it as part of its result. The current approach is a TOCTOU risk and a leaky abstraction.
-
----
-
-#### Finding 2: Validation runs before settings.json is fully written
-
-**Severity:** major
-**Source:** quality (Finding 8)
-**Requirement:** FN-02 / TC-01 (functional integrity of auto-validation)
-**Verdict:** not met (suspected — latent fragility, not current bug)
-
-**Evidence (from reviewer):**
-- `bin/install.js:984` — `install(isGlobal)` returns a settings object; it does NOT write settings.json.
-- `bin/install.js:994` — `runValidation({ quiet: true })` runs here.
-- `bin/install.js:1006-1013` — `finishInstall(...)` is where `writeSettings()` is called — after validation.
-- `scripts/validate-install.js:181-190` — Check 1 validates hook file presence only; no existing check reads settings.json hook registrations.
-- Reasoning: Validation runs after files are written to disk but before settings.json is finalized. Current checks do not inspect settings.json, so no current bug exists. However, the install contract is not fulfilled until `finishInstall()` completes. If a future validation check reads settings.json hook registrations, it will see incomplete state.
-
-**Spot-check:** verified — `bin/install.js:983-1013` confirmed. `runValidation` at line 994 precedes `finishInstall` at line 1006. Sequence is exactly as described.
-
----
-
-#### Finding 3: Banner ASCII art does not present "-PE" as a visible identity marker
-
-**Severity:** major
-**Source:** end-user
-**Requirement:** EU-01-AC1 — banner displays with -PE identity (ASCII art mirrors existing style)
+**Source:** quality (Finding 5)
+**Requirement:** quality (robustness)
 **Verdict:** not met (proven)
 
 **Evidence (from reviewer):**
-- `bin/install.js:46-56` — ASCII block art spells "GSD" using filled-block characters (`██`, `╔══╝`). "-PE" appears only in the lowercase tagline `get-shit-done-pe` at line 54, not as a visual element of the ASCII art itself.
-- `bin/install.js:86` — `console.log(banner);` — banner prints unconditionally.
-- Reviewer reasoning: The FEATURE.md TC-01 example shows `Get Shit Done -PE` as the product name, rendered in box-drawing border style (`╔═══╗`). The implementation renders a different style (filled-block) and spells a different identifier (GSD, not -PE). Style diverges and the product's "-PE" suffix has no visual prominence in the rendered output.
+- `/Users/philliphall/get-shit-done-pe/scripts/validate-install.js:182` -- `const expectedHooks = ['gsd-context-monitor.js', 'gsd-statusline.js', 'gsd-askuserquestion-guard.js'];`
+- `/Users/philliphall/get-shit-done-pe/bin/install.js:689` -- `const hookFiles = ['gsd-context-monitor.js', 'gsd-statusline.js', 'gsd-askuserquestion-guard.js', 'gsd-auto-update.js'];`
+- Reasoning: Installer copies 4 hooks, validation only checks 3. If `gsd-auto-update.js` fails to copy, the post-install validation passes anyway. One-line fix: add `'gsd-auto-update.js'` to the expectedHooks array.
 
-**Spot-check:** verified — `bin/install.js:46-56` confirmed. Filled-block art characters spell "GSD". Line 54 reads `'  get-shit-done-pe '` in lowercase only.
-
-**Note:** No other reviewer challenges this finding. Severity set to major (not blocker) because the banner renders successfully and the package is identifiable — this is a spec conformance issue on style and identity presentation, not a functional failure.
+**Spot-check:** verified -- validate-install.js:182 shows 3-element array, install.js:689 shows 4-element array. Lists are out of sync.
 
 ---
 
-#### Finding 4: Duplicate recursive directory scan logic / redundant token check
+#### Finding 2: Dead non-interactive guard in promptLocation()
 
 **Severity:** minor
-**Source:** quality (Finding 3)
-**Requirement:** quality — DRY
+**Source:** quality (Finding 2)
+**Requirement:** quality (DRY / dead code)
 **Verdict:** not met (proven)
 
 **Evidence (from reviewer):**
-- `bin/install.js:610-628` — `validateNoUnresolvedTokens()`, inner `scan()` function: recursive walk, `.md|.js|.json`, checks `{GSD_ROOT}`.
-- `scripts/validate-install.js:205-218` — `scanForTokens()`: same recursive walk, same extension filter, same token check.
-- `scripts/validate-install.js:299-314` — `scanForStale()`: third instance of same recursive walk with different match logic.
-- `bin/install.js:750-758` — token scan in `install()` runs and then `runValidation()` at line 994 runs `scanForTokens()` over the identical directories immediately after. Same check runs twice per install.
+- `/Users/philliphall/get-shit-done-pe/bin/install.js:894-897` -- TTY check inside `promptLocation()`:
+  ```js
+  if (!process.stdin.isTTY) {
+    console.log(`  ${yellow}Non-interactive terminal detected, defaulting to global install${reset}\n`);
+    runInstall(true, false);
+    return;
+  }
+  ```
+- `/Users/philliphall/get-shit-done-pe/bin/install.js:989-991` -- identical TTY check in main block that executes before `promptLocation()` is ever called:
+  ```js
+  if (!process.stdin.isTTY) {
+    console.log(`  ${yellow}Non-interactive terminal detected, defaulting to global install${reset}\n`);
+    runInstall(true, false);
+  ```
+- Reasoning: The main block at :989 intercepts non-TTY and calls `runInstall(true, false)`. The `else` at :992 calls `promptLocation()`. The internal guard at :894-897 is therefore unreachable dead code with duplicated message string.
 
-**Spot-check:** not independently verified in full, but quality reviewer's citation is internally consistent and the redundancy logic is sound given the confirmed call sequence at lines 750-994.
+**Spot-check:** verified -- main block at :989 checks `!process.stdin.isTTY`, then else at :992-993 calls `promptLocation()`. The internal guard cannot fire.
 
 ---
 
-#### Finding 5: Empty if-branch for hooks verifyInstalled check
+#### Finding 3: Agent copy block duplicates copyWithPathReplacement pipeline
 
 **Severity:** minor
 **Source:** quality (Finding 4)
-**Requirement:** quality — dead code / inconsistent pattern
-**Verdict:** not met (proven)
-
-**Evidence (from reviewer):**
-- `bin/install.js:726-730`:
-  ```js
-  if (verifyInstalled(hooksDest, 'hooks')) {
-    // hooks installed successfully
-  } else {
-    failures.push('hooks');
-  }
-  ```
-- All other `verifyInstalled()` calls in the same function use the negation pattern directly: `if (!verifyInstalled(...)) { failures.push(...); }` at lines 666-668, 674-676, 705-707.
-- The affirmative branch contains only a comment stub. Logically equivalent to the negation form used everywhere else.
-
-**Spot-check:** verified — `bin/install.js:726-730` confirmed exactly as quoted.
-
----
-
-#### Finding 6: Auto-update error handler re-reads cache from disk unnecessarily
-
-**Severity:** minor
-**Source:** quality (Finding 5)
-**Requirement:** quality — KISS
+**Requirement:** quality (DRY)
 **Verdict:** not met (suspected)
 
 **Evidence (from reviewer):**
-- `hooks/gsd-auto-update.js:77-84`:
-  ```js
-  child.on('error', (err) => {
-    try {
-      const errCache = JSON.parse(fs.readFileSync(CACHE_PATH, 'utf8'));
-      errCache.lastError = err.message;
-      errCache.lastErrorTime = new Date().toISOString();
-      fs.writeFileSync(CACHE_PATH, JSON.stringify(errCache, null, 2) + '\n');
-    } catch (e) { /* silent */ }
-  });
-  ```
-- The `cache` object is already in-scope and was written to disk at line 71 via `writeCache(cache)`. The handler could extend `cache` directly without a redundant disk read and second JSON.parse. The inner `try/catch` indicates the author recognized the fragility introduced by the extra I/O.
-- The improvement over no error handler is real; the implementation is more complex than necessary.
+- `/Users/philliphall/get-shit-done-pe/bin/install.js:664-674` -- agent copy block: getCommitAttribution, read file, regex replace `{GSD_ROOT}/`, processAttribution, write
+- `/Users/philliphall/get-shit-done-pe/bin/install.js:203-208` -- identical pipeline inside `copyWithPathReplacement`
+- Reasoning: Two independent sites implementing the same token-replace + attribution transform. If transforms change (new tokens, new transforms), both must be updated independently. However, the agent block has different pre-cleanup logic (removes old `gsd-*.md` files individually at :655-660 vs. full recursive rm in copyWithPathReplacement at :189-190), so extraction is not completely trivial.
 
-**Spot-check:** not independently verified (hooks/gsd-auto-update.js not read in full). Citation is specific and internally consistent.
+**Spot-check:** verified -- both blocks contain identical `gsdRootRegex` creation, `.replace(gsdRootRegex, pathPrefix)`, and `processAttribution(content, attribution)` calls.
+
+---
+
+#### Finding 4: getCommitAttribution() re-reads settings.json per recursive call
+
+**Severity:** minor
+**Source:** quality (Finding 1)
+**Requirement:** quality (KISS)
+**Verdict:** not met (suspected)
+
+**Evidence (from reviewer):**
+- `/Users/philliphall/get-shit-done-pe/bin/install.js:195` -- `const attribution = getCommitAttribution();` called inside `copyWithPathReplacement` which recurses per subdirectory at :202
+- `/Users/philliphall/get-shit-done-pe/bin/install.js:150-158` -- `getCommitAttribution()` calls `readSettings()` at :151 which does `fs.readFileSync` + `JSON.parse`
+- `/Users/philliphall/get-shit-done-pe/bin/install.js:665` -- separate `getCommitAttribution()` call in agent copy block
+- Reasoning: Attribution value is constant for the entire install run. Each recursive descent re-reads and re-parses settings.json. Low practical impact (directory trees are shallow), but the fix is trivial: hoist the call above the recursion entry point and pass as parameter.
+
+**Spot-check:** verified -- getCommitAttribution at :150 calls readSettings with fs.readFileSync. copyWithPathReplacement at :195 calls it on every invocation, including recursive calls from :202.
+
+---
+
+#### Finding 5: Unused `description` parameter in verifyInstalled()
+
+**Severity:** minor
+**Source:** quality (Finding 3), also noted by technical (TC-01.10)
+**Requirement:** quality (dead code)
+**Verdict:** not met (proven)
+
+**Evidence (from reviewer):**
+- `/Users/philliphall/get-shit-done-pe/bin/install.js:585` -- `function verifyInstalled(dirPath, description) {`
+- Function body (lines 586-598) never references `description`
+- Call sites at :636, :644, :675, :696 all pass description strings that are silently discarded
+- Technical reviewer (TC-01.10) also noted: "The `description` parameter is accepted but unused (no logging)."
+
+**Spot-check:** verified -- function body contains only `dirPath` references, `fs.existsSync`, `fs.readdirSync`, and boolean returns. No reference to `description`.
+
+---
+
+#### Finding 6: Trailing `return;` at end of replaceCc()
+
+**Severity:** minor
+**Source:** quality (Finding 6)
+**Requirement:** quality (dead code)
+**Verdict:** not met (proven)
+
+**Evidence (from reviewer):**
+- `/Users/philliphall/get-shit-done-pe/bin/install.js:341` -- `return;`
+- Reasoning: Last statement in a void function. The function ends at :342 with `}`. Implicit return makes the explicit `return;` redundant.
+
+**Spot-check:** verified -- line 341 is `return;`, line 342 closes the function.
+
+---
+
+#### Finding 7: String-equality version compare in auto-update hook
+
+**Severity:** minor
+**Source:** quality (Finding 7)
+**Requirement:** quality (robustness)
+**Verdict:** not met (suspected)
+
+**Evidence (from reviewer):**
+- `/Users/philliphall/get-shit-done-pe/hooks/gsd-auto-update.js:63` -- `if (cache.currentVersion && latestVersion === cache.currentVersion) {`
+- Reasoning: Strict string equality means pre-release suffixes or whitespace differences would trigger unnecessary background `npm install`. Not a crash risk (hook is silent/no-fail), but wastes spawns. Adding a semver dependency would increase surface area -- known tradeoff with low blast radius.
+
+**Spot-check:** verified -- line 63 uses `===` string comparison between `latestVersion` and `cache.currentVersion`.
 
 ---
 
@@ -153,21 +152,15 @@ No citation failures across any reviewer. All four reports carry full confidence
 
 #### Disagreements
 
-- **settingsWasCorrupt verdict label:** Functional reviewer calls it "partial." Technical reviewer calls it "met (proven), with a documented detection gap." Quality reviewer calls it "not met (proven)."
-  - Resolution: The `readSettings()` baseline behavior (returning GSD_BASELINE_SETTINGS instead of `{}`) is met and is a distinct question from the flag accuracy. The `settingsWasCorrupt` flag for the corrupt-but-present case is not met — the warning message never fires for that case, which is the stated purpose of the flag. Synthesized verdict for Finding 1: not met. Technical reviewer's "met" label was applied to too broad a scope; functional reviewer's "partial" is closest to accurate.
-  - Tiebreaker applied: no — judgment sufficient.
-
-- **Banner verdict (EU-01-AC1):** End-user marks "not met (proven)." Functional reviewer's summary table says "met" for EU-01 AC-1, citing `bin/install.js:30-40,71`. Technical reviewer does not address this criterion.
-  - Resolution: End-user priority applies. The end-user reviewer examined the criterion most closely against the spec example. Functional reviewer's "met" appears to address presence of a banner generally, not the "-PE identity" and style specifics. End-user verdict accepted.
-  - Tiebreaker applied: yes — end-user > functional priority ordering.
+No direct verdict disagreements across reviewers. All four reviewers agree that all formal requirements (EU-01 ACs 1-6, FN-01 through FN-03, TC-01.1 through TC-01.13) are met. Quality findings are additive code-quality observations not contradicted by any other reviewer.
 
 #### Tensions
 
-- **Validation sequencing (Finding 2) vs. FN-02 "met" verdict:** Functional and technical reviewers mark FN-02 met because auto-validation runs unconditionally and failures propagate. Quality flags the pre-`finishInstall` sequencing as latent fragility. These are not contradictory — both are simultaneously true.
-  - Assessment: FN-02 is met against its current spec and current validation scope. Finding 2 is a design risk that should be resolved before any future validation check is added that reads settings.json. Both findings coexist; neither invalidates the other.
+- **verifyInstalled `description` param:** Technical reviewer (TC-01.10) noted the unused parameter but gave a "met" verdict for the requirement that verifyInstalled returns a boolean silently. Quality reviewer flagged it as dead code. These perspectives are compatible -- the technical requirement (returns boolean silently) is met, but the code quality concern (unused parameter) is valid. Both findings stand; no resolution needed.
 
-- **readSettings() design:** Quality recommends `readSettings()` return a structured result including a corruption flag, eliminating the leaky `fs.existsSync()` pre-flight. Functional and technical confirm the baseline return behavior is correct and accept the two-step approach. Quality's recommendation is architecturally sounder; the functional/technical verdicts are correct for the narrower baseline question.
-  - Assessment: The design recommendation should accompany any fix to Finding 1. The leaky abstraction is the root cause; fixing the flag without fixing the design produces the same class of bug on the next edge case.
+- **Agent copy duplication vs. cleanup semantics:** Quality reviewer flags the agent copy block as duplicating copyWithPathReplacement. The agent block has different pre-cleanup logic (selective `gsd-*.md` removal at :655-660 vs. full recursive directory removal in copyWithPathReplacement at :189-190). A refactor would need to account for this difference. The DRY concern is valid but extraction requires reconciling the cleanup strategies.
+
+- **String version comparison tradeoff:** Quality flags string equality as a robustness gap. Technical reviewer (TC-01.13) confirms the silent contract is honored regardless. Both are correct -- the hook will not break, but it may do unnecessary work. Given the hook has no semver dependency and adding one would increase surface area, this is a deliberate tradeoff. Flagged for awareness only.
 
 ---
 
@@ -176,28 +169,22 @@ No citation failures across any reviewer. All four reports carry full confidence
 | Severity | Count |
 |----------|-------|
 | Blocker  | 0     |
-| Major    | 3     |
-| Minor    | 3     |
+| Major    | 1     |
+| Minor    | 6     |
 
 | Req ID | Verdict | Severity | Source Reviewer |
 |--------|---------|----------|----------------|
-| settingsWasCorrupt flag (corrupt-but-present) | not met | major | functional, technical, quality |
-| Validation sequence before writeSettings | not met (suspected) | major | quality |
-| EU-01-AC1 (banner -PE identity) | not met | major | end-user |
-| DRY — duplicate recursive scan / redundant token check | not met | minor | quality |
-| Dead code — empty if-branch hooks check | not met | minor | quality |
-| KISS — auto-update error handler disk re-read | not met | minor | quality |
-| EU-01-AC2 / FN-01 (silent install) | met | — | end-user, functional, technical |
-| EU-01-AC3 / FN-02 (auto-validation) | met | — | end-user, functional, technical |
-| EU-01-AC4 (single pass message + hint) | met | — | end-user, functional |
-| EU-01-AC5 / FN-03 (single fail message + step) | met | — | end-user, functional, technical |
-| EU-01-AC6 (no intermediate noise) | met | — | end-user, functional |
-| TC-01.1 (npx + node contexts) | met | — | technical |
-| TC-01.2 (options.quiet, no monkey-patch) | met | — | technical, functional |
-| TC-01.3 (validate-install.js programmatic) | met | — | technical, functional |
-| TC-01.4 (human-readable errors, no stack traces) | met | — | technical |
-| TC-01.5 (result object shape) | met | — | technical |
-| TC-01.6 (readSettings() baseline behavior) | met | — | functional, technical |
-| TC-01.7 (auto-update child.on error handler) | met | — | technical |
-| TC-01.8 (ccWarnings dead code removed) | met | — | functional, technical |
-| TC-01.9 (log/logErr pattern complete) | met | — | technical |
+| Q-5 (validation hooks list gap) | not met | major | quality |
+| Q-2 (dead promptLocation guard) | not met | minor | quality |
+| Q-4 (agent copy DRY) | not met | minor | quality |
+| Q-1 (getCommitAttribution I/O) | not met | minor | quality |
+| Q-3 (unused description param) | not met | minor | quality, technical |
+| Q-6 (trailing return) | not met | minor | quality |
+| Q-7 (string version compare) | not met | minor | quality |
+| EU-01 (all 6 ACs) | met | -- | end-user |
+| FN-01 (silent install) | met | -- | functional |
+| FN-02 (auto-validation) | met | -- | functional |
+| FN-03 (final output) | met | -- | functional |
+| TC-01 (all 13 sub-reqs) | met | -- | technical |
+
+**Bottom line:** All functional and technical requirements are met across all reviewers. No blockers. One major quality finding: the validation hooks list is out of sync with the installer (one-line fix to add `'gsd-auto-update.js'` to the expectedHooks array at validate-install.js:182). Six minor code quality items suitable for a cleanup pass -- none affect correctness or user experience. The 6 prior fixes from round 1 are all confirmed resolved with no regressions.

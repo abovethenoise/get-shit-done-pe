@@ -179,7 +179,7 @@ function runValidation(options = {}) {
 
   // Hooks
   const hooksDir = path.join(configDir, 'hooks');
-  const expectedHooks = ['gsd-context-monitor.js', 'gsd-statusline.js', 'gsd-askuserquestion-guard.js'];
+  const expectedHooks = ['gsd-context-monitor.js', 'gsd-statusline.js', 'gsd-askuserquestion-guard.js', 'gsd-auto-update.js'];
   for (const hook of expectedHooks) {
     const hp = path.join(hooksDir, hook);
     if (fs.existsSync(hp)) {

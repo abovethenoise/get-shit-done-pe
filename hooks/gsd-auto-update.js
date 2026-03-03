@@ -76,10 +76,9 @@ process.stdin.on('end', () => {
           });
           child.on('error', (err) => {
             try {
-              const errCache = JSON.parse(fs.readFileSync(CACHE_PATH, 'utf8'));
-              errCache.lastError = err.message;
-              errCache.lastErrorTime = new Date().toISOString();
-              fs.writeFileSync(CACHE_PATH, JSON.stringify(errCache, null, 2) + '\n');
+              cache.lastError = err.message;
+              cache.lastErrorTime = new Date().toISOString();
+              writeCache(cache);
             } catch (e) { /* silent */ }
           });
           child.unref();
