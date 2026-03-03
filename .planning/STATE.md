@@ -157,25 +157,26 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: install-and-deploy capability fully planned, ready for execution
+Stopped at: install-and-deploy 4/4 features executed + reviewed, refactor plan ready
 
 ### Completed this session:
-1. discuss-feature: install-feedback — specified (EU/FN/TC written)
-2. discuss-feature: auto-latest — specified (EU/FN/TC written)
-3. Research: 6/6 gatherers completed + synthesized → RESEARCH.md
-4. Planning: all 4 features planned (8 tasks, 2 waves), CLI validated
+1. Executed Wave 1: package-identity (3 commits), install-feedback (3 commits)
+2. Executed Wave 2: cc-replacement (3 commits), auto-latest (2 commits)
+3. Reviewed all 4 features: 16 reviewers + 4 synthesizers
+4. Created refactor plan (02-PLAN.md) for blocker + major findings
 
-### Key research findings applied:
-- hooks/dist build pipeline broken → ship source hooks directly
-- npm uninstall -g (not upstream's buggy npx) for cc-replacement
-- npm install -g (not npx) for auto-update (npx caches stale)
-- validate-install.js needs refactor to export function (process.exit blocks require)
-- gsd-check-update orphan in live settings.json needs cleanup
+### Review findings (02-PLAN.md addresses all):
+- BLOCKER: readSettings() returns {} on corrupt settings.json (need known-good baseline)
+- MAJOR: README has 20+ stale get-shit-done-cc refs
+- MAJOR: package-lock.json not regenerated
+- MAJOR: Console monkey-patch → should use options.quiet
+- MAJOR: ccWarnings dead code
+- MAJOR: Auto-update hook has no error logging
 
 ### Pending deployment:
-- `node bin/install.js --global` to deploy AskUserQuestion fix
+- `node bin/install.js --global` to deploy AskUserQuestion fix + all new features
 
 ### Resume:
-- `/gsd:execute install-and-deploy` or execute per-feature
-- Wave 1 first: package-identity + install-feedback
-- Wave 2 after: cc-replacement + auto-latest
+- Execute 02-PLAN.md: `.planning/capabilities/install-and-deploy/features/install-feedback/02-PLAN.md`
+- Then: `node bin/install.js --global` to deploy everything
+- Plan is autonomous (2 tasks), follow execute-plan.md workflow
