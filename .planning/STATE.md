@@ -156,7 +156,23 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-03-02
-Stopped at: Completed 14-02-PLAN.md
-Resume: Phase 14, Plan 03
-Next action: Execute Plan 14-03 (install validation testing)
+Last session: 2026-03-03
+Stopped at: discuss-feature for install-and-deploy capability
+
+### Completed this session:
+1. AskUserQuestion bug fix (GH #29547): removed from 11 command frontmatters, created guard hook, updated install.js — **NOT YET DEPLOYED** (need `node bin/install.js --global`)
+2. Discovery brief for install-and-deploy (refactor+enhance compound lens) — BRIEF.md committed
+3. discuss-capability: 4 features scaffolded (package-identity, cc-replacement, install-feedback, auto-latest)
+4. discuss-feature: package-identity — specified (EU/FN/TC written)
+5. discuss-feature: cc-replacement — specified (EU/FN/TC written)
+
+### Not yet discussed:
+- install-and-deploy/install-feedback
+- install-and-deploy/auto-latest
+
+### Pending deployment:
+- `node bin/install.js --global` to deploy AskUserQuestion fix (removes from allowed-tools, adds guard hook)
+
+### Resume:
+- `/gsd:discuss-feature install-and-deploy/install-feedback` then `auto-latest`
+- Or skip to `/gsd:plan install-and-deploy` if ready to plan without further discussion
