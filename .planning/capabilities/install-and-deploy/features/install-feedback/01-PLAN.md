@@ -19,6 +19,7 @@ must_haves:
   truths:
     - "Running node bin/install.js --global produces only a banner and a single pass or fail line — no intermediate output"
     - "A failed step produces a line naming the step that failed and the reason (e.g., 'Install failed: hook registration — settings.json not writable')"
+    - "readSettings() on missing/corrupt/unparseable settings.json returns a known-good GSD baseline (minimum required hooks, permissions, deny rules for a working pe install) — not {} which leaves a broken install that silently fails. Corruption is treated as fresh install, not blank slate. Warning surfaced in final output."
     - "Validation runs automatically after install steps and its result folds into the pass/fail"
     - "scripts/validate-install.js can be require()'d without killing the calling process"
   artifacts:
