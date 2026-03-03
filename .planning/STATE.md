@@ -157,25 +157,19 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: 02-PLAN executed + reviewed, 3/6 review fixes committed, 3 remaining
+Stopped at: install-feedback feature fully reviewed (2 rounds), all fixes committed
 
 ### Completed this session:
-1. Executed 02-PLAN.md (refactor): 2 tasks, commits da00919, 2704cef, 7a793ce
-2. Reviewed 02-PLAN output: 4 reviewers + synthesizer → 3 major, 3 minor, 0 blockers
-3. Fixed finding 1 (readSettings returns { settings, wasCorrupt } — detects missing AND corrupt)
-4. Fixed finding 4 (removed redundant validateNoUnresolvedTokens inline scan)
-5. Fixed finding 5 (empty if-branch → negation pattern)
-6. Committed: 29df81e
+1. Fixed remaining 3 review findings from round 1: validation ordering, banner -PE, auto-update cache
+2. Re-review round 2: 4 reviewers + synthesizer → 0 blockers, 1 major, 6 minor. All EU/FN/TC MET.
+3. Fixed 5 of 7 round 2 findings (1 major + 4 minor), deferred 2 (different semantics / correct behavior)
+4. Committed: 72e222b
 
-### Remaining review fixes (3):
-- MAJOR finding 2: Validation runs before settings.json fully written (reorder validation after finishInstall)
-- MAJOR finding 3: Banner -PE identity not prominent (update ASCII art style)
-- MINOR finding 6: Auto-update error handler re-reads cache from disk (use in-scope object)
-
-### Pending deployment:
-- `node bin/install.js --global` to deploy AskUserQuestion fix + all install-and-deploy features
+### Pending:
+- AskUserQuestion fix changes staged but uncommitted (commands/gsd/*.md, workflows, hooks/gsd-askuserquestion-guard.js)
+- `node bin/install.js --global` to deploy everything
 
 ### Resume:
-- Fix remaining 3 findings in bin/install.js and hooks/gsd-auto-update.js
-- Then: `node bin/install.js --global` to deploy everything
-- Review decisions at: `.planning/capabilities/install-and-deploy/features/install-feedback/review/review-decisions.md`
+- Commit AskUserQuestion fix (11 command files + 4 workflow files + new guard hook)
+- Then: `node bin/install.js --global` to deploy
+- Then: test in fresh session
