@@ -14,6 +14,10 @@ const yellow = '\x1b[33m';
 const dim = '\x1b[2m';
 const reset = '\x1b[0m';
 
+// CLAUDE.md delimiters
+const CLAUDE_MD_START = '<!-- GSD-PE:START -->';
+const CLAUDE_MD_END = '<!-- GSD-PE:END -->';
+
 // Get version from package.json
 const pkg = require('../package.json');
 
@@ -325,6 +329,62 @@ function replaceCc(configDir) {
 }
 
 /**
+ * Write pe content to CLAUDE.md using delimiters for safe future removal
+ * @param {string} configDir - The target config directory
+ * @param {string} peContent - The content to write between delimiters
+ */
+function writeClaudeMd(configDir, peContent) {
+  const claudeMdPath = path.join(configDir, 'CLAUDE.md');
+  const block = `\n${CLAUDE_MD_START}\n${peContent}\n${CLAUDE_MD_END}\n`;
+
+  if (!fs.existsSync(claudeMdPath)) {
+    fs.writeFileSync(claudeMdPath, block);
+    return;
+  }
+
+  let existing = fs.readFileSync(claudeMdPath, 'utf8');
+  const startIdx = existing.indexOf(CLAUDE_MD_START);
+  const endIdx = existing.indexOf(CLAUDE_MD_END);
+
+  if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+    // Replace existing delimited block
+    existing = existing.slice(0, startIdx) + block.trimStart() + existing.slice(endIdx + CLAUDE_MD_END.length);
+  } else {
+    // Append new delimited block
+    existing = existing.trimEnd() + '\n' + block;
+  }
+
+  fs.writeFileSync(claudeMdPath, existing);
+}
+
+/**
+ * Strip GSD-PE delimited content from CLAUDE.md
+ * @param {string} configDir - The target config directory
+ * @returns {{ stripped: boolean, warned: boolean }}
+ */
+function stripClaudeMd(configDir) {
+  const claudeMdPath = path.join(configDir, 'CLAUDE.md');
+  if (!fs.existsSync(claudeMdPath)) {
+    return { stripped: false, warned: false };
+  }
+
+  const content = fs.readFileSync(claudeMdPath, 'utf8');
+  const startIdx = content.indexOf(CLAUDE_MD_START);
+  const endIdx = content.indexOf(CLAUDE_MD_END);
+
+  if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+    const before = content.slice(0, startIdx).trimEnd();
+    const after = content.slice(endIdx + CLAUDE_MD_END.length).trimStart();
+    const newContent = [before, after].filter(Boolean).join('\n') + '\n';
+    fs.writeFileSync(claudeMdPath, newContent);
+    return { stripped: true, warned: false };
+  }
+
+  // No delimiters — warn, don't touch
+  return { stripped: false, warned: true };
+}
+
+/**
  * Uninstall GSD from the specified directory
  * Removes only GSD-specific files/directories, preserves user content
  * @param {boolean} isGlobal - Whether to uninstall from global or local
@@ -384,7 +444,7 @@ function uninstall(isGlobal) {
   // 4. Remove GSD hooks
   const hooksDir = path.join(targetDir, 'hooks');
   if (fs.existsSync(hooksDir)) {
-    const gsdHooks = ['gsd-statusline.js', 'gsd-context-monitor.js', 'gsd-askuserquestion-guard.js'];
+    const gsdHooks = ['gsd-statusline.js', 'gsd-context-monitor.js', 'gsd-askuserquestion-guard.js', 'gsd-auto-update.js'];
     let hookCount = 0;
     for (const hook of gsdHooks) {
       const hookPath = path.join(hooksDir, hook);
@@ -434,7 +494,10 @@ function uninstall(isGlobal) {
       settings.hooks.SessionStart = settings.hooks.SessionStart.filter(entry => {
         if (entry.hooks && Array.isArray(entry.hooks)) {
           const hasGsdHook = entry.hooks.some(h =>
-            h.command && h.command.includes('gsd-statusline')
+            h.command && (
+              h.command.includes('gsd-statusline') ||
+              h.command.includes('gsd-auto-update')
+            )
           );
           return !hasGsdHook;
         }
@@ -626,7 +689,7 @@ function install(isGlobal) {
   if (fs.existsSync(hooksSrc)) {
     const hooksDest = path.join(targetDir, 'hooks');
     fs.mkdirSync(hooksDest, { recursive: true });
-    const hookFiles = ['gsd-context-monitor.js', 'gsd-statusline.js', 'gsd-askuserquestion-guard.js'];
+    const hookFiles = ['gsd-context-monitor.js', 'gsd-statusline.js', 'gsd-askuserquestion-guard.js', 'gsd-auto-update.js'];
     for (const hookFile of hookFiles) {
       const srcFile = path.join(hooksSrc, hookFile);
       if (fs.existsSync(srcFile)) {
@@ -667,6 +730,26 @@ function install(isGlobal) {
     return { ok: false, step: 'token replacement', reason: `unresolved {GSD_ROOT} in ${tokenFailures[0]}` };
   }
 
+  // Initialize auto-update cache with current version
+  const cacheDir = path.join(os.homedir(), '.claude', 'get-shit-done');
+  const cachePath = path.join(cacheDir, '.update-check');
+  try {
+    fs.mkdirSync(cacheDir, { recursive: true });
+    // Only write if missing or currentVersion is absent (don't reset lastCheck on re-install)
+    let cacheData = {};
+    if (fs.existsSync(cachePath)) {
+      try { cacheData = JSON.parse(fs.readFileSync(cachePath, 'utf8')); } catch (e) {}
+    }
+    cacheData.currentVersion = pkg.version;
+    // Only reset lastCheck if missing (force check on fresh install)
+    if (!cacheData.lastCheck) {
+      cacheData.lastCheck = new Date(0).toISOString(); // epoch = always check
+    }
+    fs.writeFileSync(cachePath, JSON.stringify(cacheData, null, 2) + '\n');
+  } catch (e) {
+    // Silent — cache init failure must not block install
+  }
+
   // Configure statusline and hooks in settings.json
   try {
     const settingsPath = path.join(targetDir, 'settings.json');
@@ -680,6 +763,9 @@ function install(isGlobal) {
     const askUserQuestionGuardCommand = isGlobal
       ? buildHookCommand(targetDir, 'gsd-askuserquestion-guard.js')
       : 'node .claude/hooks/gsd-askuserquestion-guard.js';
+    const autoUpdateCommand = isGlobal
+      ? buildHookCommand(targetDir, 'gsd-auto-update.js')
+      : 'node .claude/hooks/gsd-auto-update.js';
 
     // Configure SessionStart hook
     if (!settings.hooks) {
@@ -687,6 +773,30 @@ function install(isGlobal) {
     }
     if (!settings.hooks.SessionStart) {
       settings.hooks.SessionStart = [];
+    }
+
+    // Clean up orphaned gsd-check-update hook (deleted predecessor to gsd-auto-update)
+    settings.hooks.SessionStart = settings.hooks.SessionStart.filter(entry => {
+      if (entry.hooks && Array.isArray(entry.hooks)) {
+        return !entry.hooks.some(h => h.command && h.command.includes('gsd-check-update'));
+      }
+      return true;
+    });
+
+    // Configure SessionStart hook for auto-update
+    const hasAutoUpdateHook = settings.hooks.SessionStart.some(entry =>
+      entry.hooks && entry.hooks.some(h => h.command && h.command.includes('gsd-auto-update'))
+    );
+
+    if (!hasAutoUpdateHook) {
+      settings.hooks.SessionStart.push({
+        hooks: [
+          {
+            type: 'command',
+            command: autoUpdateCommand
+          }
+        ]
+      });
     }
 
     // Configure PostToolUse hook for context window monitoring
@@ -725,6 +835,10 @@ function install(isGlobal) {
         ]
       });
     }
+
+    // Write pe attribution block to CLAUDE.md with delimiters
+    const peClaudeMdContent = `# GSD — Get Shit Done\n\nInstalled by get-shit-done-pe. Run \`/gsd:new\` in a blank directory to get started.`;
+    writeClaudeMd(targetDir, peClaudeMdContent);
 
     return { ok: true, settingsPath, settings, statuslineCommand };
   } catch (e) {
