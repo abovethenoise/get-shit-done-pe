@@ -27,6 +27,9 @@ const dim = '\x1b[2m';
 const reset = '\x1b[0m';
 
 function runValidation(options = {}) {
+  const log = options.quiet ? () => {} : console.log;
+  const logErr = options.quiet ? () => {} : console.error;
+
   const configDir = process.env.CLAUDE_CONFIG_DIR
     ? process.env.CLAUDE_CONFIG_DIR
     : path.join(os.homedir(), '.claude');
@@ -39,7 +42,7 @@ function runValidation(options = {}) {
   function pass(msg) {
     totalChecks++;
     passedChecks++;
-    console.log(`  ${green}PASS${reset} ${msg}`);
+    log(`  ${green}PASS${reset} ${msg}`);
   }
 
   function fail(msg, detail) {
@@ -47,14 +50,14 @@ function runValidation(options = {}) {
     failedChecks++;
     const entry = detail ? `${msg}: ${detail}` : msg;
     failures.push(entry);
-    console.log(`  ${red}FAIL${reset} ${msg}`);
-    if (detail) console.log(`       ${dim}${detail}${reset}`);
+    log(`  ${red}FAIL${reset} ${msg}`);
+    if (detail) log(`       ${dim}${detail}${reset}`);
   }
 
   // ---------------------------------------------------------------------------
   // Check 1: Expected files exist at installed paths
   // ---------------------------------------------------------------------------
-  console.log('\n  --- Check 1: Expected files exist ---\n');
+  log('\n  --- Check 1: Expected files exist ---\n');
 
   const expectedCommands = [
     'debug.md', 'discuss-capability.md', 'discuss-feature.md', 'enhance.md',
@@ -189,7 +192,7 @@ function runValidation(options = {}) {
   // ---------------------------------------------------------------------------
   // Check 2: No unresolved {GSD_ROOT} tokens
   // ---------------------------------------------------------------------------
-  console.log('\n  --- Check 2: No unresolved {GSD_ROOT} tokens ---\n');
+  log('\n  --- Check 2: No unresolved {GSD_ROOT} tokens ---\n');
 
   const dirsToScan = [
     path.join(configDir, 'commands', 'gsd'),
@@ -220,14 +223,14 @@ function runValidation(options = {}) {
   } else {
     fail(`Found ${tokenHits.length} files with unresolved {GSD_ROOT} tokens`);
     for (const f of tokenHits) {
-      console.log(`       ${dim}${f}${reset}`);
+      log(`       ${dim}${f}${reset}`);
     }
   }
 
   // ---------------------------------------------------------------------------
   // Check 3: Commands are discoverable (have frontmatter)
   // ---------------------------------------------------------------------------
-  console.log('\n  --- Check 3: Commands are discoverable ---\n');
+  log('\n  --- Check 3: Commands are discoverable ---\n');
 
   let discoverableCount = 0;
   const nonDiscoverable = [];
@@ -255,7 +258,7 @@ function runValidation(options = {}) {
   // ---------------------------------------------------------------------------
   // Check 4: gsd-tools.cjs runs without error
   // ---------------------------------------------------------------------------
-  console.log('\n  --- Check 4: gsd-tools.cjs runs without error ---\n');
+  log('\n  --- Check 4: gsd-tools.cjs runs without error ---\n');
 
   if (fs.existsSync(toolsPath)) {
     try {
@@ -282,7 +285,7 @@ function runValidation(options = {}) {
   // ---------------------------------------------------------------------------
   // Check 5: No references to deleted files or old phase paths
   // ---------------------------------------------------------------------------
-  console.log('\n  --- Check 5: No stale references ---\n');
+  log('\n  --- Check 5: No stale references ---\n');
 
   const stalePatterns = [
     { pattern: /phases\//g, label: 'phases/ path reference' },
@@ -317,20 +320,20 @@ function runValidation(options = {}) {
   } else {
     // These may be legitimate references (e.g., documentation about phases concept)
     // Report as warnings, not failures
-    console.log(`  ${yellow}WARN${reset} Found ${staleHits.length} potential stale references (review needed):`);
+    log(`  ${yellow}WARN${reset} Found ${staleHits.length} potential stale references (review needed):`);
     for (const h of staleHits) {
-      console.log(`       ${dim}${h}${reset}`);
+      log(`       ${dim}${h}${reset}`);
     }
     // Don't count as pass or fail -- informational
     totalChecks++;
     passedChecks++;
-    console.log(`  ${green}PASS${reset} Stale reference check complete (${staleHits.length} warnings noted)`);
+    log(`  ${green}PASS${reset} Stale reference check complete (${staleHits.length} warnings noted)`);
   }
 
   // ---------------------------------------------------------------------------
   // Check 6: Legacy artifacts cleaned
   // ---------------------------------------------------------------------------
-  console.log('\n  --- Check 6: Legacy artifacts cleaned ---\n');
+  log('\n  --- Check 6: Legacy artifacts cleaned ---\n');
 
   const legacyPaths = [
     { path: path.join(configDir, 'gsd-local-patches'), label: 'gsd-local-patches/' },
@@ -352,9 +355,9 @@ function runValidation(options = {}) {
   // ---------------------------------------------------------------------------
   // Summary
   // ---------------------------------------------------------------------------
-  console.log('\n  =========================================');
-  console.log(`  Results: ${passedChecks}/${totalChecks} passed, ${failedChecks} failed`);
-  console.log('  =========================================\n');
+  log('\n  =========================================');
+  log(`  Results: ${passedChecks}/${totalChecks} passed, ${failedChecks} failed`);
+  log('  =========================================\n');
 
   return {
     passed: passedChecks,

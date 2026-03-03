@@ -79,7 +79,6 @@ function parseConfigDirArg() {
   }
   return null;
 }
-const ccWarnings = [];
 const explicitConfigDir = parseConfigDirArg();
 const hasHelp = args.includes('--help') || args.includes('-h');
 const forceStatusline = args.includes('--force-statusline');
@@ -291,7 +290,6 @@ function cleanupOrphanedHooks(settings) {
 /**
  * Detect and remove get-shit-done-cc artifacts before pe install
  * @param {string} configDir - The target config directory (~/.claude or explicit)
- * @returns {{ ccWarnings: string[] }}
  */
 function replaceCc(configDir) {
   // 1. Detect cc global install
@@ -308,7 +306,7 @@ function replaceCc(configDir) {
     try {
       execSync('npm uninstall -g get-shit-done-cc', { stdio: 'pipe' });
     } catch (e) {
-      ccWarnings.push('cc uninstall failed — manual cleanup may be needed');
+      // cc uninstall failed — silent, manual cleanup may be needed
     }
   }
 
@@ -345,7 +343,7 @@ function replaceCc(configDir) {
     fs.rmSync(hooksDist, { recursive: true });
   }
 
-  return { ccWarnings };
+  return;
 }
 
 /**
@@ -806,14 +804,6 @@ function install(isGlobal) {
       settings.hooks.SessionStart = [];
     }
 
-    // Clean up orphaned gsd-check-update hook (deleted predecessor to gsd-auto-update)
-    settings.hooks.SessionStart = settings.hooks.SessionStart.filter(entry => {
-      if (entry.hooks && Array.isArray(entry.hooks)) {
-        return !entry.hooks.some(h => h.command && h.command.includes('gsd-check-update'));
-      }
-      return true;
-    });
-
     // Configure SessionStart hook for auto-update
     const hasAutoUpdateHook = settings.hooks.SessionStart.some(entry =>
       entry.hooks && entry.hooks.some(h => h.command && h.command.includes('gsd-auto-update'))
@@ -998,19 +988,12 @@ function runInstall(isGlobal, isInteractive) {
     process.exit(1);
   }
 
-  // Auto-validation (suppress validation's per-check console output)
+  // Auto-validation (suppress per-check output via quiet option)
   let validationResult;
-  const origLog = console.log;
-  const origError = console.error;
   try {
-    console.log = () => {};
-    console.error = () => {};
-    validationResult = runValidation();
+    validationResult = runValidation({ quiet: true });
   } catch (e) {
     validationResult = { failed: 1, failures: [`validation error: ${e.message}`] };
-  } finally {
-    console.log = origLog;
-    console.error = origError;
   }
 
   if (validationResult.failed > 0) {

@@ -25,8 +25,7 @@ process.stdin.setEncoding('utf8');
 process.stdin.on('data', chunk => input += chunk);
 process.stdin.on('end', () => {
   try {
-    // Parse stdin (session JSON) - we don't use it, but must drain it
-    try { JSON.parse(input); } catch (e) { /* ignore parse errors */ }
+    // stdin drained above (hook protocol) — contents not used
 
     // Read cache
     let cache = {};
@@ -74,6 +73,14 @@ process.stdin.on('end', () => {
           const child = spawn('npm', ['install', '-g', 'get-shit-done-pe@latest'], {
             detached: true,
             stdio: 'ignore'
+          });
+          child.on('error', (err) => {
+            try {
+              const errCache = JSON.parse(fs.readFileSync(CACHE_PATH, 'utf8'));
+              errCache.lastError = err.message;
+              errCache.lastErrorTime = new Date().toISOString();
+              fs.writeFileSync(CACHE_PATH, JSON.stringify(errCache, null, 2) + '\n');
+            } catch (e) { /* silent */ }
           });
           child.unref();
 
