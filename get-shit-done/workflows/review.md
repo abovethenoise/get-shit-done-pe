@@ -45,15 +45,52 @@ Read SUMMARY.md files from feature directory to build list of key files created/
 
 ## 4. Spawn 4 Reviewers in Parallel
 
-Define gatherers:
-- `agents/gsd-review-enduser.md` -> `{feature_dir}/review/enduser-trace.md`
-- `agents/gsd-review-functional.md` -> `{feature_dir}/review/functional-trace.md`
-- `agents/gsd-review-technical.md` -> `{feature_dir}/review/technical-trace.md`
-- `agents/gsd-review-quality.md` -> `{feature_dir}/review/quality-trace.md`
+Assemble context payload (read each path, embed content):
+```
+<core_context>{contents of PROJECT.md, STATE.md, ROADMAP.md}</core_context>
+<capability_context>{contents of CAPABILITY.md}</capability_context>
+<feature_context>{contents of FEATURE.md with EU/FN/TC requirements}</feature_context>
+<review_context>
+Lens: {LENS}
+Anchor questions: {GSD_ROOT}/get-shit-done/framings/{LENS}/anchor-questions.md
+Feature artifacts: {artifact list from Step 3}
+Requirement IDs: {EU-xx, FN-xx, TC-xx from FEATURE.md}
+</review_context>
+```
 
-Per reviewer prompt: read agent file, subject, context payload, dimension name, feature artifacts list, requirement IDs, output path.
+Spawn all 4 reviewers simultaneously (parallel Task calls — do NOT wait for one before spawning the next):
 
-Spawn ALL 4 simultaneously. Wait for all to complete.
+```
+Task(
+  prompt="First, read {GSD_ROOT}/agents/gsd-review-enduser.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Dimension: End-User\nFeature artifacts: {artifact_list}\nRequirement IDs: {requirement_ids}\nWrite your trace report to: {feature_dir}/review/enduser-trace.md</task_context>",
+  subagent_type="gsd-review-enduser",
+  model="sonnet",
+  description="Review End-User for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
+)
+
+Task(
+  prompt="First, read {GSD_ROOT}/agents/gsd-review-functional.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Dimension: Functional\nFeature artifacts: {artifact_list}\nRequirement IDs: {requirement_ids}\nWrite your trace report to: {feature_dir}/review/functional-trace.md</task_context>",
+  subagent_type="gsd-review-functional",
+  model="sonnet",
+  description="Review Functional for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
+)
+
+Task(
+  prompt="First, read {GSD_ROOT}/agents/gsd-review-technical.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Dimension: Technical\nFeature artifacts: {artifact_list}\nRequirement IDs: {requirement_ids}\nWrite your trace report to: {feature_dir}/review/technical-trace.md</task_context>",
+  subagent_type="gsd-review-technical",
+  model="sonnet",
+  description="Review Technical for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
+)
+
+Task(
+  prompt="First, read {GSD_ROOT}/agents/gsd-review-quality.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Dimension: Quality\nFeature artifacts: {artifact_list}\nRequirement IDs: {requirement_ids}\nWrite your trace report to: {feature_dir}/review/quality-trace.md</task_context>",
+  subagent_type="gsd-universal-quality-reviewer",
+  model="sonnet",
+  description="Review Quality for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
+)
+```
+
+Wait for ALL 4 reviewers to complete.
 
 ## 5. Failure Handling
 
@@ -64,7 +101,16 @@ If fewer: proceed with partial results.
 
 ## 6. Synthesize
 
-Spawn synthesizer with all trace reports. Priority for conflicts: end-user > functional > technical > quality. Output: `{feature_dir}/review/synthesis.md`.
+Build reviewer manifest listing each dimension and its status (success | failed).
+
+```
+Task(
+  prompt="First, read {GSD_ROOT}/agents/gsd-review-synthesizer.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Review phase complete. Consolidate the following reviewer trace reports.\n\nReviewer outputs:\n- End-User: {feature_dir}/review/enduser-trace.md [{status}]\n- Functional: {feature_dir}/review/functional-trace.md [{status}]\n- Technical: {feature_dir}/review/technical-trace.md [{status}]\n- Quality: {feature_dir}/review/quality-trace.md [{status}]\n\nConflict priority: end-user > functional > technical > quality\n\nWrite your synthesis to: {feature_dir}/review/synthesis.md\n\nIf any reviewer has status \"failed\", document the gap — do not fabricate findings for missing dimensions.</task_context>",
+  subagent_type="gsd-review-synthesizer",
+  model="inherit",
+  description="Synthesize Review for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
+)
+```
 
 If synthesis output missing: error.
 
@@ -91,7 +137,7 @@ After all processed: if accepted findings exist -> step 9. Otherwise -> step 10.
 
 Check `re_review_cycle < max_re_review_cycles` (2).
 
-If accepted findings AND cycles remaining: re-spawn only affected reviewers + always re-run synthesizer. Present any new/changed findings (same Q&A). If max reached: surface remaining for manual resolution.
+If accepted findings AND cycles remaining: re-spawn only affected reviewers using the same Task() blocks from Step 4 (same prompt structure, same subagent_types). Always re-run synthesizer via Step 6 Task() block after affected reviewers complete. Present any new/changed findings (same Q&A). If max reached: surface remaining for manual resolution.
 
 ## 10. Log Decisions
 
