@@ -11,7 +11,7 @@ created: "2026-03-04"
 
 ## Problem Statement
 
-The pipeline's plan-to-user presentation layer gives flat table summaries without justification or interactive discussion, and the doc-writer stage lacks a standalone entry point (`/gsd:doc`) and doesn't follow the gather->synthesize pattern used by research.
+The pipeline's plan-to-user presentation layer gives flat table summaries without justification or interactive discussion, the doc-writer stage lacks a standalone entry point (`/gsd:doc`) and doesn't follow the gather->synthesize pattern, and the framing-pipeline is hardcoded to feature-level operation with no capability-level routing.
 
 ## Context
 
@@ -29,6 +29,8 @@ The pipeline's plan-to-user presentation layer gives flat table summaries withou
 - `get-shit-done/workflows/doc.md` — doc-writer workflow (restructure target)
 - `get-shit-done/agents/gsd-doc-writer` — doc-writer agent definition
 - `get-shit-done/references/ui-brand.md` — visual patterns for output
+- `get-shit-done/workflows/framing-pipeline.md` — hardcoded feature-level scope (routing target)
+- `get-shit-done/workflows/capability-orchestrator.md` — exists but not integrated with framing-pipeline
 
 ### Prior Exploration
 
@@ -45,6 +47,8 @@ Real-world example: planner acknowledged 4 self-fixes, skipped Q&A ("No unresolv
 5. Doc-writer is a single agent that writes documentation directly — no parallel exploration
 6. Doc-writer has no standalone entry point — only runs as part of the pipeline
 7. Doc-writer scope limited to code comments and .documentation directory
+8. framing-pipeline.md requires FEATURE_SLUG and FEATURE_DIR as inputs — cannot operate at capability level
+9. Discovery can resolve at capability level but pipeline can't accept that scope — gap between discovery output and pipeline input
 
 ### Desired Behavior
 
@@ -58,6 +62,10 @@ Real-world example: planner acknowledged 4 self-fixes, skipped Q&A ("No unresolv
    - Synthesizer produces documentation recommendations
 4. **Doc-writer recommendations cover:** code comment updates, .documentation updates, new standards or decisions, relevant project or sub CLAUDE.md fixes, hooks or skills that could reduce friction
 5. **`/gsd:doc` skill** — standalone entry point for doc-writer so it can be invoked outside the pipeline
+6. **Scope-aware pipeline routing:**
+   - Capability-level input → pipeline decomposes into features and orchestrates across them (feature creation, DAG ordering, per-feature pipeline runs)
+   - Feature-level input → pipeline runs on the single feature (current behavior, unchanged)
+   - Discovery handoff works regardless of resolution scope
 
 ### Delta
 
@@ -70,6 +78,8 @@ Real-world example: planner acknowledged 4 self-fixes, skipped Q&A ("No unresolv
 | Doc-writer gather->synthesize | doc.md workflow — restructure from single-agent to parallel explorers + synthesizer |
 | `/gsd:doc` skill | New skill entry point invoking doc-writer workflow standalone |
 | Expanded doc scope | Doc-writer focus areas — add standards, decisions, CLAUDE.md, hooks/skills |
+| Pipeline scope routing | framing-pipeline.md — add capability-vs-feature input detection + decomposition logic |
+| Discovery-pipeline handoff | framing-discovery.md Step 10 — pass scope type (capability or feature) to pipeline |
 
 ### Invariants
 
@@ -85,6 +95,7 @@ Real-world example: planner acknowledged 4 self-fixes, skipped Q&A ("No unresolv
 - Justification narrative can be generated from data already available at checkpoint time (planner output, checker results, research findings)
 - Doc-writer focus areas map cleanly to parallel explorer agents
 - Existing gather->synthesize pattern from research is reusable for doc-writer
+- Capability-level pipeline can reuse capability-orchestrator.md or its patterns for feature decomposition
 
 ### Open Questions
 
@@ -92,6 +103,8 @@ Real-world example: planner acknowledged 4 self-fixes, skipped Q&A ("No unresolv
 - How many doc-writer explorer agents and what focus areas specifically
 - Whether doc-writer needs its own synthesizer agent or reuses existing pattern
 - What's the right scope for `/gsd:doc` — just the doc-writer stage, or the full doc workflow?
+- How does capability-level pipeline interact with capability-orchestrator.md — reuse, replace, or merge?
+- What's the feature decomposition UX at capability level — auto-detect from brief, user-guided, or hybrid?
 
 ## Scope Boundary
 
@@ -101,6 +114,8 @@ Real-world example: planner acknowledged 4 self-fixes, skipped Q&A ("No unresolv
 - Doc-writer gather->synthesize restructure
 - `/gsd:doc` standalone skill entry point
 - Expanded doc-writer recommendation scope
+- Pipeline scope-aware routing (capability-level decomposition + feature-level pass-through)
+- Discovery-to-pipeline handoff for both scope types
 
 ### Out
 
@@ -114,3 +129,4 @@ Real-world example: planner acknowledged 4 self-fixes, skipped Q&A ("No unresolv
 - Consider if review stage presentation needs similar justification treatment
 - Consider if execute stage's progress output could benefit from richer presentation
 - Evaluate whether other pipeline stages need standalone entry points
+- Consider if capability-orchestrator.md should be merged into framing-pipeline.md or remain separate
