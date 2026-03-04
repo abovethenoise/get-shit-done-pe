@@ -37,6 +37,8 @@ PLAN.md files written to `{feature_dir}/{nn}-PLAN.md` with:
 - Objective, context (@file references), verification, success criteria sections
 
 See planner-reference.md for full format specification, task anatomy, and examples.
+
+Completion message also includes `### Justification` (ordering/approach/KISS rationale, grounded in REQ IDs) and `### Round 1 Fixes` (ADR-format entries for changes made during Round 1 self-critique) — see planner-reference.md Structured Return Formats for schema.
 </output_format>
 
 <downstream_consumers>
