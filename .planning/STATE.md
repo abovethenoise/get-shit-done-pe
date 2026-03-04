@@ -169,18 +169,19 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-04
-Stopped at: pipeline-execution/doc-writer-overhaul — Feature complete (2/2 plans executed), ready for review
+Stopped at: pipeline-execution/doc-writer-overhaul — Reviewed (7 findings: 5 accepted+fixed, 1 dismissed, 1 accepted). No blockers.
 
 ### Completed this session:
 1. plan-presentation: Reviewed (7 findings, all accepted+fixed), docs deferred
-2. doc-writer-overhaul: Both plans executed
+2. doc-writer-overhaul: Both plans executed + reviewed
    - Plan 01 (4min): doc.md gather→synthesize restructure + gsd-doc-writer.md dual-role rewrite
    - Plan 02 (2min): /gsd:doc standalone skill + review.md LENS propagation fix
+   - Review: 7 findings (3 major quality idioms, 4 minor), 5 accepted+fixed, 1 dismissed
 
 ### Resume:
-- `/gsd:review pipeline-execution/doc-writer-overhaul` or next feature
 - `/gsd:plan pipeline-execution/scope-aware-routing` (needs discuss-feature first for requirements)
-- Docs deferred until all 3 features reviewed
+- Docs deferred until all features reviewed (plan-presentation + doc-writer-overhaul both reviewed)
+- pipeline-execution/research-overhaul — Plans 01/02/04 pending execution
 
 ### Prior pending (from previous sessions):
 - pipeline-execution/research-overhaul — Plans 01/02/04 pending execution
