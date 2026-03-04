@@ -22,6 +22,8 @@ npx get-shit-done-pe@latest
 
 ## Changelog
 
+**2.0.2** — Pipeline execution improvements: plan presentation restructured with 3-layer justification before approval + unconditional deep-dive; doc writer overhauled to gather-synthesize pattern (5 parallel focus-area explorers + synthesizer) with standalone `/gsd:doc` skill; all 4 lens commands now accept capability slugs and route to capability-orchestrator for fan-out, `/gsd:new` adds unknown-slug disambiguation and feature stub auto-creation.
+
 **2.0.1** — Research overhaul: research is now mandatory (no skip gates), all research/review agent spawns use explicit `Task()` blocks instead of ambiguous `@workflow.md` delegation, lens-aware reuse prevents double-research when framing-pipeline hands off to plan.md.
 
 ---
