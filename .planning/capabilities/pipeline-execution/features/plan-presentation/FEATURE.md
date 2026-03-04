@@ -1,7 +1,7 @@
 ---
 type: feature
 capability: "pipeline-execution"
-status: planning
+status: executed
 created: "2026-03-04"
 ---
 
@@ -15,17 +15,18 @@ Replace the flat table + "approve?" plan checkpoint with a 3-layer justification
 
 | REQ | Research | Plan | Execute | Review | Docs | Status |
 |-----|----------|------|---------|--------|------|--------|
-| EU-01 | ✓ | - | - | - | - | draft |
-| EU-02 | ✓ | - | - | - | - | draft |
-| FN-01 | ✓ | - | - | - | - | draft |
-| FN-02 | ✓ | - | - | - | - | draft |
-| FN-03 | ✓ | - | - | - | - | draft |
-| FN-04 | ✓ | - | - | - | - | draft |
-| FN-05 | ✓ | - | - | - | - | draft |
-| FN-06 | ✓ | - | - | - | - | draft |
-| TC-01 | ✓ | - | - | - | - | draft |
-| TC-02 | ✓ | - | - | - | - | draft |
-| TC-03 | ✓ | - | - | - | - | draft |
+| EU-01 | ✓ | ✓ | ✓ | - | - | executed |
+| EU-02 | ✓ | ✓ | ✓ | - | - | executed |
+| FN-01 | ✓ | ✓ | ✓ | - | - | executed |
+| FN-02 | ✓ | ✓ | ✓ | - | - | executed |
+| FN-03 | ✓ | ✓ | ✓ | - | - | executed |
+| FN-04 | ✓ | ✓ | ✓ | - | - | executed |
+| FN-05 | ✓ | ✓ | ✓ | - | - | executed |
+| FN-06 | ✓ | ✓ | ✓ | - | - | executed |
+| FN-07 | ✓ | ✓ | ✓ | - | - | executed |
+| TC-01 | ✓ | ✓ | ✓ | - | - | executed |
+| TC-02 | ✓ | ✓ | ✓ | - | - | executed |
+| TC-03 | ✓ | ✓ | ✓ | - | - | executed |
 
 ## End-User Requirements
 
