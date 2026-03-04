@@ -64,26 +64,12 @@ Parse JSON result for: `resolved`, `tier`, `type`, `capability_slug`, `feature_s
   - header: "Multiple Matches"
   - question: "Multiple matches found for '$ARGUMENTS'. Which did you mean?"
   - options: list each candidate with type and full_path
-- Re-resolve with the selected candidate
+- Re-resolve with the selected candidate, return to top of Step 2
 
 **If not resolved and reason is "no_match":**
 - Display error: "No capability or feature matches '$ARGUMENTS'."
 - Suggest: "Run /gsd:status to see available capabilities and features."
 - Stop.
-
-## 3. Workflow Invocation
-
-For **feature-level:**
-```
-@{GSD_ROOT}/get-shit-done/workflows/framing-discovery.md
-```
-Pass: LENS=debug, CAPABILITY_SLUG (from resolution)
-
-For **capability-level:**
-```
-@{GSD_ROOT}/get-shit-done/workflows/capability-orchestrator.md
-```
-Pass: CAPABILITY_SLUG, LENS=debug
 
 </process>
 

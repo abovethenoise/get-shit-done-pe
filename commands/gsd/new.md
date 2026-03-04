@@ -77,7 +77,7 @@ If $ARGUMENTS is empty: treat as no_match (skip resolution, go to Step 2 no_matc
 - **If new capability:**
   - Invoke discuss-capability workflow
   - After discuss-capability completes, use the capability slug it created as CAPABILITY_SLUG
-  - Proceed to Step 4 (fan-out offer)
+  - Proceed to Step 3 (feature stub auto-creation), then Step 4 (fan-out offer)
 - **If new feature:**
   - Use AskUserQuestion:
     - header: "Which Capability?"
@@ -118,7 +118,7 @@ Pass: CAPABILITY_SLUG, LENS=new
 
 **Note:** Step 4 is reached either from:
 - Step 2 "resolved as capability" path (after Step 3 stub creation) — invoke orchestrator directly, no fan-out offer
-- Step 2 "no_match → new capability" path after discuss-capability completes — present fan-out offer first
+- Step 2 "no_match → new capability" path (after Step 3 stub creation) — present fan-out offer first
 
 **Fan-out offer (only when arriving from discuss-capability path):**
 Before invoking orchestrator, use AskUserQuestion:
