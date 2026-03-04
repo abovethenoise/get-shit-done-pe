@@ -3,6 +3,7 @@ Orchestrate the documentation pipeline for a feature: locate artifacts, spawn do
 </purpose>
 
 <required_reading>
+@{GSD_ROOT}/get-shit-done/workflows/gather-synthesize.md
 @{GSD_ROOT}/get-shit-done/references/ui-brand.md
 </required_reading>
 
@@ -65,35 +66,35 @@ Spawn all 5 explorers simultaneously (parallel Task calls — do NOT wait for on
 
 ```
 Task(
-  prompt="First, read {GSD_ROOT}/agents/gsd-doc-writer.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Role: explorer\nFocus area: code-comments\nScope: Scan modified source files for missing or stale inline documentation. Check: function docstrings, inline explanations of non-obvious logic, parameter descriptions, return value notes. Do NOT cover .documentation/ files or config files — those are other focus areas.\nFeature artifacts: {artifact_list}\nWrite your findings to: {feature_dir}/doc/code-comments-findings.md\nWrite something even if you find no opportunities (e.g., 'No inline documentation gaps identified in modified files.').</task_context>",
+  prompt="First, read {GSD_ROOT}/agents/gsd-doc-writer.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Role: explorer\nFocus area: code-comments\nFeature artifacts: {artifact_list}\nWrite your findings to: {feature_dir}/doc/code-comments-findings.md</task_context>",
   subagent_type="gsd-doc-writer",
   model="sonnet",
   description="Doc Explore: code-comments for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
 )
 
 Task(
-  prompt="First, read {GSD_ROOT}/agents/gsd-doc-writer.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Role: explorer\nFocus area: module-flow-docs\nScope: Identify .documentation/ module and flow docs that need creation or update based on what was built/changed. Check: missing module docs for new files, stale module docs for modified files, missing/stale flow docs for changed data paths. Do NOT check inline code comments or config files — those are other focus areas.\nFeature artifacts: {artifact_list}\nWrite your findings to: {feature_dir}/doc/module-flow-docs-findings.md\nWrite something even if you find no opportunities (e.g., 'No module/flow doc gaps identified.').</task_context>",
+  prompt="First, read {GSD_ROOT}/agents/gsd-doc-writer.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Role: explorer\nFocus area: module-flow-docs\nFeature artifacts: {artifact_list}\nWrite your findings to: {feature_dir}/doc/module-flow-docs-findings.md</task_context>",
   subagent_type="gsd-doc-writer",
   model="sonnet",
   description="Doc Explore: module-flow-docs for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
 )
 
 Task(
-  prompt="First, read {GSD_ROOT}/agents/gsd-doc-writer.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Role: explorer\nFocus area: standards-decisions\nScope: Identify new patterns, conventions, or architectural decisions introduced by this change that are worth codifying. Read existing .documentation/ for drift. Check CLAUDE.md for stale architectural guidance this change supersedes. Do NOT check config drift (that is project-config focus area).\nFeature artifacts: {artifact_list}\nWrite your findings to: {feature_dir}/doc/standards-decisions-findings.md\nWrite something even if you find no opportunities (e.g., 'No new standards or decisions identified.').</task_context>",
+  prompt="First, read {GSD_ROOT}/agents/gsd-doc-writer.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Role: explorer\nFocus area: standards-decisions\nFeature artifacts: {artifact_list}\nWrite your findings to: {feature_dir}/doc/standards-decisions-findings.md</task_context>",
   subagent_type="gsd-doc-writer",
   model="sonnet",
   description="Doc Explore: standards-decisions for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
 )
 
 Task(
-  prompt="First, read {GSD_ROOT}/agents/gsd-doc-writer.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Role: explorer\nFocus area: project-config\nScope: Detect CLAUDE.md fixes, config drift, or stale project instructions caused by this change. Read CLAUDE.md for instructions that are now incorrect, outdated, or missing given what was built. Do NOT look for new patterns or architectural decisions — that is standards-decisions focus area.\nFeature artifacts: {artifact_list}\nWrite your findings to: {feature_dir}/doc/project-config-findings.md\nWrite something even if you find no opportunities (e.g., 'No CLAUDE.md or config drift identified.').</task_context>",
+  prompt="First, read {GSD_ROOT}/agents/gsd-doc-writer.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Role: explorer\nFocus area: project-config\nFeature artifacts: {artifact_list}\nWrite your findings to: {feature_dir}/doc/project-config-findings.md</task_context>",
   subagent_type="gsd-doc-writer",
   model="sonnet",
   description="Doc Explore: project-config for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
 )
 
 Task(
-  prompt="First, read {GSD_ROOT}/agents/gsd-doc-writer.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Role: explorer\nFocus area: friction-reduction\nScope: Recommend hooks, skills, or automation that could streamline repeated workflows exposed by this change. Look for: repetitive manual steps in related workflows, patterns that could become a skill command, setup steps that could be automated via hooks. Do NOT recommend changes to the implemented feature itself.\nFeature artifacts: {artifact_list}\nWrite your findings to: {feature_dir}/doc/friction-reduction-findings.md\nWrite something even if you find no opportunities (e.g., 'No friction reduction opportunities identified.').</task_context>",
+  prompt="First, read {GSD_ROOT}/agents/gsd-doc-writer.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Role: explorer\nFocus area: friction-reduction\nFeature artifacts: {artifact_list}\nWrite your findings to: {feature_dir}/doc/friction-reduction-findings.md</task_context>",
   subagent_type="gsd-doc-writer",
   model="sonnet",
   description="Doc Explore: friction-reduction for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
@@ -125,7 +126,7 @@ If 2 or fewer fail: proceed to synthesis with partial results.
 
 ```
 Task(
-  prompt="First, read {GSD_ROOT}/agents/gsd-doc-writer.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Role: synthesizer\nExplorer findings to consolidate:\n- code-comments: {feature_dir}/doc/code-comments-findings.md [{status}]\n- module-flow-docs: {feature_dir}/doc/module-flow-docs-findings.md [{status}]\n- standards-decisions: {feature_dir}/doc/standards-decisions-findings.md [{status}]\n- project-config: {feature_dir}/doc/project-config-findings.md [{status}]\n- friction-reduction: {feature_dir}/doc/friction-reduction-findings.md [{status}]\n\nConflict priority: code-comments > module-flow-docs > standards-decisions > project-config > friction-reduction\n\nFor any explorer with status 'failed': document the gap — do not fabricate findings.\n\nWrite consolidated doc-report.md to: {feature_dir}/doc-report.md</task_context>",
+  prompt="First, read {GSD_ROOT}/agents/gsd-doc-writer.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Role: synthesizer\nExplorer findings to consolidate:\n- code-comments: {feature_dir}/doc/code-comments-findings.md [{status}]\n- module-flow-docs: {feature_dir}/doc/module-flow-docs-findings.md [{status}]\n- standards-decisions: {feature_dir}/doc/standards-decisions-findings.md [{status}]\n- project-config: {feature_dir}/doc/project-config-findings.md [{status}]\n- friction-reduction: {feature_dir}/doc/friction-reduction-findings.md [{status}]\n\nFor any explorer with status 'failed': document the gap — do not fabricate findings.\n\nWrite consolidated doc-report.md to: {feature_dir}/doc-report.md</task_context>",
   subagent_type="gsd-doc-writer",
   model="inherit",
   description="Doc Synthesize for {CAPABILITY_SLUG}/{FEATURE_SLUG}"

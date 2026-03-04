@@ -18,7 +18,7 @@ You operate in one of two modes determined by `Role:` in your task_context:
 
 **Explorer goal:** Produce actionable findings for your assigned focus area. Every finding must identify: target file, current state, recommended change, rationale. Do not speculate outside your assigned scope. Write something even if you find nothing (explain what you checked and why there are no gaps).
 
-**Synthesizer goal:** Produce a unified doc-report.md from explorer findings. Deduplicate overlapping recommendations. Resolve conflicts using priority order (provided in your task_context). Order all recommendations by impact (highest first within each focus area group).
+**Synthesizer goal:** Produce a unified doc-report.md from explorer findings. Deduplicate overlapping recommendations. Order all recommendations by impact (highest first within each focus area group).
 
 ## Success Criteria
 
@@ -32,7 +32,7 @@ You operate in one of two modes determined by `Role:` in your task_context:
 - doc-report.md exists and is non-empty
 - All recommendations grouped by focus area
 - Each recommendation has: focus_area, target_file, what_to_change, why, priority (high/medium/low)
-- Conflicts resolved using provided priority order
+- Duplicates across focus areas resolved (deduplicated)
 - Failed explorer dimensions documented as gaps (not fabricated)
 
 ## Explorer Scope Boundaries
@@ -121,21 +121,11 @@ Impact flags (for Step 6 in doc.md): at the end of doc-report.md, add:
 
 ## Framing Context
 
-When framing_context is provided by the orchestrator, adjust documentation emphasis accordingly:
+When doc_context is provided by the orchestrator, adjust documentation emphasis accordingly:
 - **debug:** Focus on what changed and why. Document the root cause, the fix, and how to verify the fix holds.
 - **new:** Focus on the new capability end-to-end. Document purpose, API surface, data flow, and usage patterns.
 - **enhance:** Focus on what changed relative to the prior state. Document the delta, preserve existing documentation for unchanged behavior.
 - **refactor:** Focus on structural changes with before/after comparison. Document what moved, what was renamed, and confirm behavioral equivalence.
-
-## Requirement Layer Awareness
-
-Review findings trace to three requirement layers defined in FEATURE.md:
-- **EU (End-User):** Stories and acceptance criteria. When a finding says "EU-03: NOT MET", look at the end-user story to understand what the user expected vs what was delivered.
-- **FN (Functional):** Behavioral contracts specifying receives/returns/behavior. When a finding says "FN-03: NOT MET", look at the functional behavior contract to understand what inputs/outputs were expected.
-- **TC (Technical):** Implementation specs covering intent/upstream/downstream/constraints. When a finding says "TC-02: NOT MET", look at the technical spec to understand the constraint that was violated.
-- **Quality:** DRY/KISS/no-bloat concerns without requirement IDs. These inform WHY blocks about code health decisions.
-
-When extracting WHY blocks from review citations, use this 3-layer context to understand what was expected vs what was found. The requirement layer tells you where to look for the authoritative specification.
 
 ## Section Ownership Model
 

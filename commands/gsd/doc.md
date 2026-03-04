@@ -74,7 +74,10 @@ If "Stopped at:" references a feature (format: `{cap}/{feat} --`):
 - If Specify: ask for slug, re-resolve via Step 1
 
 If "Stopped at:" does not reference a deterministic feature:
-- Use AskUserQuestion: "No recent feature detected. Provide a feature or capability slug to document:" (free text response)
+- Try git log fallback: `git log --oneline -10 --grep="docs\\|feat\\|fix" | head -5` to find recent feature-scoped commits
+- Parse commit messages for `{capability}/{feature}` patterns (e.g., `feat(pipeline-execution/doc-writer-overhaul):`)
+- If a feature is found: confirm with user via AskUserQuestion, then proceed as above
+- If no feature found: Use AskUserQuestion: "No recent feature detected. Provide a feature or capability slug to document:" (free text response)
 - Re-resolve via Step 1
 
 ## 4. Infer LENS
