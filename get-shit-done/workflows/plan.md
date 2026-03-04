@@ -22,13 +22,13 @@ Read all files referenced by the invoking prompt's execution_context before star
 INIT=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" init plan-feature "$CAPABILITY_SLUG" "$FEATURE_SLUG")
 ```
 
-Parse JSON for: `researcher_model`, `planner_model`, `checker_model`, `research_enabled`, `plan_checker_enabled`, `commit_docs`, `feature_found`, `feature_dir`, `feature_slug`, `capability_slug`, `capability_dir`, `has_research`, `has_context`, `has_brief`, `has_plans`, `plan_count`, `planning_exists`, `roadmap_exists`, `state_path`, `roadmap_path`, `requirements_path`, `context_path`, `brief_path`, `design_path`, `research_path`.
+Parse JSON for: `researcher_model`, `planner_model`, `checker_model`, `plan_checker_enabled`, `commit_docs`, `feature_found`, `feature_dir`, `feature_slug`, `capability_slug`, `capability_dir`, `has_context`, `has_brief`, `has_plans`, `plan_count`, `planning_exists`, `roadmap_exists`, `state_path`, `roadmap_path`, `requirements_path`, `context_path`, `brief_path`, `design_path`, `research_path`.
 
 **If `planning_exists` is false:** Error -- run `/gsd:new` first.
 
 ## 2. Parse Arguments
 
-Extract flags: `--research`, `--skip-research`, `--skip-verify`.
+Extract flags: `--research`, `--skip-verify`.
 
 **If `feature_found` is false:** Validate and create directory:
 ```bash
@@ -220,7 +220,7 @@ Also: cat {feature_dir}/*-PLAN.md -- review plans
 - .planning/ directory validated
 - Feature validated (FEATURE.md exists with requirements)
 - Context hierarchy scanned and passed to ALL agents
-- Research completed (unless skipped or existing)
+- Research completed (or existing research reused when lens matches)
 - Plans created with self-critique findings resolved
 - CLI validation passed
 - User explicitly confirmed "Finalize this plan?"
