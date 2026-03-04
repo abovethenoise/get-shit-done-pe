@@ -157,25 +157,14 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-04
-Stopped at: pipeline-execution/research-overhaul — plans drafted (3 plans), user review surfaced 2 scope additions before finalization
+Stopped at: pipeline-execution/research-overhaul — Plan 03 complete, Plans 01/02/04 pending
 
 ### Completed this session:
-1. /gsd:enhance discovery for pipeline-execution capability (enhance+debug compound lens)
-2. Discovery Brief written and committed (.planning/capabilities/pipeline-execution/BRIEF.md)
-3. 6 parallel research gatherers spawned + synthesized → RESEARCH.md
-4. 3-layer requirements generated (2 EU / 5 FN / 4 TC) → FEATURE.md approved
-5. Planner spawned → 3 plans in 2 waves, CLI validation passed
-6. User review surfaced 2 scope additions before plan finalization
-
-### Pending — Plans need revision before execution:
-1. **Add review.md fix** — same parallel spawn anti-pattern (4 reviewers via @gather-synthesize.md). User wants same root cause = same fix. Needs a new Plan 04 or expansion of existing plans.
-2. **Reframe research-workflow.md** — mark as reference/guidelines (not delegation target). Callers own spawn logic. Task to update research-workflow.md prose to be illustrative, not imperative.
-3. **Re-run planner** with expanded scope, then re-validate and get user approval.
+1. Plan 03 Task 1: Audited 16 workflow files, classified 22 @workflow.md instances (3 cat-1, 7 cat-2, 12+ cat-3)
+2. Plan 03 Task 2: Reframed research-workflow.md as reference documentation (removed imperative delegation language)
 
 ### Resume:
-- `/gsd:plan pipeline-execution/research-overhaul` — re-plan with expanded scope (review.md fix + research-workflow.md reframe)
-- Or manually add Plans 04-05 covering the two additions, re-validate, get approval
-- Then: `/gsd:execute pipeline-execution/research-overhaul`
+- `/gsd:execute pipeline-execution/research-overhaul` — execute Plan 01 (plan.md Task() blocks), then Plan 02 (framing-pipeline.md), then Plan 04 (review.md)
 
 ### Prior pending (from 2026-03-03):
 - AskUserQuestion fix changes staged but uncommitted
