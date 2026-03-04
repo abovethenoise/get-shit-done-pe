@@ -78,7 +78,7 @@ Every GSD workflow begins with one of four framing modes. The mode you choose sh
 
 **Lens effect:** Research identifies structural problems and target patterns. Planning creates behavior-preserving transformations. Review checks that the refactored structure is actually simpler. Documentation covers before/after and rationale.
 
-Each framing command creates a **DISCOVERY-BRIEF.md** that anchors all subsequent work.
+Each framing command creates a **BRIEF.md** (at the capability level) that anchors all subsequent work.
 
 ---
 
@@ -207,6 +207,7 @@ After all plans execute, run `/gsd:review` to evaluate the code.
 |---------|---------|-------------|
 | `/gsd:focus <cap>` | Create a focus group: sequence features for execution | After discussing features, before planning |
 | `/gsd:plan <slug>` | Research + plan + verify for a feature (or all features in a capability) | Before execution |
+| `/gsd:execute <slug>` | Execute plans for a feature or capability | After planning, or to resume interrupted execution |
 | `/gsd:review <feat>` | Code review by 4 specialized reviewers + synthesizer | After execution completes |
 
 ### Navigation & Status
@@ -290,7 +291,7 @@ GSD stores project settings in `.planning/config.json`. Configure during `/gsd:i
 
 | Setting | Options | Default | What it Controls |
 |---------|---------|---------|------------------|
-| `workflow.research` | `true`, `false` | `true` | Domain investigation before planning |
+| `workflow.research` | `true`, `false` | `true` | Domain investigation before planning. **Note:** As of 2.0.1, research is always mandatory in the workflow — this config field is retained but no longer gates research execution. |
 | `workflow.plan_check` | `true`, `false` | `true` | Plan verification loop (up to 3 iterations) |
 | `workflow.verifier` | `true`, `false` | `true` | Post-execution verification |
 
@@ -432,13 +433,14 @@ Set `commit_docs: false` during `/gsd:init`. Add `.planning/` to your `.gitignor
   capabilities/
     {cap-name}/
       CAPABILITY.md             # Capability definition and scope
+      BRIEF.md                  # Discovery Brief from framing (debug/new/enhance/refactor)
       features/
         {feat-name}/
           FEATURE.md            # Feature definition with EU/FN/TC requirements
-          CONTEXT.md            # Implementation preferences from discussion
-          DISCOVERY-BRIEF.md    # Framing output from debug/new/enhance/refactor
+          CONTEXT.md            # Implementation preferences from /gsd:discuss-feature
           RESEARCH.md           # Ecosystem research findings
+          research/             # Individual gatherer outputs (6 files)
           {nn}-PLAN.md          # Executable plans (01-PLAN.md, 02-PLAN.md, ...)
           {nn}-SUMMARY.md       # Execution outcomes per plan
-          review/               # Review traces and synthesis
+          review/               # Review traces, synthesis, decisions
 ```

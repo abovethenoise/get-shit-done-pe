@@ -20,6 +20,12 @@ npx get-shit-done-pe@latest
 
 ---
 
+## Changelog
+
+**2.0.1** — Research overhaul: research is now mandatory (no skip gates), all research/review agent spawns use explicit `Task()` blocks instead of ambiguous `@workflow.md` delegation, lens-aware reuse prevents double-research when framing-pipeline hands off to plan.md.
+
+---
+
 ## Why This Exists
 
 I don't write code — AI does. I'm a data professional with product vision, domain expertise, and strong opinions about what I'm building. I just don't have the software engineering background to implement it myself.

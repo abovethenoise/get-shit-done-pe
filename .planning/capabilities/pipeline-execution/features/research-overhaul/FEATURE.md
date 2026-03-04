@@ -213,7 +213,7 @@ Task(
 - review.md Step 4 contains 4 explicit `Task()` pseudo-code blocks, one per reviewer
 - Each block specifies: `prompt`, `subagent_type`, `model`, `description`
 - After 4 reviewers complete, Step 6 contains a `Task()` block for the synthesizer
-- The `@gather-synthesize.md` required_reading reference is removed — review.md owns the spawn logic directly
+- The `@gather-synthesize.md` required_reading reference is retained as a category-3 context reference — review.md owns the spawn logic but reads the pattern description for context
 - Pattern is consistent with plan.md Step 5 and framing-pipeline.md Stage 1 (same Task() structure)
 - Re-review loop (Step 9) spawns only affected reviewers using the same Task() pattern
 
@@ -260,7 +260,7 @@ Task(
 
 **Date:** 2026-03-04
 **Files scanned:** 16 workflow files
-**Total @workflow.md references found:** 17 instances (across 8 files; 8 files clean)
+**Total @workflow.md references found:** 22 instances (across 8 files; 8 files clean)
 
 ### Classification Table
 

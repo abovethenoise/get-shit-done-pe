@@ -11,6 +11,7 @@ Read all files referenced by the invoking prompt's execution_context before star
 **CAPABILITY_SLUG** -- The capability this feature belongs to (e.g., "coaching")
 **FEATURE_SLUG** -- The feature to plan (e.g., "mistake-detection")
 **LENS** -- Framing lens (debug|new|enhance|refactor), from framing-pipeline or direct invocation
+**SECONDARY_LENS** -- Secondary framing lens (optional, for compound work)
 **ANCHOR_QUESTIONS_PATH** -- Path to lens-specific anchor questions file
 </inputs>
 
@@ -304,7 +305,7 @@ GSD > FEATURE {FEATURE_SLUG} PLANNED
 |------|-------|----------------|
 | 1 | 01, 02 | [objectives] |
 
-Research: {Completed | Used existing | Skipped}
+Research: {Completed | Used existing}
 Verification: {Passed | Passed with override | Skipped}
 
 ## Next Up
