@@ -1,9 +1,7 @@
 <purpose>
-Standalone research orchestration workflow. Spawns 6 specialist research gatherers in parallel via the gather-synthesize pattern, then consolidates via the research synthesizer agent. Produces a single RESEARCH.md consumed by the planner.
+Reference documentation for the research gather-synthesize pattern. Describes the 6 specialist research gatherers, context assembly layers, and output structure used when plan.md or framing-pipeline.md spawn research.
 
-Callers: framing-pipeline.md (Stage 1), plan.md (Step 5).
-
-Separation of concerns: callers determine WHAT to research (subject, scope, framing). This workflow determines HOW to research (6 gatherers + synthesis via gather-synthesize pattern).
+Callers (plan.md Step 5, framing-pipeline.md Stage 1) own the actual Task() spawns. This file documents the framework: what each gatherer investigates, how context is layered, and what the synthesizer produces.
 </purpose>
 
 <required_reading>
@@ -144,29 +142,15 @@ synthesizer:
   output_path: {output_dir}/RESEARCH.md
 ```
 
-## 5. Invoke Gather-Synthesize
+## 5. Gather-Synthesize Execution
 
-Delegate to the gather-synthesize pattern:
+When callers spawn the 6 gatherers, the execution follows the gather-synthesize pattern described in `gather-synthesize.md`:
 
-```
-@{GSD_ROOT}/get-shit-done/workflows/gather-synthesize.md
-```
-
-Pass:
-- `gatherers[]` -- the 6 gatherers defined above
-- `synthesizer` -- the synthesizer defined above
-- `context` -- the assembled context payload from step 2
-- `subject` -- the subject from inputs
-
-The gather-synthesize workflow handles:
-1. Spawning all 6 gatherers in parallel as Task calls
-2. Failure handling with one retry per failed gatherer
-3. Building the manifest (success/failed per dimension)
-4. Aborting if > 50% fail (3+ of 6)
-5. Spawning the synthesizer with all outputs + manifest
-6. Returning the synthesis output path + manifest
-
-Wait for gather-synthesize to complete.
+1. All 6 gatherers spawn simultaneously as parallel Task() calls
+2. Each gatherer writes to its output path in `{output_dir}/research/`
+3. Failed gatherers are retried once; if >50% fail, research aborts
+4. The synthesizer reads all gatherer outputs + manifest and writes RESEARCH.md
+5. Caller receives: synthesis path, manifest, status (complete | partial | failed)
 
 ## 6. Handle Result
 
@@ -218,21 +202,19 @@ Gatherer results:
   Prior Art:        [OK | FAILED]
 ```
 
-## 7. Return to Caller
+## 7. Output Structure
 
-Return to the calling workflow:
+Research produces:
+- `{output_dir}/RESEARCH.md` -- consolidated research with lens frontmatter
+- `{output_dir}/research/{dimension}-findings.md` -- individual gatherer outputs (6 files)
+- Manifest: which gatherers succeeded/failed
 
-- `research_path`: `{output_dir}/RESEARCH.md` -- the consolidated research document
-- `manifest`: Which gatherers succeeded and which failed
-- `summary`: `{success_count}/6 gatherers succeeded`
-- `status`: "complete" | "partial" (if any failures) | "failed" (if aborted)
-
-The calling workflow decides what to do with partial results.
+Callers use RESEARCH.md as input to planning. Partial results (some gatherers failed) are documented in the synthesis -- the synthesizer notes gaps without fabricating content.
 
 </process>
 
 <key_constraints>
-- This workflow follows the gather-synthesize pattern from gather-synthesize.md exactly -- it does not reinvent parallel spawning or failure handling.
+- This is reference documentation for the research gather-synthesize pattern. Callers own the actual Task() spawns.
 - All 6 gatherers always run regardless of framing type. The framing context shapes what each gatherer focuses on, but no gatherers are skipped.
 - Gatherers use role_type executor (Sonnet). Synthesizer uses role_type judge (Opus via inherit). This follows the Executor/Judge pattern from model-profiles.md.
 - The orchestrator passes PATHS not content. Each gatherer reads its own agent definition and context files in its fresh context window.
