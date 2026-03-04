@@ -156,20 +156,27 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-03-03
-Stopped at: install-feedback feature fully reviewed (2 rounds), all fixes committed
+Last session: 2026-03-04
+Stopped at: pipeline-execution/research-overhaul — plans drafted (3 plans), user review surfaced 2 scope additions before finalization
 
 ### Completed this session:
-1. Fixed remaining 3 review findings from round 1: validation ordering, banner -PE, auto-update cache
-2. Re-review round 2: 4 reviewers + synthesizer → 0 blockers, 1 major, 6 minor. All EU/FN/TC MET.
-3. Fixed 5 of 7 round 2 findings (1 major + 4 minor), deferred 2 (different semantics / correct behavior)
-4. Committed: 72e222b
+1. /gsd:enhance discovery for pipeline-execution capability (enhance+debug compound lens)
+2. Discovery Brief written and committed (.planning/capabilities/pipeline-execution/BRIEF.md)
+3. 6 parallel research gatherers spawned + synthesized → RESEARCH.md
+4. 3-layer requirements generated (2 EU / 5 FN / 4 TC) → FEATURE.md approved
+5. Planner spawned → 3 plans in 2 waves, CLI validation passed
+6. User review surfaced 2 scope additions before plan finalization
 
-### Pending:
-- AskUserQuestion fix changes staged but uncommitted (commands/gsd/*.md, workflows, hooks/gsd-askuserquestion-guard.js)
-- `node bin/install.js --global` to deploy everything
+### Pending — Plans need revision before execution:
+1. **Add review.md fix** — same parallel spawn anti-pattern (4 reviewers via @gather-synthesize.md). User wants same root cause = same fix. Needs a new Plan 04 or expansion of existing plans.
+2. **Reframe research-workflow.md** — mark as reference/guidelines (not delegation target). Callers own spawn logic. Task to update research-workflow.md prose to be illustrative, not imperative.
+3. **Re-run planner** with expanded scope, then re-validate and get user approval.
 
 ### Resume:
-- Commit AskUserQuestion fix (11 command files + 4 workflow files + new guard hook)
-- Then: `node bin/install.js --global` to deploy
-- Then: test in fresh session
+- `/gsd:plan pipeline-execution/research-overhaul` — re-plan with expanded scope (review.md fix + research-workflow.md reframe)
+- Or manually add Plans 04-05 covering the two additions, re-validate, get approval
+- Then: `/gsd:execute pipeline-execution/research-overhaul`
+
+### Prior pending (from 2026-03-03):
+- AskUserQuestion fix changes staged but uncommitted
+- `node bin/install.js --global` to deploy everything
