@@ -1,7 +1,7 @@
 ---
 type: capability
 name: pipeline-execution
-status: complete
+status: in-progress
 created: "2026-03-03"
 ---
 
@@ -45,7 +45,10 @@ Discovery Brief
 
 | Feature | Priority | Depends-On | Status |
 |---------|----------|------------|--------|
-| (no active features — stable) | — | — | complete |
+| plan-presentation | P1 | — | exploring |
+| doc-writer-overhaul | P2 | — | exploring |
+| scope-aware-routing | P2 | — | exploring |
+| research-overhaul | — | — | planning |
 
 ## Decisions
 
