@@ -157,15 +157,24 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-04
-Stopped at: pipeline-execution/research-overhaul — Plan 03 complete, Plans 01/02/04 pending
+Stopped at: pipeline-execution/plan-presentation — Research + Requirements complete, ready for Planning stage
 
 ### Completed this session:
-1. Plan 03 Task 1: Audited 16 workflow files, classified 22 @workflow.md instances (3 cat-1, 7 cat-2, 12+ cat-3)
-2. Plan 03 Task 2: Reframed research-workflow.md as reference documentation (removed imperative delegation language)
+1. Enhancement discovery for pipeline-execution — 3 features identified:
+   - plan-presentation (P1) — 3-layer justification for plan checkpoint
+   - doc-writer-overhaul (P2) — gather->synthesize + /gsd:doc skill
+   - scope-aware-routing (P2) — capability-level pipeline routing
+2. BRIEF.md updated with all 3 enhancement areas
+3. CAPABILITY.md status changed to in-progress, features table added
+4. plan-presentation: 6/6 research gatherers + synthesis complete (RESEARCH.md written)
+5. plan-presentation: Requirements drafted and approved (2 EU, 7 FN, 3 TC)
+6. User constraint: 10-15% max token growth ceiling on touched files (Goldilocks)
 
 ### Resume:
-- `/gsd:execute pipeline-execution/research-overhaul` — execute Plan 01 (plan.md Task() blocks), then Plan 02 (framing-pipeline.md), then Plan 04 (review.md)
+- `/gsd:plan pipeline-execution/plan-presentation` — plan the feature (Stage 3 of pipeline)
+- After plan-presentation pipeline completes, run pipelines for doc-writer-overhaul and scope-aware-routing
 
-### Prior pending (from 2026-03-03):
+### Prior pending (from previous sessions):
+- pipeline-execution/research-overhaul — Plans 01/02/04 pending execution
 - AskUserQuestion fix changes staged but uncommitted
 - `node bin/install.js --global` to deploy everything
