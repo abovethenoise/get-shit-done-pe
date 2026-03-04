@@ -1,7 +1,7 @@
 ---
 name: gsd:new
-description: Architect mode -- define problem space before solutioning through structured discovery
-argument-hint: "[capability or feature reference]"
+description: Architect mode -- define problem space before solutioning through structured discovery. Works at capability or feature level.
+argument-hint: "[capability or feature slug, or empty for disambiguation]"
 allowed-tools:
   - Read
   - Write
@@ -11,11 +11,11 @@ allowed-tools:
   - Task
 ---
 <objective>
-Run architect-mode discovery for a new capability or feature. Defines the problem space before solutioning through exploratory but disciplined questioning.
+Run architect-mode discovery for a new capability or feature. Resolves slug type first, then routes to the correct workflow. Capability-level input triggers feature stub auto-creation and capability-orchestrator. Feature-level input runs framing-discovery directly. Unknown slugs prompt user to disambiguate.
 
 **Thinking mode:** Forward -- from problem to shape. Exploratory but disciplined. Define before designing.
 
-**Flow:** Fuzzy resolve capability -> lens-specific discovery Q&A -> MVU tracking (problem + who + done criteria + constraints) -> Discovery Brief
+**Flow:** Resolve slug type -> route: capability (stub creation + orchestrator) | feature (framing-discovery) | ambiguous (AskUserQuestion candidates) | no_match (AskUserQuestion capability-or-feature)
 
 **MVU (Minimum Viable Understanding):**
 - The problem or goal stated in one sentence with audience identified
@@ -27,6 +27,8 @@ Run architect-mode discovery for a new capability or feature. Defines the proble
 
 <execution_context>
 @{GSD_ROOT}/get-shit-done/workflows/framing-discovery.md
+@{GSD_ROOT}/get-shit-done/workflows/capability-orchestrator.md
+@{GSD_ROOT}/get-shit-done/workflows/discuss-capability.md
 @{GSD_ROOT}/get-shit-done/references/framing-lenses.md
 @{GSD_ROOT}/get-shit-done/references/ui-brand.md
 </execution_context>
@@ -39,9 +41,101 @@ Context files are resolved inside the workflow via `gsd-tools init framing-disco
 </context>
 
 <process>
-Execute the framing-discovery workflow from @{GSD_ROOT}/get-shit-done/workflows/framing-discovery.md end-to-end.
+## 1. Resolve Slug
 
-Pass: LENS=new, CAPABILITY_SLUG=(resolved from $ARGUMENTS via fuzzy matching).
+If $ARGUMENTS is provided:
+```bash
+RESOLVED=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" slug-resolve "$ARGUMENTS")
+```
+Parse JSON result for: `resolved`, `tier`, `type`, `capability_slug`, `feature_slug`, `full_path`, `candidates`, `reason`.
 
-Preserve all workflow gates (fuzzy resolution confirmation, capability status check, MVU tracking, misclassification detection, mandatory summary playback).
+If $ARGUMENTS is empty: treat as no_match (skip resolution, go to Step 2 no_match branch).
+
+## 2. Handle Resolution Result
+
+**If resolved and type is "capability":**
+- Set CAPABILITY_SLUG from result
+- Proceed to Step 3 (feature stub auto-creation)
+
+**If resolved and type is "feature":**
+- Invoke framing-discovery.md with LENS=new and CAPABILITY_SLUG (derived from feature path)
+- Preserve all workflow gates (fuzzy resolution confirmation, capability status check, MVU tracking, misclassification detection, mandatory summary playback)
+- Stop after framing-discovery completes
+
+**If not resolved and reason is "ambiguous":**
+- Use AskUserQuestion:
+  - header: "Multiple Matches"
+  - question: "Multiple matches found for '$ARGUMENTS'. Which did you mean?"
+  - options: list each candidate with type and full_path
+- Re-resolve with the selected candidate, return to top of Step 2
+
+**If not resolved and reason is "no_match" (or no $ARGUMENTS):**
+- Use AskUserQuestion:
+  - header: "New Work"
+  - question: "What kind of new work is this?"
+  - options: "New capability", "New feature under an existing capability"
+- **If new capability:**
+  - Invoke discuss-capability workflow
+  - After discuss-capability completes, use the capability slug it created as CAPABILITY_SLUG
+  - Proceed to Step 4 (fan-out offer)
+- **If new feature:**
+  - Use AskUserQuestion:
+    - header: "Which Capability?"
+    - question: "Which capability does this feature belong to? Enter the capability slug."
+  - Run slug-resolve on the user's input; if not resolved as a capability, ask again
+  - Invoke framing-discovery.md with LENS=new and CAPABILITY_SLUG
+  - Stop after framing-discovery completes
+
+## 3. Feature Stub Auto-Creation (capability path only)
+
+Before invoking capability-orchestrator, ensure feature directories exist for all features listed in CAPABILITY.md.
+
+Read `.planning/capabilities/{CAPABILITY_SLUG}/CAPABILITY.md`. Parse the Features table to extract all feature slugs.
+
+**If the features table has zero data rows (no features listed):**
+- Display error: "No features found in CAPABILITY.md for '{CAPABILITY_SLUG}'."
+- Suggest: "Run /gsd:discuss-capability {CAPABILITY_SLUG} to define features first."
+- Stop.
+
+**For each feature slug in the features table:**
+- Check if `.planning/capabilities/{CAPABILITY_SLUG}/features/{feature_slug}/` directory exists
+- **If it does not exist:**
+  ```bash
+  node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" feature-create "{CAPABILITY_SLUG}" "{feature_slug}"
+  ```
+  After creation, open the created FEATURE.md at `.planning/capabilities/{CAPABILITY_SLUG}/features/{feature_slug}/FEATURE.md` and change `status: planning` to `status: exploring` in the YAML frontmatter.
+  Log: "Created feature stub: {CAPABILITY_SLUG}/{feature_slug}"
+- **If it already exists:** Skip silently (no log, no error)
+
+After the loop completes, proceed to Step 4 (capability-orchestrator invocation — direct path, no fan-out offer).
+
+## 4. Capability-Orchestrator Invocation
+
+```
+@{GSD_ROOT}/get-shit-done/workflows/capability-orchestrator.md
+```
+Pass: CAPABILITY_SLUG, LENS=new
+
+**Note:** Step 4 is reached either from:
+- Step 2 "resolved as capability" path (after Step 3 stub creation) — invoke orchestrator directly, no fan-out offer
+- Step 2 "no_match → new capability" path after discuss-capability completes — present fan-out offer first
+
+**Fan-out offer (only when arriving from discuss-capability path):**
+Before invoking orchestrator, use AskUserQuestion:
+- header: "Pipeline Ready"
+- question: "Capability and features defined. Continue to pipeline for all features now?"
+- options: "Continue (run pipeline for all features)", "I'll run them individually"
+- If "I'll run them individually": display next steps ("Run /gsd:new {feature_slug} for each feature") and stop
+- If "Continue": invoke capability-orchestrator
+
+**Direct path (arriving from Step 2 resolved-as-capability):**
+Invoke capability-orchestrator directly without fan-out offer.
 </process>
+
+<success_criteria>
+- Slug resolved; capability -> stub creation + orchestrator, feature -> framing-discovery
+- Unknown slug asks capability-or-feature; routes correctly to discuss-capability or framing-discovery
+- Feature stubs created for missing features; existing features skipped; empty table errors
+- Post-discuss-capability fan-out offer presented before orchestrator invocation
+- Feature-level framing-discovery invocation preserved (no regression from original behavior)
+</success_criteria>
