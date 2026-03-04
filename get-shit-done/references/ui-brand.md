@@ -149,6 +149,27 @@ Always at end of major completions.
 
 ---
 
+## ASCII Flow Diagrams
+
+Use for wave dependency visualization. Render only when plan has **2+ waves OR 3+ plans** (complexity gate). Omit for trivially simple plans (1 wave, 1-2 plans).
+
+**Notation:**
+```
+[Plan-01: objective summary] --> [Plan-02: objective summary]
+                             --> [Plan-03: objective summary]
+
+[Plan-04: objective summary] (after Plan-02 + Plan-03)
+```
+
+Rules:
+- Use `-->` for sequential dependency
+- Plans at same wave level appear on separate lines under a shared arrow column
+- Parenthetical notes for multi-dependency convergence: `(after Plan-XX + Plan-YY)`
+- No box-drawing characters (`┌`, `─`, `┐`) — use `[brackets]` and `-->` only
+- Objective summary: 3-6 words, enough to identify the plan's purpose
+
+---
+
 ## Anti-Patterns
 
 - Varying box/banner widths
@@ -156,5 +177,6 @@ Always at end of major completions.
 - Skipping `GSD ►` prefix in banners
 - Random emoji (`🚀`, `✨`, `💫`)
 - Missing Next Up block after completions
+- Flow diagrams on trivially simple plans (1 wave, ≤2 plans)
 
 </ui_patterns>
