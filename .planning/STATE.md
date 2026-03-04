@@ -171,21 +171,22 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-04
-Stopped at: pipeline-execution/scope-aware-routing — Feature specified (EU/FN/TC written), ready for /gsd:plan
+Stopped at: 3 features fully complete (executed + reviewed + documented), changelog written, ready for npm patch
 
 ### Completed this session:
-1. plan-presentation: Reviewed (7 findings, all accepted+fixed), docs deferred
-2. doc-writer-overhaul: Both plans executed + reviewed
-   - Plan 01 (4min): doc.md gather→synthesize restructure + gsd-doc-writer.md dual-role rewrite
-   - Plan 02 (2min): /gsd:doc standalone skill + review.md LENS propagation fix
-   - Review: 7 findings (3 major quality idioms, 4 minor), 5 accepted+fixed, 1 dismissed
+1. scope-aware-routing: Full pipeline — executed (2 plans, 4 tasks), reviewed (5 findings, 3 fixed), documented
+   - Plan 01 (2min): 3-step routing added to enhance/debug/refactor
+   - Plan 02 (2min): 4-step routing in new.md with stub creation + disambiguation
+   - Review: F1 stub path fix, F2 re-loop fix, F5 redundant step removal; F3+F4 dismissed
+2. Documentation generated for all 3 pipeline-execution features:
+   - plan-presentation: 2 module docs + 1 flow doc
+   - doc-writer-overhaul: 1 module doc (3 modules) + 1 flow doc (4 paths)
+   - scope-aware-routing: 1 module doc (4 commands) + 1 flow doc (decision tree)
+   - plan-workflow module updated with both research-overhaul + plan-presentation deltas
+3. README changelog updated with 2.0.2 entry
 
 ### Resume:
-- `/gsd:plan pipeline-execution/scope-aware-routing` (needs discuss-feature first for requirements)
-- Docs deferred until all features reviewed (plan-presentation + doc-writer-overhaul both reviewed)
+- `npm version patch` + `npm publish` to deploy 2.0.2
+- `node bin/install.js --global` to deploy locally
 - pipeline-execution/research-overhaul — Plans 01/02/04 pending execution
-
-### Prior pending (from previous sessions):
-- pipeline-execution/research-overhaul — Complete (executed, reviewed, documented)
 - AskUserQuestion fix changes staged but uncommitted
-- `node bin/install.js --global` to deploy everything
