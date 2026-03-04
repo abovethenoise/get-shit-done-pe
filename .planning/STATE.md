@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: milestone
 status: unknown
-last_updated: 2026-03-04T21:23:21.568Z
+last_updated: 2026-03-04T22:50:05.191Z
 progress:
   total_phases: 14
   completed_phases: 13
@@ -80,6 +80,7 @@ Next: /clear, then use /gsd:discuss-capability or /gsd:debug|enhance|refactor to
 | Phase 14 P02 | 4min | 2 tasks | 1 files |
 | Phase pipeline-execution/doc-writer-overhaul P01 | 4min | 2 tasks | 2 files |
 | Phase pipeline-execution/doc-writer-overhaul P02 | 2min | 2 tasks | 2 files |
+| Phase pipeline-execution/scope-aware-routing P01 | 2min | 3 tasks | 3 files |
 
 ## Accumulated Context
 
