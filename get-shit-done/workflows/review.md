@@ -164,11 +164,12 @@ After completion:
 
 **If 0 blocker/major findings remaining:**
 - Auto-invoke doc workflow: `@{GSD_ROOT}/get-shit-done/workflows/doc.md`
-- Pass: CAPABILITY_SLUG, FEATURE_SLUG
+- Pass: CAPABILITY_SLUG, FEATURE_SLUG, LENS
 - Display: "No blockers remaining. Auto-advancing to documentation generation."
 
 **If deferred findings but no blockers:**
-- Auto-invoke doc workflow with deferrals noted
+- Auto-invoke doc workflow with deferrals noted: `@{GSD_ROOT}/get-shit-done/workflows/doc.md`
+- Pass: CAPABILITY_SLUG, FEATURE_SLUG, LENS
 - Display: "Deferred findings noted. Auto-advancing to documentation generation."
 
 **If blockers remain:**
