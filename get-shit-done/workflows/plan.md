@@ -267,29 +267,13 @@ Aggregate all user responses: accepted suggestions, edits, guidance, dismissals.
 ### 8.5. Re-spawn if Needed
 
 If any findings received guidance or edits: re-spawn planner with collected feedback → back to 8.1.
-If all findings accepted or dismissed: proceed to 8.7.
+If all findings accepted or dismissed: proceed to 8.6.
 
 Max 3 iterations of the 8.1-8.5 loop. If max reached with unresolved issues: surface for manual resolution.
 
-### 8.6. Deep-Dive (unconditional)
+### 8.6. Final Summary
 
-After findings resolution (or immediately if no findings), present a plan-area deep-dive via AskUserQuestion:
-
-- header: "Plan Deep-Dive"
-- question: "Before finalizing, would you like to drill into any area of this plan?\n\nSelect an area to explore, or skip to finalize."
-- options:
-  - "Wave ordering & task sequence"
-  - "Approach vs alternatives"
-  - "Requirement coverage + more..." (selecting this re-offers: "Assumptions made", "Self-critique details", "No deep-dive needed")
-  - "No deep-dive needed"
-
-If user selects an area: draw relevant detail from the planner's `### Justification` section and the PLAN.md frontmatter for that area. Present the detail, then re-offer remaining areas (selected area removed). Repeat until user selects "No deep-dive needed" → proceed to 8.7.
-
-This step runs regardless of finding count. Well-formed plans receive equal scrutiny.
-
-### 8.7. Final Summary and Approval
-
-Present the full 3-layer plan summary before the finalize prompt:
+Present the full 3-layer plan summary:
 
 **Layer 1 — Justification narrative:** Repeat ordering rationale, approach rationale, and KISS rationale from `### Justification`. Repeat from 8.3.A — full context at decision time.
 
@@ -303,6 +287,26 @@ If 2+ waves OR 3+ plans: render ASCII flow diagram (ui-brand.md notation):
 Derive from PLAN.md `wave` and `depends_on` frontmatter. If 1 wave and ≤2 plans: omit.
 
 **Plan summary table:** Feature, plan count, task count, waves, validation status.
+
+### 8.7. Deep-Dive and Approval (unconditional)
+
+After the summary, present a plan-area deep-dive via AskUserQuestion (multiSelect: true):
+
+- header: "Deep-Dive"
+- question: "Select any areas to drill into before finalizing, or skip to approve."
+- multiSelect: true
+- options:
+  - "Wave ordering & task sequence"
+  - "Approach vs alternatives"
+  - "Requirement coverage"
+  - "Assumptions made"
+
+If user selects areas: draw relevant detail from the planner's `### Justification` section and the PLAN.md frontmatter for each selected area. Present all detail, then offer a second AskUserQuestion (multiSelect: true) with remaining areas:
+- options: remaining unselected areas + "Self-critique details" + "No deep-dive needed"
+
+If user selects "No deep-dive needed" (or selects it in the first question): proceed to finalize.
+
+This step runs regardless of finding count. Well-formed plans receive equal scrutiny.
 
 Finalize AskUserQuestion:
 - header: "Finalize"
@@ -336,7 +340,7 @@ Group findings by severity before presenting:
 
 For each blocker or warning:
 - header: "Checker Finding {N}/{total} [{severity}]"
-- question: "[{category}] {description}\n\nSuggestion: {suggestion}\nAffected REQs: {reqs_affected}\n\nJustification cross-reference: {cite relevant Justification section if checker finding contradicts planner rationale, else omit}"
+- question: "[{category}] {description}\n\nSuggestion: {suggestion}\nAffected REQs: {reqs_affected}\n\nJustification cross-reference: {if checker finding references the same REQ IDs as a Justification claim, cite that claim for context; else omit}"
 - options:
   - "Accept suggestion"
   - "Edit"

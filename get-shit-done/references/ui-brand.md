@@ -151,7 +151,7 @@ Always at end of major completions.
 
 ## ASCII Flow Diagrams
 
-Use for wave dependency visualization. Render only when plan has **2+ waves OR 3+ plans** (complexity gate). Omit for trivially simple plans (1 wave, 1-2 plans).
+Use for wave dependency visualization. Render only when plan has **2+ waves OR 3+ plans** (complexity gate). Omit for trivially simple plans (1 wave, ≤2 plans).
 
 **Notation:**
 ```

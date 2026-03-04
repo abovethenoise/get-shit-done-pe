@@ -261,7 +261,7 @@ For each task in every plan:
 - Does `<files>` specify exact file paths? If no, fix it.
 - Does `<done>` state an observable exit condition? If no, rewrite it.
 
-Apply all fixes. Do not surface Round 1 fixes to the user.
+Apply all fixes. Do not surface Round 1 fixes mid-task; capture them in the `### Round 1 Fixes` return section for user presentation.
 
 ### Round 2 -- Surface Issues
 
@@ -415,7 +415,7 @@ No Round 1 fixes applied.
 Execute: `/gsd:execute {cap/feat}`
 ```
 
-The Justification section is generated during planning when the planner has full reasoning context across FEATURE.md, RESEARCH.md, and dependency edges. Round 1 fixes are captured during self-critique because they cannot be reconstructed after the planner Task() completes. All claims must reference specific REQ IDs, dependency edges, or file paths — generic statements fail the grounding check.
+All Justification and Round 1 Fixes claims must reference specific REQ IDs, dependency edges, or file paths — generic statements fail the grounding check.
 
 ### Gap Closure Plans Created
 
