@@ -26,6 +26,9 @@ Make the research step in the plan workflow (and all other research callers) wor
 | TC-02 | ✓ | - | - | - | - | draft |
 | TC-03 | ✓ | - | - | - | - | draft |
 | TC-04 | ✓ | - | - | - | - | draft |
+| FN-06 | ✓ | - | - | - | - | draft |
+| FN-07 | ✓ | - | - | - | - | draft |
+| TC-05 | ✓ | - | - | - | - | draft |
 
 ## End-User Requirements
 
@@ -199,9 +202,102 @@ Task(
 - Category 2 (sequential handoff): The calling context hands off to another workflow for the next phase. Model reads the referenced workflow inline and continues. Risk: lower than category 1 (no parallel spawning needed), but model could still shortcut. **Known instances: framing-pipeline stages 3-6, capability-orchestrator, framing-discovery → framing-pipeline.**
 - Category 3 (context reference): The `@` reference appears inside a Task() prompt or as required_reading. This is correct — agent needs to read the file. **Known instances: execute.md, various `required_reading` blocks.**
 
+### FN-06: Replace ambiguous delegation in review.md with explicit Task() blocks
+
+**Receives:** Feature context (capability, feature, lens) from review.md initialization.
+
+**Returns:** 4 reviewer trace files + 1 synthesis report.
+
+**Behavior:**
+
+- review.md Step 4 contains 4 explicit `Task()` pseudo-code blocks, one per reviewer
+- Each block specifies: `prompt`, `subagent_type`, `model`, `description`
+- After 4 reviewers complete, Step 6 contains a `Task()` block for the synthesizer
+- The `@gather-synthesize.md` required_reading reference is removed — review.md owns the spawn logic directly
+- Pattern is consistent with plan.md Step 5 and framing-pipeline.md Stage 1 (same Task() structure)
+- Re-review loop (Step 9) spawns only affected reviewers using the same Task() pattern
+
+### FN-07: Reframe research-workflow.md as reference documentation
+
+**Receives:** N/A (file update, not runtime behavior).
+
+**Returns:** Updated research-workflow.md that describes the research pattern without imperative delegation language.
+
+**Behavior:**
+
+- research-workflow.md no longer uses "Invoke" or "Delegate to" for gather-synthesize.md
+- Step 5 is rewritten to describe the pattern (what happens, not "execute this")
+- Purpose block updated: callers (plan.md, framing-pipeline.md) own the actual Task() spawns; this file documents the research framework (gatherer dimensions, context layers, output structure)
+- Existing content about gatherer definitions, context assembly, and output structure is preserved — only the imperative delegation language changes
+
+## Technical Specs (continued)
+
+### TC-05: Task() block structure for reviewer spawns
+
+**Intent:** Same unambiguous spawn instruction pattern used for research, applied to review.
+
+**Upstream:** review.md Step 1 initialization provides: feature context, FEATURE.md requirement IDs, SUMMARY.md artifact lists.
+
+**Downstream:** 4 reviewer agents write to `{feature_dir}/review/{dimension}-trace.md`. Synthesizer reads these and writes `{feature_dir}/review/synthesis.md`.
+
+**Constraints:**
+
+- `model` parameter: use `"sonnet"` for reviewers (executor role), `"inherit"` for synthesizer (judge role)
+- `subagent_type`: must match registered agent types (`gsd-review-enduser`, `gsd-review-functional`, `gsd-review-technical`, `gsd-universal-quality-reviewer`, `gsd-review-synthesizer`)
+- Note: quality reviewer subagent_type is `gsd-universal-quality-reviewer` but agent file is `agents/gsd-review-quality.md`
+- Re-review spawns use the same Task() blocks but only for affected dimensions
+
 ## Decisions
 
 - Research synthesis lens frontmatter is the lowest-cost approach for lens-aware reuse (no CLI changes)
 - DRY cost of duplicating Task() blocks across plan.md and framing-pipeline.md is accepted — ambiguity cost is worse
 - Category 2 `@workflow.md` instances (sequential handoffs) are documented but not fixed in this feature
-- review.md's gather-synthesize delegation (same pattern, 4 reviewers) is documented as follow-up
+- review.md's gather-synthesize delegation (same pattern, 4 reviewers) fixed in Plan 04 (promoted from follow-up)
+- research-workflow.md reframed as reference documentation in Plan 03 task 2 — no longer a delegation target
+- DRY cost of duplicating Task() blocks across review.md accepted — same rationale as plan.md/framing-pipeline.md
+
+## @workflow.md Audit Results (FN-05, TC-04)
+
+**Date:** 2026-03-04
+**Files scanned:** 16 workflow files
+**Total @workflow.md references found:** 17 instances (across 8 files; 8 files clean)
+
+### Classification Table
+
+| File | Line | Reference | Category | Disposition |
+|------|------|-----------|----------|-------------|
+| plan.md | 60 | `@research-workflow.md` | 1 -- parallel spawn | FIX in Plan 01. Step 5 delegates research orchestration that requires 6 parallel Task() spawns. |
+| framing-pipeline.md | 86 | `@research-workflow.md` | 1 -- parallel spawn | FIX in Plan 02. Stage 1 delegates research orchestration that requires 6 parallel Task() spawns. |
+| research-workflow.md | 152 | `@gather-synthesize.md` | 1 -- parallel spawn | FIX in Plan 03 Task 2. Step 5 delegates gather-synthesize execution that spawns 6 parallel gatherers. Reframed as reference documentation. |
+| framing-pipeline.md | 169 | `@plan.md` | 2 -- sequential handoff | Document only. Stage 3 hands off to plan workflow. Model reads inline and continues. No parallel spawning needed. |
+| framing-pipeline.md | 202 | `@execute.md` | 2 -- sequential handoff | Document only. Stage 4 hands off to execute workflow. Sequential single-context continuation. |
+| framing-pipeline.md | 244 | `@review.md` | 2 -- sequential handoff | Document only. Stage 5 hands off to review workflow. Sequential single-context continuation. |
+| framing-pipeline.md | 286 | `@doc.md` | 2 -- sequential handoff | Document only. Stage 6 hands off to doc workflow. Sequential single-context continuation. |
+| capability-orchestrator.md | 95 | `@framing-pipeline.md` | 2 -- sequential handoff | Document only. Orchestrator invokes framing-pipeline per feature in sequence. |
+| framing-discovery.md | 259 | `@framing-pipeline.md` | 2 -- sequential handoff | Document only. Discovery hands off to pipeline after brief finalization. |
+| review.md | 120 | `@doc.md` | 2 -- sequential handoff | Document only. Review auto-advances to doc workflow on clean pass. |
+| init-project.md | 341 | `@gather-synthesize.md` | 2 -- sequential handoff | Document only. Existing project scan uses gather-synthesize pattern for parallel codebase analysis. |
+| capability-orchestrator.md | 8 | `@framing-pipeline.md` | 3 -- context ref | Correct usage. required_reading block -- model reads for context. No action. |
+| capability-orchestrator.md | 9 | `@framing-lenses.md` | 3 -- context ref | Correct usage. required_reading block -- reference file. No action. |
+| review.md | 6 | `@gather-synthesize.md` | 3 -- context ref | Correct usage. required_reading block -- model reads gather-synthesize pattern for context. No action. |
+| review.md | 7 | `@ui-brand.md` | 3 -- context ref | Correct usage. required_reading block -- reference file. No action. |
+| research-workflow.md | 12 | `@gather-synthesize.md` | 3 -- context ref | Correct usage. required_reading block -- model reads pattern description. No action. |
+| execute.md | 73-75 | `@execute-plan.md`, `@summary.md`, `@checkpoints.md` | 3 -- context ref | Correct usage. Inside Task() prompt execution_context block. Agent reads these files. No action. |
+| plan.md | 7 | `@ui-brand.md` | 3 -- context ref | Correct usage. required_reading block -- reference file. No action. |
+| doc.md | 6 | `@ui-brand.md` | 3 -- context ref | Correct usage. required_reading block -- reference file. No action. |
+| framing-discovery.md | 10-11 | `@framing-lenses.md`, `@ui-brand.md` | 3 -- context ref | Correct usage. required_reading block -- reference files. No action. |
+| framing-pipeline.md | 10-12 | `@framing-lenses.md`, `@escalation-protocol.md`, `@ui-brand.md` | 3 -- context ref | Correct usage. required_reading block -- reference files. No action. |
+| resume-work.md | 10 | `@continuation-format.md` | 3 -- context ref | Correct usage. required_reading block -- reference file. No action. |
+| execute-plan.md | 8 | `@git-integration.md` | 3 -- context ref | Correct usage. required_reading block -- reference file. No action. |
+
+### Summary
+
+- Category 1 (bugs): 3 found. plan.md (Plan 01), framing-pipeline.md (Plan 02), research-workflow.md (Plan 03 Task 2). All have assigned fixes.
+- Category 2 (sequential handoffs): 7 instances. Documented. Lower risk -- no parallel spawn needed. Evaluate for reliability separately if shortcutting is observed.
+- Category 3 (correct usage): 12+ instances (required_reading blocks and Task() prompt context refs). No action needed.
+
+### Follow-up Items
+
+- review.md uses same gather-synthesize delegation pattern as research (4 reviewers). Fixed in Plan 04 with explicit Task() blocks.
+- Category-2 sequential handoffs: evaluate reliability of model inline-read behavior for framing-pipeline stages 3-6 in a separate feature if shortcutting is observed.
+- init-project.md's gather-synthesize reference (line 341) uses descriptive "Use the pattern" language rather than bare delegation -- lower risk but worth monitoring.
