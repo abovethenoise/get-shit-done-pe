@@ -15,7 +15,10 @@ Run editor-mode discovery for enhancing an existing capability or feature. Under
 
 **Thinking mode:** Outward -- from current state to extended state. Pragmatic, surgical. Find the seam, extend through it.
 
-**Flow:** Fuzzy resolve capability -> lens-specific discovery Q&A -> MVU tracking (observed behavior + desired behavior + delta) -> Discovery Brief
+**If capability:** Invokes capability-orchestrator.md which fans out to all features in DAG wave order.
+**If feature:** Invokes framing-discovery.md directly for the single feature.
+
+**Flow:** slug-resolve -> route to capability orchestrator or feature framing-discovery workflow
 
 **MVU (Minimum Viable Understanding):**
 - Observed behavior concretely described (not aspirational)
@@ -25,21 +28,68 @@ Run editor-mode discovery for enhancing an existing capability or feature. Under
 
 <execution_context>
 @{GSD_ROOT}/get-shit-done/workflows/framing-discovery.md
+@{GSD_ROOT}/get-shit-done/workflows/capability-orchestrator.md
 @{GSD_ROOT}/get-shit-done/references/framing-lenses.md
 @{GSD_ROOT}/get-shit-done/references/ui-brand.md
 </execution_context>
 
 <context>
 **Lens:** enhance
-**User reference:** $ARGUMENTS
+**User reference:** $ARGUMENTS (required -- capability or feature slug)
 
-Context files are resolved inside the workflow via `gsd-tools init framing-discovery enhance`.
+Context resolved via `gsd-tools slug-resolve` and feature-scoped init routes.
 </context>
 
 <process>
-Execute the framing-discovery workflow from @{GSD_ROOT}/get-shit-done/workflows/framing-discovery.md end-to-end.
+## 1. Resolve Slug
 
-Pass: LENS=enhance, CAPABILITY_SLUG=(resolved from $ARGUMENTS via fuzzy matching).
+```bash
+RESOLVED=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" slug-resolve "$ARGUMENTS")
+```
 
-Preserve all workflow gates (fuzzy resolution confirmation, capability status check, MVU tracking, misclassification detection, mandatory summary playback).
+Parse JSON result for: `resolved`, `tier`, `type`, `capability_slug`, `feature_slug`, `full_path`, `candidates`, `reason`.
+
+## 2. Handle Resolution Result
+
+**If resolved and type is "feature":**
+- Invoke framing-discovery.md with LENS=enhance and CAPABILITY_SLUG (derived from feature path)
+- Preserve all workflow gates (fuzzy resolution confirmation, capability status check, MVU tracking, misclassification detection, mandatory summary playback)
+
+**If resolved and type is "capability":**
+- Invoke capability-orchestrator.md with CAPABILITY_SLUG and LENS=enhance
+- The orchestrator will fan out to all features in DAG wave order
+
+**If not resolved and reason is "ambiguous":**
+- Use AskUserQuestion:
+  - header: "Multiple Matches"
+  - question: "Multiple matches found for '$ARGUMENTS'. Which did you mean?"
+  - options: list each candidate with type and full_path
+- Re-resolve with the selected candidate
+
+**If not resolved and reason is "no_match":**
+- Display error: "No capability or feature matches '$ARGUMENTS'."
+- Suggest: "Run /gsd:status to see available capabilities and features."
+- Stop.
+
+## 3. Workflow Invocation
+
+For **feature-level:**
+```
+@{GSD_ROOT}/get-shit-done/workflows/framing-discovery.md
+```
+Pass: LENS=enhance, CAPABILITY_SLUG (from resolution)
+
+For **capability-level:**
+```
+@{GSD_ROOT}/get-shit-done/workflows/capability-orchestrator.md
+```
+Pass: CAPABILITY_SLUG, LENS=enhance
+
 </process>
+
+<success_criteria>
+- Slug resolved via 3-tier resolution (exact -> fuzzy -> fall-through)
+- Correct routing: capability -> orchestrator, feature -> framing-discovery
+- Ambiguous matches presented for user selection
+- No-match handled with error + /gsd:status suggestion (not create-new)
+</success_criteria>
