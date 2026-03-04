@@ -165,18 +165,18 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-04
-Stopped at: pipeline-execution/plan-presentation — Execution complete (3/3 plans), ready for Review stage
+Stopped at: pipeline-execution/doc-writer-overhaul — Planned (2 plans, 1 wave), ready for Execute stage
 
 ### Completed this session:
-1. plan-presentation: Planned (3 plans, 2 waves) and executed all 3 plans (~8min total)
-   - Plan 01: planner-reference.md + gsd-planner.md return format extension
-   - Plan 02: ui-brand.md ASCII flow convention
-   - Plan 03: plan.md step 8 restructure (3-layer justification + deep-dive + explicit checker format)
-2. All 12 requirements (EU-01..02, FN-01..07, TC-01..03) traced through execute stage
+1. plan-presentation: Reviewed (7 findings, all accepted+fixed), docs deferred
+2. doc-writer-overhaul: FEATURE.md requirements inferred (3 EU, 6 FN, 3 TC), research (6 gatherers + synthesizer), planned (2 plans, 1 wave parallel)
+   - Plan 01: doc.md gather→synthesize restructure + gsd-doc-writer.md dual-role rewrite
+   - Plan 02: /gsd:doc skill + review.md LENS fix
 
 ### Resume:
-- `/gsd:review pipeline-execution/plan-presentation` — review the feature implementation
-- After plan-presentation pipeline completes, run pipelines for doc-writer-overhaul and scope-aware-routing
+- `/gsd:execute pipeline-execution/doc-writer-overhaul` — execute the 2 plans
+- Then: `/gsd:plan pipeline-execution/scope-aware-routing` (needs discuss-feature first for requirements)
+- Docs deferred until all 3 features reviewed
 
 ### Prior pending (from previous sessions):
 - pipeline-execution/research-overhaul — Plans 01/02/04 pending execution
