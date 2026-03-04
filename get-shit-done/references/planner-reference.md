@@ -392,12 +392,30 @@ Interface context: embed key types in `<interfaces>` block when plans depend on 
 | Plan | Objective | Tasks | Files |
 |------|-----------|-------|-------|
 
+### Justification
+
+**Ordering rationale:** {why waves/tasks are sequenced this way — cite dependency edges and REQ IDs}
+**Approach rationale:** {why this approach vs alternatives — cite RESEARCH.md findings and project constraints}
+**KISS rationale:** {why this is the simplest approach that satisfies requirements — cite specific trade-offs rejected}
+
+### Round 1 Fixes
+
+{If fixes applied, one entry per fix:}
+- **Context:** {what was wrong before the fix}
+  **Decision:** {what changed}
+  **Consequence:** {REQ IDs affected, downstream impact}
+
+{If no fixes:}
+No Round 1 fixes applied.
+
 ### Findings
 {findings from Round 2, or "None -- all issues resolved in Round 1"}
 
 ### Next Steps
 Execute: `/gsd:execute {cap/feat}`
 ```
+
+The Justification section is generated during planning when the planner has full reasoning context across FEATURE.md, RESEARCH.md, and dependency edges. Round 1 fixes are captured during self-critique because they cannot be reconstructed after the planner Task() completes. All claims must reference specific REQ IDs, dependency edges, or file paths — generic statements fail the grounding check.
 
 ### Gap Closure Plans Created
 
