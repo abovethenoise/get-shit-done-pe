@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: milestone
 status: unknown
-last_updated: 2026-03-04T21:19:55.308Z
+last_updated: 2026-03-04T21:23:21.568Z
 progress:
   total_phases: 14
   completed_phases: 13
@@ -79,6 +79,7 @@ Next: /clear, then use /gsd:discuss-capability or /gsd:debug|enhance|refactor to
 | Phase 14 P01 | 3min | 2 tasks | 26 files |
 | Phase 14 P02 | 4min | 2 tasks | 1 files |
 | Phase pipeline-execution/doc-writer-overhaul P01 | 4min | 2 tasks | 2 files |
+| Phase pipeline-execution/doc-writer-overhaul P02 | 2min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -159,6 +160,7 @@ Recent decisions affecting current work:
 - [Phase pipeline-execution/plan-presentation]: plan-presentation plan 03: AskUserQuestion 4-option limit handled via 'Requirement coverage + more...' expansion pattern for 6-area deep-dive
 - [Phase pipeline-execution/plan-presentation]: plan-presentation 03: token growth trimmed from 63 to 50 lines (14.9%) by compressing prose in 8.3.A, 8.3.B, 8.6, 8.7 layers while preserving all structural instructions
 - [Phase pipeline-execution/doc-writer-overhaul]: Gather-synthesize doc pipeline: 5 parallel focus-area explorers + synthesizer replace single-agent doc writer — Parallel exploration covers full impact surface (code comments, module docs, standards, config, friction) without cross-area contamination
+- [Phase pipeline-execution/doc-writer-overhaul]: /gsd:doc skill uses inline capability iteration (not orchestrator) with review/synthesis.md gate for reviewed-features-only filtering — Doc stage is post-review — only features with review artifacts should be documented; orchestrator pattern is for pre-review pipeline stages
 
 ### Blockers/Concerns
 
@@ -167,16 +169,17 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-04
-Stopped at: Completed pipeline-execution/doc-writer-overhaul plan 01 — plan 02 next
+Stopped at: pipeline-execution/doc-writer-overhaul — Feature complete (2/2 plans executed), ready for review
 
 ### Completed this session:
 1. plan-presentation: Reviewed (7 findings, all accepted+fixed), docs deferred
-2. doc-writer-overhaul: Plan 01 executed (4min, 2 tasks, 2 files) — gather-synthesize restructure + dual-role agent rewrite
-   - Plan 02 remaining: /gsd:doc skill + review.md LENS fix
+2. doc-writer-overhaul: Both plans executed
+   - Plan 01 (4min): doc.md gather→synthesize restructure + gsd-doc-writer.md dual-role rewrite
+   - Plan 02 (2min): /gsd:doc standalone skill + review.md LENS propagation fix
 
 ### Resume:
-- Continue executing plan 02 for pipeline-execution/doc-writer-overhaul (auto-continue)
-- Then: `/gsd:plan pipeline-execution/scope-aware-routing` (needs discuss-feature first for requirements)
+- `/gsd:review pipeline-execution/doc-writer-overhaul` or next feature
+- `/gsd:plan pipeline-execution/scope-aware-routing` (needs discuss-feature first for requirements)
 - Docs deferred until all 3 features reviewed
 
 ### Prior pending (from previous sessions):
