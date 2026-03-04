@@ -169,7 +169,7 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-04
-Stopped at: pipeline-execution/doc-writer-overhaul — Reviewed (7 findings: 5 accepted+fixed, 1 dismissed, 1 accepted). No blockers.
+Stopped at: pipeline-execution/scope-aware-routing — Feature specified (EU/FN/TC written), ready for /gsd:plan
 
 ### Completed this session:
 1. plan-presentation: Reviewed (7 findings, all accepted+fixed), docs deferred
@@ -184,6 +184,6 @@ Stopped at: pipeline-execution/doc-writer-overhaul — Reviewed (7 findings: 5 a
 - pipeline-execution/research-overhaul — Plans 01/02/04 pending execution
 
 ### Prior pending (from previous sessions):
-- pipeline-execution/research-overhaul — Plans 01/02/04 pending execution
+- pipeline-execution/research-overhaul — Complete (executed, reviewed, documented)
 - AskUserQuestion fix changes staged but uncommitted
 - `node bin/install.js --global` to deploy everything
