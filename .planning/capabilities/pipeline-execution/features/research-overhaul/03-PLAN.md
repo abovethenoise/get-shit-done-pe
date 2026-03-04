@@ -10,17 +10,21 @@ files_modified:
   - get-shit-done/workflows/review.md
   - get-shit-done/workflows/execute.md
   - get-shit-done/workflows/doc.md
+  - get-shit-done/workflows/research-workflow.md
   - .planning/capabilities/pipeline-execution/features/research-overhaul/FEATURE.md
 autonomous: true
-requirements: [FN-05, TC-04]
+requirements: [FN-05, FN-07, TC-04]
 must_haves:
   truths:
     - "Every @{GSD_ROOT}/workflows/*.md reference across all workflow files is enumerated and classified"
-    - "Zero category-1 instances exist after classification (plan.md and framing-pipeline.md are fixed in Plans 01/02; this plan confirms no others exist)"
+    - "Zero category-1 instances exist after classification (plan.md and framing-pipeline.md fixed in Plans 01/02; review.md fixed in Plan 04; this plan confirms no others exist)"
     - "Category-2 and category-3 instances are documented in FEATURE.md Decisions section with disposition"
+    - "research-workflow.md uses descriptive/reference language, not imperative delegation language"
   artifacts:
     - path: ".planning/capabilities/pipeline-execution/features/research-overhaul/FEATURE.md"
       provides: "Decisions section updated with @workflow.md audit results: full enumeration, classification, and disposition for every instance found"
+    - path: "get-shit-done/workflows/research-workflow.md"
+      provides: "Reframed as reference documentation — describes research pattern without imperative delegation"
   key_links:
     - from: "audit enumeration"
       to: "FEATURE.md Decisions section"
@@ -159,7 +163,7 @@ get-shit-done/workflows/focus.md
 
   ### Follow-up Items
 
-  - review.md uses same gather-synthesize delegation pattern as research (4 reviewers). Same category-1 risk if review.md delegates to gather-synthesize.md without explicit Task() blocks. Evaluate as separate feature.
+  - review.md uses same gather-synthesize delegation pattern as research (4 reviewers). Fixed in Plan 04 with explicit Task() blocks.
   - Category-2 sequential handoffs: evaluate reliability of model inline-read behavior for framing-pipeline stages 3-6 in a separate feature if shortcutting is observed.
   ```
 
@@ -179,22 +183,84 @@ get-shit-done/workflows/focus.md
   </done>
 </task>
 
+<task type="auto">
+  <name>Reframe research-workflow.md as reference documentation</name>
+  <reqs>FN-07</reqs>
+  <files>get-shit-done/workflows/research-workflow.md</files>
+  <action>
+  Read research-workflow.md in full first. Make these targeted edits:
+
+  **Purpose block (lines 1-7):**
+  Replace "Standalone research orchestration workflow. Spawns 6 specialist research gatherers in parallel via the gather-synthesize pattern" with language that positions this as reference documentation:
+  ```
+  Reference documentation for the research gather-synthesize pattern. Describes the 6 specialist research gatherers, context assembly layers, and output structure used when plan.md or framing-pipeline.md spawn research.
+
+  Callers (plan.md Step 5, framing-pipeline.md Stage 1) own the actual Task() spawns. This file documents the framework: what each gatherer investigates, how context is layered, and what the synthesizer produces.
+  ```
+
+  **Step 5 "Invoke Gather-Synthesize" (lines 147-169):**
+  Replace the imperative delegation block with descriptive reference language:
+  ```markdown
+  ## 5. Gather-Synthesize Execution
+
+  When callers spawn the 6 gatherers, the execution follows the gather-synthesize pattern described in `gather-synthesize.md`:
+
+  1. All 6 gatherers spawn simultaneously as parallel Task() calls
+  2. Each gatherer writes to its output path in `{output_dir}/research/`
+  3. Failed gatherers are retried once; if >50% fail, research aborts
+  4. The synthesizer reads all gatherer outputs + manifest and writes RESEARCH.md
+  5. Caller receives: synthesis path, manifest, status (complete | partial | failed)
+  ```
+
+  Remove the `@{GSD_ROOT}/get-shit-done/workflows/gather-synthesize.md` bare delegation reference from Step 5. The required_reading reference to gather-synthesize.md at the top of the file can stay — it's a context reference (category 3), not a delegation.
+
+  **Step 7 "Return to Caller" (lines 224-229):**
+  Update to reflect that this file is reference documentation, not an active workflow that returns values:
+  ```markdown
+  ## 7. Output Structure
+
+  Research produces:
+  - `{output_dir}/RESEARCH.md` — consolidated research with lens frontmatter
+  - `{output_dir}/research/{dimension}-findings.md` — individual gatherer outputs (6 files)
+  - Manifest: which gatherers succeeded/failed
+
+  Callers use RESEARCH.md as input to planning. Partial results (some gatherers failed) are documented in the synthesis — the synthesizer notes gaps without fabricating content.
+  ```
+
+  **key_constraints block (lines 234-242):**
+  Update first constraint from "This workflow follows the gather-synthesize pattern" to "This is reference documentation for the research gather-synthesize pattern. Callers own the actual Task() spawns."
+
+  Do not change: gatherer definitions (Step 3), synthesizer definition (Step 4), context assembly (Step 2), or the inputs section. These describe the framework correctly.
+  </action>
+  <verify>
+    <automated>grep -n "Invoke\|Delegate to" /Users/philliphall/get-shit-done-pe/get-shit-done/workflows/research-workflow.md</automated>
+  </verify>
+  <done>
+  - grep returns zero matches for "Invoke" and "Delegate to" in research-workflow.md
+  - The only @gather-synthesize.md reference is in required_reading (category 3 — correct usage)
+  - Purpose block describes file as reference documentation, not orchestration workflow
+  - Step 5 uses descriptive language ("When callers spawn...") not imperative ("Invoke...")
+  </done>
+</task>
+
 </tasks>
 
 <verification>
-After task completes:
+After both tasks complete:
 1. grep -rn "Invoke @.*research-workflow\|Invoke @.*gather-synthesize" get-shit-done/workflows/ -- zero matches (no remaining category-1 research delegation)
 2. FEATURE.md Decisions section contains a table with "Category" column and at least 8 rows (known instances from RESEARCH.md)
 3. grep -n "Category 1" .planning/capabilities/pipeline-execution/features/research-overhaul/FEATURE.md -- all rows show "FIXED" disposition
 4. Spot-check: read the rows for framing-pipeline.md stages 3-6 in the classification table -- should be Category 2 with "Document only" disposition
+5. grep -n "Invoke\|Delegate to" get-shit-done/workflows/research-workflow.md -- zero matches
+6. research-workflow.md purpose block contains "reference documentation" language
 </verification>
 
 <success_criteria>
 - All @workflow.md references in all workflow files are enumerated (no unscanned files)
 - Every instance is classified as category 1, 2, or 3 per TC-04 criteria
-- Zero category-1 instances remain unfixed across the entire workflows/ directory
+- Zero category-1 instances remain unfixed across the entire workflows/ directory (plan.md Plan 01, framing-pipeline.md Plan 02, review.md Plan 04)
 - Category-2 and category-3 instances are documented in FEATURE.md Decisions with explicit disposition
-- review.md gather-synthesize delegation is called out as a follow-up item (out of scope for this feature)
+- research-workflow.md reframed as reference documentation — no imperative delegation language remains
 </success_criteria>
 
 <output>
