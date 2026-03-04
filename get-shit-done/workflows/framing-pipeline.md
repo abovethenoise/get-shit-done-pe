@@ -80,30 +80,97 @@ Research agents investigate technical feasibility with lens-aware focus.
 - /enhance: Prioritize existing module boundaries, integration points, test coverage
 - /refactor: Prioritize dependency mapping, consumer contracts, migration precedents
 
-Invoke the research workflow directly, passing framing context:
+**Spawn research gatherers:**
+
+```bash
+mkdir -p "${FEATURE_DIR}/research"
+```
+
+Assemble context payload (read each path, embed content):
+```
+<core_context>{contents of PROJECT.md, STATE.md, ROADMAP.md}</core_context>
+<capability_context>{contents of CAPABILITY.md}</capability_context>
+<feature_context>{contents of FEATURE.md}</feature_context>
+<framing_context>
+Lens: {LENS}
+Secondary lens: {SECONDARY_LENS or null}
+Lens direction: {LENS_METADATA.direction}
+Lens tone: {LENS_METADATA.tone}
+Research focus: {lens-specific focus from above}
+Brief path: {BRIEF_PATH}
+Anchor questions: {ANCHOR_QUESTIONS_PATH}
+</framing_context>
+```
+
+Spawn all 6 gatherers simultaneously (parallel Task calls -- do NOT wait for one before spawning the next):
 
 ```
-@{GSD_ROOT}/get-shit-done/workflows/research-workflow.md
+Task(
+  prompt="First, read {GSD_ROOT}/agents/gsd-research-domain.md for your role.\n\n<subject>{CAPABILITY_NAME}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Dimension: Domain Truth\nWrite your complete analysis to: {FEATURE_DIR}/research/domain-truth-findings.md</task_context>",
+  subagent_type="gsd-research-domain",
+  model="sonnet",
+  description="Research Domain Truth for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
+)
+
+Task(
+  prompt="First, read {GSD_ROOT}/agents/gsd-research-system.md for your role.\n\n<subject>{CAPABILITY_NAME}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Dimension: Existing System\nWrite your complete analysis to: {FEATURE_DIR}/research/existing-system-findings.md</task_context>",
+  subagent_type="gsd-research-system",
+  model="sonnet",
+  description="Research Existing System for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
+)
+
+Task(
+  prompt="First, read {GSD_ROOT}/agents/gsd-research-intent.md for your role.\n\n<subject>{CAPABILITY_NAME}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Dimension: User Intent\nWrite your complete analysis to: {FEATURE_DIR}/research/user-intent-findings.md</task_context>",
+  subagent_type="gsd-research-intent",
+  model="sonnet",
+  description="Research User Intent for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
+)
+
+Task(
+  prompt="First, read {GSD_ROOT}/agents/gsd-research-tech.md for your role.\n\n<subject>{CAPABILITY_NAME}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Dimension: Tech Constraints\nWrite your complete analysis to: {FEATURE_DIR}/research/tech-constraints-findings.md</task_context>",
+  subagent_type="gsd-research-tech",
+  model="sonnet",
+  description="Research Tech Constraints for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
+)
+
+Task(
+  prompt="First, read {GSD_ROOT}/agents/gsd-research-edges.md for your role.\n\n<subject>{CAPABILITY_NAME}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Dimension: Edge Cases\nWrite your complete analysis to: {FEATURE_DIR}/research/edge-cases-findings.md</task_context>",
+  subagent_type="gsd-research-edges",
+  model="sonnet",
+  description="Research Edge Cases for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
+)
+
+Task(
+  prompt="First, read {GSD_ROOT}/agents/gsd-research-prior-art.md for your role.\n\n<subject>{CAPABILITY_NAME}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Dimension: Prior Art\nWrite your complete analysis to: {FEATURE_DIR}/research/prior-art-findings.md</task_context>",
+  subagent_type="gsd-research-prior-art",
+  model="sonnet",
+  description="Research Prior Art for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
+)
 ```
 
-Pass:
-- `subject`: "{CAPABILITY_NAME}/{FEATURE_SLUG}" (the feature being researched)
-- `context_paths`:
-  - `project_path`: .planning/PROJECT.md
-  - `state_path`: .planning/STATE.md
-  - `roadmap_path`: .planning/ROADMAP.md
-- `output_dir`: .planning/capabilities/{CAPABILITY_SLUG}/features/{FEATURE_SLUG}
-- `capability_path`: .planning/capabilities/{CAPABILITY_SLUG}/CAPABILITY.md
-- `feature_path`: ${FEATURE_DIR}/FEATURE.md
-- `framing_context`:
-  - `brief_path`: {BRIEF_PATH}
-  - `lens`: {LENS}
-  - `secondary_lens`: {SECONDARY_LENS or null}
-  - `direction`: {LENS_METADATA.direction}
-  - `focus`: {lens-specific focus from above}
-  - `anchor_questions_path`: {ANCHOR_QUESTIONS_PATH}
+Wait for ALL 6 gatherers to complete. Check each output file exists and is non-empty:
+```bash
+for f in domain-truth existing-system user-intent tech-constraints edge-cases prior-art; do
+  test -f "${FEATURE_DIR}/research/${f}-findings.md" && test -s "${FEATURE_DIR}/research/${f}-findings.md" && echo "${f}: OK" || echo "${f}: FAILED"
+done
+```
 
-The research workflow spawns 6 gatherers in parallel via gather-synthesize, then consolidates via the research synthesizer. Output: `{output_dir}/RESEARCH.md`.
+For any failed gatherer: retry once with the same Task() prompt. If still failed after retry: mark as failed in manifest.
+
+If more than 3 gatherers failed: surface escalation (MAJOR tier per escalation-protocol.md). Do NOT continue to synthesizer.
+
+**Spawn synthesizer:**
+
+Build manifest listing each dimension path and status.
+
+```
+Task(
+  prompt="First, read {GSD_ROOT}/agents/gsd-research-synthesizer.md for your role.\n\n<subject>{CAPABILITY_NAME}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Gather phase complete. Synthesize the following gatherer outputs into a consolidated RESEARCH.md.\n\nGatherer outputs:\n- Domain Truth: {FEATURE_DIR}/research/domain-truth-findings.md [{status}]\n- Existing System: {FEATURE_DIR}/research/existing-system-findings.md [{status}]\n- User Intent: {FEATURE_DIR}/research/user-intent-findings.md [{status}]\n- Tech Constraints: {FEATURE_DIR}/research/tech-constraints-findings.md [{status}]\n- Edge Cases: {FEATURE_DIR}/research/edge-cases-findings.md [{status}]\n- Prior Art: {FEATURE_DIR}/research/prior-art-findings.md [{status}]\n\nWrite your synthesis to: {FEATURE_DIR}/RESEARCH.md\n\nIMPORTANT: Begin RESEARCH.md with YAML frontmatter:\n---\nlens: {LENS}\nsecondary_lens: {SECONDARY_LENS or null}\nsubject: {CAPABILITY_NAME}/{FEATURE_SLUG}\ndate: {ISO date today}\n---\n\nIf any gatherer has status \"failed\", document the gap -- do not fabricate content for missing dimensions.</task_context>",
+  subagent_type="gsd-research-synthesizer",
+  model="inherit",
+  description="Synthesize Research for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
+)
+```
 
 **After research completes:**
 - Check for escalation signals in research output (see escalation-protocol.md)
