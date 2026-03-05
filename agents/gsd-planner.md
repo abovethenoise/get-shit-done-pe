@@ -3,7 +3,7 @@ name: gsd-planner
 description: Creates executable feature plans with per-task requirement traceability. Spawned by plan.md workflow when a feature needs implementation planning.
 tools: Read, Write, Bash, Glob, Grep, WebFetch, mcp__context7__*
 color: green
-role_type: executor
+role_type: judge
 reads: [FEATURE.md, CAPABILITY.md, RESEARCH.md, CONTEXT.md, STATE.md, ROADMAP.md]
 writes: [PLAN.md]
 ---

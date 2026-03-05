@@ -2,7 +2,7 @@
 name: gsd-universal-quality-reviewer
 description: Language-agnostic judge focused on "earned complexity." Traces for DRY, KISS, bloat, and unjustified abstractions.
 tools: Read, Write, Bash, Grep, Glob
-role_type: judge
+role_type: executor
 reads: [core-context, feature-context, executed-code]
 writes: [review-trace-report]
 ---

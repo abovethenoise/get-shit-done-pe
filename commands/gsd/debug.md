@@ -15,10 +15,10 @@ Run detective-mode discovery for a capability or feature. Narrows from symptom t
 
 **Thinking mode:** Backward -- from symptom to root cause. Convergent tone. Narrow the search space, eliminate hypotheses.
 
-**If capability:** Invokes capability-orchestrator.md which fans out to all features in DAG wave order.
+**If capability:** Invokes framing-pipeline.md which fans out to all features in DAG wave order.
 **If feature:** Invokes framing-discovery.md directly for the single feature.
 
-**Flow:** slug-resolve -> route to capability orchestrator or feature framing-discovery workflow
+**Flow:** slug-resolve -> route to framing-pipeline or feature framing-discovery workflow
 
 **MVU (Minimum Viable Understanding):**
 - Symptom documented without interpretation
@@ -28,7 +28,7 @@ Run detective-mode discovery for a capability or feature. Narrows from symptom t
 
 <execution_context>
 @{GSD_ROOT}/get-shit-done/workflows/framing-discovery.md
-@{GSD_ROOT}/get-shit-done/workflows/capability-orchestrator.md
+@{GSD_ROOT}/get-shit-done/workflows/framing-pipeline.md
 @{GSD_ROOT}/get-shit-done/references/framing-lenses.md
 @{GSD_ROOT}/get-shit-done/references/ui-brand.md
 </execution_context>
@@ -56,8 +56,8 @@ Parse JSON result for: `resolved`, `tier`, `type`, `capability_slug`, `feature_s
 - Preserve all workflow gates (fuzzy resolution confirmation, capability status check, MVU tracking, misclassification detection, mandatory summary playback)
 
 **If resolved and type is "capability":**
-- Invoke capability-orchestrator.md with CAPABILITY_SLUG and LENS=debug
-- The orchestrator will fan out to all features in DAG wave order
+- Invoke framing-pipeline.md with CAPABILITY_SLUG and LENS=debug
+- The pipeline will fan out to all features in DAG wave order
 
 **If not resolved and reason is "ambiguous":**
 - Use AskUserQuestion:
@@ -75,7 +75,7 @@ Parse JSON result for: `resolved`, `tier`, `type`, `capability_slug`, `feature_s
 
 <success_criteria>
 - Slug resolved via 3-tier resolution (exact -> fuzzy -> fall-through)
-- Correct routing: capability -> orchestrator, feature -> framing-discovery
+- Correct routing: capability -> framing-pipeline, feature -> framing-discovery
 - Ambiguous matches presented for user selection
 - No-match handled with error + /gsd:status suggestion (not create-new)
 </success_criteria>

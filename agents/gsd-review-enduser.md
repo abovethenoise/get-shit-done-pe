@@ -2,7 +2,7 @@
 name: gsd-review-enduser
 description: Traces executed work against end-user stories and acceptance criteria — produces per-requirement verdicts with cited evidence
 tools: Read, Write, Bash, Grep, Glob
-role_type: judge
+role_type: executor
 reads: [core-context, feature-context, requirement-layer-eu, executed-code]
 writes: [review-trace-report]
 ---

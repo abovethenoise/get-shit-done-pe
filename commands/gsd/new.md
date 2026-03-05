@@ -11,11 +11,11 @@ allowed-tools:
   - Task
 ---
 <objective>
-Run architect-mode discovery for a new capability or feature. Resolves slug type first, then routes to the correct workflow. Capability-level input triggers feature stub auto-creation and capability-orchestrator. Feature-level input runs framing-discovery directly. Unknown slugs prompt user to disambiguate.
+Run architect-mode discovery for a new capability or feature. Resolves slug type first, then routes to the correct workflow. Capability-level input triggers feature stub auto-creation and framing-pipeline. Feature-level input runs framing-discovery directly. Unknown slugs prompt user to disambiguate.
 
 **Thinking mode:** Forward -- from problem to shape. Exploratory but disciplined. Define before designing.
 
-**Flow:** Resolve slug type -> route: capability (stub creation + orchestrator) | feature (framing-discovery) | ambiguous (AskUserQuestion candidates) | no_match (AskUserQuestion capability-or-feature)
+**Flow:** Resolve slug type -> route: capability (stub creation + framing-pipeline) | feature (framing-discovery) | ambiguous (AskUserQuestion candidates) | no_match (AskUserQuestion capability-or-feature)
 
 **MVU (Minimum Viable Understanding):**
 - The problem or goal stated in one sentence with audience identified
@@ -27,7 +27,7 @@ Run architect-mode discovery for a new capability or feature. Resolves slug type
 
 <execution_context>
 @{GSD_ROOT}/get-shit-done/workflows/framing-discovery.md
-@{GSD_ROOT}/get-shit-done/workflows/capability-orchestrator.md
+@{GSD_ROOT}/get-shit-done/workflows/framing-pipeline.md
 @{GSD_ROOT}/get-shit-done/workflows/discuss-capability.md
 @{GSD_ROOT}/get-shit-done/references/framing-lenses.md
 @{GSD_ROOT}/get-shit-done/references/ui-brand.md
@@ -88,7 +88,7 @@ If $ARGUMENTS is empty: treat as no_match (skip resolution, go to Step 2 no_matc
 
 ## 3. Feature Stub Auto-Creation (capability path only)
 
-Before invoking capability-orchestrator, ensure feature directories exist for all features listed in CAPABILITY.md.
+Before invoking framing-pipeline, ensure feature directories exist for all features listed in CAPABILITY.md.
 
 Read `.planning/capabilities/{CAPABILITY_SLUG}/CAPABILITY.md`. Parse the Features table to extract all feature slugs.
 
@@ -107,35 +107,35 @@ Read `.planning/capabilities/{CAPABILITY_SLUG}/CAPABILITY.md`. Parse the Feature
   Log: "Created feature stub: {CAPABILITY_SLUG}/{feature_slug}"
 - **If it already exists:** Skip silently (no log, no error)
 
-After the loop completes, proceed to Step 4 (capability-orchestrator invocation — direct path, no fan-out offer).
+After the loop completes, proceed to Step 4 (framing-pipeline invocation — direct path, no fan-out offer).
 
-## 4. Capability-Orchestrator Invocation
+## 4. Framing-Pipeline Invocation
 
 ```
-@{GSD_ROOT}/get-shit-done/workflows/capability-orchestrator.md
+@{GSD_ROOT}/get-shit-done/workflows/framing-pipeline.md
 ```
 Pass: CAPABILITY_SLUG, LENS=new
 
 **Note:** Step 4 is reached either from:
-- Step 2 "resolved as capability" path (after Step 3 stub creation) — invoke orchestrator directly, no fan-out offer
+- Step 2 "resolved as capability" path (after Step 3 stub creation) — invoke pipeline directly, no fan-out offer
 - Step 2 "no_match → new capability" path (after Step 3 stub creation) — present fan-out offer first
 
 **Fan-out offer (only when arriving from discuss-capability path):**
-Before invoking orchestrator, use AskUserQuestion:
+Before invoking pipeline, use AskUserQuestion:
 - header: "Pipeline Ready"
 - question: "Capability and features defined. Continue to pipeline for all features now?"
 - options: "Continue (run pipeline for all features)", "I'll run them individually"
 - If "I'll run them individually": display next steps ("Run /gsd:new {feature_slug} for each feature") and stop
-- If "Continue": invoke capability-orchestrator
+- If "Continue": invoke framing-pipeline
 
 **Direct path (arriving from Step 2 resolved-as-capability):**
-Invoke capability-orchestrator directly without fan-out offer.
+Invoke framing-pipeline directly without fan-out offer.
 </process>
 
 <success_criteria>
-- Slug resolved; capability -> stub creation + orchestrator, feature -> framing-discovery
+- Slug resolved; capability -> stub creation + framing-pipeline, feature -> framing-discovery
 - Unknown slug asks capability-or-feature; routes correctly to discuss-capability or framing-discovery
 - Feature stubs created for missing features; existing features skipped; empty table errors
-- Post-discuss-capability fan-out offer presented before orchestrator invocation
+- Post-discuss-capability fan-out offer presented before framing-pipeline invocation
 - Feature-level framing-discovery invocation preserved (no regression from original behavior)
 </success_criteria>

@@ -130,5 +130,5 @@ GSD > DOCUMENTING: {capability_slug}/{feature_slug} ({N}/{total})
 - Capability-level: doc.md invoked for each feature with review/synthesis.md, sequentially
 - No-arg: target inferred from STATE.md session continuity with user confirmation
 - LENS inferred from pipeline context -> RESEARCH.md frontmatter -> "enhance" default
-- Capability-level routing uses inline iteration (not capability-orchestrator.md)
+- Capability-level routing uses inline iteration (not framing-pipeline.md)
 </success_criteria>

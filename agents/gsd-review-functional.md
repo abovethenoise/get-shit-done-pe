@@ -2,7 +2,7 @@
 name: gsd-review-functional
 description: Traces executed work against functional behavior specs — verifies input/output contracts, state transitions, and error handling paths
 tools: Read, Write, Bash, Grep, Glob
-role_type: judge
+role_type: executor
 reads: [core-context, feature-context, requirement-layer-fn, executed-code]
 writes: [review-trace-report]
 ---

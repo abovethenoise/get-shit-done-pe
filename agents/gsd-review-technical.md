@@ -2,7 +2,7 @@
 name: gsd-review-technical
 description: Traces executed work against technical implementation specs — verifies spec compliance, data structures, algorithms, and documents spec-vs-reality gaps
 tools: Read, Write, Bash, Grep, Glob
-role_type: judge
+role_type: executor
 reads: [core-context, feature-context, requirement-layer-tc, executed-code]
 writes: [review-trace-report]
 ---

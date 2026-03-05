@@ -14,15 +14,15 @@ allowed-tools:
 <objective>
 Plan a capability or feature through the framing pipeline's plan stage. Resolves the user's slug reference via 3-tier slug resolution and routes accordingly.
 
-**If capability:** Invokes capability-orchestrator.md which plans all features in DAG wave order.
+**If capability:** Invokes framing-pipeline.md which plans all features in DAG wave order.
 **If feature:** Invokes plan.md workflow directly for the single feature.
 
-**Flow:** slug-resolve -> route to capability orchestrator or feature plan workflow
+**Flow:** slug-resolve -> route to framing-pipeline or feature plan workflow
 </objective>
 
 <execution_context>
 @{GSD_ROOT}/get-shit-done/workflows/plan.md
-@{GSD_ROOT}/get-shit-done/workflows/capability-orchestrator.md
+@{GSD_ROOT}/get-shit-done/workflows/framing-pipeline.md
 </execution_context>
 
 <context>
@@ -47,8 +47,8 @@ Parse JSON result for: `resolved`, `tier`, `type`, `capability_slug`, `feature_s
 - Pass: `LENS=plan`, `FEATURE_SLUG`, `CAPABILITY_SLUG`
 
 **If resolved and type is "capability":**
-- Invoke capability-orchestrator.md with CAPABILITY_SLUG and LENS=plan
-- The orchestrator will plan all features in DAG wave order
+- Invoke framing-pipeline.md with CAPABILITY_SLUG and LENS=plan
+- The pipeline will plan all features in DAG wave order
 
 **If not resolved and reason is "ambiguous":**
 - Present candidates to user:
@@ -75,7 +75,7 @@ Pass: FEATURE_SLUG, CAPABILITY_SLUG, LENS=plan
 
 For **capability-level planning:**
 ```
-@{GSD_ROOT}/get-shit-done/workflows/capability-orchestrator.md
+@{GSD_ROOT}/get-shit-done/workflows/framing-pipeline.md
 ```
 Pass: CAPABILITY_SLUG, LENS=plan
 
@@ -83,7 +83,7 @@ Pass: CAPABILITY_SLUG, LENS=plan
 
 <success_criteria>
 - Slug resolved via 3-tier resolution (exact -> fuzzy -> fall-through)
-- Correct routing: capability -> orchestrator, feature -> plan.md workflow
+- Correct routing: capability -> framing-pipeline, feature -> plan.md workflow
 - Ambiguous matches presented for user selection
 - No-match handled gracefully with create/retry options
 </success_criteria>

@@ -1,5 +1,5 @@
 <purpose>
-Create executable planning prompts (PLAN.md files) for a feature. Default flow: Research (if needed) -> Plan -> Self-critique -> CLI validate -> Plan-check -> Done. Orchestrates research-workflow, gsd-planner, and gsd-plan-checker with a revision loop (max 3 iterations).
+Create executable planning prompts (PLAN.md files) for a feature. Default flow: Research (if needed) -> Plan -> Self-critique -> CLI validate -> Plan-check -> Done. Orchestrates research (internal gather-synthesize), gsd-planner, and gsd-plan-checker with a revision loop (max 3 iterations).
 </purpose>
 
 <required_reading>
@@ -219,7 +219,7 @@ Task(
 )
 ```
 
-**ONE planner per feature.** No parallel planner spawns. If capability-level planning is needed, the capability-orchestrator handles feature sequencing — each feature still gets exactly one planner invocation.
+**ONE planner per feature.** No parallel planner spawns. If capability-level planning is needed, the framing-pipeline handles feature sequencing — each feature still gets exactly one planner invocation.
 
 ## 8. Draft/Refine Loop
 

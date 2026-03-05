@@ -15,15 +15,15 @@ allowed-tools:
 <objective>
 Execute the plan for a capability or feature. This is a pipeline stage invoked after planning — it reads the existing plan and carries out implementation.
 
-**If capability:** Invokes capability-orchestrator.md which executes all features in DAG wave order.
+**If capability:** Invokes framing-pipeline.md which executes all features in DAG wave order.
 **If feature:** Invokes execute-plan.md workflow directly for the single feature.
 
-**Flow:** slug-resolve -> route to capability orchestrator or feature execute workflow
+**Flow:** slug-resolve -> route to framing-pipeline or feature execute workflow
 </objective>
 
 <execution_context>
 @{GSD_ROOT}/get-shit-done/workflows/execute-plan.md
-@{GSD_ROOT}/get-shit-done/workflows/capability-orchestrator.md
+@{GSD_ROOT}/get-shit-done/workflows/framing-pipeline.md
 </execution_context>
 
 <context>
@@ -48,8 +48,8 @@ Parse JSON result for: `resolved`, `tier`, `type`, `capability_slug`, `feature_s
 - Pass: `FEATURE_SLUG`, `CAPABILITY_SLUG`
 
 **If resolved and type is "capability":**
-- Invoke capability-orchestrator.md with CAPABILITY_SLUG and LENS=execute
-- The orchestrator will execute all features in DAG wave order
+- Invoke framing-pipeline.md with CAPABILITY_SLUG and LENS=execute
+- The pipeline will execute all features in DAG wave order
 
 **If not resolved and reason is "ambiguous":**
 - Present candidates to user:
@@ -76,7 +76,7 @@ Pass: FEATURE_SLUG, CAPABILITY_SLUG
 
 For **capability-level execution:**
 ```
-@{GSD_ROOT}/get-shit-done/workflows/capability-orchestrator.md
+@{GSD_ROOT}/get-shit-done/workflows/framing-pipeline.md
 ```
 Pass: CAPABILITY_SLUG, LENS=execute
 
@@ -84,7 +84,7 @@ Pass: CAPABILITY_SLUG, LENS=execute
 
 <success_criteria>
 - Slug resolved via 3-tier resolution (exact -> fuzzy -> fall-through)
-- Correct routing: capability -> orchestrator, feature -> execute-plan.md workflow
+- Correct routing: capability -> framing-pipeline, feature -> execute-plan.md workflow
 - Ambiguous matches presented for user selection
 - No-match handled gracefully with create/retry options
 </success_criteria>
