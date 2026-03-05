@@ -202,7 +202,11 @@ Execution approach guidance (from lens):
 **After execution completes:**
 - Check for escalation signals (execution discovered scope problems, requirement mismatches)
 - If escalation: handle per Section 7
-- If clean: **auto-chain to Stage 3** (no user intervention needed)
+- If clean: proceed directly to Stage 3 (Review) -- NO user gate here
+- **Context exhaustion check:** If context window is degraded after execute, present next command and exit cleanly:
+  ```
+  Context running low. Continue with: /gsd:review {CAPABILITY_SLUG}/{FEATURE_SLUG or ''}
+  ```
 
 ## 5. Stage 3 -- Review (3-Input Model, Auto-Chained from Execute)
 
@@ -253,9 +257,32 @@ Intent verification (from brief):
 ```
 
 **After review completes:**
-- If review finds issues requiring re-work: normal review re-review cycle handles this (Q&A with user for fix decisions)
 - If review finds fundamental scope/requirement problems: MAJOR escalation per Section 7
-- If review passes cleanly: **auto-chain to Stage 4** (no user intervention needed)
+- If review finds issues requiring re-work: human gate at review findings Q&A (within review.md), then remediation loop (see below)
+- If review passes cleanly (no blockers): proceed directly to Stage 4 (Doc) -- NO user gate here
+
+### 5a. Remediation Loop (Post-Review)
+
+```
+REMEDIATION_COUNTER = 0
+```
+
+After review Q&A, if user accepts findings for remediation:
+
+1. Feed accepted findings to planner (existing planning pattern via plan.md)
+   - Planner produces remediation PLAN.md(s) scoped to the accepted findings
+2. Execute remediation plans via existing executor (execute.md)
+3. Increment `REMEDIATION_COUNTER`
+4. Re-review at execution scope (invoke review.md again with same scope)
+5. If `REMEDIATION_COUNTER >= 2`: stop remediation loop, proceed to Stage 4 (Doc) with remaining findings logged
+6. Else: repeat from review Q&A if new findings emerge
+
+**Human gate:** Only at the review findings Q&A within review.md. The plan/execute/re-review cycle within remediation is automatic.
+
+**Context exhaustion check:** If context window is degraded after review/remediation cycles, present next command and exit cleanly:
+```
+Context running low. Continue with: /gsd:doc {CAPABILITY_SLUG}/{FEATURE_SLUG or ''}
+```
 
 ## 6. Stage 4 -- Doc/Reflect (Auto-Chained from Review)
 
@@ -298,6 +325,8 @@ Lens-specific doc emphasis:
 ```
 
 **Human checkpoint within doc stage:** doc.md surfaces documentation changes for user confirmation before writing to `.documentation/`.
+
+**Human checkpoint within doc stage:** doc.md Q&A for documentation approval. This is the second and final human gate in the pipeline.
 
 **After documentation completes:**
 - Update FEATURE.md frontmatter status to "complete" (all 4 stages passed)
@@ -407,8 +436,10 @@ Status: complete
 - Requirements come from discuss-feature upstream. Pipeline receives pre-written requirements in FEATURE.md.
 - Review receives 3 inputs: requirements + lens metadata + brief. The brief check catches spec-complete-but-problem-incomplete work.
 - Doc stage is the doc agent -- not a new agent.
-- Execute -> Review auto-chains (no user intervention). Review -> Doc auto-chains when clean.
-- Full auto-chain: user kicks off pipeline -> plans -> builds code -> auto-reviews -> auto-documents -> done. Only pauses for human decisions (fix Q&A, doc confirmations).
+- Execute -> Review auto-chains (no user intervention, NO user gate). Review -> Doc auto-chains when clean (NO user gate).
+- Full auto-chain: user kicks off pipeline -> plans -> builds code -> auto-reviews -> auto-documents -> done. Human gates ONLY at: review findings Q&A and doc approval Q&A.
+- Remediation loop: accepted review findings -> planner -> remediation PLAN -> executor -> re-review. Max 2 cycles, then proceed to doc.
+- Context exhaustion: at any stage transition, if context is degraded, present concrete next command (`/gsd:review` or `/gsd:doc`) and exit cleanly.
 - Escalation protocol is universal: same 3 tiers at every stage boundary.
 - Maximum 1 backward reset per pipeline run. After that, hard stop (user must restart manually).
 - Major issues use propose-and-confirm. No auto-return.

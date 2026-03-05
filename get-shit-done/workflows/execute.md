@@ -198,7 +198,9 @@ Verification: {Passed | Gaps Found}
 [Include aggregate_results output]
 ```
 
-The workflow ends. The user decides next steps (review, documentation, or next feature).
+The workflow returns. If running under pipeline orchestration (framing-pipeline.md), the pipeline handles next-stage chaining automatically. If running standalone (via /gsd:execute), present next steps to user:
+- "Continue with: `/gsd:review {cap/feat}`" if review is next
+- "Continue with: `/gsd:doc {cap/feat}`" if review already done
 </step>
 
 </process>
