@@ -6,6 +6,26 @@ const fs = require('fs');
 const path = require('path');
 const { output, error, safeReadFile } = require('./core.cjs');
 
+// ─── Shared Helpers ─────────────────────────────────────────────────────────
+
+function guardPath(value, label) {
+  if (!value) error(`${label} value missing`);
+  if (value.includes('..')) error(`Invalid ${label}: contains ".." segment`);
+}
+
+function clearFindings(findingsDir) {
+  if (!fs.existsSync(findingsDir)) return;
+  for (const f of fs.readdirSync(findingsDir).filter(f => f.startsWith('FINDING-') && f.endsWith('.md'))) {
+    fs.unlinkSync(path.join(findingsDir, f));
+  }
+}
+
+const matrixKeyFn = row => {
+  const keys = Object.keys(row);
+  return keys.length >= 2 ? `${row[keys[0]]}|${row[keys[1]]}` : null;
+};
+const graphKeyFn = row => (row['From'] && row['To']) ? `${row['From']}|${row['To']}` : null;
+
 // ─── Utility Functions ──────────────────────────────────────────────────────
 
 /**
@@ -43,7 +63,7 @@ function parseMarkdownTable(content) {
   const rows = [];
   for (let i = dataStart; i < lines.length; i++) {
     const line = lines[i].trim();
-    if (!line || !line.startsWith('|')) continue;
+    if (!line || !line.startsWith('|')) break;
     const cells = parseRow(lines[i]);
     if (cells.length === 0) continue;
 
@@ -158,26 +178,11 @@ function cmdRefinementInit(cwd, raw) {
   // Snapshot existing state for delta computation
   const recommendations = safeReadFile(path.join(refDir, 'RECOMMENDATIONS.md'));
   const findings = snapshotFindings(findingsDir);
-  const matrix = snapshotTable(
-    path.join(refDir, 'matrix.md'),
-    row => {
-      // Use first two non-empty columns as key
-      const keys = Object.keys(row);
-      return keys.length >= 2 ? `${row[keys[0]]}|${row[keys[1]]}` : null;
-    }
-  );
-  const dependencyGraph = snapshotTable(
-    path.join(refDir, 'dependency-graph.md'),
-    row => (row['From'] && row['To']) ? `${row['From']}|${row['To']}` : null
-  );
+  const matrix = snapshotTable(path.join(refDir, 'matrix.md'), matrixKeyFn);
+  const dependencyGraph = snapshotTable(path.join(refDir, 'dependency-graph.md'), graphKeyFn);
 
   // Clear existing findings to prevent orphans
-  if (fs.existsSync(findingsDir)) {
-    const existing = fs.readdirSync(findingsDir).filter(f => f.startsWith('FINDING-') && f.endsWith('.md'));
-    for (const f of existing) {
-      fs.unlinkSync(path.join(findingsDir, f));
-    }
-  }
+  clearFindings(findingsDir);
 
   // Serialize Maps as [key, value] arrays
   const snapshot = {
@@ -208,8 +213,7 @@ function cmdRefinementWrite(cwd, args, raw) {
 
   // For checkpoint type, we just need --name
   if (type === 'checkpoint') {
-    if (!name) error('--name required for checkpoint type');
-    if (name.includes('..')) error('Invalid name: contains ".." segment');
+    guardPath(name, '--name');
     const pairsDir = path.join(refDir, 'pairs');
     fs.mkdirSync(pairsDir, { recursive: true });
     const filePath = path.join(pairsDir, `${name}.complete`);
@@ -218,8 +222,7 @@ function cmdRefinementWrite(cwd, args, raw) {
     return;
   }
 
-  if (!contentFile) error('--content-file required');
-  if (contentFile.includes('..')) error('Invalid --content-file: contains ".." segment');
+  guardPath(contentFile, '--content-file');
 
   const content = safeReadFile(path.resolve(cwd, contentFile));
   if (content === null) error(`Cannot read content file: ${contentFile}`);
@@ -272,7 +275,7 @@ function cmdRefinementReport(cwd, args, raw) {
   // Write matrix
   if (matrixFileIdx !== -1) {
     const matrixFile = args[matrixFileIdx + 1];
-    if (matrixFile && matrixFile.includes('..')) error('Invalid path: contains ".." segment');
+    guardPath(matrixFile, '--matrix-file');
     const content = safeReadFile(path.resolve(cwd, matrixFile));
     if (content === null) error(`Cannot read matrix file: ${matrixFile}`);
     fs.writeFileSync(path.join(refDir, 'matrix.md'), content, 'utf-8');
@@ -282,7 +285,7 @@ function cmdRefinementReport(cwd, args, raw) {
   // Write dependency graph
   if (graphFileIdx !== -1) {
     const graphFile = args[graphFileIdx + 1];
-    if (graphFile && graphFile.includes('..')) error('Invalid path: contains ".." segment');
+    guardPath(graphFile, '--dependency-graph-file');
     const content = safeReadFile(path.resolve(cwd, graphFile));
     if (content === null) error(`Cannot read dependency-graph file: ${graphFile}`);
     fs.writeFileSync(path.join(refDir, 'dependency-graph.md'), content, 'utf-8');
@@ -292,16 +295,13 @@ function cmdRefinementReport(cwd, args, raw) {
   // Write findings
   if (findingsDirIdx !== -1) {
     const srcDir = args[findingsDirIdx + 1];
-    if (srcDir && srcDir.includes('..')) error('Invalid path: contains ".." segment');
+    guardPath(srcDir, '--findings-dir');
     const srcPath = path.resolve(cwd, srcDir);
 
     // Clear existing findings
     const destFindingsDir = path.join(refDir, 'findings');
     fs.mkdirSync(destFindingsDir, { recursive: true });
-    const existing = fs.readdirSync(destFindingsDir).filter(f => f.startsWith('FINDING-') && f.endsWith('.md'));
-    for (const f of existing) {
-      fs.unlinkSync(path.join(destFindingsDir, f));
-    }
+    clearFindings(destFindingsDir);
 
     // Copy new findings
     if (fs.existsSync(srcPath)) {
@@ -364,17 +364,8 @@ function cmdRefinementDelta(cwd, args, raw) {
 
   // Read current state
   const currentFindings = snapshotFindings(path.join(refDir, 'findings'));
-  const currentMatrix = snapshotTable(
-    path.join(refDir, 'matrix.md'),
-    row => {
-      const keys = Object.keys(row);
-      return keys.length >= 2 ? `${row[keys[0]]}|${row[keys[1]]}` : null;
-    }
-  );
-  const currentGraph = snapshotTable(
-    path.join(refDir, 'dependency-graph.md'),
-    row => (row['From'] && row['To']) ? `${row['From']}|${row['To']}` : null
-  );
+  const currentMatrix = snapshotTable(path.join(refDir, 'matrix.md'), matrixKeyFn);
+  const currentGraph = snapshotTable(path.join(refDir, 'dependency-graph.md'), graphKeyFn);
 
   // Compute diffs
   const findingsDiff = diffMaps(snapshot.findings, currentFindings);
@@ -457,9 +448,8 @@ function cmdChangesetWrite(cwd, args, raw) {
   const contentFileIdx = args.indexOf('--content-file');
   const isCheckpoint = args.includes('--checkpoint');
 
-  if (contentFileIdx === -1) error('--content-file required');
-  const contentFile = args[contentFileIdx + 1];
-  if (contentFile.includes('..')) error('Invalid --content-file: contains ".." segment');
+  const contentFile = contentFileIdx !== -1 ? args[contentFileIdx + 1] : null;
+  guardPath(contentFile, '--content-file');
 
   const jsonContent = safeReadFile(path.resolve(cwd, contentFile));
   if (!jsonContent) error(`Cannot read content file: ${contentFile}`);
@@ -477,9 +467,12 @@ function cmdChangesetWrite(cwd, args, raw) {
     }
   }
 
-  // Sort: by type order, then maintain original order within type group
+  // Sort: by type order, then severity within type group
+  const SEVERITY_ORDER = { critical: 0, high: 0, major: 1, medium: 1, minor: 2, low: 2, info: 3 };
   const sorted = [...data.entries].sort((a, b) => {
-    return (TYPE_ORDER[a.type] || 99) - (TYPE_ORDER[b.type] || 99);
+    const typeOrd = (TYPE_ORDER[a.type] || 99) - (TYPE_ORDER[b.type] || 99);
+    if (typeOrd !== 0) return typeOrd;
+    return (SEVERITY_ORDER[(a.severity || '').toLowerCase()] ?? 99) - (SEVERITY_ORDER[(b.severity || '').toLowerCase()] ?? 99);
   });
 
   // Compute counts
@@ -521,7 +514,7 @@ function cmdChangesetWrite(cwd, args, raw) {
   for (const entry of sorted) {
     lines.push(`### ${entry.id}: ${entry.topic}`);
     lines.push(`- **Type:** ${entry.type}`);
-    lines.push(`- **Source:** ${entry.source_finding || 'user-initiated'}`);
+    lines.push(`- **Source:** ${entry.source || entry.source_finding || 'user-initiated'}`);
     lines.push(`- **Capabilities:** ${Array.isArray(entry.capabilities) ? entry.capabilities.join(', ') : entry.capabilities}`);
     lines.push(`- **Action:** ${entry.action}`);
     lines.push(`- **Reasoning:** ${entry.reasoning}`);
