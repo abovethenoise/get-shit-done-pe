@@ -28,6 +28,10 @@ created: "2026-03-05"
 | TC-04 | - | - | - | - | - | specified |
 | TC-05 | - | - | - | - | - | specified |
 | TC-06 | - | - | - | - | - | specified |
+| EU-04 | - | - | - | - | - | specified |
+| FN-09 | - | - | - | - | - | specified |
+| TC-07 | - | - | - | - | - | specified |
+| TC-08 | - | - | - | - | - | specified |
 
 ## End-User Requirements
 
@@ -188,6 +192,35 @@ created: "2026-03-05"
 - Human gates at review findings Q&A and doc approval Q&A
 - If context window is exhausted, present next command for user to run in fresh context
 
+### EU-04: No CLI breakage
+
+**Story:** As a GSD user, I want all my existing CLI commands and workflows to continue working after this refactor, so that the fluid scope changes don't break my current tooling.
+
+**Acceptance Criteria:**
+
+- [ ] All gsd-tools CLI routes pass smoke test (valid JSON, no crashes)
+- [ ] All 13 slash commands fire without error
+- [ ] Feature-scope and capability-scope commands both work
+- [ ] Existing project artifacts (.planning/, CAPABILITY.md, FEATURE.md) remain compatible
+
+**Out of Scope:**
+
+- Adding new CLI routes
+
+### FN-09: CLI and workflow backward compatibility
+
+**Receives:** Any existing gsd-tools CLI call or slash command invocation
+
+**Returns:** Same output format and behavior as before refactor
+
+**Behavior:**
+
+- CLI routes that accept feature scope continue unchanged
+- CLI routes that accept capability scope continue unchanged
+- Deleted workflows (capability-orchestrator, research-workflow) have their callers updated to use the consolidated paths
+- No orphaned references to deleted files
+- Agent frontmatter role_type corrected to match actual model usage (4 reviewers: judge→executor, planner: executor→judge)
+
 ## Technical Specs
 
 ### TC-01: Delete capability-orchestrator.md
@@ -255,6 +288,37 @@ created: "2026-03-05"
 - review.md and doc.md must handle both single-feature and multi-feature artifact lists
 - Agent definitions unchanged (already scope-agnostic per research findings)
 
+### TC-07: CLI smoke test pass
+
+**Intent:** All existing gsd-tools CLI routes must continue to work after refactor.
+
+**Upstream:** Workflow changes may alter how CLI routes are called or what arguments they receive.
+
+**Downstream:** Every command, workflow, and agent that calls gsd-tools.
+
+**Constraints:**
+
+- All existing CLI routes return valid JSON (no crashes, no unhandled errors)
+- Routes that accept feature scope continue to work
+- Routes that accept capability scope continue to work
+- No new CLI routes required
+
+### TC-08: Enforce correct role-to-model mapping
+
+**Intent:** Every agent's frontmatter role_type must match its actual function, and every workflow model= parameter must align with ROLE_MODEL_MAP. No agent should run on the wrong model tier.
+
+**Upstream:** ROLE_MODEL_MAP in core.cjs: executor→sonnet, judge→inherit (Opus), quick→haiku.
+
+**Downstream:** Every Task() spawn in every workflow. Any future tooling that reads role_type.
+
+**Constraints:**
+
+- Executors (do work, produce artifacts): researchers, doc explorers, code reviewers, executor, doc writers → role_type: executor, model="sonnet"
+- Judges (synthesize, decide, plan): planner, plan-checker, synthesizers, verifier → role_type: judge, model="inherit"
+- Fix mismatches: 4 reviewer agents role_type judge→executor, gsd-planner role_type executor→judge
+- Every workflow Task() call must use model= consistent with the agent's role_type
+- Verify all 18 agents and all workflow Task() calls align after refactor
+
 ### TC-06: No net line increase
 
 **Intent:** This is a consolidation refactor. Total lines across modified files must not increase.
@@ -271,6 +335,7 @@ created: "2026-03-05"
 
 ## Decisions
 
+- Model mapping cleanup: fix agent frontmatter role_type mismatches (4 reviewers say judge→should be executor, planner says executor→should be judge). Workflows already use correct models.
 - Pipeline stage reordering: requirements come from discussion (upstream), research absorbed into plan. Pipeline stages are: plan → execute → review → doc.
 - Scope detection: inferred from SUMMARY.md presence in feature directories. No new manifest artifact.
 - Remediation: accepted review findings → existing planner → remediation PLAN.md → existing executor. Reuses existing patterns.

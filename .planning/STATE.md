@@ -171,19 +171,26 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-05
-Stopped at: /gsd:doc requirements-refinement — COMPLETE (all 5 features documented)
+Stopped at: /gsd:discuss-feature pipeline-execution/scope-fluid-pipeline — feature specified, discussion in progress
 
 ### Completed this session:
-1. /gsd:doc requirements-refinement — all 5 features documented in commit 615b80b:
-   - 5 flow docs, 7 module docs (landscape-scan, coherence-report, refinement-qa, change-application, refinement-artifact)
-   - Capability doc updated with key patterns for all features
-   - 5 constraints added (agent-receives-content, skip-not-halt, double-underscore, graceful-degradation, zero-tool-judge)
-   - Glossary: 6 domain terms added
-   - JSDoc/inline comments in scan.cjs and refinement.cjs
-   - Trace tables: Docs=done for all 5 features
-   - User pattern: approve docs, reject code changes, reject low-priority
-2. Prior session (same day): 23 review findings fixed across 3 commits (870fa7d, db6ad4d, 1ce18fe)
+1. /gsd:refactor pipeline-execution — discovery brief written (refactor + debug compound lens)
+2. scope-fluid-pipeline feature created, CAPABILITY.md updated (replaces doc-writer-overhaul + scope-aware-routing)
+3. 6 research gatherers completed (background, results in research/ directory)
+4. /gsd:discuss-feature — extensive discussion, requirements written (3 EU, 8 FN, 6 TC), committed a9ad1aa
+5. Key decisions captured:
+   - Pipeline is fluid entry points, not fixed 6-stage sequence
+   - Pipeline stages: plan (includes research) → execute → review → doc
+   - Discovery/discussion are upstream, not pipeline stages
+   - Execution scope is fluid (capability or feature), determined at entry
+   - framing-pipeline absorbs capability-orchestrator (delete orchestrator)
+   - research-workflow absorbed into plan (delete research-workflow)
+   - Requirements generation stage removed (discuss-feature produces them)
+   - Review + doc run once per execution scope, not per-feature
+   - No net line increase constraint
+6. Found model assignment mismatches: reviewer agents have role_type:judge in frontmatter but workflows correctly use sonnet; planner has role_type:executor but should be judge
 
 ### Resume:
-- Review artifacts (untracked): all 5 features have review/ dirs with synthesis.md + doc/ dirs with findings — commit if desired
-- Prior session pending: pipeline-execution/research-overhaul Plans 01/02/04 execution, npm publish 2.0.2
+- Feature is specified, ready for planning: `/gsd:plan pipeline-execution/scope-fluid-pipeline`
+- Model mapping fix (frontmatter role_type corrections) should be added to feature requirements or handled as separate cleanup
+- Prior pending: npm publish 2.0.2
