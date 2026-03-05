@@ -22,6 +22,8 @@ npx get-shit-done-pe@latest
 
 ## Changelog
 
+**2.0.3** — Requirements refinement: new `/gsd:refine` command runs a 5-stage coherence audit across all capabilities — landscape scan (sequential pair analysis with checkpoint resume), coherence synthesis (zero-tool judge agent), interactive Q&A (accept/reject/modify per finding), change application (CLI creates + direct edits), and delta computation against prior runs. Scan artifacts live in `.planning/refinement/`.
+
 **2.0.2** — Pipeline execution improvements: plan presentation restructured with 3-layer justification before approval + unconditional deep-dive; doc writer overhauled to gather-synthesize pattern (5 parallel focus-area explorers + synthesizer) with standalone `/gsd:doc` skill; all 4 lens commands now accept capability slugs and route to capability-orchestrator for fan-out, `/gsd:new` adds unknown-slug disambiguation and feature stub auto-creation.
 
 **2.0.1** — Research overhaul: research is now mandatory (no skip gates), all research/review agent spawns use explicit `Task()` blocks instead of ambiguous `@workflow.md` delegation, lens-aware reuse prevents double-research when framing-pipeline hands off to plan.md.
@@ -127,6 +129,8 @@ Not every piece of work is "build a new thing." PE recognizes four modes, each w
     ↓
 /gsd:discuss-capability <cap>              Define capability scope
 /gsd:discuss-feature <cap/feat>            Lock in feature preferences
+    ↓
+/gsd:refine                                (Optional) Cross-capability coherence audit
     ↓
 /gsd:focus <cap>                           Sequence features by dependency
     ↓

@@ -171,26 +171,19 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-05
-Stopped at: requirements-refinement capability execution — ALL 4 WAVES COMPLETE (10/10 plans)
+Stopped at: /gsd:doc requirements-refinement — COMPLETE (all 5 features documented)
 
 ### Completed this session:
-1. /gsd:execute requirements-refinement — ALL 10 plans executed across 4 waves
-   - Wave 1: landscape-scan (2 plans) + refinement-artifact (2 plans) ✓
-     - scan.cjs: 3 CLI routes (scan-discover, scan-pairs, scan-checkpoint)
-     - landscape-scan.md workflow + gsd-scan-pair.md agent template
-     - refinement.cjs: 4 CLI routes (refinement-init, refinement-write, refinement-report, refinement-delta)
-   - Wave 2: coherence-report (2 plans) ✓
-     - gsd-coherence-synthesizer.md agent (judge role, causal clustering, Q&A agenda)
-     - coherence-report.md workflow (context assembly, zero-findings detection)
-   - Wave 3: refinement-qa (2 plans) ✓
-     - changeset-write + changeset-parse CLI routes (CHANGESET.md schema)
-     - refinement-qa.md workflow (AskUserQuestion Q&A, checkpoint saves)
-   - Wave 4: change-application (2 plans) ✓
-     - change-application.md workflow (7 mutation types, topological ordering, failure UX)
-   - New files: 2 lib modules, 4 workflows, 2 agent/template files
-   - New CLI routes: scan-discover, scan-pairs, scan-checkpoint, refinement-init, refinement-write, refinement-report, refinement-delta, changeset-write, changeset-parse (9 total)
+1. /gsd:doc requirements-refinement — all 5 features documented in commit 615b80b:
+   - 5 flow docs, 7 module docs (landscape-scan, coherence-report, refinement-qa, change-application, refinement-artifact)
+   - Capability doc updated with key patterns for all features
+   - 5 constraints added (agent-receives-content, skip-not-halt, double-underscore, graceful-degradation, zero-tool-judge)
+   - Glossary: 6 domain terms added
+   - JSDoc/inline comments in scan.cjs and refinement.cjs
+   - Trace tables: Docs=done for all 5 features
+   - User pattern: approve docs, reject code changes, reject low-priority
+2. Prior session (same day): 23 review findings fixed across 3 commits (870fa7d, db6ad4d, 1ce18fe)
 
 ### Resume:
-- requirements-refinement capability is COMPLETE (all features executed)
-- Need: metadata commits (STATE.md, ROADMAP.md updates), capability status update to "complete"
+- Review artifacts (untracked): all 5 features have review/ dirs with synthesis.md + doc/ dirs with findings — commit if desired
 - Prior session pending: pipeline-execution/research-overhaul Plans 01/02/04 execution, npm publish 2.0.2

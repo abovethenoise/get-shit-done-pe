@@ -93,6 +93,8 @@ Each framing command creates a **BRIEF.md** (at the capability level) that ancho
          |
   /gsd:discuss-feature <cap/feat>    <- Lock in feature preferences
          |
+  /gsd:refine                        <- (Optional) Cross-capability coherence audit
+         |
   /gsd:focus <cap>                   <- Create focus group (sequence features)
          |
   /gsd:debug|new|enhance|refactor    <- Frame the work (creates Discovery Brief)
@@ -210,6 +212,12 @@ After all plans execute, run `/gsd:review` to evaluate the code.
 | `/gsd:execute <slug>` | Execute plans for a feature or capability | After planning, or to resume interrupted execution |
 | `/gsd:review <feat>` | Code review by 4 specialized reviewers + synthesizer | After execution completes |
 
+### Coherence & Refinement
+
+| Command | Purpose | When to Use |
+|---------|---------|-------------|
+| `/gsd:refine` | Project-level coherence audit: scan, synthesize, Q&A, apply changes | After defining multiple capabilities, before or during implementation |
+
 ### Navigation & Status
 
 | Command | Purpose | When to Use |
@@ -217,6 +225,70 @@ After all plans execute, run `/gsd:review` to evaluate the code.
 | `/gsd:status` | Show capability/feature dashboard with progress | Anytime -- "where am I?" |
 | `/gsd:progress` | Check progress and route to next action (execute or plan) | Mid-pipeline -- "what's next?" |
 | `/gsd:resume-work` | Restore full context from last session | Starting a new session |
+
+---
+
+## Requirements Refinement
+
+After brainstorming capabilities and features in isolation, there's no guarantee they fit together. `/gsd:refine` steps back and audits the entire project for coherence — gaps, overlaps, conflicts, and misaligned dependencies across all capabilities.
+
+### Why It Matters
+
+Individual `/gsd:discuss-capability` sessions lack cross-project awareness. Without refinement, you accumulate:
+- Redundant features across capabilities that do the same thing differently
+- Missing dependencies that only surface during implementation
+- Scope misalignment where one capability assumes something another doesn't provide
+
+### Pipeline
+
+```
+/gsd:refine
+    |
+    +-- landscape-scan
+    |     Discover all capabilities, enumerate pairs,
+    |     analyze each pair for coherence issues.
+    |     Output: matrix, findings, dependency graph
+    |
+    +-- coherence-report
+    |     Synthesize findings into root causes,
+    |     goal alignment, resolution sequence.
+    |     Output: RECOMMENDATIONS.md
+    |
+    +-- refinement-qa
+    |     Walk you through every recommendation.
+    |     Accept, reject, modify, or flag for research.
+    |     Output: CHANGESET.md
+    |
+    +-- change-application
+    |     Apply confirmed changes to capability/feature files.
+    |     Creates via CLI, edits via direct markdown changes.
+    |     Output: EXECUTION-LOG.md
+    |
+    +-- delta (if prior run exists)
+          Compare current state to previous run.
+          Output: DELTA.md
+```
+
+### What It Produces
+
+All artifacts live in `.planning/refinement/`:
+
+| Artifact | What It Contains |
+|----------|-----------------|
+| `matrix.md` | Capability × capability relationship grid (type + severity) |
+| `findings/FINDING-{NNN}.md` | Individual coherence finding cards with type, severity, root cause |
+| `dependency-graph.md` | Explicit, implicit, and gap dependencies between capabilities |
+| `RECOMMENDATIONS.md` | Root causes, systemic patterns, goal alignment, resolution sequence, Q&A agenda |
+| `CHANGESET.md` | Your decisions from Q&A (accept/reject/modify/research per finding) |
+| `EXECUTION-LOG.md` | What was applied, skipped, or failed |
+| `DELTA.md` | What changed since the last refinement run |
+
+### Key Behaviors
+
+- **Repeatable**: Run at any point — not gated to a specific lifecycle stage. Each run snapshots prior state for delta computation.
+- **Nothing happens without your approval**: Every recommendation goes through Q&A. Auto-resolvable items are batched for efficiency, but you still confirm.
+- **Checkpoint resumable**: Pair analysis checkpoints per completed pair. If interrupted, re-running picks up where it left off.
+- **Skip-not-halt**: A malformed finding from one capability pair doesn't crash the scan. It's logged and skipped.
 
 ---
 
@@ -381,6 +453,18 @@ GSD stores project settings in `.planning/config.json`. Configure during `/gsd:i
 # (normal capability workflow from here)
 ```
 
+### Refine After Brainstorming
+
+```bash
+/gsd:discuss-capability Authentication  # Define capabilities in isolation
+/gsd:discuss-capability Payments
+/gsd:discuss-capability Notifications
+/clear
+/gsd:refine                             # Scan all 3 for coherence issues
+                                        # Walk through findings in Q&A
+                                        # Apply confirmed changes
+```
+
 ### Resuming After a Break
 
 ```bash
@@ -430,6 +514,15 @@ Set `commit_docs: false` during `/gsd:init`. Add `.planning/` to your `.gitignor
   config.json                   # Workflow configuration
   research/                     # Domain research from /gsd:init
   codebase/                     # Brownfield codebase mapping (auto-generated)
+  refinement/                   # Coherence audit output from /gsd:refine
+    RECOMMENDATIONS.md          # Synthesized findings with Q&A agenda
+    CHANGESET.md                # User decisions from Q&A
+    EXECUTION-LOG.md            # Change application results
+    DELTA.md                    # Diff from previous refinement run
+    matrix.md                   # Capability × capability relationship grid
+    dependency-graph.md         # Cross-capability dependency table
+    findings/FINDING-{NNN}.md   # Individual coherence finding cards
+    pairs/{A}__{B}.complete     # Checkpoint markers for resume
   capabilities/
     {cap-name}/
       CAPABILITY.md             # Capability definition and scope

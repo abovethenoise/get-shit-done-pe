@@ -1,82 +1,77 @@
 # =============================================================================
-# .gitignore — get-shit-done-pe (Node.js CLI / npm package)
+# .mgrepignore — Exclude from semantic search indexing
 # =============================================================================
+# Goal: Don't spend tokens indexing generated code, binaries, lockfiles,
+# vendored deps, or non-source artifacts.
 
 # -----------------------------------------------------------------------------
-# Node / JS
+# Dependencies (vendored / installed)
 # -----------------------------------------------------------------------------
 node_modules/
+get-shit-done/bin/node_modules/
 
 # -----------------------------------------------------------------------------
-# Build artifacts (committed to npm via `files`, not git)
+# Lockfiles (large, no semantic value)
+# -----------------------------------------------------------------------------
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# -----------------------------------------------------------------------------
+# Build artifacts
 # -----------------------------------------------------------------------------
 hooks/dist/
 
 # -----------------------------------------------------------------------------
-# Test coverage
+# Test coverage reports
 # -----------------------------------------------------------------------------
 coverage/
 .nyc_output/
 
 # -----------------------------------------------------------------------------
-# Environment and secrets
+# Git internals
 # -----------------------------------------------------------------------------
-.env
-.env.*
-!.env.example
-*.pem
-*.key
+.git/
 
 # -----------------------------------------------------------------------------
-# Logs and temp files
+# Planning / research / internal docs (not useful for code search)
+# -----------------------------------------------------------------------------
+.planning/
+.archive/
+reports/
+analysis/
+
+# -----------------------------------------------------------------------------
+# Media / binary files
+# -----------------------------------------------------------------------------
+animation/
+*.gif
+*.png
+*.jpg
+*.jpeg
+*.svg
+*.ico
+
+# -----------------------------------------------------------------------------
+# Logs, temp, OS junk
 # -----------------------------------------------------------------------------
 *.log
 *.tmp
-*.temp
-logs/
+.DS_Store
 .cache/
 tmp/
 temp/
 
 # -----------------------------------------------------------------------------
-# IDE and OS artifacts
+# IDE config
 # -----------------------------------------------------------------------------
-.DS_Store
-Thumbs.db
 .idea/
 .vscode/
-*.swp
-*.swo
 
 # -----------------------------------------------------------------------------
-# Animation / media assets
+# Secrets / env
 # -----------------------------------------------------------------------------
-animation/
-*.gif
-
-# -----------------------------------------------------------------------------
-# Claude Code local dev
-# -----------------------------------------------------------------------------
-.claude/
-CLAUDE.md
-
-# -----------------------------------------------------------------------------
-# Internal planning / research / one-off docs (not for distribution)
-# -----------------------------------------------------------------------------
-TO-DOS.md
-/research.claude/
-commands.html
-reports/
-analysis/
-gaps.md
-improve.md
-philosophy.md
-RAILROAD_ARCHITECTURE.md
-docs/GSD-MASTER-ARCHITECTURE.md
-docs/GSD-RUST-IMPLEMENTATION-GUIDE.md
-docs/GSD-SYSTEM-SPECIFICATION.md
-
-# -----------------------------------------------------------------------------
-# Archived removed files
-# -----------------------------------------------------------------------------
-.archive/
+.env
+.env.*
+*.pem
+*.key
