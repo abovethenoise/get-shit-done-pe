@@ -48,7 +48,7 @@ created: "2026-03-05"
 
 **Acceptance Criteria:**
 
-- [ ] Each completed pair writes a checkpoint flag (e.g., `scan-output/pairs/{A}-{B}.complete`)
+- [ ] Each completed pair writes a checkpoint flag (e.g., `.planning/refinement/pairs/{A}-{B}.complete`)
 - [ ] On re-run, already-checkpointed pairs are skipped
 - [ ] Accumulated findings from checkpointed pairs are loaded as prior context
 
@@ -66,7 +66,7 @@ created: "2026-03-05"
 
 **Behavior:**
 
-- Read all capabilities via `gsd-tools.cjs capability-list`
+- Read all capabilities via `gsd-tools.cjs scan-discover` (independent route — different output shape from capability-list, includes loaded contents and completeness assessment)
 - For each capability, resolve paths to all artifact types: CAPABILITY.md, FEATURE.md files, exploration notes (.documentation/capabilities/*.md), discovery briefs
 - Load and structure file contents per capability
 - Enumerate all unique capability pairs (A×B where A < B alphabetically)
@@ -124,7 +124,7 @@ created: "2026-03-05"
 
 - **Layer 1 — Relationship Matrix:** Capability × capability grid. Each cell shows relationship type (DEPENDS_ON, CONFLICT, GAP, OVERLAP, NONE) and confidence (HIGH/MEDIUM/LOW). Diagonal is `—`.
 - **Layer 2 — Finding Cards:** Consolidated findings sorted by severity (HIGH first), then by type. Root causes grouped with their symptoms.
-- **Layer 3 — Dependency Graph:** Directed graph listing explicit dependencies (from CAPABILITY.md), implicit dependencies (discovered during analysis), and gap dependencies (expected but undocumented). Format: `A ──requires──▶ B`, `A ──triggers──▶ B (implicit)`, `A ──triggers──▶ B (GAP — no spec exists)`.
+- **Layer 3 — Dependency Graph:** Markdown table with columns: From, To, Type (explicit/implicit/gap), Source. Explicit dependencies come from CAPABILITY.md, implicit are discovered during analysis, gap are expected but undocumented.
 
 ## Technical Specs
 
@@ -172,7 +172,7 @@ $ node gsd-tools.cjs scan-discover
 
 **Constraints:**
 
-- Agent file: `agents/gsd-scan-pair.md`
+- Agent file: `templates/gsd-scan-pair.md` (prompt templates live in `templates/`, not `agents/`)
 - Agent receives: capability pair contents + prior findings + finding card schema
 - Agent outputs: structured finding cards (markdown with frontmatter)
 - No file I/O in agent — orchestrator handles disk writes

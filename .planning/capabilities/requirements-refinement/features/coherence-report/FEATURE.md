@@ -102,7 +102,7 @@ created: "2026-03-05"
 
 **Constraints:**
 
-- Agent file: `agents/gsd-coherence-synthesizer.md`
+- Agent file: `templates/gsd-coherence-synthesizer.md` (prompt templates live in `templates/`, not `agents/`)
 - Agent receives: all scan artifacts + project context files (contents, not paths)
 - Agent outputs: RECOMMENDATIONS.md content (orchestrator handles disk write)
 - Model: inherit (opus-level reasoning needed for cross-finding synthesis and goal alignment)
@@ -132,3 +132,5 @@ created: "2026-03-05"
 - 2026-03-05: Zero findings produces clean bill of health (pipeline continues, Q&A confirms).
 - 2026-03-05: Goal alignment is categorical (blocks/risks/irrelevant), not numeric.
 - 2026-03-05: Q&A agenda embedded in RECOMMENDATIONS.md as final section — single artifact for refinement-qa to consume.
+- 2026-03-05: Synthesizer consumes and refines landscape-scan's root-cause grouping — it does not re-derive from raw findings.
+- 2026-03-05: Temp files written to `.planning/refinement/.tmp/` and cleaned up after synthesis completes.

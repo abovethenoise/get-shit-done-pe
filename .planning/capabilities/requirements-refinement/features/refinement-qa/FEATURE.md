@@ -142,7 +142,7 @@ created: "2026-03-05"
 - Workflow file: `workflows/refinement-qa.md` (or embedded in the main refinement workflow)
 - Uses AskUserQuestion for all user interaction (mandatory per GSD conventions)
 - No file I/O for scan artifacts — orchestrator loads and passes contents
-- Change set writing uses `refinement-write` CLI route from refinement-artifact
+- Change set writing uses `changeset-write` CLI route from refinement
 - Follows GSD UI brand patterns (stage banners, checkpoint boxes)
 
 ### TC-02: Change set format

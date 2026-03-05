@@ -1,5 +1,5 @@
 <purpose>
-Apply confirmed changes from CHANGESET.md to capability and feature files. Executes mutations in safe topological order, writes EXECUTION-LOG.md incrementally, and halts on failure for user decision.
+Apply confirmed changes from CHANGESET.md to capability and feature files. Writes EXECUTION-LOG.md at completion.
 </purpose>
 
 <required_reading>
@@ -13,7 +13,7 @@ No explicit inputs -- reads .planning/refinement/CHANGESET.md via changeset-pars
 <process>
 
 <step name="parse_changeset">
-Parse and classify change set:
+Parse change set:
 
 ```bash
 CHANGESET=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" changeset-parse --raw)
@@ -28,49 +28,7 @@ Split entries into:
 Log: "{N} actionable entries, {M} logged-only entries"
 </step>
 
-<step name="classify_mutations">
-For each actionable entry, classify the `action` free-text field into one of 7 mutation types:
-
-1. **create-capability** -- "create capability", "add capability", "new capability"
-2. **create-feature** -- "create feature", "add feature", "new feature"
-3. **move-feature** -- "move feature", "relocate", "transfer from ... to"
-4. **modify-metadata** -- "update", "change", "rename", "set", "adjust"
-5. **reinstate** -- "reinstate", "restore", "reactivate", "un-defer", "un-kill"
-6. **defer** -- "defer", "postpone", "delay"
-7. **kill** -- "kill", "remove", "drop", "eliminate", "delete"
-
-If action doesn't map: mark FAILED with "Unknown mutation type" and continue.
-
-Extract targets from action text (capability slug, feature slug, source/target for moves, field/value for metadata changes).
-</step>
-
-<step name="sort_execution_order">
-Sort into safe topological order:
-1. Create capabilities
-2. Create feature stubs
-3. Move features between capabilities
-4. Modify metadata
-5. Reinstate features
-6. Defer features
-7. Kill features
-8. Kill capabilities
-
-Within each category, maintain original CHANGESET.md ordering.
-</step>
-
-<step name="pre_validation">
-Before executing, validate each entry:
-
-- **create-capability**: if `.planning/capabilities/{slug}/` exists -> APPLIED (idempotent skip)
-- **create-feature**: if feature dir exists -> APPLIED (idempotent skip)
-- **move-feature**: source must exist AND target cap must exist (or in create set). Missing source -> FAILED
-- **modify-metadata, defer, kill**: target file must exist. Missing -> FAILED
-- **reinstate**: target feature must exist. Missing -> FAILED
-
-Log: "{N} passed, {M} pre-failed, {K} idempotent skips"
-</step>
-
-<step name="execute_mutations">
+<step name="apply_changes">
 Print stage banner:
 
 ```
@@ -81,61 +39,32 @@ Print stage banner:
 Applying {N} changes from CHANGESET.md ({M} logged-only entries excluded).
 ```
 
-Initialize EXECUTION-LOG.md with all entries PENDING.
+Initialize results array (all entries start PENDING).
 
-For each PENDING entry in safe execution order:
+For each actionable entry in changeset order:
 
-Print: "[{i}/{total}] {mutation_type}: {CS-ID} — {topic}"
+Print: "[{i}/{total}] {CS-ID} — {topic}"
 
-**create-capability (CLI route):**
+Read the action text and apply:
+
+**If action says create capability:**
 ```bash
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" capability-create --name {slug} --raw
+node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" capability-create {slug} --raw
 ```
 
-**create-feature (CLI route):**
+**If action says create feature:**
 ```bash
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" feature-create --capability {cap} --name {feat} --raw
+node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" feature-create {cap} {feat} --raw
 ```
 
-**move-feature (direct edit, UNVALIDATED):**
-1. `cp -r .planning/capabilities/{source_cap}/features/{feat}/ .planning/capabilities/{target_cap}/features/{feat}/`
-2. Read target FEATURE.md, update `capability` frontmatter field
-3. Verify target exists and is readable
-4. `rm -rf .planning/capabilities/{source_cap}/features/{feat}/`
+**Everything else (modify, defer, kill, reinstate, move, metadata):**
+1. Read the target file (CAPABILITY.md or FEATURE.md)
+2. Apply the change described in the action text using the Edit tool
+3. Direct markdown edits — no CLI route needed
 
-**modify-metadata (direct edit, UNVALIDATED):**
-1. Read target file (CAPABILITY.md or FEATURE.md)
-2. Identify field from action text
-3. Edit field value using Edit tool
-
-**reinstate (direct edit, UNVALIDATED):**
-1. Set frontmatter `status` to `exploring`, remove killed/deferred reason fields
-2. Clear downstream artifacts:
-   - `rm -rf .planning/capabilities/{cap}/features/{feat}/research/`
-   - Delete RESEARCH.md, all *-PLAN.md, all *-SUMMARY.md
-3. Preserve: FEATURE.md (EU/FN/TC sections), BRIEF.md
-
-**defer (direct edit, UNVALIDATED):**
-1. Set frontmatter `status` to `deferred`
-2. Add reasoning from changeset entry
-
-**kill (direct edit, UNVALIDATED):**
-1. Set frontmatter `status` to `killed`
-2. Add reasoning from changeset entry
-
-After each mutation: print "  -> APPLIED{if UNVALIDATED: ' (UNVALIDATED)'}" and rewrite EXECUTION-LOG.md.
+After success: mark APPLIED, print "  -> APPLIED"
 
 **On failure — halt and ask user:**
-
-```
-MUTATION FAILED
-
-Failed: {CS-ID} — {topic}
-Error: {error message}
-
-Applied so far: {list}
-Pending: {list}
-```
 
 AskUserQuestion:
 - header: "CA Fail"
@@ -144,25 +73,13 @@ AskUserQuestion:
 
 Empty response guard: retry once, then conversational fallback.
 
-**If "Fix and resume":**
-- Wait for user confirmation ("done" / "fixed")
-- Retry the SAME failed entry
-- If fails again: return to failure handler (recursive)
-
-**If "Skip and continue":**
-- Mark SKIPPED with error reason
-- Update EXECUTION-LOG.md
-- Continue to next PENDING entry
-
-**If "Abort":**
-- Remaining entries stay PENDING
-- Write final EXECUTION-LOG.md
-- Print: "Aborted. {applied_count} applied, {pending_count} remain pending."
-- Skip to completion
+**If "Fix and resume":** Wait for user confirmation, retry the failed entry.
+**If "Skip and continue":** Mark SKIPPED, continue to next entry.
+**If "Abort":** Remaining entries stay PENDING, skip to write step.
 </step>
 
 <step name="write_execution_log">
-After EVERY mutation (success or failure), rebuild and write EXECUTION-LOG.md:
+Write EXECUTION-LOG.md to `.planning/refinement/EXECUTION-LOG.md`:
 
 ```markdown
 ---
@@ -188,29 +105,15 @@ pending: {count}
 ## Entries
 
 ### {CS-ID}: {topic}
-Result: APPLIED
-{if UNVALIDATED: "Flag: UNVALIDATED (direct edit, no CLI route)"}
-
-### {CS-ID}: {topic}
-Result: FAILED
-Error: {error message}
-
-### {CS-ID}: {topic}
-Result: SKIPPED
-Reason: {skip reason}
+Result: {APPLIED|FAILED|SKIPPED|PENDING}
+{if FAILED: "Error: {error message}"}
 
 ## Logged Only
 
 ### {CS-ID}: {topic}
-Type: REJECT
-Reasoning: {user's rejection reasoning}
-
-### {CS-ID}: {topic}
-Type: RESEARCH_NEEDED
-Reasoning: {research question}
+Type: {REJECT|RESEARCH_NEEDED}
+Reasoning: {reasoning from changeset}
 ```
-
-Write to `.planning/refinement/EXECUTION-LOG.md` using the Write tool.
 </step>
 
 <step name="completion">
@@ -229,7 +132,6 @@ Write to `.planning/refinement/EXECUTION-LOG.md` using the Write tool.
 Execution log: .planning/refinement/EXECUTION-LOG.md
 
 {if any FAILED/SKIPPED: list each with CS-ID and reason}
-{if any UNVALIDATED: "Note: {U} entries applied via direct edit (UNVALIDATED)."}
 {if all APPLIED: "All changes applied successfully."}
 
 Next: Run refinement-artifact to generate the refinement report.
@@ -240,12 +142,8 @@ Next: Run refinement-artifact to generate the refinement report.
 
 <success_criteria>
 - CHANGESET.md parsed via changeset-parse CLI route
-- Mutations classified from free-text action field
-- Safe execution order: creates -> moves -> metadata -> reinstate -> defer -> kills
-- 2 CLI routes + 5 direct edit handlers
-- Idempotency pre-check prevents duplicate failures
-- EXECUTION-LOG.md written incrementally (WAL pattern)
-- Failure halts with 3 AskUserQuestion options (fix/skip/abort)
-- Reinstate clears downstream artifacts but preserves FEATURE.md
-- Move uses copy-verify-delete pattern
+- Creates use CLI routes with positional args (capability-create {slug}, feature-create {cap} {feat})
+- Everything else applied via direct Read + Edit
+- Failure halts with AskUserQuestion: fix/skip/abort
+- EXECUTION-LOG.md written once at end with all results
 </success_criteria>
