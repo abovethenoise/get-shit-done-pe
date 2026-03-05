@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: milestone
 status: unknown
-last_updated: 2026-03-04T22:52:58.643Z
+last_updated: 2026-03-05T22:43:40.800Z
 progress:
   total_phases: 14
   completed_phases: 13
@@ -82,6 +82,7 @@ Next: /clear, then use /gsd:discuss-capability or /gsd:debug|enhance|refactor to
 | Phase pipeline-execution/doc-writer-overhaul P02 | 2min | 2 tasks | 2 files |
 | Phase pipeline-execution/scope-aware-routing P01 | 2min | 3 tasks | 3 files |
 | Phase pipeline-execution/scope-aware-routing P02 | 2min | 1 tasks | 1 files |
+| Phase pipeline-execution/scope-fluid-pipeline P01 | 12min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -171,26 +172,11 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-05
-Stopped at: /gsd:discuss-feature pipeline-execution/scope-fluid-pipeline — feature specified, discussion in progress
+Stopped at: Completed pipeline-execution/scope-fluid-pipeline plan 01
 
 ### Completed this session:
-1. /gsd:refactor pipeline-execution — discovery brief written (refactor + debug compound lens)
-2. scope-fluid-pipeline feature created, CAPABILITY.md updated (replaces doc-writer-overhaul + scope-aware-routing)
-3. 6 research gatherers completed (background, results in research/ directory)
-4. /gsd:discuss-feature — extensive discussion, requirements written (3 EU, 8 FN, 6 TC), committed a9ad1aa
-5. Key decisions captured:
-   - Pipeline is fluid entry points, not fixed 6-stage sequence
-   - Pipeline stages: plan (includes research) → execute → review → doc
-   - Discovery/discussion are upstream, not pipeline stages
-   - Execution scope is fluid (capability or feature), determined at entry
-   - framing-pipeline absorbs capability-orchestrator (delete orchestrator)
-   - research-workflow absorbed into plan (delete research-workflow)
-   - Requirements generation stage removed (discuss-feature produces them)
-   - Review + doc run once per execution scope, not per-feature
-   - No net line increase constraint
-6. Found model assignment mismatches: reviewer agents have role_type:judge in frontmatter but workflows correctly use sonnet; planner has role_type:executor but should be judge
+1. Plan 01 executed: framing-pipeline.md rewritten with scope-detection + 4-stage flow, capability-orchestrator.md and research-workflow.md deleted (-460 lines)
 
 ### Resume:
-- Feature is specified, ready for planning: `/gsd:plan pipeline-execution/scope-fluid-pipeline`
-- Model mapping fix (frontmatter role_type corrections) should be added to feature requirements or handled as separate cleanup
+- Next: Plan 02 of 4 for scope-fluid-pipeline
 - Prior pending: npm publish 2.0.2
