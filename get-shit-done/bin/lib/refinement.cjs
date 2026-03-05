@@ -254,9 +254,202 @@ function cmdRefinementWrite(cwd, args, raw) {
   output({ written: true, type, path: path.relative(cwd, destPath) }, raw);
 }
 
+/**
+ * Write aggregated scan output to .planning/refinement/.
+ */
+function cmdRefinementReport(cwd, args, raw) {
+  const matrixFileIdx = args.indexOf('--matrix-file');
+  const graphFileIdx = args.indexOf('--dependency-graph-file');
+  const findingsDirIdx = args.indexOf('--findings-dir');
+
+  const refDir = path.join(cwd, '.planning', 'refinement');
+  if (!fs.existsSync(refDir)) {
+    error('.planning/refinement/ does not exist. Run refinement-init first.');
+  }
+
+  const result = { written: { matrix: false, dependencyGraph: false, findings: 0 } };
+
+  // Write matrix
+  if (matrixFileIdx !== -1) {
+    const matrixFile = args[matrixFileIdx + 1];
+    if (matrixFile && matrixFile.includes('..')) error('Invalid path: contains ".." segment');
+    const content = safeReadFile(path.resolve(cwd, matrixFile));
+    if (content === null) error(`Cannot read matrix file: ${matrixFile}`);
+    fs.writeFileSync(path.join(refDir, 'matrix.md'), content, 'utf-8');
+    result.written.matrix = true;
+  }
+
+  // Write dependency graph
+  if (graphFileIdx !== -1) {
+    const graphFile = args[graphFileIdx + 1];
+    if (graphFile && graphFile.includes('..')) error('Invalid path: contains ".." segment');
+    const content = safeReadFile(path.resolve(cwd, graphFile));
+    if (content === null) error(`Cannot read dependency-graph file: ${graphFile}`);
+    fs.writeFileSync(path.join(refDir, 'dependency-graph.md'), content, 'utf-8');
+    result.written.dependencyGraph = true;
+  }
+
+  // Write findings
+  if (findingsDirIdx !== -1) {
+    const srcDir = args[findingsDirIdx + 1];
+    if (srcDir && srcDir.includes('..')) error('Invalid path: contains ".." segment');
+    const srcPath = path.resolve(cwd, srcDir);
+
+    // Clear existing findings
+    const destFindingsDir = path.join(refDir, 'findings');
+    fs.mkdirSync(destFindingsDir, { recursive: true });
+    const existing = fs.readdirSync(destFindingsDir).filter(f => f.startsWith('FINDING-') && f.endsWith('.md'));
+    for (const f of existing) {
+      fs.unlinkSync(path.join(destFindingsDir, f));
+    }
+
+    // Copy new findings
+    if (fs.existsSync(srcPath)) {
+      const files = fs.readdirSync(srcPath)
+        .filter(f => f.startsWith('FINDING-') && f.endsWith('.md'))
+        .sort();
+      for (const f of files) {
+        const content = safeReadFile(path.join(srcPath, f));
+        if (content) {
+          fs.writeFileSync(path.join(destFindingsDir, f), content, 'utf-8');
+          result.written.findings++;
+        }
+      }
+    }
+  }
+
+  output(result, raw);
+}
+
+/**
+ * Render a delta section as markdown table.
+ */
+function renderDeltaTable(heading, columns, rows) {
+  if (rows.length === 0) return `### ${heading}\n\nNo changes.\n`;
+
+  const header = `| ${columns.join(' | ')} |`;
+  const sep = `| ${columns.map(() => '---').join(' | ')} |`;
+  const body = rows.map(r => `| ${r.join(' | ')} |`).join('\n');
+  return `### ${heading}\n\n${header}\n${sep}\n${body}\n`;
+}
+
+/**
+ * Compare pre-scan snapshot to current artifacts and write DELTA.md.
+ */
+function cmdRefinementDelta(cwd, args, raw) {
+  const snapshotFileIdx = args.indexOf('--snapshot-file');
+  if (snapshotFileIdx === -1) error('--snapshot-file required');
+
+  const snapshotFile = args[snapshotFileIdx + 1];
+  const snapshotContent = safeReadFile(path.resolve(cwd, snapshotFile));
+  if (!snapshotContent) error(`Cannot read snapshot file: ${snapshotFile}`);
+
+  const snapshotRaw = JSON.parse(snapshotContent);
+
+  // Deserialize Maps from [key, value] arrays
+  const snapshot = {
+    recommendations: snapshotRaw.recommendations,
+    findings: new Map(snapshotRaw.findings || []),
+    matrix: new Map(snapshotRaw.matrix || []),
+    dependencyGraph: new Map(snapshotRaw.dependencyGraph || []),
+  };
+
+  // First run check: no prior state
+  if (snapshot.recommendations === null && snapshot.findings.size === 0) {
+    output({ delta: false, reason: 'first_run' }, raw);
+    return;
+  }
+
+  const refDir = path.join(cwd, '.planning', 'refinement');
+
+  // Read current state
+  const currentFindings = snapshotFindings(path.join(refDir, 'findings'));
+  const currentMatrix = snapshotTable(
+    path.join(refDir, 'matrix.md'),
+    row => {
+      const keys = Object.keys(row);
+      return keys.length >= 2 ? `${row[keys[0]]}|${row[keys[1]]}` : null;
+    }
+  );
+  const currentGraph = snapshotTable(
+    path.join(refDir, 'dependency-graph.md'),
+    row => (row['From'] && row['To']) ? `${row['From']}|${row['To']}` : null
+  );
+
+  // Compute diffs
+  const findingsDiff = diffMaps(snapshot.findings, currentFindings);
+  const matrixDiff = diffMaps(snapshot.matrix, currentMatrix);
+  const graphDiff = diffMaps(snapshot.dependencyGraph, currentGraph);
+
+  // Render DELTA.md
+  const sections = [];
+  sections.push('# Refinement Delta\n\n*Compared to previous run*\n');
+
+  // Findings section
+  sections.push('## Findings\n');
+  sections.push(renderDeltaTable('Added',
+    ['ID', 'Type', 'Severity', 'Summary'],
+    findingsDiff.added.map(e => [e.key, e.value.type, e.value.severity, e.value.summary])
+  ));
+  sections.push(renderDeltaTable('Resolved',
+    ['ID', 'Type', 'Severity', 'Summary'],
+    findingsDiff.removed.map(e => [e.key, e.value.type, e.value.severity, e.value.summary])
+  ));
+  sections.push(renderDeltaTable('Changed',
+    ['ID', 'Field', 'Previous', 'Current'],
+    findingsDiff.changed.flatMap(e => {
+      const diffs = [];
+      for (const field of Object.keys(e.new)) {
+        if (JSON.stringify(e.old[field]) !== JSON.stringify(e.new[field])) {
+          diffs.push([e.key, field, String(e.old[field] || ''), String(e.new[field] || '')]);
+        }
+      }
+      return diffs;
+    })
+  ));
+
+  // Matrix changes
+  sections.push('## Matrix Changes\n');
+  const matrixRows = [
+    ...matrixDiff.added.map(e => [e.key, '(new)', JSON.stringify(e.value)]),
+    ...matrixDiff.removed.map(e => [e.key, JSON.stringify(e.value), '(removed)']),
+    ...matrixDiff.changed.map(e => [e.key, JSON.stringify(e.old), JSON.stringify(e.new)]),
+  ];
+  if (matrixRows.length === 0) {
+    sections.push('No changes.\n');
+  } else {
+    sections.push(renderDeltaTable('', ['Pair', 'Previous', 'Current'], matrixRows));
+  }
+
+  // Dependency graph changes
+  sections.push('## Dependency Graph Changes\n');
+  const graphRows = [
+    ...graphDiff.added.map(e => ['added', e.value['From'] || e.key.split('|')[0], e.value['To'] || e.key.split('|')[1], '', JSON.stringify(e.value)]),
+    ...graphDiff.removed.map(e => ['removed', e.value['From'] || e.key.split('|')[0], e.value['To'] || e.key.split('|')[1], JSON.stringify(e.value), '']),
+    ...graphDiff.changed.map(e => ['changed', e.old['From'] || e.key.split('|')[0], e.old['To'] || e.key.split('|')[1], JSON.stringify(e.old), JSON.stringify(e.new)]),
+  ];
+  if (graphRows.length === 0) {
+    sections.push('No changes.\n');
+  } else {
+    sections.push(renderDeltaTable('', ['Change', 'From', 'To', 'Previous', 'Current'], graphRows));
+  }
+
+  const deltaContent = sections.join('\n');
+  fs.writeFileSync(path.join(refDir, 'DELTA.md'), deltaContent, 'utf-8');
+
+  output({
+    delta: true,
+    findings: { added: findingsDiff.added.length, resolved: findingsDiff.removed.length, changed: findingsDiff.changed.length },
+    matrix: { changed: matrixDiff.added.length + matrixDiff.removed.length + matrixDiff.changed.length },
+    graph: { changed: graphDiff.added.length + graphDiff.removed.length + graphDiff.changed.length },
+  }, raw);
+}
+
 module.exports = {
   cmdRefinementInit,
   cmdRefinementWrite,
+  cmdRefinementReport,
+  cmdRefinementDelta,
   parseMarkdownTable,
   diffMaps,
   snapshotFindings,

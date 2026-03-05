@@ -81,6 +81,8 @@
  * Refinement:
  *   refinement-init                    Create refinement dir + snapshot existing state
  *   refinement-write --type T --content-file P  Write artifact to refinement dir
+ *   refinement-report --matrix-file --dependency-graph-file --findings-dir  Write scan output
+ *   refinement-delta --snapshot-file P  Compare snapshot to current state, write DELTA.md
  */
 
 const fs = require('fs');
@@ -436,6 +438,16 @@ async function main() {
     case 'refinement-write': {
       const { cmdRefinementWrite } = require('./lib/refinement.cjs');
       cmdRefinementWrite(cwd, args.slice(1), raw);
+      break;
+    }
+    case 'refinement-report': {
+      const { cmdRefinementReport } = require('./lib/refinement.cjs');
+      cmdRefinementReport(cwd, args.slice(1), raw);
+      break;
+    }
+    case 'refinement-delta': {
+      const { cmdRefinementDelta } = require('./lib/refinement.cjs');
+      cmdRefinementDelta(cwd, args.slice(1), raw);
       break;
     }
 
