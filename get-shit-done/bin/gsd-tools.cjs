@@ -72,6 +72,11 @@
  *   feature-create <cap> <slug>        Create feature directory
  *   feature-list <cap>                 List features for capability
  *   feature-status <cap> <feat>        Get feature status
+ *
+ * Scan:
+ *   scan-discover                      Discover all capabilities with contents and completeness
+ *   scan-pairs                         Enumerate all unique capability pairs with tier detection
+ *   scan-checkpoint --pair P --action A  Read/write/list pair checkpoint markers
  */
 
 const fs = require('fs');
@@ -398,6 +403,23 @@ async function main() {
     case 'feature-status': {
       const { cmdFeatureStatus } = require('./lib/feature.cjs');
       cmdFeatureStatus(cwd, args[1], args[2], raw);
+      break;
+    }
+
+    // ─── Scan commands ──────────────────────────────────────────────────────
+    case 'scan-discover': {
+      const { cmdScanDiscover } = require('./lib/scan.cjs');
+      cmdScanDiscover(cwd, raw);
+      break;
+    }
+    case 'scan-pairs': {
+      const { cmdScanPairs } = require('./lib/scan.cjs');
+      cmdScanPairs(cwd, raw);
+      break;
+    }
+    case 'scan-checkpoint': {
+      const { cmdScanCheckpoint } = require('./lib/scan.cjs');
+      cmdScanCheckpoint(cwd, args.slice(1), raw);
       break;
     }
 
