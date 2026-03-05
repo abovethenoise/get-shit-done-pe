@@ -171,24 +171,22 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-05
-Stopped at: requirements-refinement capability planning — Wave 1 complete, Waves 2-4 pending
+Stopped at: requirements-refinement capability planning — ALL 4 WAVES COMPLETE
 
 ### Completed this session:
-1. discuss-feature requirements-refinement/change-application — specified (7 mutation types, DELTA.md, halt-on-failure)
-2. /gsd:plan requirements-refinement — capability orchestrator started
-   - DAG: 4 waves (landscape-scan+refinement-artifact → coherence-report → refinement-qa → change-application)
-   - Wave 1 planning COMPLETE:
-     - landscape-scan: 6 gatherers + synthesis + planner → 2 plans, 2 waves, 4 tasks, validation passed
-     - refinement-artifact: 6 gatherers + synthesis + planner → 2 plans, 2 waves, 4 tasks, validation passed
-   - Key research findings surfaced:
-     - Output path mismatch (scan-output/ vs .planning/refinement/) — resolved to .planning/refinement/
-     - DELTA.md naming collision between refinement-artifact and change-application — resolved (change-application uses EXECUTION-LOG.md)
-     - Finding ID instability across runs — accepted for v1
-     - Medium/large tier scaling deferred (YAGNI)
-     - Checkpoint slug collision — resolved with double-underscore separator
+1. discuss-feature requirements-refinement/change-application — specified (7 mutation types, EXECUTION-LOG.md, halt-on-failure)
+2. /gsd:plan requirements-refinement — capability orchestrator COMPLETE (all 5 features planned)
+   - DAG: 4 waves, all planned:
+     - Wave 1: landscape-scan (2 plans) + refinement-artifact (2 plans) ✓
+     - Wave 2: coherence-report (2 plans: agent definition + orchestrator workflow) ✓
+     - Wave 3: refinement-qa (2 plans: CHANGESET schema/CLI routes + Q&A workflow) ✓
+     - Wave 4: change-application (2 plans: sequencer + failure UX) ✓
+   - Total: 10 plans across 5 features, all validated, all committed
 
 ### Resume:
-- `/gsd:plan requirements-refinement` — continue from Wave 2 (coherence-report)
-  - Remaining: coherence-report (Wave 2), refinement-qa (Wave 3), change-application (Wave 4)
-  - Each needs: research (6 gatherers + synthesis) → planner → validate → approve
+- `/gsd:execute requirements-refinement` — execute all 10 plans in DAG wave order
+  - Wave 1: landscape-scan Plans 01-02 + refinement-artifact Plans 01-02 (parallel)
+  - Wave 2: coherence-report Plans 01-02
+  - Wave 3: refinement-qa Plans 01-02
+  - Wave 4: change-application Plans 01-02
 - Prior session pending: pipeline-execution/research-overhaul Plans 01/02/04 execution, npm publish 2.0.2
