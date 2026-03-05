@@ -45,9 +45,8 @@ Discovery Brief
 
 | Feature | Priority | Depends-On | Status |
 |---------|----------|------------|--------|
-| plan-presentation | P1 | — | exploring |
-| doc-writer-overhaul | P2 | — | exploring |
-| scope-aware-routing | P2 | — | exploring |
+| scope-fluid-pipeline | P0 | — | exploring |
+| plan-presentation | P1 | scope-fluid-pipeline | exploring |
 | research-overhaul | — | — | planning |
 
 ## Decisions
