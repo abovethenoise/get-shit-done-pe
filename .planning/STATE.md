@@ -171,22 +171,26 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-05
-Stopped at: requirements-refinement capability planning — ALL 4 WAVES COMPLETE
+Stopped at: requirements-refinement capability execution — ALL 4 WAVES COMPLETE (10/10 plans)
 
 ### Completed this session:
-1. discuss-feature requirements-refinement/change-application — specified (7 mutation types, EXECUTION-LOG.md, halt-on-failure)
-2. /gsd:plan requirements-refinement — capability orchestrator COMPLETE (all 5 features planned)
-   - DAG: 4 waves, all planned:
-     - Wave 1: landscape-scan (2 plans) + refinement-artifact (2 plans) ✓
-     - Wave 2: coherence-report (2 plans: agent definition + orchestrator workflow) ✓
-     - Wave 3: refinement-qa (2 plans: CHANGESET schema/CLI routes + Q&A workflow) ✓
-     - Wave 4: change-application (2 plans: sequencer + failure UX) ✓
-   - Total: 10 plans across 5 features, all validated, all committed
+1. /gsd:execute requirements-refinement — ALL 10 plans executed across 4 waves
+   - Wave 1: landscape-scan (2 plans) + refinement-artifact (2 plans) ✓
+     - scan.cjs: 3 CLI routes (scan-discover, scan-pairs, scan-checkpoint)
+     - landscape-scan.md workflow + gsd-scan-pair.md agent template
+     - refinement.cjs: 4 CLI routes (refinement-init, refinement-write, refinement-report, refinement-delta)
+   - Wave 2: coherence-report (2 plans) ✓
+     - gsd-coherence-synthesizer.md agent (judge role, causal clustering, Q&A agenda)
+     - coherence-report.md workflow (context assembly, zero-findings detection)
+   - Wave 3: refinement-qa (2 plans) ✓
+     - changeset-write + changeset-parse CLI routes (CHANGESET.md schema)
+     - refinement-qa.md workflow (AskUserQuestion Q&A, checkpoint saves)
+   - Wave 4: change-application (2 plans) ✓
+     - change-application.md workflow (7 mutation types, topological ordering, failure UX)
+   - New files: 2 lib modules, 4 workflows, 2 agent/template files
+   - New CLI routes: scan-discover, scan-pairs, scan-checkpoint, refinement-init, refinement-write, refinement-report, refinement-delta, changeset-write, changeset-parse (9 total)
 
 ### Resume:
-- `/gsd:execute requirements-refinement` — execute all 10 plans in DAG wave order
-  - Wave 1: landscape-scan Plans 01-02 + refinement-artifact Plans 01-02 (parallel)
-  - Wave 2: coherence-report Plans 01-02
-  - Wave 3: refinement-qa Plans 01-02
-  - Wave 4: change-application Plans 01-02
+- requirements-refinement capability is COMPLETE (all features executed)
+- Need: metadata commits (STATE.md, ROADMAP.md updates), capability status update to "complete"
 - Prior session pending: pipeline-execution/research-overhaul Plans 01/02/04 execution, npm publish 2.0.2
