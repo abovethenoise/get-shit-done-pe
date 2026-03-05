@@ -27,10 +27,10 @@ created: "2026-03-05"
 
 **Acceptance Criteria:**
 
-- [ ] REPORT.md contains current-state summary with links to supporting artifacts
+- [ ] RECOMMENDATIONS.md contains coherence synthesis (written by coherence-report, managed here)
 - [ ] DELTA.md shows findings added/resolved/changed since last run
 - [ ] Supporting artifacts (matrix.md, dependency-graph.md, findings/) are written to `.planning/refinement/`
-- [ ] First run produces REPORT.md with no DELTA.md (no previous state to diff)
+- [ ] First run produces RECOMMENDATIONS.md with no DELTA.md (no previous state to diff)
 
 **Out of Scope:**
 
@@ -46,7 +46,7 @@ created: "2026-03-05"
 - [ ] Directory structure matches:
   ```
   .planning/refinement/
-  ├─ REPORT.md
+  ├─ RECOMMENDATIONS.md
   ├─ DELTA.md
   ├─ matrix.md
   ├─ dependency-graph.md
@@ -66,35 +66,32 @@ created: "2026-03-05"
 
 **Receives:** Trigger from refinement orchestrator before scan begins.
 
-**Returns:** Snapshot of current REPORT.md contents (or null if first run).
+**Returns:** Snapshot of current RECOMMENDATIONS.md contents (or null if first run).
 
 **Behavior:**
 
-- If `.planning/refinement/REPORT.md` exists, read and store its contents in memory for delta computation after scan completes
-- If no REPORT.md exists (first run), store null — delta computation will be skipped
+- If `.planning/refinement/RECOMMENDATIONS.md` exists, read and store its contents in memory for delta computation after scan completes
+- If no RECOMMENDATIONS.md exists (first run), store null — delta computation will be skipped
 - Also snapshot the current findings/ directory listing (finding IDs and their summaries) for delta diffing
 
 ### FN-02: Report generation
 
 **Receives:** Aggregated scan output from landscape-scan (matrix, finding cards, dependency graph) + Q&A results from refinement-qa + applied changes from change-application.
 
-**Returns:** Rewritten REPORT.md + supporting artifact files.
+**Returns:** Verified artifact directory with all scan outputs written.
 
 **Behavior:**
 
-- REPORT.md structure:
-  - Frontmatter: date, run number, capability count, finding count, change count
-  - Summary: high-level stats (findings by severity, relationship types distribution)
-  - Links to supporting artifacts (matrix.md, dependency-graph.md, findings/)
-  - Changes applied this run (from change-application output)
-- matrix.md: capability × capability relationship matrix as markdown table
-- dependency-graph.md: markdown table with columns: From, To, Relationship, Explicit (yes/implicit/gap)
-- findings/FINDING-{id}.md: individual finding cards (preserved from landscape-scan output)
-- Overwrite all files (current state, not cumulative)
+- Ensure all landscape-scan artifacts are written to `.planning/refinement/`:
+  - matrix.md: capability × capability relationship matrix as markdown table
+  - dependency-graph.md: markdown table with columns: From, To, Relationship, Explicit (yes/implicit/gap)
+  - findings/FINDING-{id}.md: individual finding cards (preserved from landscape-scan output)
+- RECOMMENDATIONS.md is written by coherence-report (not this feature)
+- Overwrite all files on each run (current state, not cumulative)
 
 ### FN-03: Delta computation
 
-**Receives:** Pre-scan snapshot + newly written REPORT.md and findings/.
+**Receives:** Pre-scan snapshot + newly written RECOMMENDATIONS.md and findings/.
 
 **Returns:** DELTA.md written to `.planning/refinement/`.
 
@@ -124,7 +121,7 @@ created: "2026-03-05"
 **Constraints:**
 
 - New CLI route: `refinement-init` — creates `.planning/refinement/` directory structure, snapshots existing state if present
-- New CLI route: `refinement-write` — writes a specific artifact file (REPORT.md, DELTA.md, matrix.md, dependency-graph.md) to the refinement directory
+- New CLI route: `refinement-write` — writes a specific artifact file (RECOMMENDATIONS.md, DELTA.md, matrix.md, dependency-graph.md) to the refinement directory
 - Checkpoint management reuses landscape-scan's `scan-checkpoint` route (pairs/ directory)
 - No external dependencies
 
@@ -146,7 +143,7 @@ created: "2026-03-05"
 
 ## Decisions
 
-- 2026-03-05: Single current-state file (REPORT.md) rewritten each run, not cumulative. DELTA.md tracks changes from immediately prior run only.
+- 2026-03-05: RECOMMENDATIONS.md (written by coherence-report) is the primary synthesis artifact. DELTA.md tracks changes from immediately prior run only.
 - 2026-03-05: No Mermaid — all artifacts are markdown tables for agent-parseability and diffability.
 - 2026-03-05: Directory lives at `.planning/refinement/` (project-level, alongside capabilities/).
 - 2026-03-05: Delta is semantic (compare finding IDs/metadata), not textual (no raw text diff).
