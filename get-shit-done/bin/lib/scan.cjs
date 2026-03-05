@@ -5,14 +5,15 @@
 const fs = require('fs');
 const path = require('path');
 const { output, error, safeReadFile } = require('./core.cjs');
-const { extractFrontmatter } = require('./frontmatter.cjs');
+// ─── Helpers ────────────────────────────────────────────────────────────────
 
-// ─── Finding Card Schema Constants ──────────────────────────────────────────
-
-const FINDING_TYPES = ['CONFLICT', 'GAP', 'OVERLAP', 'DEPENDS_ON', 'ASSUMPTION_MISMATCH', 'ALIGNMENT'];
-const SEVERITY_LEVELS = ['HIGH', 'MEDIUM', 'LOW'];
-const CONFIDENCE_LEVELS = ['HIGH', 'MEDIUM', 'LOW'];
-const FINDING_FIELDS = ['id', 'type', 'severity', 'confidence', 'affected_capabilities', 'doc_sources', 'summary', 'recommendation', 'root_cause'];
+function listDirs(dirPath) {
+  if (!fs.existsSync(dirPath)) return [];
+  return fs.readdirSync(dirPath, { withFileTypes: true })
+    .filter(e => e.isDirectory())
+    .map(e => e.name)
+    .sort();
+}
 
 // ─── Commands ───────────────────────────────────────────────────────────────
 
@@ -25,10 +26,7 @@ function cmdScanDiscover(cwd, raw) {
     return;
   }
 
-  const entries = fs.readdirSync(capabilitiesDir, { withFileTypes: true })
-    .filter(e => e.isDirectory())
-    .map(e => e.name)
-    .sort();
+  const entries = listDirs(capabilitiesDir);
 
   const capabilities = [];
   const gapFindings = [];
@@ -44,10 +42,7 @@ function cmdScanDiscover(cwd, raw) {
     // Load features
     const features = [];
     if (fs.existsSync(featuresDir)) {
-      const featEntries = fs.readdirSync(featuresDir, { withFileTypes: true })
-        .filter(e => e.isDirectory())
-        .map(e => e.name)
-        .sort();
+      const featEntries = listDirs(featuresDir);
 
       for (const featSlug of featEntries) {
         const featPath = path.join(featuresDir, featSlug, 'FEATURE.md');
@@ -62,9 +57,9 @@ function cmdScanDiscover(cwd, raw) {
 
     // Compute completeness
     let completeness;
-    if (capContent && features.length > 0) {
+    if (capContent && features.length > 0 && docContent) {
       completeness = 'full';
-    } else if (capContent) {
+    } else if (capContent || features.length > 0 || docContent) {
       completeness = 'partial';
     } else {
       completeness = 'none';
@@ -107,17 +102,12 @@ function cmdScanPairs(cwd, raw) {
     return;
   }
 
-  const slugs = fs.readdirSync(capabilitiesDir, { withFileTypes: true })
-    .filter(e => e.isDirectory())
-    .map(e => e.name)
-    .sort();
+  const slugs = listDirs(capabilitiesDir);
 
   const count = slugs.length;
   let tier = 'small';
-  if (count > 20) {
-    tier = 'medium';
-    process.stderr.write('Warning: Medium/large tier pair filtering not yet implemented. Falling back to full pairwise.\n');
-  }
+  if (count > 50) tier = 'large';
+  else if (count > 20) tier = 'medium';
 
   const pairs = [];
   for (let i = 0; i < slugs.length; i++) {
@@ -138,6 +128,9 @@ function cmdScanCheckpoint(cwd, args, raw) {
   const pair = pairIdx !== -1 ? args[pairIdx + 1] : null;
   const action = actionIdx !== -1 ? args[actionIdx + 1] : null;
   const outputDir = outputDirIdx !== -1 ? args[outputDirIdx + 1] : '.planning/refinement';
+
+  if (pair && pair.includes('..')) error('Invalid --pair: contains ".." segment');
+  if (outputDir && outputDir.includes('..')) error('Invalid --output-dir: contains ".." segment');
 
   if (!action) {
     error('--action required (read|write|list)');
@@ -181,8 +174,4 @@ module.exports = {
   cmdScanDiscover,
   cmdScanPairs,
   cmdScanCheckpoint,
-  FINDING_TYPES,
-  SEVERITY_LEVELS,
-  CONFIDENCE_LEVELS,
-  FINDING_FIELDS,
 };
