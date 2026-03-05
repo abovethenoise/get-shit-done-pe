@@ -1,7 +1,7 @@
 ---
 name: gsd:review
-description: Review a feature's implementation against its requirements
-argument-hint: "<feature slug>"
+description: Review a feature or capability's implementation against its requirements
+argument-hint: "<feature or capability slug>"
 allowed-tools:
   - Read
   - Write
@@ -12,9 +12,9 @@ allowed-tools:
 ---
 
 <objective>
-Run code review + requirements verification for a feature. Review always operates at the feature level -- resolves the user's reference to a specific feature and invokes the review.md workflow.
+Run code review + requirements verification for a feature or capability. Accepts both scopes -- resolves the user's reference and routes accordingly. Feature scope reviews a single feature. Capability scope reviews all executed features within the capability.
 
-**Flow:** slug-resolve (feature) -> load feature context -> review.md workflow
+**Flow:** slug-resolve -> route (feature | capability) -> review.md workflow
 </objective>
 
 <execution_context>
@@ -22,52 +22,71 @@ Run code review + requirements verification for a feature. Review always operate
 </execution_context>
 
 <context>
-**User reference:** $ARGUMENTS (required -- feature slug, e.g. "mistake-detection" or "coaching/grading")
+**User reference:** $ARGUMENTS (required -- feature slug, capability slug, or cap/feat path)
 
-Context resolved via `gsd-tools slug-resolve` with feature type hint.
+Context resolved via `gsd-tools slug-resolve` (no type hint -- accepts both scopes).
 </context>
 
 <process>
 ## 1. Resolve Slug
 
 ```bash
-RESOLVED=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" slug-resolve "$ARGUMENTS" --type feature)
+RESOLVED=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" slug-resolve "$ARGUMENTS")
 ```
 
-Parse JSON result.
+Parse JSON result for: `resolved`, `type`, `capability_slug`, `feature_slug`, `candidates`, `reason`.
 
 ## 2. Handle Resolution Result
 
-**If resolved:**
-- Invoke review.md workflow with CAPABILITY_SLUG and FEATURE_SLUG
+**If resolved and type is "feature":**
+- Set CAPABILITY_SLUG and FEATURE_SLUG from resolution
+- Go to Step 3 (feature-level invocation)
+
+**If resolved and type is "capability":**
+- Set CAPABILITY_SLUG from resolution
+- Go to Step 4 (capability-level invocation)
 
 **If not resolved and reason is "ambiguous":**
-- Present candidates to user (feature matches only)
+- Present candidates to user (all matches)
 - Use AskUserQuestion to let user pick one
 - Re-resolve with selected candidate
 
 **If not resolved and reason is "no_match":**
-- Inform user: "No feature matches '$ARGUMENTS'. Check available features with `/gsd:status`."
+- Inform user: "No capability or feature matches '$ARGUMENTS'. Check available features with `/gsd:status`."
 
-## 3. Workflow Invocation
+## 3. Feature-Level Invocation
 
 ```
 @{GSD_ROOT}/get-shit-done/workflows/review.md
 ```
 
-Pass: FEATURE_SLUG, CAPABILITY_SLUG
+Pass: CAPABILITY_SLUG, FEATURE_SLUG
 
-The review workflow handles:
-- Code review against FEATURE.md 3-layer requirements (EU/FN/TC)
-- Gap and issue surfacing
-- Human checkpoint if issues found
-- Auto-chain to doc stage if clean
+## 4. Capability-Level Invocation
+
+Read `{capability_dir}/CAPABILITY.md` features table to get all feature slugs.
+
+For each feature_slug in the features table:
+- Check if `{capability_dir}/features/{feature_slug}/` has at least one `*-SUMMARY.md` file (indicates execution happened)
+- If SUMMARY exists: include in review list
+- If not: skip (log: "Skipping {feature_slug} -- no execution artifacts")
+
+If review list is empty:
+- Inform user: "No executed features found in {capability_slug}. Run `/gsd:execute {cap/feat}` first."
+- Stop.
+
+```
+@{GSD_ROOT}/get-shit-done/workflows/review.md
+```
+
+Pass: CAPABILITY_SLUG, FEATURE_SLUG=null (capability scope -- review.md handles multi-feature artifact collection)
 
 </process>
 
 <success_criteria>
-- Feature resolved via 3-tier slug resolution (feature type hint)
-- Review workflow invoked with correct feature context
+- Slug resolved via 3-tier resolution (no type constraint)
+- Feature-level: review.md invoked for single feature
+- Capability-level: review.md invoked with capability scope (FEATURE_SLUG null), processes all executed features
 - Ambiguous matches presented for selection
 - No-match directs user to /gsd:status for discovery
 </success_criteria>

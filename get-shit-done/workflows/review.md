@@ -8,9 +8,10 @@ Orchestrate the full review pipeline for a feature: spawn 4 specialist reviewers
 </required_reading>
 
 <inputs>
-- `CAPABILITY_SLUG`: The capability containing this feature
-- `FEATURE_SLUG`: The feature being reviewed
+- `CAPABILITY_SLUG`: The capability containing the feature(s)
+- `FEATURE_SLUG`: The feature being reviewed (null/empty for capability scope)
 - `LENS`: Primary lens (debug | new | enhance | refactor)
+- `SCOPE`: Derived -- "feature" if FEATURE_SLUG provided, "capability" if null/empty
 </inputs>
 
 <process>
@@ -39,9 +40,22 @@ Build payload (Layers 1-4):
 - **Layer 3:** `${feature_dir}/FEATURE.md` (EU/FN/TC requirements)
 - **Layer 4:** `get-shit-done/framings/${LENS}/anchor-questions.md` (if LENS provided)
 
-## 3. Locate Feature Artifacts
+## 3. Locate Artifacts (Scope-Fluid)
 
+Determine scope: `SCOPE = if FEATURE_SLUG is provided then "feature" else "capability"`
+
+**Feature scope (FEATURE_SLUG provided):**
 Read SUMMARY.md files from feature directory to build list of key files created/modified. Extract requirement IDs from FEATURE.md (EU-xx, FN-xx, TC-xx).
+
+**Capability scope (FEATURE_SLUG is null/empty):**
+Scan all feature directories under `.planning/capabilities/${CAPABILITY_SLUG}/features/`. For each feature directory that contains at least one `*-SUMMARY.md` file:
+- Collect SUMMARY.md paths and FEATURE.md path
+- Extract key files and requirement IDs from each
+- Build combined artifact list and combined requirement ID list across all features
+
+Log scope: "Reviewing at {SCOPE} scope: {feature count} feature(s)"
+
+**Ground truth framing:** Spec (FEATURE.md requirements) is ground truth for code review. Reviewers verify implementation against specified requirements -- the spec defines correctness.
 
 ## 4. Spawn 4 Reviewers in Parallel
 
@@ -83,10 +97,10 @@ Task(
 )
 
 Task(
-  prompt="First, read {GSD_ROOT}/agents/gsd-review-quality.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Dimension: Quality\nFeature artifacts: {artifact_list}\nRequirement IDs: {requirement_ids}\nWrite your trace report to: {feature_dir}/review/quality-trace.md</task_context>",
+  prompt="First, read {GSD_ROOT}/agents/gsd-review-quality.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG or 'all (capability scope)'}</subject>\n\n{context_payload}\n\n<task_context>Dimension: Quality\nExecution scope: {SCOPE}\nFeature artifacts: {artifact_list}\nRequirement IDs: {requirement_ids}\nCross-scope detection (when capability scope): check for cross-scope state conflicts, interface contract violations, conflicting assumptions between features, and spec coverage gaps in implementation.\nWrite your trace report to: {review_dir}/quality-trace.md</task_context>",
   subagent_type="gsd-universal-quality-reviewer",
   model="sonnet",
-  description="Review Quality for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
+  description="Review Quality for {CAPABILITY_SLUG}/{FEATURE_SLUG or 'all'}"
 )
 ```
 
@@ -105,10 +119,10 @@ Build reviewer manifest listing each dimension and its status (success | failed)
 
 ```
 Task(
-  prompt="First, read {GSD_ROOT}/agents/gsd-review-synthesizer.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Review phase complete. Consolidate the following reviewer trace reports.\n\nReviewer outputs:\n- End-User: {feature_dir}/review/enduser-trace.md [{status}]\n- Functional: {feature_dir}/review/functional-trace.md [{status}]\n- Technical: {feature_dir}/review/technical-trace.md [{status}]\n- Quality: {feature_dir}/review/quality-trace.md [{status}]\n\nConflict priority: end-user > functional > technical > quality\n\nWrite your synthesis to: {feature_dir}/review/synthesis.md\n\nIf any reviewer has status \"failed\", document the gap — do not fabricate findings for missing dimensions.</task_context>",
+  prompt="First, read {GSD_ROOT}/agents/gsd-review-synthesizer.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG or 'all (capability scope)'}</subject>\n\n{context_payload}\n\n<task_context>Review phase complete. Consolidate the following reviewer trace reports.\n\nExecution scope: {SCOPE} ({SCOPE == 'capability' ? 'reviewing all executed features in capability' : 'reviewing single feature'})\n\nReviewer outputs:\n- End-User: {review_dir}/enduser-trace.md [{status}]\n- Functional: {review_dir}/functional-trace.md [{status}]\n- Technical: {review_dir}/technical-trace.md [{status}]\n- Quality: {review_dir}/quality-trace.md [{status}]\n\nConflict priority: end-user > functional > technical > quality\n\nWrite your synthesis to: {review_dir}/synthesis.md\n\nNote the review scope (capability-level or feature-level) in the synthesis output header.\nIf any reviewer has status \"failed\", document the gap — do not fabricate findings for missing dimensions.</task_context>",
   subagent_type="gsd-review-synthesizer",
   model="inherit",
-  description="Synthesize Review for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
+  description="Synthesize Review for {CAPABILITY_SLUG}/{FEATURE_SLUG or 'all'}"
 )
 ```
 

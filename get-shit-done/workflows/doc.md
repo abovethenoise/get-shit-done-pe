@@ -8,9 +8,10 @@ Orchestrate the documentation pipeline for a feature: locate artifacts, spawn do
 </required_reading>
 
 <inputs>
-- `CAPABILITY_SLUG`: The capability containing this feature
-- `FEATURE_SLUG`: The feature being documented
+- `CAPABILITY_SLUG`: The capability containing the feature(s)
+- `FEATURE_SLUG`: The feature being documented (null/empty for capability scope)
 - `LENS`: Primary lens (debug | new | enhance | refactor)
+- `SCOPE`: Derived -- "feature" if FEATURE_SLUG provided, "capability" if null/empty
 </inputs>
 
 <process>
@@ -38,9 +39,24 @@ Build payload (Layers 1-4):
 - **Layer 3:** `${feature_dir}/FEATURE.md` (EU/FN/TC requirements)
 - **Layer 4:** Lens-specific doc focus (debug=root cause, new=end-to-end, enhance=what changed, refactor=before/after)
 
-## 3. Locate Feature Artifacts
+## 3. Locate Artifacts (Scope-Fluid)
 
-Read SUMMARY.md files for key files list. Check for review synthesis (`${FEATURE_DIR}/review/synthesis.md`). Supplement with git diff. Deduplicate.
+Determine scope: `SCOPE = if FEATURE_SLUG is provided then "feature" else "capability"`
+
+**Feature scope (FEATURE_SLUG provided):**
+Read SUMMARY.md files from feature directory for key files list. Check for review synthesis (`${FEATURE_DIR}/review/synthesis.md`). Supplement with git diff. Deduplicate.
+
+**Capability scope (FEATURE_SLUG is null/empty):**
+Scan all feature directories under `.planning/capabilities/${CAPABILITY_SLUG}/features/`. For each feature directory that contains at least one `*-SUMMARY.md` file:
+- Collect SUMMARY.md paths, FEATURE.md path, and review synthesis path
+- Extract key files from each
+- Build combined artifact list across all features
+
+Log scope: "Documenting at {SCOPE} scope: {feature count} feature(s)"
+
+**Ground truth framing:** Code (what was actually built) is ground truth for documentation. Explorers document actual implementation, not aspirational requirements.
+
+**Doc aggregator framing (capability scope):** When documenting across multiple features, detect: terminology inconsistency across features, orphaned docs referencing removed/changed code, and prioritize updates by impact (user-facing > internal > config).
 
 ## 4. Spawn Explorers in Parallel
 
