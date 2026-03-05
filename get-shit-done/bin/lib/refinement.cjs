@@ -445,11 +445,175 @@ function cmdRefinementDelta(cwd, args, raw) {
   }, raw);
 }
 
+// ─── Changeset Constants ────────────────────────────────────────────────────
+
+const CHANGESET_TYPES = ['ACCEPT', 'MODIFY', 'REJECT', 'RESEARCH_NEEDED', 'ASSUMPTION_OVERRIDE', 'USER_INITIATED'];
+const TYPE_ORDER = Object.fromEntries(CHANGESET_TYPES.map((t, i) => [t, i]));
+
+/**
+ * Write CHANGESET.md from JSON input.
+ */
+function cmdChangesetWrite(cwd, args, raw) {
+  const contentFileIdx = args.indexOf('--content-file');
+  const isCheckpoint = args.includes('--checkpoint');
+
+  if (contentFileIdx === -1) error('--content-file required');
+  const contentFile = args[contentFileIdx + 1];
+  if (contentFile.includes('..')) error('Invalid --content-file: contains ".." segment');
+
+  const jsonContent = safeReadFile(path.resolve(cwd, contentFile));
+  if (!jsonContent) error(`Cannot read content file: ${contentFile}`);
+
+  const data = JSON.parse(jsonContent);
+  if (!data.entries || !Array.isArray(data.entries)) error('Invalid JSON: entries array required');
+
+  // Validate entries
+  for (const entry of data.entries) {
+    if (!entry.id || !entry.topic || !entry.type || !entry.capabilities || !entry.action || !entry.reasoning) {
+      error(`Invalid entry ${entry.id || '?'}: missing required fields (id, topic, type, capabilities, action, reasoning)`);
+    }
+    if (!CHANGESET_TYPES.includes(entry.type)) {
+      error(`Invalid entry ${entry.id}: unknown type '${entry.type}'. Expected: ${CHANGESET_TYPES.join(', ')}`);
+    }
+  }
+
+  // Sort: by type order, then maintain original order within type group
+  const sorted = [...data.entries].sort((a, b) => {
+    return (TYPE_ORDER[a.type] || 99) - (TYPE_ORDER[b.type] || 99);
+  });
+
+  // Compute counts
+  const counts = {};
+  for (const t of CHANGESET_TYPES) counts[t.toLowerCase()] = 0;
+  for (const e of sorted) counts[e.type.toLowerCase()]++;
+
+  const today = new Date().toISOString().split('T')[0];
+  const status = isCheckpoint ? 'partial' : 'complete';
+
+  // Render frontmatter
+  const lines = [];
+  lines.push('---');
+  lines.push(`date: ${today}`);
+  lines.push(`status: ${status}`);
+  lines.push(`source: ${data.source || '.planning/refinement/RECOMMENDATIONS.md'}`);
+  lines.push(`total_items: ${sorted.length}`);
+  lines.push('counts:');
+  for (const t of CHANGESET_TYPES) {
+    lines.push(`  ${t.toLowerCase()}: ${counts[t.toLowerCase()]}`);
+  }
+  lines.push('---');
+  lines.push('');
+
+  // Render body
+  lines.push('# Refinement Change Set');
+  lines.push('');
+  lines.push('## Summary');
+  lines.push('');
+  lines.push('| Type | Count |');
+  lines.push('|------|-------|');
+  for (const t of CHANGESET_TYPES) {
+    lines.push(`| ${t} | ${counts[t.toLowerCase()]} |`);
+  }
+  lines.push('');
+  lines.push('## Entries');
+  lines.push('');
+
+  for (const entry of sorted) {
+    lines.push(`### ${entry.id}: ${entry.topic}`);
+    lines.push(`- **Type:** ${entry.type}`);
+    lines.push(`- **Source:** ${entry.source_finding || 'user-initiated'}`);
+    lines.push(`- **Capabilities:** ${Array.isArray(entry.capabilities) ? entry.capabilities.join(', ') : entry.capabilities}`);
+    lines.push(`- **Action:** ${entry.action}`);
+    lines.push(`- **Reasoning:** ${entry.reasoning}`);
+    lines.push('');
+  }
+
+  const refDir = path.join(cwd, '.planning', 'refinement');
+  fs.mkdirSync(refDir, { recursive: true });
+  const destPath = path.join(refDir, 'CHANGESET.md');
+  fs.writeFileSync(destPath, lines.join('\n'), 'utf-8');
+
+  output({ written: true, path: '.planning/refinement/CHANGESET.md', status, total: sorted.length }, raw);
+}
+
+/**
+ * Parse CHANGESET.md and return JSON for change-application consumption.
+ */
+function cmdChangesetParse(cwd, raw) {
+  const changesetPath = path.join(cwd, '.planning', 'refinement', 'CHANGESET.md');
+  const content = safeReadFile(changesetPath);
+  if (!content) error('CHANGESET.md not found. Run refinement-qa first.');
+
+  // Parse frontmatter
+  const fmMatch = content.match(/^---\n([\s\S]*?)\n---/);
+  const meta = {};
+  if (fmMatch) {
+    const fm = fmMatch[1];
+    const dateMatch = fm.match(/^date:\s*(.+)$/m);
+    const statusMatch = fm.match(/^status:\s*(.+)$/m);
+    const sourceMatch = fm.match(/^source:\s*(.+)$/m);
+    const totalMatch = fm.match(/^total_items:\s*(\d+)$/m);
+
+    if (dateMatch) meta.date = dateMatch[1].trim();
+    if (statusMatch) meta.status = statusMatch[1].trim();
+    if (sourceMatch) meta.source = sourceMatch[1].trim();
+    if (totalMatch) meta.total = parseInt(totalMatch[1], 10);
+
+    // Parse counts
+    const countsSection = fm.match(/counts:\n((?:\s+\w+:\s*\d+\n?)+)/);
+    if (countsSection) {
+      meta.counts = {};
+      const countLines = countsSection[1].trim().split('\n');
+      for (const line of countLines) {
+        const m = line.match(/^\s+(\w+):\s*(\d+)/);
+        if (m) meta.counts[m[1]] = parseInt(m[2], 10);
+      }
+    }
+  }
+
+  // Refuse partial
+  if (meta.status === 'partial') {
+    error('CHANGESET.md is partial (incomplete Q&A session). Cannot parse for execution. Complete the Q&A session first.');
+  }
+
+  // Parse entries
+  const entries = [];
+  const entryBlocks = content.split(/^### CS-/m).slice(1);
+
+  for (const block of entryBlocks) {
+    const idMatch = block.match(/^(\d+):\s*(.+)/);
+    if (!idMatch) continue;
+
+    const id = `CS-${idMatch[1]}`;
+    const topic = idMatch[2].trim();
+
+    const typeMatch = block.match(/- \*\*Type:\*\*\s*(.+)/);
+    const sourceMatch = block.match(/- \*\*Source:\*\*\s*(.+)/);
+    const capsMatch = block.match(/- \*\*Capabilities:\*\*\s*(.+)/);
+    const actionMatch = block.match(/- \*\*Action:\*\*\s*(.+)/);
+    const reasonMatch = block.match(/- \*\*Reasoning:\*\*\s*(.+)/);
+
+    entries.push({
+      id,
+      topic,
+      type: typeMatch ? typeMatch[1].trim() : '',
+      source: sourceMatch ? sourceMatch[1].trim() : '',
+      capabilities: capsMatch ? capsMatch[1].trim().split(', ').map(s => s.trim()) : [],
+      action: actionMatch ? actionMatch[1].trim() : '',
+      reasoning: reasonMatch ? reasonMatch[1].trim() : '',
+    });
+  }
+
+  output({ meta, entries }, raw);
+}
+
 module.exports = {
   cmdRefinementInit,
   cmdRefinementWrite,
   cmdRefinementReport,
   cmdRefinementDelta,
+  cmdChangesetWrite,
+  cmdChangesetParse,
   parseMarkdownTable,
   diffMaps,
   snapshotFindings,

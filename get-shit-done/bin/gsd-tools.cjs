@@ -83,6 +83,8 @@
  *   refinement-write --type T --content-file P  Write artifact to refinement dir
  *   refinement-report --matrix-file --dependency-graph-file --findings-dir  Write scan output
  *   refinement-delta --snapshot-file P  Compare snapshot to current state, write DELTA.md
+ *   changeset-write --content-file P [--checkpoint]  Write CHANGESET.md from JSON
+ *   changeset-parse                                   Parse CHANGESET.md to JSON
  */
 
 const fs = require('fs');
@@ -448,6 +450,16 @@ async function main() {
     case 'refinement-delta': {
       const { cmdRefinementDelta } = require('./lib/refinement.cjs');
       cmdRefinementDelta(cwd, args.slice(1), raw);
+      break;
+    }
+    case 'changeset-write': {
+      const { cmdChangesetWrite } = require('./lib/refinement.cjs');
+      cmdChangesetWrite(cwd, args.slice(1), raw);
+      break;
+    }
+    case 'changeset-parse': {
+      const { cmdChangesetParse } = require('./lib/refinement.cjs');
+      cmdChangesetParse(cwd, raw);
       break;
     }
 
