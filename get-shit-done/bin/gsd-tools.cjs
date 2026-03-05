@@ -77,6 +77,10 @@
  *   scan-discover                      Discover all capabilities with contents and completeness
  *   scan-pairs                         Enumerate all unique capability pairs with tier detection
  *   scan-checkpoint --pair P --action A  Read/write/list pair checkpoint markers
+ *
+ * Refinement:
+ *   refinement-init                    Create refinement dir + snapshot existing state
+ *   refinement-write --type T --content-file P  Write artifact to refinement dir
  */
 
 const fs = require('fs');
@@ -420,6 +424,18 @@ async function main() {
     case 'scan-checkpoint': {
       const { cmdScanCheckpoint } = require('./lib/scan.cjs');
       cmdScanCheckpoint(cwd, args.slice(1), raw);
+      break;
+    }
+
+    // ─── Refinement commands ────────────────────────────────────────────────
+    case 'refinement-init': {
+      const { cmdRefinementInit } = require('./lib/refinement.cjs');
+      cmdRefinementInit(cwd, raw);
+      break;
+    }
+    case 'refinement-write': {
+      const { cmdRefinementWrite } = require('./lib/refinement.cjs');
+      cmdRefinementWrite(cwd, args.slice(1), raw);
       break;
     }
 
