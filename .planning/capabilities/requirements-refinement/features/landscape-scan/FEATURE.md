@@ -11,16 +11,16 @@ created: "2026-03-05"
 
 | REQ | Research | Plan | Execute | Review | Docs | Status |
 |-----|----------|------|---------|--------|------|--------|
-| EU-01 | - | - | - | - | - | draft |
-| EU-02 | - | - | - | - | - | draft |
-| FN-01 | - | - | - | - | - | draft |
-| FN-02 | - | - | - | - | - | draft |
-| FN-03 | - | - | - | - | - | draft |
-| FN-04 | - | - | - | - | - | draft |
-| FN-05 | - | - | - | - | - | draft |
-| TC-01 | - | - | - | - | - | draft |
-| TC-02 | - | - | - | - | - | draft |
-| TC-03 | - | - | - | - | - | draft |
+| EU-01 | - | - | - | - | done | draft |
+| EU-02 | - | - | - | - | done | draft |
+| FN-01 | - | - | - | - | done | draft |
+| FN-02 | - | - | - | - | done | draft |
+| FN-03 | - | - | - | - | done | draft |
+| FN-04 | - | - | - | - | done | draft |
+| FN-05 | - | - | - | - | done | draft |
+| TC-01 | - | - | - | - | done | draft |
+| TC-02 | - | - | - | - | done | draft |
+| TC-03 | - | - | - | - | done | draft |
 
 ## End-User Requirements
 

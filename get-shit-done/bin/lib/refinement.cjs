@@ -8,11 +8,19 @@ const { output, error, safeReadFile } = require('./core.cjs');
 
 // ─── Shared Helpers ─────────────────────────────────────────────────────────
 
+/**
+ * @param {string} value - Value to validate
+ * @param {string} label - Label for error messages
+ * Calls error() (process-terminating) if value is falsy or contains '..'
+ */
 function guardPath(value, label) {
   if (!value) error(`${label} value missing`);
   if (value.includes('..')) error(`Invalid ${label}: contains ".." segment`);
 }
 
+/**
+ * @param {string} findingsDir - Path to findings directory. Removes all FINDING-*.md files.
+ */
 function clearFindings(findingsDir) {
   if (!fs.existsSync(findingsDir)) return;
   for (const f of fs.readdirSync(findingsDir).filter(f => f.startsWith('FINDING-') && f.endsWith('.md'))) {
@@ -20,10 +28,12 @@ function clearFindings(findingsDir) {
   }
 }
 
+/** Composite key from first two columns of a matrix row. Used by snapshotTable for matrix diffing. */
 const matrixKeyFn = row => {
   const keys = Object.keys(row);
   return keys.length >= 2 ? `${row[keys[0]]}|${row[keys[1]]}` : null;
 };
+/** Composite key from From|To columns. Used by snapshotTable for dependency graph diffing. */
 const graphKeyFn = row => (row['From'] && row['To']) ? `${row['From']}|${row['To']}` : null;
 
 // ─── Utility Functions ──────────────────────────────────────────────────────
@@ -31,6 +41,8 @@ const graphKeyFn = row => (row['From'] && row['To']) ? `${row['From']}|${row['To
 /**
  * Parse a pipe-delimited markdown table into an array of row objects.
  * Returns [] if no table found or content is empty.
+ * @param {string} content - Raw markdown text containing a pipe-delimited table
+ * @returns {Object[]} Array of row objects keyed by column headers
  */
 function parseMarkdownTable(content) {
   if (!content) return [];
@@ -79,6 +91,9 @@ function parseMarkdownTable(content) {
 
 /**
  * Compute added/removed/changed between two Maps with string keys.
+ * @param {Map<string,*>} oldMap
+ * @param {Map<string,*>} newMap
+ * @returns {{ added: Array, removed: Array, changed: Array }}
  */
 function diffMaps(oldMap, newMap) {
   const added = [];
@@ -354,7 +369,7 @@ function cmdRefinementDelta(cwd, args, raw) {
     dependencyGraph: new Map(snapshotRaw.dependencyGraph || []),
   };
 
-  // First run check: no prior state
+  // Conservative first-run check: skip delta only when NO prior state exists (not just missing recommendations)
   if (snapshot.recommendations === null && snapshot.findings.size === 0) {
     output({ delta: false, reason: 'first_run' }, raw);
     return;
@@ -438,6 +453,11 @@ function cmdRefinementDelta(cwd, args, raw) {
 
 // ─── Changeset Constants ────────────────────────────────────────────────────
 
+/**
+ * Canonical changeset entry types. Defines the contract between
+ * refinement-qa (producer) and change-application (consumer).
+ * Ordered by resolution priority for sort.
+ */
 const CHANGESET_TYPES = ['ACCEPT', 'MODIFY', 'REJECT', 'RESEARCH_NEEDED', 'ASSUMPTION_OVERRIDE', 'USER_INITIATED'];
 const TYPE_ORDER = Object.fromEntries(CHANGESET_TYPES.map((t, i) => [t, i]));
 
@@ -467,7 +487,8 @@ function cmdChangesetWrite(cwd, args, raw) {
     }
   }
 
-  // Sort: by type order, then severity within type group
+  // Two-level sort: primary by TYPE_ORDER, secondary by severity.
+  // SEVERITY_ORDER collapses synonyms (critical=high, major=medium) for consistent ordering.
   const SEVERITY_ORDER = { critical: 0, high: 0, major: 1, medium: 1, minor: 2, low: 2, info: 3 };
   const sorted = [...data.entries].sort((a, b) => {
     const typeOrd = (TYPE_ORDER[a.type] || 99) - (TYPE_ORDER[b.type] || 99);
@@ -514,6 +535,7 @@ function cmdChangesetWrite(cwd, args, raw) {
   for (const entry of sorted) {
     lines.push(`### ${entry.id}: ${entry.topic}`);
     lines.push(`- **Type:** ${entry.type}`);
+    // Fallback chain: 'source' is canonical (from changeset-parse), 'source_finding' for backward compat, default for USER_INITIATED entries
     lines.push(`- **Source:** ${entry.source || entry.source_finding || 'user-initiated'}`);
     lines.push(`- **Capabilities:** ${Array.isArray(entry.capabilities) ? entry.capabilities.join(', ') : entry.capabilities}`);
     lines.push(`- **Action:** ${entry.action}`);
@@ -531,6 +553,7 @@ function cmdChangesetWrite(cwd, args, raw) {
 
 /**
  * Parse CHANGESET.md and return JSON for change-application consumption.
+ * @returns {{ meta: { date, status, source, total, counts }, entries: Array<{ id, topic, type, source, capabilities, action, reasoning }> }}
  */
 function cmdChangesetParse(cwd, raw) {
   const changesetPath = path.join(cwd, '.planning', 'refinement', 'CHANGESET.md');

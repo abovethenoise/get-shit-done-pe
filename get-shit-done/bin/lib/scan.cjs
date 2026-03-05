@@ -7,6 +7,7 @@ const path = require('path');
 const { output, error, safeReadFile } = require('./core.cjs');
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
+/** List sorted subdirectory names. Sorting ensures deterministic pair enumeration order for checkpoint resumability. */
 function listDirs(dirPath) {
   if (!fs.existsSync(dirPath)) return [];
   return fs.readdirSync(dirPath, { withFileTypes: true })
@@ -17,6 +18,7 @@ function listDirs(dirPath) {
 
 // ─── Commands ───────────────────────────────────────────────────────────────
 
+/** Scan .planning/capabilities/ to build full capability inventory with artifacts and completeness classification. */
 function cmdScanDiscover(cwd, raw) {
   const capabilitiesDir = path.join(cwd, '.planning', 'capabilities');
   const documentationDir = path.join(cwd, '.documentation', 'capabilities');
@@ -55,7 +57,7 @@ function cmdScanDiscover(cwd, raw) {
       }
     }
 
-    // Compute completeness
+    // Compute completeness: CAPABILITY.md is the anchor — directories without it are orphaned (completeness 'none'), not 'partial'.
     let completeness;
     if (capContent && features.length > 0 && docContent) {
       completeness = 'full';
@@ -94,6 +96,7 @@ function cmdScanDiscover(cwd, raw) {
   output({ capabilities, gap_findings: gapFindings }, raw);
 }
 
+/** Generate all unique capability pairs for pairwise analysis. Classifies project tier by capability count. */
 function cmdScanPairs(cwd, raw) {
   const capabilitiesDir = path.join(cwd, '.planning', 'capabilities');
 
@@ -119,6 +122,13 @@ function cmdScanPairs(cwd, raw) {
   output({ tier, capability_count: count, pairs, total_pairs: pairs.length }, raw);
 }
 
+/**
+ * Manage checkpoint state for resumable scanning.
+ * @param {string[]} args - CLI args: --action {read|write|list} [--pair A__B] [--output-dir path]
+ *   --action: read (check if pair complete), write (mark pair complete), list (all completed pairs)
+ *   --pair: capability pair key using double-underscore separator (e.g., "auth__payments")
+ *   --output-dir: base directory for checkpoint files (default: .planning/refinement)
+ */
 function cmdScanCheckpoint(cwd, args, raw) {
   // Parse args
   const pairIdx = args.indexOf('--pair');

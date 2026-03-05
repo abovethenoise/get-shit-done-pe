@@ -11,10 +11,10 @@ created: "2026-03-05"
 
 | REQ | Research | Plan | Execute | Review | Docs | Status |
 |-----|----------|------|---------|--------|------|--------|
-| EU-01 | - | - | - | - | - | draft |
-| EU-02 | - | - | - | - | - | draft |
-| FN-01 | - | - | - | - | - | draft |
-| TC-01 | - | - | - | - | - | draft |
+| EU-01 | - | - | - | - | done | draft |
+| EU-02 | - | - | - | - | done | draft |
+| FN-01 | - | - | - | - | done | draft |
+| TC-01 | - | - | - | - | done | draft |
 
 ## End-User Requirements
 

@@ -30,3 +30,29 @@ One module, one job. If the description requires "and", split it.
 ## Constraint: explicit-boundaries [manual]
 Module inputs and outputs are typed and documented. No passing
 unstructured objects across module boundaries.
+
+## Constraint: agent-receives-content [manual]
+Reasoning agents receive content, not paths. All file I/O is performed
+by the orchestrator or gsd-tools layer. Agents must not read or write
+files directly.
+
+## Constraint: skip-not-halt-batch [manual]
+For batch workflows processing independent items, malformed output from
+one item should be logged and skipped, not used to halt the entire batch.
+The skip must be visible (logged to stderr or captured in output).
+Companion to no-silent-failures — errors are surfaced, but isolated
+failures don't block independent work.
+
+## Constraint: double-underscore-separator [manual]
+When composing multiple slug values into a single filename, use
+double-underscore (`__`) as separator to avoid collision with hyphens
+in slugs.
+
+## Constraint: graceful-degradation-for-optimizations [manual]
+Unimplemented optimizations must degrade to correct-but-slow behavior,
+never skip work. Emit a stderr warning when falling back.
+
+## Constraint: zero-tool-judge-agent [manual]
+Agents with role_type "judge" use tools: [], reads: [], writes: [].
+All context passed via prompt. Output IS the artifact. Orchestrator
+handles all file I/O. Stricter specialization of agent-receives-content.
