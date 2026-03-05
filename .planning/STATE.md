@@ -170,23 +170,25 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-03-04
-Stopped at: 3 features fully complete (executed + reviewed + documented), changelog written, ready for npm patch
+Last session: 2026-03-05
+Stopped at: requirements-refinement capability planning — Wave 1 complete, Waves 2-4 pending
 
 ### Completed this session:
-1. scope-aware-routing: Full pipeline — executed (2 plans, 4 tasks), reviewed (5 findings, 3 fixed), documented
-   - Plan 01 (2min): 3-step routing added to enhance/debug/refactor
-   - Plan 02 (2min): 4-step routing in new.md with stub creation + disambiguation
-   - Review: F1 stub path fix, F2 re-loop fix, F5 redundant step removal; F3+F4 dismissed
-2. Documentation generated for all 3 pipeline-execution features:
-   - plan-presentation: 2 module docs + 1 flow doc
-   - doc-writer-overhaul: 1 module doc (3 modules) + 1 flow doc (4 paths)
-   - scope-aware-routing: 1 module doc (4 commands) + 1 flow doc (decision tree)
-   - plan-workflow module updated with both research-overhaul + plan-presentation deltas
-3. README changelog updated with 2.0.2 entry
+1. discuss-feature requirements-refinement/change-application — specified (7 mutation types, DELTA.md, halt-on-failure)
+2. /gsd:plan requirements-refinement — capability orchestrator started
+   - DAG: 4 waves (landscape-scan+refinement-artifact → coherence-report → refinement-qa → change-application)
+   - Wave 1 planning COMPLETE:
+     - landscape-scan: 6 gatherers + synthesis + planner → 2 plans, 2 waves, 4 tasks, validation passed
+     - refinement-artifact: 6 gatherers + synthesis + planner → 2 plans, 2 waves, 4 tasks, validation passed
+   - Key research findings surfaced:
+     - Output path mismatch (scan-output/ vs .planning/refinement/) — resolved to .planning/refinement/
+     - DELTA.md naming collision between refinement-artifact and change-application — resolved (change-application uses EXECUTION-LOG.md)
+     - Finding ID instability across runs — accepted for v1
+     - Medium/large tier scaling deferred (YAGNI)
+     - Checkpoint slug collision — resolved with double-underscore separator
 
 ### Resume:
-- `npm version patch` + `npm publish` to deploy 2.0.2
-- `node bin/install.js --global` to deploy locally
-- pipeline-execution/research-overhaul — Plans 01/02/04 pending execution
-- AskUserQuestion fix changes staged but uncommitted
+- `/gsd:plan requirements-refinement` — continue from Wave 2 (coherence-report)
+  - Remaining: coherence-report (Wave 2), refinement-qa (Wave 3), change-application (Wave 4)
+  - Each needs: research (6 gatherers + synthesis) → planner → validate → approve
+- Prior session pending: pipeline-execution/research-overhaul Plans 01/02/04 execution, npm publish 2.0.2
