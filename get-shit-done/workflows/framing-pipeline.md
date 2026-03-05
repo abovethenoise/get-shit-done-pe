@@ -1,7 +1,7 @@
 <purpose>
-Orchestrate the 6 post-discovery pipeline stages for any framing at feature level. After discovery produces a brief, this workflow runs: research -> requirements -> plan -> execute -> review -> doc. Framing context (brief path + lens metadata) shapes behavior at every stage without changing agent definitions.
+Orchestrate the post-discovery pipeline for any scope (capability or feature). Pipeline stages: plan -> execute -> review -> doc. For capability scope, builds a DAG from CAPABILITY.md features table, runs plan+execute per feature in wave order, then review+doc once for the full scope. For feature scope, runs 4 stages linearly.
 
-Invoked by framing-discovery.md after brief finalization. All four framings converge here. The pipeline operates on a single feature -- capability context is derived from the feature's directory path.
+Invoked by framing-discovery.md after brief finalization, or directly by commands for capability-scope orchestration. Framing context (brief path + lens metadata) shapes behavior at every stage without changing agent definitions.
 </purpose>
 
 <required_reading>
@@ -19,15 +19,18 @@ The invoking workflow passes these as context:
 - `SECONDARY_LENS`: Secondary lens identifier (optional, for compound work)
 - `CAPABILITY_SLUG`: The resolved capability slug
 - `CAPABILITY_NAME`: The resolved capability name
-- `FEATURE_SLUG`: The feature being processed
+- `FEATURE_SLUG`: The feature being processed (may be null for capability scope)
 - `FEATURE_DIR`: Absolute path to the feature directory (.planning/capabilities/{cap}/features/{feat})
+
+Derived:
+- `SCOPE`: "capability" if FEATURE_SLUG is null/empty, "feature" if FEATURE_SLUG is provided
 </inputs>
 
 <process>
 
 ## 1. Initialize
 
-Read the Discovery Brief at `BRIEF_PATH`. Extract from frontmatter:
+Read the Discovery Brief at `BRIEF_PATH` (if feature scope) or CAPABILITY.md (if capability scope). Extract from frontmatter:
 - `primary_lens`
 - `secondary_lens` (may be empty)
 - `completion` signal (mvu_met | user_override | gaps_flagged)
@@ -47,6 +50,11 @@ Read anchor questions for the active lens:
 ANCHOR_QUESTIONS_PATH="get-shit-done/framings/${LENS}/anchor-questions.md"
 ```
 
+Determine scope:
+```
+SCOPE = if FEATURE_SLUG is provided then "feature" else "capability"
+```
+
 This metadata and anchor questions are passed to every stage as context. The orchestrator passes PATHS, not content -- each stage reads files itself.
 
 Display banner:
@@ -55,12 +63,13 @@ Display banner:
  GSD > FRAMING PIPELINE
 -------------------------------------------------------
 
-Feature: {CAPABILITY_SLUG}/{FEATURE_SLUG}
+Scope: {SCOPE}
+Capability: {CAPABILITY_SLUG}
+Feature: {FEATURE_SLUG or "all (capability scope)"}
 Lens: {LENS} {+ SECONDARY_LENS if compound}
-Brief: {BRIEF_PATH}
-Completion: {completion signal}
+Brief: {BRIEF_PATH or "per-feature"}
 
-Running 6 stages: research -> requirements -> plan -> execute -> review -> doc
+Running 4 stages: plan -> execute -> review -> doc
 ```
 
 Initialize escalation state:
@@ -70,165 +79,65 @@ ESCALATION_STATE:
   max_backward_resets: 1
 ```
 
-## 2. Stage 1 -- Research (Lens-Aware)
+## 2. Capability-Scope Branch (DAG Wave Orchestration)
 
-Research agents investigate technical feasibility with lens-aware focus.
+**When SCOPE is "capability":**
 
-**Lens-aware research behavior:**
-- /debug: Prioritize reproduction environment, error paths, dependency versions
-- /new: Prioritize domain modeling, architectural options, prior art
-- /enhance: Prioritize existing module boundaries, integration points, test coverage
-- /refactor: Prioritize dependency mapping, consumer contracts, migration precedents
+### 2a. Build Feature DAG
 
-**Spawn research gatherers:**
+Read CAPABILITY.md at `.planning/capabilities/${CAPABILITY_SLUG}/CAPABILITY.md`.
 
-```bash
-mkdir -p "${FEATURE_DIR}/research"
-```
+Extract the Features table columns: Feature | Priority | Depends-On | Status.
 
-Assemble context payload (read each path, embed content):
-```
-<core_context>{contents of PROJECT.md, STATE.md, ROADMAP.md}</core_context>
-<capability_context>{contents of CAPABILITY.md}</capability_context>
-<feature_context>{contents of FEATURE.md}</feature_context>
-<framing_context>
-Lens: {LENS}
-Secondary lens: {SECONDARY_LENS or null}
-Lens direction: {LENS_METADATA.direction}
-Lens tone: {LENS_METADATA.tone}
-Research focus: {lens-specific focus from above}
-Brief path: {BRIEF_PATH}
-Anchor questions: {ANCHOR_QUESTIONS_PATH}
-</framing_context>
-```
+Build a directed acyclic graph:
+- Each feature is a node
+- Each `Depends-On` entry creates a directed edge (dependency -> feature)
+- Skip features with status "complete"
 
-Spawn all 6 gatherers simultaneously (parallel Task calls -- do NOT wait for one before spawning the next):
+### 2b. Cycle Detection
 
-```
-Task(
-  prompt="First, read {GSD_ROOT}/agents/gsd-research-domain.md for your role.\n\n<subject>{CAPABILITY_NAME}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Dimension: Domain Truth\nWrite your complete analysis to: {FEATURE_DIR}/research/domain-truth-findings.md</task_context>",
-  subagent_type="gsd-research-domain",
-  model="sonnet",
-  description="Research Domain Truth for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
-)
+Validate: no cycles in the DAG.
 
-Task(
-  prompt="First, read {GSD_ROOT}/agents/gsd-research-system.md for your role.\n\n<subject>{CAPABILITY_NAME}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Dimension: Existing System\nWrite your complete analysis to: {FEATURE_DIR}/research/existing-system-findings.md</task_context>",
-  subagent_type="gsd-research-system",
-  model="sonnet",
-  description="Research Existing System for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
-)
+If a cycle is found (e.g., A depends on B, B depends on A):
+- Display: "Circular dependency detected: A -> B -> A"
+- Use AskUserQuestion:
+  - header: "Dependency Cycle"
+  - question: "Which dependency should be removed to break the cycle?"
+  - options: list each edge in the cycle
+- Remove the selected edge and re-validate
+- Repeat until no cycles remain
 
-Task(
-  prompt="First, read {GSD_ROOT}/agents/gsd-research-intent.md for your role.\n\n<subject>{CAPABILITY_NAME}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Dimension: User Intent\nWrite your complete analysis to: {FEATURE_DIR}/research/user-intent-findings.md</task_context>",
-  subagent_type="gsd-research-intent",
-  model="sonnet",
-  description="Research User Intent for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
-)
+### 2c. Topological Sort Into Waves
 
-Task(
-  prompt="First, read {GSD_ROOT}/agents/gsd-research-tech.md for your role.\n\n<subject>{CAPABILITY_NAME}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Dimension: Tech Constraints\nWrite your complete analysis to: {FEATURE_DIR}/research/tech-constraints-findings.md</task_context>",
-  subagent_type="gsd-research-tech",
-  model="sonnet",
-  description="Research Tech Constraints for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
-)
+Group features into execution waves:
+- **Wave 1:** Features with no dependencies (or all deps already complete)
+- **Wave 2:** Features whose dependencies are all in Wave 1 or earlier
+- **Wave N:** Features whose dependencies are all in waves before N
 
-Task(
-  prompt="First, read {GSD_ROOT}/agents/gsd-research-edges.md for your role.\n\n<subject>{CAPABILITY_NAME}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Dimension: Edge Cases\nWrite your complete analysis to: {FEATURE_DIR}/research/edge-cases-findings.md</task_context>",
-  subagent_type="gsd-research-edges",
-  model="sonnet",
-  description="Research Edge Cases for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
-)
+### 2d. Execute Waves (Plan + Execute Per Feature)
 
-Task(
-  prompt="First, read {GSD_ROOT}/agents/gsd-research-prior-art.md for your role.\n\n<subject>{CAPABILITY_NAME}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Dimension: Prior Art\nWrite your complete analysis to: {FEATURE_DIR}/research/prior-art-findings.md</task_context>",
-  subagent_type="gsd-research-prior-art",
-  model="sonnet",
-  description="Research Prior Art for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
-)
-```
+For each wave (in order), for each feature in the wave (sequentially):
 
-Wait for ALL 6 gatherers to complete. Check each output file exists and is non-empty:
-```bash
-for f in domain-truth existing-system user-intent tech-constraints edge-cases prior-art; do
-  test -f "${FEATURE_DIR}/research/${f}-findings.md" && test -s "${FEATURE_DIR}/research/${f}-findings.md" && echo "${f}: OK" || echo "${f}: FAILED"
-done
-```
+1. Set `FEATURE_SLUG` and `FEATURE_DIR` for the current feature
+2. Check `DISCOVERY-BRIEF.md` existence at `${FEATURE_DIR}/DISCOVERY-BRIEF.md`
+   - If missing: invoke `framing-discovery.md` for this feature first
+   - Pass: LENS, CAPABILITY_SLUG, FEATURE_SLUG
+3. Set `BRIEF_PATH` to `${FEATURE_DIR}/DISCOVERY-BRIEF.md`
+4. Run **Stage 1 (Plan)** for this feature (see Section 3)
+5. Run **Stage 2 (Execute)** for this feature (see Section 4)
 
-For any failed gatherer: retry once with the same Task() prompt. If still failed after retry: mark as failed in manifest.
+After ALL waves complete:
+- Collect artifact lists (SUMMARY.md, FEATURE.md) from ALL features in the capability
+- Run **Stage 3 (Review)** ONCE for the full capability scope (see Section 5)
+- Run **Stage 4 (Doc)** ONCE for the full capability scope (see Section 6)
 
-If more than 3 gatherers failed: surface escalation (MAJOR tier per escalation-protocol.md). Do NOT continue to synthesizer.
+### 2e. Feature-Scope Branch (Linear Pipeline)
 
-**Spawn synthesizer:**
+**When SCOPE is "feature":**
 
-Build manifest listing each dimension path and status.
+Run Stage 1 (Plan) -> Stage 2 (Execute) -> Stage 3 (Review) -> Stage 4 (Doc) linearly for the single feature.
 
-```
-Task(
-  prompt="First, read {GSD_ROOT}/agents/gsd-research-synthesizer.md for your role.\n\n<subject>{CAPABILITY_NAME}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Gather phase complete. Synthesize the following gatherer outputs into a consolidated RESEARCH.md.\n\nGatherer outputs:\n- Domain Truth: {FEATURE_DIR}/research/domain-truth-findings.md [{status}]\n- Existing System: {FEATURE_DIR}/research/existing-system-findings.md [{status}]\n- User Intent: {FEATURE_DIR}/research/user-intent-findings.md [{status}]\n- Tech Constraints: {FEATURE_DIR}/research/tech-constraints-findings.md [{status}]\n- Edge Cases: {FEATURE_DIR}/research/edge-cases-findings.md [{status}]\n- Prior Art: {FEATURE_DIR}/research/prior-art-findings.md [{status}]\n\nWrite your synthesis to: {FEATURE_DIR}/RESEARCH.md\n\nIMPORTANT: Begin RESEARCH.md with YAML frontmatter:\n---\nlens: {LENS}\nsecondary_lens: {SECONDARY_LENS or null}\nsubject: {CAPABILITY_NAME}/{FEATURE_SLUG}\ndate: {ISO date today}\n---\n\nIf any gatherer has status \"failed\", document the gap -- do not fabricate content for missing dimensions.</task_context>",
-  subagent_type="gsd-research-synthesizer",
-  model="inherit",
-  description="Synthesize Research for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
-)
-```
-
-**After research completes:**
-- Check for escalation signals in research output (see escalation-protocol.md)
-- If escalation: handle per Section 8 (Escalation Handling) below
-- If clean: proceed to Stage 2
-
-## 3. Stage 2 -- Requirements Generation (Lens-Weighted)
-
-Auto-generate 3-layer requirements (end-user, functional, technical) from the Discovery Brief. All 3 layers are always present, but weight varies by lens.
-
-**Lens-specific weighting:**
-
-| Lens | End-User (EU) | Functional (FN) | Technical (TC) |
-|------|--------------|-----------------|----------------|
-| debug | Thin -- "user sees correct behavior" | Medium -- behavioral contract for the fix | Rich -- root cause detail, error paths, regression tests |
-| new | Rich -- user stories, acceptance criteria | Medium -- behavioral boundaries | Thin -- implementation constraints only |
-| enhance | Medium -- delta from user perspective | Rich -- current vs desired behavior contract | Medium -- integration points, invariants |
-| refactor | Thin -- "behavior unchanged" | Medium -- behavioral invariants preserved | Rich -- structural changes, migration steps, contract preservation |
-
-**Compound work adjustment:** If `SECONDARY_LENS` is set, enrich the secondary lens's strong layer. Example: enhance+refactor -> rich FN (enhance primary) AND rich TC (refactor secondary).
-
-**Process:**
-
-Read the brief at `BRIEF_PATH`. Extract:
-- Problem Statement -> EU requirements seed
-- Specification (lens-specific fields) -> FN + TC requirements seed
-- Scope Boundary (in/out) -> requirement scoping
-- Unknowns & Assumptions -> flag as risks in requirements
-
-Draft requirements directly into FEATURE.md, populating the 3-layer sections:
-- EU-xx: End-user stories with acceptance criteria
-- FN-xx: Functional behavior specifications
-- TC-xx: Technical implementation specifications
-
-Read the existing FEATURE.md template structure at `${FEATURE_DIR}/FEATURE.md`, fill in the End-User Requirements, Functional Requirements, and Technical Specs sections.
-
-Present drafted requirements to user:
-
-Use AskUserQuestion:
-- header: "Reqs Review"
-- question: "Here are the auto-generated requirements from the Discovery Brief. Review the 3-layer requirements (EU/FN/TC) with {LENS}-weighted distribution."
-- Show the requirements content
-- options:
-  - "Approve" -- requirements are good, proceed to planning
-  - "Edit" -- provide corrections (re-draft affected sections)
-  - "Back to discovery" -- requirements reveal discovery gaps (escalation)
-
-Lens-specific question prompts for the requirements Q&A:
-- **debug:** "What behavior should change? What should remain the same?"
-- **new:** "What user stories matter most? What acceptance criteria are non-negotiable?"
-- **enhance:** "What's working that must be preserved? What's the minimum viable enhancement?"
-- **refactor:** "What constraints exist on the refactor? What behavioral invariants must hold?"
-
-**If "Back to discovery":** This is a MODERATE escalation. Handle per Section 8.
-
-**After approval:** Proceed to Stage 3.
-
-## 4. Stage 3 -- Plan (Lens-Shaped Risk Posture)
+## 3. Stage 1 -- Plan (Lens-Shaped Risk Posture)
 
 Invoke the planning workflow with framing context:
 
@@ -256,12 +165,14 @@ Risk posture guidance (from lens):
 </framing_context>
 ```
 
+Plan.md owns research internally (Step 5: 6 parallel gather-synthesize agents with lens-aware RESEARCH.md reuse checking). No separate research stage needed.
+
 **After planning completes:**
 - Check for escalation signals (planner found scope issues, requirement gaps)
-- If escalation: handle per Section 8
-- If clean: proceed to Stage 4
+- If escalation: handle per Section 7
+- If clean: proceed to Stage 2
 
-## 5. Stage 4 -- Execute (Lens-Shaped Aggressiveness)
+## 4. Stage 2 -- Execute (Lens-Shaped Aggressiveness)
 
 Invoke the execution workflow with framing context:
 
@@ -290,12 +201,12 @@ Execution approach guidance (from lens):
 
 **After execution completes:**
 - Check for escalation signals (execution discovered scope problems, requirement mismatches)
-- If escalation: handle per Section 8
-- If clean: **auto-chain to Stage 5** (no user intervention needed)
+- If escalation: handle per Section 7
+- If clean: **auto-chain to Stage 3** (no user intervention needed)
 
-## 6. Stage 5 -- Review (3-Input Model, Auto-Chained from Execute)
+## 5. Stage 3 -- Review (3-Input Model, Auto-Chained from Execute)
 
-**Execute -> Review auto-chain:** After execute.md completes, automatically invoke review.md without user intervention. The review stage itself has a human checkpoint if issues are found.
+**Execute -> Review auto-chain:** After execute completes, automatically invoke review without user intervention. The review stage itself has a human checkpoint if issues are found.
 
 Review receives three inputs -- not just requirements:
 
@@ -305,7 +216,11 @@ Review receives three inputs -- not just requirements:
 
 The third input catches spec-complete but problem-incomplete work.
 
-Invoke the review workflow with all three inputs:
+**Scope-fluid artifact collection:**
+- Feature scope: SUMMARY.md and FEATURE.md from the single feature directory
+- Capability scope: SUMMARY.md and FEATURE.md from ALL feature directories under the capability. Scope inferred from SUMMARY.md presence in feature directories.
+
+Invoke the review workflow:
 
 ```
 @{GSD_ROOT}/get-shit-done/workflows/review.md
@@ -320,8 +235,9 @@ Secondary lens: {SECONDARY_LENS or "none"}
 Lens direction: {LENS_METADATA.direction}
 Anchor questions: {ANCHOR_QUESTIONS_PATH}
 Capability: {CAPABILITY_SLUG}
-Feature: {FEATURE_SLUG}
+Feature: {FEATURE_SLUG or "all (capability scope)"}
 Feature dir: {FEATURE_DIR}
+Execution scope: {SCOPE}
 
 Review disposition (from lens):
 - debug: Verify root cause is addressed (not just symptom). Check reproduction path no longer triggers. Verify no regressions in adjacent paths.
@@ -338,14 +254,18 @@ Intent verification (from brief):
 
 **After review completes:**
 - If review finds issues requiring re-work: normal review re-review cycle handles this (Q&A with user for fix decisions)
-- If review finds fundamental scope/requirement problems: MAJOR escalation per Section 8
-- If review passes cleanly: **auto-chain to Stage 6** (no user intervention needed)
+- If review finds fundamental scope/requirement problems: MAJOR escalation per Section 7
+- If review passes cleanly: **auto-chain to Stage 4** (no user intervention needed)
 
-## 7. Stage 6 -- Doc/Reflect (Auto-Chained from Review)
+## 6. Stage 4 -- Doc/Reflect (Auto-Chained from Review)
 
-**Review -> Doc auto-chain:** After review completes cleanly, automatically invoke doc.md. If review surfaces issues, Q&A checkpoint intervenes first -- once resolved, doc stage auto-chains.
+**Review -> Doc auto-chain:** After review completes cleanly, automatically invoke doc. If review surfaces issues, Q&A checkpoint intervenes first -- once resolved, doc stage auto-chains.
 
 The doc stage IS the doc agent wired as the final pipeline step. After review acceptance, the doc agent reads actual built code and generates/updates documentation.
+
+**Scope-fluid artifact collection:**
+- Feature scope: artifacts from the single feature
+- Capability scope: artifacts from ALL features in the capability
 
 Invoke the documentation workflow:
 
@@ -360,8 +280,9 @@ Brief path: {BRIEF_PATH}
 Primary lens: {LENS}
 Anchor questions: {ANCHOR_QUESTIONS_PATH}
 Capability: {CAPABILITY_SLUG} ({CAPABILITY_NAME})
-Feature: {FEATURE_SLUG}
+Feature: {FEATURE_SLUG or "all (capability scope)"}
 Feature dir: {FEATURE_DIR}
+Execution scope: {SCOPE}
 
 Documentation focus:
 - What was built (from review-verified artifacts)
@@ -379,11 +300,12 @@ Lens-specific doc emphasis:
 **Human checkpoint within doc stage:** doc.md surfaces documentation changes for user confirmation before writing to `.documentation/`.
 
 **After documentation completes:**
-- Update FEATURE.md frontmatter status to "complete" (all 6 stages passed)
+- Update FEATURE.md frontmatter status to "complete" (all 4 stages passed)
 - Update FEATURE.md trace table to mark all columns complete
+- For capability scope: update CAPABILITY.md status if all features complete
 - Proceed to completion
 
-## 8. Escalation Handling
+## 7. Escalation Handling
 
 At every stage boundary, check for escalation signals. Apply the universal 3-tier escalation protocol from escalation-protocol.md.
 
@@ -447,7 +369,7 @@ Use AskUserQuestion:
 
 **If confirmed backward return:** Same budget check as Moderate tier.
 
-## 9. Pipeline Completion
+## 8. Pipeline Completion
 
 Display completion banner:
 ```
@@ -455,40 +377,41 @@ Display completion banner:
  GSD > PIPELINE COMPLETE
 -------------------------------------------------------
 
-Feature: {CAPABILITY_SLUG}/{FEATURE_SLUG}
+Scope: {SCOPE}
+Capability: {CAPABILITY_SLUG}
+Feature: {FEATURE_SLUG or "all features"}
 Lens: {LENS} {+ SECONDARY_LENS if compound}
 
 Stages completed:
-  1. Research      [OK]
-  2. Requirements  [OK]
-  3. Plan          [OK]
-  4. Execute       [OK]
-  5. Review        [OK]
-  6. Doc           [OK]
+  1. Plan          [OK]
+  2. Execute       [OK]
+  3. Review        [OK]
+  4. Doc           [OK]
 
 Escalations: {count} ({breakdown by tier})
 Backward resets: {backward_resets}/{max_backward_resets}
 
-Feature status: complete
+Status: complete
 ```
 
 </process>
 
 <key_constraints>
 - Orchestrator passes PATHS not content. Each stage reads files itself with fresh context.
-- All 6 stages run in sequence. No stage skipping.
-- LENS and ANCHOR_QUESTIONS_PATH propagated to all 6 pipeline stages.
+- 4 stages: plan -> execute -> review -> doc. Review and doc run once per execution scope.
+- Capability scope: DAG wave ordering of features for plan+execute, then single review+doc for the full scope.
+- Feature scope: linear plan -> execute -> review -> doc.
+- LENS and ANCHOR_QUESTIONS_PATH propagated to all 4 pipeline stages.
 - Each stage receives lens framing context that affects its Q&A, discovery, and agent behavior.
-- Requirements generation always produces all 3 layers (EU/FN/TC). Weight varies by lens.
-- Requirements populate FEATURE.md directly, not a separate REQUIREMENTS.md.
-- Research output written to feature directory, not capability directory.
+- Research is owned by plan.md (Step 5: 6 parallel gatherers + synthesizer). No separate research stage.
+- Requirements come from discuss-feature upstream. Pipeline receives pre-written requirements in FEATURE.md.
 - Review receives 3 inputs: requirements + lens metadata + brief. The brief check catches spec-complete-but-problem-incomplete work.
 - Doc stage is the doc agent -- not a new agent.
 - Execute -> Review auto-chains (no user intervention). Review -> Doc auto-chains when clean.
-- Full auto-chain: user kicks off execute once -> builds code -> auto-reviews -> auto-documents -> done. Only pauses for human decisions (fix Q&A, doc confirmations).
+- Full auto-chain: user kicks off pipeline -> plans -> builds code -> auto-reviews -> auto-documents -> done. Only pauses for human decisions (fix Q&A, doc confirmations).
 - Escalation protocol is universal: same 3 tiers at every stage boundary.
 - Maximum 1 backward reset per pipeline run. After that, hard stop (user must restart manually).
 - Major issues use propose-and-confirm. No auto-return.
 - Compound work: primary lens governs, secondary lens informs. See framing-lenses.md precedence table.
-- FEATURE.md status updated to "complete" when all 6 stages finish.
+- FEATURE.md status updated to "complete" when all 4 stages finish.
 </key_constraints>
