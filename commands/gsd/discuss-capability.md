@@ -21,7 +21,7 @@ Guided exploration of a capability's core idea, boundaries, and suggested lens. 
 5. Update capability file with exploration notes and suggested lens
 6. Can kill or defer ideas with reasoning
 
-**Output:** Updated capability file in `.documentation/capabilities/` with status, exploration notes, and suggested lens
+**Output:** Updated capability file in `.planning/capabilities/{slug}/CAPABILITY.md` with status, exploration notes, and suggested lens
 </objective>
 
 <execution_context>

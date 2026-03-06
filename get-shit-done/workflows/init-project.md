@@ -1,9 +1,10 @@
 <purpose>
-Initialize a project through auto-detected flow. Handles both new (greenfield) and existing (brownfield) projects through a single entry point. Produces PROJECT.md + capability map + .documentation/ seed regardless of mode.
+Initialize a project through auto-detected flow. Handles both new (greenfield) and existing (brownfield) projects through a single entry point. Produces PROJECT.md + capability map + documentation tier seed regardless of mode.
 </purpose>
 
 <required_reading>
 Read all files referenced by the invoking prompt's execution_context before starting.
+@{GSD_ROOT}/get-shit-done/references/doc-tiers.md
 </required_reading>
 
 <question_protocol>
@@ -263,27 +264,35 @@ Update each CAPABILITY.md with exploration notes from the Q&A.
 
 **Incremental write -- update init-state.json** with `completed_sections: ["goals", "capabilities", "tech_stack", "architecture", "design_style", "project_md", "capability_map"]`.
 
-### 3f. Seed .documentation/
+### 3f. Seed Documentation Tiers
 
-Create the documentation structure:
+Seed the documentation tier structure (see `references/doc-tiers.md` for the full tier registry):
 
+**Tier 1 — Update CLAUDE.md router:**
+- Create or update root `CLAUDE.md` with project identity, tech stack summary, and pointers to `.docs/` and `.claude/`
+- Keep under 200 lines — router only
+
+**Tier 3 — Create `.docs/` knowledge base:**
+```bash
+mkdir -p .docs
 ```
-.documentation/
-  architecture.md      <- High-level architecture from Q&A
-  domain.md            <- Domain concepts from Q&A
-  mapping.md           <- Domain concept -> code location (empty for new projects)
-  capabilities/        <- Mirrors .planning/capabilities/ for published docs
-  decisions/           <- ADRs (seed with decisions from Q&A)
-```
+- `architecture.md` — high-level architecture from Q&A
+- `domain-vocabulary.md` — domain concepts from Q&A (includes domain-to-code mapping; empty for new projects)
+- `brand.md` — voice, tone, design direction from Q&A
+
+**Tier 5 — Create memory ledger:**
+- `.claude/memory-ledger.md` — empty with format header (solved gotchas accumulate during development)
 
 Write initial content based on what was gathered. For new projects, most files will be stubs with intent captured.
 
+No `decisions/` directory — architectural decisions go into `.docs/architecture.md`, code-level decisions are Tier 4 inline comments.
+
 ```bash
-mkdir -p .documentation/capabilities .documentation/decisions
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs: seed documentation structure" --files .documentation/architecture.md .documentation/domain.md .documentation/mapping.md
+mkdir -p .docs .claude
+node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs: seed documentation tiers" --files .docs/architecture.md .docs/domain-vocabulary.md .docs/brand.md .claude/memory-ledger.md
 ```
 
-**Incremental write -- update init-state.json** with `completed_sections: ["goals", "capabilities", "tech_stack", "architecture", "design_style", "project_md", "capability_map", "documentation"]`.
+**Incremental write -- update init-state.json** with `completed_sections: ["goals", "capabilities", "tech_stack", "architecture", "design_style", "project_md", "capability_map", "doc_tiers"]`.
 
 ### 3g. Write ROADMAP.md
 
@@ -303,7 +312,7 @@ For new projects:
 node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs: initialize roadmap" --files .planning/ROADMAP.md
 ```
 
-**Incremental write -- update init-state.json** with `completed_sections: ["goals", "capabilities", "tech_stack", "architecture", "design_style", "project_md", "capability_map", "documentation", "roadmap_md"]`.
+**Incremental write -- update init-state.json** with `completed_sections: ["goals", "capabilities", "tech_stack", "architecture", "design_style", "project_md", "capability_map", "doc_tiers", "roadmap_md"]`.
 
 ### 3h. Write STATE.md
 
@@ -323,7 +332,7 @@ Write `.planning/STATE.md` using the v2 state template (`templates/state.md`).
 node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs: initialize state" --files .planning/STATE.md
 ```
 
-**Incremental write -- update init-state.json** with `completed_sections: ["goals", "capabilities", "tech_stack", "architecture", "design_style", "project_md", "capability_map", "documentation", "roadmap_md", "state_md"]`.
+**Incremental write -- update init-state.json** with `completed_sections: ["goals", "capabilities", "tech_stack", "architecture", "design_style", "project_md", "capability_map", "doc_tiers", "roadmap_md", "state_md"]`.
 
 **Proceed to Step 5 (Completion).**
 
@@ -461,25 +470,51 @@ Update each CAPABILITY.md with validated scan findings.
 
 **Incremental write -- update init-state.json** with `completed_sections: ["scan", "validation", "gap_fill", "design_style", "project_md", "capability_map"]`.
 
-### 4f. Seed .documentation/
+### 4f. Seed Documentation Tiers
 
-Create the documentation structure populated from scan + validation:
+Seed the documentation tier structure (see `references/doc-tiers.md` for the full tier registry), populated from scan + validation:
 
+**Tier 1 — Update CLAUDE.md router:**
+- Create or update root `CLAUDE.md` with project identity, tech stack summary, and pointers to `.docs/` and `.claude/`
+- Keep under 200 lines — router only
+
+**Tier 3 — Create `.docs/` knowledge base:**
+```bash
+mkdir -p .docs
 ```
-.documentation/
-  architecture.md      <- Validated architecture from scan Phase 1+2
-  domain.md            <- Domain context from gap fill Phase 3
-  mapping.md           <- Domain concept -> code location from scan
-  capabilities/        <- Per-capability docs from validated findings
-  decisions/           <- Known decisions (from intent questions)
-```
+- `architecture.md` — validated architecture from scan Phase 1+2
+- `domain-vocabulary.md` — domain context from gap fill Phase 3 (includes domain-to-code mapping from scan)
+- `brand.md` — voice, tone, design direction from design Q&A
+
+**Tier 5 — Create memory ledger:**
+- `.claude/memory-ledger.md` — empty with format header
+
+No `decisions/` directory — architectural decisions go into `.docs/architecture.md`, code-level decisions are Tier 4 inline comments.
 
 ```bash
-mkdir -p .documentation/capabilities .documentation/decisions
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs: seed documentation from codebase scan" --files .documentation/architecture.md .documentation/domain.md .documentation/mapping.md
+mkdir -p .docs .claude
+node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs: seed documentation tiers from codebase scan" --files .docs/architecture.md .docs/domain-vocabulary.md .docs/brand.md .claude/memory-ledger.md
 ```
 
-**Incremental write -- update init-state.json** with `completed_sections: ["scan", "validation", "gap_fill", "design_style", "project_md", "capability_map", "documentation"]`.
+**Incremental write -- update init-state.json** with `completed_sections: ["scan", "validation", "gap_fill", "design_style", "project_md", "capability_map", "doc_tiers"]`.
+
+### 4f.5. Scaffold Tier 2 Rules
+
+After the capability map (4e) and tier seeding (4f), scaffold directory-scoped CLAUDE.md files for detected code directories.
+
+1. **Detect code directories** from the validated scan (e.g., `src/`, `src-tauri/`, `server/`, `lib/`)
+2. **For each directory:** scan for framework conventions (Svelte, Rust, Python, etc.) from the scan findings
+3. **Propose scoped CLAUDE.md content** per directory — framework-specific rules, naming conventions, testing patterns
+
+Use AskUserQuestion:
+- header: "Tier 2 Rules"
+- question: "Based on the scan, I'd like to create scoped CLAUDE.md files for these directories:\n\n[list each directory with proposed rule summary]\n\nApprove, adjust, or skip?"
+- options:
+  - "Approve all" — Create all proposed files
+  - "Let me adjust" — Modify the proposals
+  - "Skip" — Skip Tier 2 scaffolding for now
+
+4. **Create confirmed `{subdir}/CLAUDE.md` files** with the approved content
 
 ### 4g. Write ROADMAP.md
 
@@ -498,7 +533,7 @@ For brownfield projects:
 node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs: initialize roadmap from codebase scan" --files .planning/ROADMAP.md
 ```
 
-**Incremental write -- update init-state.json** with `completed_sections: ["scan", "validation", "gap_fill", "design_style", "project_md", "capability_map", "documentation", "roadmap_md"]`.
+**Incremental write -- update init-state.json** with `completed_sections: ["scan", "validation", "gap_fill", "design_style", "project_md", "capability_map", "doc_tiers", "roadmap_md"]`.
 
 ### 4h. Write STATE.md
 
@@ -518,7 +553,7 @@ Write `.planning/STATE.md` using the v2 state template (`templates/state.md`).
 node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs: initialize state" --files .planning/STATE.md
 ```
 
-**Incremental write -- update init-state.json** with `completed_sections: ["scan", "validation", "gap_fill", "design_style", "project_md", "capability_map", "documentation", "roadmap_md", "state_md"]`.
+**Incremental write -- update init-state.json** with `completed_sections: ["scan", "validation", "gap_fill", "design_style", "project_md", "capability_map", "doc_tiers", "roadmap_md", "state_md"]`.
 
 **Proceed to Step 5 (Completion).**
 
@@ -548,10 +583,10 @@ Mode: [New / Existing]
 | Capabilities       | .planning/capabilities/           |
 | Roadmap            | .planning/ROADMAP.md              |
 | State              | .planning/STATE.md                |
-| Architecture       | .documentation/architecture.md    |
-| Domain             | .documentation/domain.md          |
-| Mapping            | .documentation/mapping.md         |
-| Decisions          | .documentation/decisions/         |
+| Architecture       | .docs/architecture.md             |
+| Domain Vocabulary  | .docs/domain-vocabulary.md        |
+| Brand              | .docs/brand.md                    |
+| Memory Ledger      | .claude/memory-ledger.md          |
 
 Project initialized with [N] capabilities and [M] feature stubs.
 
@@ -576,13 +611,13 @@ Later, once you have features:
 - Incremental writes: each section is persisted to init-state.json immediately after completion
 - Partial-run detection: re-running /init checks init-state.json and offers resume
 - No interactive stdin from gsd-tools -- all user interaction via AskUserQuestion in the workflow
-- Both flows produce the same outputs: PROJECT.md + capability map + .documentation/ seed
+- Both flows produce the same outputs: PROJECT.md + capability map + documentation tier seed (.docs/, .claude/memory-ledger.md)
 </key_constraints>
 
 <success_criteria>
 - [ ] Auto-detection correctly identifies new/existing/ambiguous
 - [ ] New-project flow captures goals, tech stack opinions, architecture, constraints
-- [ ] New-project flow writes PROJECT.md, capability map, .documentation/ seed
+- [ ] New-project flow writes PROJECT.md, capability map, documentation tier seed (.docs/, .claude/memory-ledger.md)
 - [ ] Existing-project flow runs parallel scan via gather-synthesize
 - [ ] Existing-project validation uses independent sections
 - [ ] Existing-project gap fill captures domain context and tech debt
@@ -590,4 +625,5 @@ Later, once you have features:
 - [ ] Partial-run detection works on re-run
 - [ ] Both flows create STATE.md and ROADMAP.md
 - [ ] Both flows produce identical output artifact set
+- [ ] Brownfield flow scaffolds Tier 2 rules for detected code directories
 </success_criteria>

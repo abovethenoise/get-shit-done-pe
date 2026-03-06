@@ -97,8 +97,8 @@ function cmdInitProject(cwd, raw) {
 
       // Determine next section based on mode
       const allSections = stateData.mode === 'existing'
-        ? ['scan', 'validation', 'gap_fill', 'design_style', 'project_md', 'capability_map', 'documentation', 'roadmap_md', 'state_md']
-        : ['goals', 'tech_stack', 'architecture', 'design_style', 'project_md', 'capability_map', 'documentation', 'roadmap_md', 'state_md'];
+        ? ['scan', 'validation', 'gap_fill', 'design_style', 'project_md', 'capability_map', 'doc_tiers', 'roadmap_md', 'state_md']
+        : ['goals', 'tech_stack', 'architecture', 'design_style', 'project_md', 'capability_map', 'doc_tiers', 'roadmap_md', 'state_md'];
 
       const completed = new Set(stateData.completed_sections);
       partialRun.next_section = allSections.find(s => !completed.has(s)) || null;
@@ -309,15 +309,6 @@ function cmdInitDiscussCapability(cwd, raw) {
     }
   } catch { /* no capabilities dir */ }
 
-  // Documentation capabilities directory
-  const docCapDir = path.join(cwd, '.documentation', 'capabilities');
-  let docCapabilities = [];
-  try {
-    docCapabilities = fs.readdirSync(docCapDir)
-      .filter(f => f.endsWith('.md'))
-      .map(f => f.replace('.md', ''));
-  } catch { /* no doc capabilities dir */ }
-
   const result = {
     // Config
     commit_docs: config.commit_docs,
@@ -326,19 +317,12 @@ function cmdInitDiscussCapability(cwd, raw) {
     capability_list: capabilities,
     capability_count: capabilities.length,
 
-    // Documentation capabilities
-    doc_capabilities: docCapabilities,
-
     // Paths
     capabilities_dir: '.planning/capabilities',
-    documentation_dir: '.documentation',
-    doc_capabilities_dir: '.documentation/capabilities',
 
     // File existence
     planning_exists: pathExistsInternal(cwd, '.planning'),
-    documentation_exists: pathExistsInternal(cwd, '.documentation'),
     capabilities_dir_exists: pathExistsInternal(cwd, '.planning/capabilities'),
-    doc_capabilities_dir_exists: pathExistsInternal(cwd, '.documentation/capabilities'),
   };
 
   output(result, raw);
@@ -417,7 +401,6 @@ function cmdInitDiscussFeature(cwd, raw) {
 
     // Paths
     capabilities_dir: '.planning/capabilities',
-    documentation_dir: '.documentation',
 
     // File existence
     planning_exists: pathExistsInternal(cwd, '.planning'),

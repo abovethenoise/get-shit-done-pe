@@ -67,10 +67,14 @@ Read the feature file content. Extract:
 - **Existing requirements**: EU, FN, TC files in the requirements subdirectory (if any)
 
 **Also load parent capability:**
-Read `.planning/capabilities/{cap-slug}/CAPABILITY.md` for capability-level context.
-If `.documentation/capabilities/{cap-slug}.md` exists, read it for exploration notes and suggested lens.
+Read `.planning/capabilities/{cap-slug}/CAPABILITY.md` for capability-level context (exploration notes and suggested lens are in the Decisions table).
 
-Store capability context for use during discussion — the feature discussion should be grounded in capability-level understanding.
+**Load project context for grounding (if files exist):**
+- `.docs/architecture.md` — system architecture context
+- `.docs/domain-vocabulary.md` — domain concepts and vocabulary
+- `.docs/brand.md` — voice, tone, design direction
+
+Store capability and project context for use during discussion — the feature discussion should be grounded in capability-level understanding, project architecture, and domain.
 </step>
 
 <step name="check_status">

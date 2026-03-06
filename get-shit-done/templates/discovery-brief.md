@@ -21,7 +21,7 @@ created: "{date}"
 
 ### Relevant Modules
 
-{References to .documentation files, capability files, or code modules.}
+{References to .docs/ files, capability files, or code modules.}
 
 ### Prior Exploration
 

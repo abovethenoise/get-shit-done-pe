@@ -6,10 +6,14 @@ You are a thinking partner, not an interviewer. The user is the visionary — yo
 This command is optional and repeatable. It can also kill or defer ideas with reasoning.
 </purpose>
 
+<required_reading>
+@{GSD_ROOT}/get-shit-done/references/doc-tiers.md
+</required_reading>
+
 <downstream_awareness>
 **discuss-capability enriches:**
 
-1. **Capability file** in `.documentation/capabilities/` — status, exploration section, suggested lens
+1. **Capability file** in `.planning/capabilities/{slug}/CAPABILITY.md` — status, exploration section, suggested lens
 2. **Framing commands** (/debug, /new, /enhance, /refactor) — suggested lens guides which entry point to use
 3. **discuss-feature** — capability-level clarity feeds feature-level discussion
 
@@ -25,7 +29,7 @@ Capability reference from argument (required — accepts fuzzy natural language)
 INIT=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" init discuss-capability)
 ```
 
-Parse JSON for: `capability_list`, `capability_count`, `documentation_dir`, `capabilities_dir`.
+Parse JSON for: `capability_list`, `capability_count`, `capabilities_dir`.
 </step>
 
 <step name="fuzzy_resolve">
@@ -62,15 +66,20 @@ If "Create new": Ask for capability name, create via `capability-create`, then p
 <step name="load_capability">
 Load the capability file and check its status.
 
-**Capability file location:** `.documentation/capabilities/{slug}.md`
-
-If the file does not exist, check `.planning/capabilities/{slug}/CAPABILITY.md` for working artifact data.
+**Capability file location:** `.planning/capabilities/{slug}/CAPABILITY.md`
 
 Read the capability file content. Extract:
 - **status**: exploring | specified | in-progress | complete | killed | deferred
 - **Exploration section**: core idea, open questions, suggested lens (if previously discussed)
 - **Brief section**: empty or populated
 - **Requirements section**: empty or populated
+
+**Load project context for grounding (if files exist):**
+- `.docs/architecture.md` — system architecture context
+- `.docs/domain-vocabulary.md` — domain concepts and vocabulary
+- `.docs/brand.md` — voice, tone, design direction
+
+These provide grounding so exploration is informed by project architecture and domain.
 </step>
 
 <step name="check_status">
@@ -196,39 +205,17 @@ Use AskUserQuestion:
 <step name="update_capability_file">
 After exploration is complete (or kill/defer decided), update the capability file.
 
-**Capability file location:** `.documentation/capabilities/{slug}.md`
+**Capability file location:** `.planning/capabilities/{slug}/CAPABILITY.md`
 
-If the file does not exist, create it.
+Update the existing CAPABILITY.md (created by `capability-create`). Do NOT overwrite the entire file — update these sections:
 
-**File format:**
+- **Frontmatter `status:`** — update to reflect current state
+- **Decisions table** — add exploration decisions with date, context, tradeoffs
+- **Goal / Why sections** — update if exploration refined the core idea
 
-```markdown
-# {Capability Name}
-status: {exploring | specified | in-progress | complete | killed | deferred}
+If killed or deferred, update the status in frontmatter and add a row to the Decisions table with the reasoning.
 
-## Exploration
-Core idea: {one sentence captured during discussion}
-Open questions: {list of unresolved questions}
-Suggested lens: {debug | new | enhance | refactor | undecided}
-
-{If killed:}
-## Kill Reasoning
-{Why this capability was killed, captured from discussion}
-{Date killed}
-
-{If deferred:}
-## Deferral Reasoning
-{Why this capability was deferred}
-{Date deferred}
-
-## Brief
-(empty until framing runs)
-
-## Requirements
-(empty until pipeline runs)
-```
-
-Write the file. If the file already existed, preserve Brief and Requirements sections — only update status, Exploration, and kill/defer reasoning.
+If exploration surfaced a suggested framing lens, add it to the Decisions table.
 
 **Scaffold feature directories and stubs:**
 
@@ -287,7 +274,7 @@ Reasoning: {reasoning}
 Commit the capability file update:
 
 ```bash
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs(capability): update {slug} exploration" --files ".documentation/capabilities/{slug}.md"
+node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs(capability): update {slug} exploration" --files ".planning/capabilities/{slug}/CAPABILITY.md"
 ```
 </step>
 

@@ -158,6 +158,14 @@ Task(
 )
 ```
 
+**Cleanup research findings:**
+After RESEARCH.md is verified non-empty, remove ephemeral gatherer outputs:
+```bash
+rm -f "${feature_dir}"/research/*-findings.md
+rmdir "${feature_dir}/research" 2>/dev/null
+```
+RESEARCH.md is the sole retained research artifact.
+
 **Handle research failure:**
 If research fails (aborted due to too many gatherer failures):
 Present options to user via AskUserQuestion:

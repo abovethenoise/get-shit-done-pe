@@ -25,10 +25,10 @@ Initialize a project through auto-detected flow. Handles both new (greenfield) a
 **Creates:**
 - `.planning/PROJECT.md` -- project context and goals
 - `.planning/capabilities/` -- capability map
-- `.documentation/architecture.md` -- code/system architecture
-- `.documentation/domain.md` -- domain concepts
-- `.documentation/mapping.md` -- domain-to-code links
-- `.documentation/decisions/` -- architectural decision records
+- `.docs/architecture.md` -- system architecture (Tier 3)
+- `.docs/domain-vocabulary.md` -- domain concepts (Tier 3)
+- `.docs/brand.md` -- design direction (Tier 3)
+- `.claude/memory-ledger.md` -- solved gotchas (Tier 5)
 
 **After this command:** Run `/gsd:new` to set up requirements, research, and roadmap.
 </objective>

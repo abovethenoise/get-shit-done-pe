@@ -21,7 +21,6 @@ function listDirs(dirPath) {
 /** Scan .planning/capabilities/ to build full capability inventory with artifacts and completeness classification. */
 function cmdScanDiscover(cwd, raw) {
   const capabilitiesDir = path.join(cwd, '.planning', 'capabilities');
-  const documentationDir = path.join(cwd, '.documentation', 'capabilities');
 
   if (!fs.existsSync(capabilitiesDir)) {
     output({ capabilities: [], gap_findings: [] }, raw);
@@ -36,10 +35,8 @@ function cmdScanDiscover(cwd, raw) {
   for (const slug of entries) {
     const capPath = path.join(capabilitiesDir, slug, 'CAPABILITY.md');
     const featuresDir = path.join(capabilitiesDir, slug, 'features');
-    const docPath = path.join(documentationDir, `${slug}.md`);
 
     const capContent = safeReadFile(capPath);
-    const docContent = safeReadFile(docPath);
 
     // Load features
     const features = [];
@@ -59,9 +56,9 @@ function cmdScanDiscover(cwd, raw) {
 
     // Compute completeness: CAPABILITY.md is the anchor — directories without it are orphaned (completeness 'none'), not 'partial'.
     let completeness;
-    if (capContent && features.length > 0 && docContent) {
+    if (capContent && features.length > 0) {
       completeness = 'full';
-    } else if (capContent || features.length > 0 || docContent) {
+    } else if (capContent || features.length > 0) {
       completeness = 'partial';
     } else {
       completeness = 'none';
@@ -72,7 +69,6 @@ function cmdScanDiscover(cwd, raw) {
       artifacts: {
         capability: capContent ? { path: path.relative(cwd, capPath), content: capContent } : null,
         features,
-        documentation: docContent ? { path: path.relative(cwd, docPath), content: docContent } : null,
       },
       completeness,
     });

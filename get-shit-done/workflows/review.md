@@ -202,6 +202,6 @@ After completion:
 - Re-review is targeted: only affected reviewers + synthesizer
 - Max 2 re-review cycles
 - Requirements from FEATURE.md (EU/FN/TC), not separate REQUIREMENTS.md
-- Review traces in feature_dir/review/ (feature-scoped paths)
+- Review traces are ephemeral — cleaned up by doc.md after doc stage completes (doc is review's downstream consumer)
 - Auto-advances to doc workflow when no blockers remain (step 12)
 </key_constraints>
