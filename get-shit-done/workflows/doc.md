@@ -27,7 +27,6 @@ Parse: `commit_docs`, `capability_slug`, `capability_dir`, `feature_found`, `fea
 **If `feature_found` is false:** Error.
 
 ```bash
-mkdir -p .documentation/modules .documentation/flows .documentation/capabilities
 mkdir -p "${FEATURE_DIR}/doc"
 ```
 
@@ -75,91 +74,95 @@ Lens emphasis:
   - refactor: emphasis on before/after architecture, migration notes, updated mappings
 Feature artifacts: {artifact list from Step 3}
 Review synthesis: {feature_dir}/review/synthesis.md (if exists)
+Review traces: {feature_dir}/review/*-trace.md (if exist)
+Review decisions: {feature_dir}/review/review-decisions.md (if exists)
+Research: {feature_dir}/RESEARCH.md (if exists)
+Plans: {feature_dir}/*-PLAN.md (if exist)
 </doc_context>
 ```
 
-Spawn all 5 explorers simultaneously (parallel Task calls — do NOT wait for one before spawning the next):
+Spawn all 6 explorers simultaneously (parallel Task calls — do NOT wait for one before spawning the next):
 
 ```
 Task(
-  prompt="First, read {GSD_ROOT}/agents/gsd-doc-writer.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Role: explorer\nFocus area: code-comments\nFeature artifacts: {artifact_list}\nWrite your findings to: {feature_dir}/doc/code-comments-findings.md</task_context>",
-  subagent_type="gsd-doc-writer",
+  prompt="First, read {GSD_ROOT}/agents/gsd-doc-explorer.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Focus area: inline-clarity\nFeature artifacts: {artifact_list}\nWrite your findings to: {feature_dir}/doc/inline-clarity-findings.md</task_context>",
+  subagent_type="gsd-doc-explorer",
   model="sonnet",
-  description="Doc Explore: code-comments for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
+  description="Doc Explore: inline-clarity for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
 )
 
 Task(
-  prompt="First, read {GSD_ROOT}/agents/gsd-doc-writer.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Role: explorer\nFocus area: module-flow-docs\nFeature artifacts: {artifact_list}\nWrite your findings to: {feature_dir}/doc/module-flow-docs-findings.md</task_context>",
-  subagent_type="gsd-doc-writer",
+  prompt="First, read {GSD_ROOT}/agents/gsd-doc-explorer.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Focus area: architecture-map\nFeature artifacts: {artifact_list}\nWrite your findings to: {feature_dir}/doc/architecture-map-findings.md</task_context>",
+  subagent_type="gsd-doc-explorer",
   model="sonnet",
-  description="Doc Explore: module-flow-docs for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
+  description="Doc Explore: architecture-map for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
 )
 
 Task(
-  prompt="First, read {GSD_ROOT}/agents/gsd-doc-writer.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Role: explorer\nFocus area: standards-decisions\nFeature artifacts: {artifact_list}\nWrite your findings to: {feature_dir}/doc/standards-decisions-findings.md</task_context>",
-  subagent_type="gsd-doc-writer",
+  prompt="First, read {GSD_ROOT}/agents/gsd-doc-explorer.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Focus area: domain-context\nFeature artifacts: {artifact_list}\nResearch: {feature_dir}/RESEARCH.md\nPlans: {feature_dir}/*-PLAN.md\nWrite your findings to: {feature_dir}/doc/domain-context-findings.md</task_context>",
+  subagent_type="gsd-doc-explorer",
   model="sonnet",
-  description="Doc Explore: standards-decisions for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
+  description="Doc Explore: domain-context for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
 )
 
 Task(
-  prompt="First, read {GSD_ROOT}/agents/gsd-doc-writer.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Role: explorer\nFocus area: project-config\nFeature artifacts: {artifact_list}\nWrite your findings to: {feature_dir}/doc/project-config-findings.md</task_context>",
-  subagent_type="gsd-doc-writer",
+  prompt="First, read {GSD_ROOT}/agents/gsd-doc-explorer.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Focus area: agent-context\nFeature artifacts: {artifact_list}\nWrite your findings to: {feature_dir}/doc/agent-context-findings.md</task_context>",
+  subagent_type="gsd-doc-explorer",
   model="sonnet",
-  description="Doc Explore: project-config for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
+  description="Doc Explore: agent-context for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
 )
 
 Task(
-  prompt="First, read {GSD_ROOT}/agents/gsd-doc-writer.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Role: explorer\nFocus area: friction-reduction\nFeature artifacts: {artifact_list}\nWrite your findings to: {feature_dir}/doc/friction-reduction-findings.md</task_context>",
-  subagent_type="gsd-doc-writer",
+  prompt="First, read {GSD_ROOT}/agents/gsd-doc-explorer.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Focus area: automation-surface\nFeature artifacts: {artifact_list}\nReview traces: {feature_dir}/review/*-trace.md\nReview decisions: {feature_dir}/review/review-decisions.md\nWrite your findings to: {feature_dir}/doc/automation-surface-findings.md</task_context>",
+  subagent_type="gsd-doc-explorer",
   model="sonnet",
-  description="Doc Explore: friction-reduction for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
+  description="Doc Explore: automation-surface for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
+)
+
+Task(
+  prompt="First, read {GSD_ROOT}/agents/gsd-doc-explorer.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Focus area: planning-hygiene\nFeature artifacts: {artifact_list}\nResearch: {feature_dir}/RESEARCH.md\nPlans: {feature_dir}/*-PLAN.md\nSummaries: {feature_dir}/*-SUMMARY.md\nWrite your findings to: {feature_dir}/doc/planning-hygiene-findings.md</task_context>",
+  subagent_type="gsd-doc-explorer",
+  model="sonnet",
+  description="Doc Explore: planning-hygiene for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
 )
 ```
 
-Wait for ALL 5 explorers to complete.
+Wait for ALL 6 explorers to complete.
 
 After all explorers complete, check each output:
-- {feature_dir}/doc/code-comments-findings.md
-- {feature_dir}/doc/module-flow-docs-findings.md
-- {feature_dir}/doc/standards-decisions-findings.md
-- {feature_dir}/doc/project-config-findings.md
-- {feature_dir}/doc/friction-reduction-findings.md
+- {feature_dir}/doc/inline-clarity-findings.md
+- {feature_dir}/doc/architecture-map-findings.md
+- {feature_dir}/doc/domain-context-findings.md
+- {feature_dir}/doc/agent-context-findings.md
+- {feature_dir}/doc/automation-surface-findings.md
+- {feature_dir}/doc/planning-hygiene-findings.md
 
 For each missing or empty file: retry that explorer ONCE with the same prompt.
 After retry, if still missing/empty: status = "failed".
 
-Abort threshold: if 3 or more explorers fail (failed_count >= 3), abort — do NOT proceed to synthesis.
+Abort threshold: if 4 or more explorers fail (failed_count >= 4), abort — do NOT proceed to synthesis.
 Display error:
 
 ```
-GSD > DOC EXPLORE FAILED: {N}/5 explorers failed
+GSD > DOC EXPLORE FAILED: {N}/6 explorers failed
 Failed: {list of failed focus areas}
 Action: Check agent definitions and context assembly before retrying.
 ```
 
-If 2 or fewer fail: proceed to synthesis with partial results.
+If 3 or fewer fail: proceed to synthesis with partial results.
 
 ```
 Task(
-  prompt="First, read {GSD_ROOT}/agents/gsd-doc-writer.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Role: synthesizer\nExplorer findings to consolidate:\n- code-comments: {feature_dir}/doc/code-comments-findings.md [{status}]\n- module-flow-docs: {feature_dir}/doc/module-flow-docs-findings.md [{status}]\n- standards-decisions: {feature_dir}/doc/standards-decisions-findings.md [{status}]\n- project-config: {feature_dir}/doc/project-config-findings.md [{status}]\n- friction-reduction: {feature_dir}/doc/friction-reduction-findings.md [{status}]\n\nFor any explorer with status 'failed': document the gap — do not fabricate findings.\n\nWrite consolidated doc-report.md to: {feature_dir}/doc-report.md</task_context>",
-  subagent_type="gsd-doc-writer",
+  prompt="First, read {GSD_ROOT}/agents/gsd-doc-synthesizer.md for your role.\nThen read {GSD_ROOT}/get-shit-done/references/doc-tiers.md for tier registry.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Explorer findings to consolidate:\n- inline-clarity: {feature_dir}/doc/inline-clarity-findings.md [{status}]\n- architecture-map: {feature_dir}/doc/architecture-map-findings.md [{status}]\n- domain-context: {feature_dir}/doc/domain-context-findings.md [{status}]\n- agent-context: {feature_dir}/doc/agent-context-findings.md [{status}]\n- automation-surface: {feature_dir}/doc/automation-surface-findings.md [{status}]\n- planning-hygiene: {feature_dir}/doc/planning-hygiene-findings.md [{status}]\n\nFor any explorer with status 'failed': document the gap — do not fabricate findings.\n\nWrite consolidated doc-report.md to: {feature_dir}/doc-report.md</task_context>",
+  subagent_type="gsd-doc-synthesizer",
   model="inherit",
   description="Doc Synthesize for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
 )
 ```
 
-## 5. Verify Output
+## 5. Present Recommendations (Q&A Loop)
 
-Check doc-report.md exists and is non-empty. If missing or empty: error.
-
-## 6. Impact Discovery
-
-Read doc-report.md. Collect impact flags: recommendations referencing existing .documentation/ files. Present after Q&A.
-
-## 7. Present Recommendations (Q&A Loop)
-
-For each focus area group in doc-report.md (in priority order: code-comments, module-flow-docs, standards-decisions, project-config, friction-reduction):
+For each focus area group in doc-report.md (in priority order: inline-clarity, architecture-map, domain-context, agent-context, automation-surface, planning-hygiene):
 
 For each recommendation in the group:
 
@@ -168,53 +171,100 @@ Display:
 - Target file: {target_file}
 - What to change: {change}
 - Why: {rationale}
+- Route: {routing target}
+- Expected behavior: {assertion}
 
 Options via AskUserQuestion (header: "Rec {N}/{total}"):
 - **Approve** -- include in commit
 - **Edit** -- provide feedback, re-generate this recommendation
 - **Reject** -- exclude from commit
 
-## 8. Present Impact Flags
-
-If impacted existing docs found in doc-report.md: display as informational section (no Q&A action required).
-
-## 9. Update FEATURE.md Trace Table
+## 6. Update FEATURE.md Trace Table
 
 Mark "Docs" column complete for documented requirements.
 
-## 10. Commit Approved Docs
+## 7. Apply Approved Recommendations
+
+Group approved recommendations by route:
+- `inline-comment` → **code-comments** group
+- `claude-md` → **claude-md** group
+- `decision-log`, `memory-ledger` → **docs** group
+- `artifact-cleanup` → **cleanup** group
+
+For each non-empty group, spawn a writer in parallel:
+
+```
+Task(
+  prompt="First, read {GSD_ROOT}/agents/gsd-doc-writer.md for your role.\n\n<task_context>\nRoute group: {group_name}\nRecommendations to apply:\n{list of approved recommendations for this group with target_file, what_to_change}\n</task_context>",
+  subagent_type="gsd-doc-writer",
+  model="sonnet",
+  description="Doc Write: {group_name} for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
+)
+```
+
+Only spawn writers for groups that have approved recommendations. Skip empty groups. Wait for all writers to complete.
+
+**Orchestrator-handled routes** (after writers complete):
+- For each approved `skill` recommendation: invoke `/skill-creator` with the skill spec
+- For each approved `hook` recommendation: create/update hook config directly
+- For each approved `linter` recommendation: update linter config directly
+
+## 8. Verify Writers
+
+Run each approved recommendation's `expected_behavior` assertion. These are freeform — grep patterns, mgrep queries, file existence checks, line counts, or absence checks. The explorer/synthesizer wrote them; the orchestrator executes them.
+
+For each approved recommendation:
+- Run its `expected_behavior` assertion
+- Record: PASS or FAIL with actual result
+
+If all pass: proceed to commit.
+
+If any fail, display failures and prompt via AskUserQuestion (header: "Verify"):
+- **Commit anyway** — proceed despite failures
+- **Fix** — re-run failed writers with failure context
+- **Abort** — stop before commit
+
+## 9. Commit and Cleanup
 
 Stage and commit approved files:
 ```bash
 git commit -m "docs(${CAPABILITY_SLUG}/${FEATURE_SLUG}): add generated documentation"
 ```
 
-## 11. Output Path Targets
+Remove ephemeral gatherer outputs — the human-approved artifacts are the sole records of each stage.
 
-Approved recommendations are applied to the paths identified in each recommendation's `target_file` field. No fixed output paths — outputs depend on user approvals in Step 7.
+```bash
+rm -f "${FEATURE_DIR}"/doc/*-findings.md
+rmdir "${FEATURE_DIR}/doc" 2>/dev/null
+rm -f "${FEATURE_DIR}"/review/*-trace.md
+rm -f "${FEATURE_DIR}"/review/synthesis.md
+rm -f "${FEATURE_DIR}"/review/review-decisions.md
+rmdir "${FEATURE_DIR}/review" 2>/dev/null
+```
 
-## 12. Completion
+## 10. Completion
 
 ```
 GSD > FEATURE DOCUMENTED: {capability_slug}/{feature_slug}
 
-Docs: {total} (Approved: {N}, Needs edit: {N}, Rejected: {N})
-Impact flags: {count} existing docs may need review
+Docs: {total} (Approved: {N}, Rejected: {N})
+Verified: {pass_count}/{total_approved} assertions passed
 
-Artifacts: {feature_dir}/doc/, {feature_dir}/doc-report.md
+Artifact: {feature_dir}/doc-report.md
 ```
 
 </process>
 
 <key_constraints>
-- Gather-synthesize pattern: 5 parallel explorers (sonnet) + 1 synthesizer (inherit)
-- Abort threshold: 3+ of 5 explorer failures = abort
+- Three agent roles: gsd-doc-explorer (6x sonnet), gsd-doc-synthesizer (1x inherit), gsd-doc-writer (Nx sonnet per route group)
+- Abort threshold: 4+ of 6 explorer failures = abort
 - mkdir -p "{FEATURE_DIR}/doc" required before explorer spawns
 - Q&A happens HERE via AskUserQuestion -- NOT inside doc agent
-- Impact flags presented separately after doc review
 - Gate docs are read-only validation inputs
 - User approval required before committing
 - Requirements from FEATURE.md (EU/FN/TC)
 - Review->Doc auto-chain when review passes cleanly
-- Section ownership: [derived] regenerated, [authored] preserved
+- Each finding routed to correct mechanism (comment, CLAUDE.md, hook, skill, linter, memory-ledger, artifact-cleanup)
+- Ephemeral artifact cleanup: doc findings + review traces/synthesis/decisions deleted after doc commit; doc-report.md is the sole retained artifact
+- Post-write verification: orchestrator runs each recommendation's expected_behavior assertion before committing
 </key_constraints>

@@ -66,7 +66,8 @@ function runValidation(options = {}) {
   ];
 
   const expectedAgents = [
-    'gsd-doc-writer.md', 'gsd-executor.md', 'gsd-plan-checker.md', 'gsd-planner.md',
+    'gsd-doc-explorer.md', 'gsd-doc-synthesizer.md', 'gsd-doc-writer.md',
+    'gsd-executor.md', 'gsd-plan-checker.md', 'gsd-planner.md',
     'gsd-research-domain.md', 'gsd-research-edges.md', 'gsd-research-intent.md',
     'gsd-research-prior-art.md', 'gsd-research-synthesizer.md', 'gsd-research-system.md',
     'gsd-research-tech.md', 'gsd-review-enduser.md', 'gsd-review-functional.md',
