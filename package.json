@@ -1,6 +1,6 @@
 {
   "name": "get-shit-done-pe",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "A meta-prompting system optimized for product management insight and detailed capabilities — enhanced AI automation and agentic development. Focus on getting it right, not just advancing the project forward. Built on GSD by TÂCHES.",
   "bin": {
     "get-shit-done-pe": "bin/install.js"
