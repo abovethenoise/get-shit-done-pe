@@ -100,34 +100,31 @@ Pass: CAPABILITY_SLUG, FEATURE_SLUG, LENS
 
 ## 6. Capability-Level Invocation
 
-Read `{capability_dir}/CAPABILITY.md` features table to get all feature slugs for this capability.
+Verify at least one feature under the capability has review artifacts:
 
-For each feature_slug in the features table:
-- Check if `{capability_dir}/features/{feature_slug}/review/synthesis.md` exists
-- If exists: include in run list
-- If not: skip (log: "Skipping {feature_slug} — no review artifacts")
+```bash
+# Check for any review/synthesis.md under capability features
+ls ${capability_dir}/features/*/review/synthesis.md 2>/dev/null
+```
 
-If run list is empty:
+If no reviewed features found:
 - Inform user: "No reviewed features found in {capability_slug}. Run `/gsd:review {cap/feat}` first."
 - Stop.
 
-For each feature in run list (sequentially):
+Invoke doc.md ONCE with capability scope (matches review command pattern):
 ```
 @{GSD_ROOT}/get-shit-done/workflows/doc.md
 ```
-Pass: CAPABILITY_SLUG, FEATURE_SLUG={current feature}, LENS
+Pass: CAPABILITY_SLUG, FEATURE_SLUG=null, LENS
 
-Display progress between features:
-```
-GSD > DOCUMENTING: {capability_slug}/{feature_slug} ({N}/{total})
-```
+Doc.md handles cross-feature artifact collection internally when FEATURE_SLUG is null.
 
 </process>
 
 <success_criteria>
 - Slug resolved via 3-tier resolution (exact -> fuzzy -> fall-through)
 - Feature-level: doc.md invoked for single feature with LENS
-- Capability-level: doc.md invoked for each feature with review/synthesis.md, sequentially
+- Capability-level: doc.md invoked once with FEATURE_SLUG=null for cross-feature detection
 - No-arg: target inferred from STATE.md session continuity with user confirmation
 - LENS inferred from pipeline context -> RESEARCH.md frontmatter -> "enhance" default
 - Capability-level routing uses inline iteration (not framing-pipeline.md)

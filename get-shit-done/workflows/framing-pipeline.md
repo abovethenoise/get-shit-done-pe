@@ -123,21 +123,21 @@ For each wave (in order), for each feature in the wave (sequentially):
    - If missing: invoke `framing-discovery.md` for this feature first
    - Pass: LENS, CAPABILITY_SLUG, FEATURE_SLUG
 3. Set `BRIEF_PATH` to `${FEATURE_DIR}/DISCOVERY-BRIEF.md`
-4. Run **Stage 1 (Plan)** for this feature (see Section 3)
-5. Run **Stage 2 (Execute)** for this feature (see Section 4)
+4. Run **Stage 1 (Plan)** for this feature (see Section 4)
+5. Run **Stage 2 (Execute)** for this feature (see Section 5)
 
 After ALL waves complete:
 - Collect artifact lists (SUMMARY.md, FEATURE.md) from ALL features in the capability
-- Run **Stage 3 (Review)** ONCE for the full capability scope (see Section 5)
-- Run **Stage 4 (Doc)** ONCE for the full capability scope (see Section 6)
+- Run **Stage 3 (Review)** ONCE for the full capability scope (see Section 6)
+- Run **Stage 4 (Doc)** ONCE for the full capability scope (see Section 8)
 
-### 2e. Feature-Scope Branch (Linear Pipeline)
+## 3. Feature-Scope Branch (Linear Pipeline)
 
 **When SCOPE is "feature":**
 
 Run Stage 1 (Plan) -> Stage 2 (Execute) -> Stage 3 (Review) -> Stage 4 (Doc) linearly for the single feature.
 
-## 3. Stage 1 -- Plan (Lens-Shaped Risk Posture)
+## 4. Stage 1 -- Plan (Lens-Shaped Risk Posture)
 
 Invoke the planning workflow with framing context:
 
@@ -169,10 +169,10 @@ Plan.md owns research internally (Step 5: 6 parallel gather-synthesize agents wi
 
 **After planning completes:**
 - Check for escalation signals (planner found scope issues, requirement gaps)
-- If escalation: handle per Section 7
+- If escalation: handle per Section 8
 - If clean: proceed to Stage 2
 
-## 4. Stage 2 -- Execute (Lens-Shaped Aggressiveness)
+## 5. Stage 2 -- Execute (Lens-Shaped Aggressiveness)
 
 Invoke the execution workflow with framing context:
 
@@ -201,14 +201,14 @@ Execution approach guidance (from lens):
 
 **After execution completes:**
 - Check for escalation signals (execution discovered scope problems, requirement mismatches)
-- If escalation: handle per Section 7
+- If escalation: handle per Section 8
 - If clean: proceed directly to Stage 3 (Review) -- NO user gate here
 - **Context exhaustion check:** If context window is degraded after execute, present next command and exit cleanly:
   ```
   Context running low. Continue with: /gsd:review {CAPABILITY_SLUG}/{FEATURE_SLUG or ''}
   ```
 
-## 5. Stage 3 -- Review (3-Input Model, Auto-Chained from Execute)
+## 6. Stage 3 -- Review (3-Input Model, Auto-Chained from Execute)
 
 **Execute -> Review auto-chain:** After execute completes, automatically invoke review without user intervention. The review stage itself has a human checkpoint if issues are found.
 
@@ -257,36 +257,18 @@ Intent verification (from brief):
 ```
 
 **After review completes:**
-- If review finds fundamental scope/requirement problems: MAJOR escalation per Section 7
-- If review finds issues requiring re-work: human gate at review findings Q&A (within review.md), then remediation loop (see below)
+- If review finds fundamental scope/requirement problems: MAJOR escalation per Section 8
+- If review finds issues requiring re-work: review.md owns the remediation loop (re-review Step 9, max 2 cycles)
 - If review passes cleanly (no blockers): proceed directly to Stage 4 (Doc) -- NO user gate here
 
-### 5a. Remediation Loop (Post-Review)
-
-```
-REMEDIATION_COUNTER = 0
-```
-
-After review Q&A, if user accepts findings for remediation:
-
-1. Feed accepted findings to planner (existing planning pattern via plan.md)
-   - Planner produces remediation PLAN.md(s) scoped to the accepted findings
-2. Execute remediation plans via existing executor (execute.md)
-3. Increment `REMEDIATION_COUNTER`
-4. Re-review at execution scope (invoke review.md again with same scope)
-5. If `REMEDIATION_COUNTER >= 2`: stop remediation loop, proceed to Stage 4 (Doc) with remaining findings logged
-6. Else: repeat from review Q&A if new findings emerge
-
-**Human gate:** Only at the review findings Q&A within review.md. The plan/execute/re-review cycle within remediation is automatic.
-
-**Context exhaustion check:** If context window is degraded after review/remediation cycles, present next command and exit cleanly:
+**Context exhaustion check:** If context window is degraded after review, present next command and exit cleanly:
 ```
 Context running low. Continue with: /gsd:doc {CAPABILITY_SLUG}/{FEATURE_SLUG or ''}
 ```
 
-## 6. Stage 4 -- Doc/Reflect (Auto-Chained from Review)
+## 7. Stage 4 -- Doc/Reflect (Auto-Chained from Review)
 
-**Review -> Doc auto-chain:** After review completes cleanly, automatically invoke doc. If review surfaces issues, Q&A checkpoint intervenes first -- once resolved, doc stage auto-chains.
+**Review -> Doc auto-chain:** review.md Step 12 owns the auto-chain to doc. After review completes cleanly, review.md invokes doc.md directly. The pipeline does not duplicate this wiring.
 
 The doc stage IS the doc agent wired as the final pipeline step. After review acceptance, the doc agent reads actual built code and generates/updates documentation.
 
@@ -324,8 +306,6 @@ Lens-specific doc emphasis:
 </framing_context>
 ```
 
-**Human checkpoint within doc stage:** doc.md surfaces documentation changes for user confirmation before writing to `.documentation/`.
-
 **Human checkpoint within doc stage:** doc.md Q&A for documentation approval. This is the second and final human gate in the pipeline.
 
 **After documentation completes:**
@@ -334,7 +314,7 @@ Lens-specific doc emphasis:
 - For capability scope: update CAPABILITY.md status if all features complete
 - Proceed to completion
 
-## 7. Escalation Handling
+## 8. Escalation Handling
 
 At every stage boundary, check for escalation signals. Apply the universal 3-tier escalation protocol from escalation-protocol.md.
 
@@ -398,7 +378,7 @@ Use AskUserQuestion:
 
 **If confirmed backward return:** Same budget check as Moderate tier.
 
-## 8. Pipeline Completion
+## 9. Pipeline Completion
 
 Display completion banner:
 ```
@@ -436,9 +416,9 @@ Status: complete
 - Requirements come from discuss-feature upstream. Pipeline receives pre-written requirements in FEATURE.md.
 - Review receives 3 inputs: requirements + lens metadata + brief. The brief check catches spec-complete-but-problem-incomplete work.
 - Doc stage is the doc agent -- not a new agent.
-- Execute -> Review auto-chains (no user intervention, NO user gate). Review -> Doc auto-chains when clean (NO user gate).
+- Execute -> Review auto-chains (no user intervention, NO user gate). Review -> Doc auto-chain owned by review.md Step 12.
 - Full auto-chain: user kicks off pipeline -> plans -> builds code -> auto-reviews -> auto-documents -> done. Human gates ONLY at: review findings Q&A and doc approval Q&A.
-- Remediation loop: accepted review findings -> planner -> remediation PLAN -> executor -> re-review. Max 2 cycles, then proceed to doc.
+- Remediation loop owned by review.md (Step 9): max 2 re-review cycles. Pipeline does not duplicate this.
 - Context exhaustion: at any stage transition, if context is degraded, present concrete next command (`/gsd:review` or `/gsd:doc`) and exit cleanly.
 - Escalation protocol is universal: same 3 tiers at every stage boundary.
 - Maximum 1 backward reset per pipeline run. After that, hard stop (user must restart manually).
