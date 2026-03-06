@@ -1,7 +1,7 @@
 ---
 type: capability
 name: install-and-deploy
-status: exploring
+status: complete
 created: "2026-03-03"
 ---
 

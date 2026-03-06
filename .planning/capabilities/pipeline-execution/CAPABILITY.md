@@ -1,7 +1,7 @@
 ---
 type: capability
 name: pipeline-execution
-status: in-progress
+status: complete
 created: "2026-03-03"
 ---
 
@@ -45,9 +45,11 @@ Discovery Brief
 
 | Feature | Priority | Depends-On | Status |
 |---------|----------|------------|--------|
-| scope-fluid-pipeline | P0 | — | exploring |
-| plan-presentation | P1 | scope-fluid-pipeline | exploring |
-| research-overhaul | — | — | planning |
+| scope-fluid-pipeline | P0 | — | complete |
+| plan-presentation | P1 | scope-fluid-pipeline | complete |
+| research-overhaul | — | — | complete |
+| doc-writer-overhaul | — | — | complete |
+| scope-aware-routing | — | — | complete |
 | slug-fuzzy-matching | P2 | — | complete |
 
 ## Decisions

@@ -1,7 +1,7 @@
 ---
 type: capability
 name: "Requirements Refinement"
-status: exploring
+status: complete
 created: "2026-03-05"
 ---
 

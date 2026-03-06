@@ -1,7 +1,7 @@
 ---
 type: feature
 capability: "requirements-refinement"
-status: specified
+status: complete
 created: "2026-03-05"
 ---
 

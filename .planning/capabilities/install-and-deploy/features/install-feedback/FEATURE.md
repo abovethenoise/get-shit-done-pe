@@ -1,7 +1,7 @@
 ---
 type: feature
 capability: "install-and-deploy"
-status: executed
+status: complete
 created: "2026-03-03"
 ---
 

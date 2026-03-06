@@ -1,7 +1,7 @@
 ---
 type: feature
 capability: "pipeline-execution"
-status: reviewed
+status: complete
 created: "2026-03-04"
 ---
 
