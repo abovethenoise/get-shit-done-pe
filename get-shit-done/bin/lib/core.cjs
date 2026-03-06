@@ -429,6 +429,8 @@ function resolveSlugInternal(cwd, input, typeHint) {
 
   // ── Tier 2: Fuzzy (substring) match ──
   const candidates = [];
+  const norm = s => s.replace(/-/g, '');
+  const normInput = norm(trimmed);
 
   if (typeHint !== 'feature') {
     // Search capabilities
@@ -438,7 +440,8 @@ function resolveSlugInternal(cwd, input, typeHint) {
         .filter(e => e.isDirectory() && fs.existsSync(path.join(capabilitiesDir, e.name, 'CAPABILITY.md')))
         .map(e => e.name);
       for (const slug of capEntries) {
-        if (slug.includes(trimmed) || trimmed.includes(slug)) {
+        const normSlug = norm(slug);
+        if (slug.includes(trimmed) || trimmed.includes(slug) || normSlug.includes(normInput) || normInput.includes(normSlug)) {
           candidates.push({ type: 'capability', capability_slug: slug, feature_slug: null, full_path: slug });
         }
       }
@@ -450,7 +453,9 @@ function resolveSlugInternal(cwd, input, typeHint) {
     const allFeatures = listAllFeaturesInternal(cwd);
     for (const f of allFeatures) {
       const fullPath = f.capability_slug + '/' + f.feature_slug;
-      if (f.feature_slug.includes(trimmed) || trimmed.includes(f.feature_slug) || fullPath.includes(trimmed)) {
+      const normFeatSlug = norm(f.feature_slug);
+      const normFullPath = norm(fullPath);
+      if (f.feature_slug.includes(trimmed) || trimmed.includes(f.feature_slug) || fullPath.includes(trimmed) || normFeatSlug.includes(normInput) || normInput.includes(normFeatSlug) || normFullPath.includes(normInput)) {
         // Avoid duplicates if already found as capability
         if (!candidates.some(c => c.full_path === fullPath)) {
           candidates.push({ type: 'feature', capability_slug: f.capability_slug, feature_slug: f.feature_slug, full_path: fullPath });
