@@ -100,9 +100,7 @@ Each framing command creates a **BRIEF.md** (at the capability level) that ancho
   /gsd:debug|new|enhance|refactor    <- Frame the work (creates Discovery Brief)
          |
   /gsd:plan <slug>                   <- Research + plan + verify
-         |                              (execute auto-chains from plan)
-  /gsd:review <feat>                 <- Review executed code
-         |
+         |                              (auto-chains: execute -> review -> doc)
   Next feature?  ---> Repeat from framing
          |
   All features done ---> Next capability
@@ -119,7 +117,7 @@ Each feature passes through a pipeline. The framing lens weights every stage dif
 | **Plan** | Break feature into executable tasks | Task granularity and verification approach |
 | **Execute** | Run tasks in parallel waves, commit atomically | Deviation rules and auto-fix behavior |
 | **Review** | 4 specialized reviewers + synthesizer | Review priorities weighted by lens |
-| **Doc** | Generate documentation from executed work | Documentation focus varies by lens |
+| **Doc** | 6 doc explorers + synthesizer + N writers | Documentation focus varies by lens |
 
 ### Research Pipeline
 
@@ -147,7 +145,7 @@ Each feature passes through a pipeline. The framing lens weights every stage dif
 
 ### Execution
 
-Execution is triggered internally after planning completes, or can be continued via `/gsd:progress`. Plans execute in dependency-ordered waves:
+Execution auto-chains from planning. Plans execute in dependency-ordered waves:
 
 ```
   Wave 1 (independent plans):
@@ -158,7 +156,53 @@ Execution is triggered internally after planning completes, or can be continued 
     +-- Executor C (fresh context) -> commit per task
 ```
 
-After all plans execute, run `/gsd:review` to evaluate the code.
+After execution completes, review auto-chains (no user gate).
+
+### Review Pipeline
+
+```
+  (auto-chained from execute)
+         |
+         +-- 4 parallel reviewers:
+         |     +-- End-user (EU requirements)
+         |     +-- Functional (FN requirements)
+         |     +-- Technical (TC requirements)
+         |     +-- Quality (DRY/KISS/complexity)
+         |           |
+         |     Synthesizer -> findings + remediation
+         |           |
+         |     Human checkpoint (if issues found)
+         |
+         Done -> auto-chains to Doc
+```
+
+### Doc Pipeline
+
+```
+  (auto-chained from review)
+         |
+         +-- 6 parallel doc explorers:
+         |     +-- Inline clarity
+         |     +-- Architecture map
+         |     +-- Domain context
+         |     +-- Agent context
+         |     +-- Automation surface
+         |     +-- Planning hygiene
+         |           |
+         |     Synthesizer -> doc-report.md
+         |           |
+         |     Human checkpoint (approve/reject per recommendation)
+         |           |
+         |     N parallel writers (grouped by route):
+         |       +-- code-comments
+         |       +-- claude-md
+         |       +-- docs
+         |       +-- cleanup
+         |           |
+         |     Verification (expected_behavior assertions)
+         |
+         Done
+```
 
 ### Brownfield Workflow (Existing Codebase)
 
@@ -210,7 +254,8 @@ After all plans execute, run `/gsd:review` to evaluate the code.
 | `/gsd:focus <cap>` | Create a focus group: sequence features for execution | After discussing features, before planning |
 | `/gsd:plan <slug>` | Research + plan + verify for a feature (or all features in a capability) | Before execution |
 | `/gsd:execute <slug>` | Execute plans for a feature or capability | After planning, or to resume interrupted execution |
-| `/gsd:review <feat>` | Code review by 4 specialized reviewers + synthesizer | After execution completes |
+| `/gsd:review <feat>` | Code review by 4 specialized reviewers + synthesizer | Auto-chains from execute, or run standalone |
+| `/gsd:doc <slug>` | Generate documentation via 6 explorers + synthesizer + writers | Auto-chains from review, or run standalone |
 
 ### Coherence & Refinement
 
@@ -418,9 +463,7 @@ GSD stores project settings in `.planning/config.json`. Configure during `/gsd:i
 /clear
 /gsd:new auth/jwt-login                 # Frame the work
 /clear
-/gsd:plan jwt-login                     # Research + plan + verify + execute
-/clear
-/gsd:review jwt-login                   # Review executed code
+/gsd:plan jwt-login                     # Research + plan + execute + review + doc
 /clear
 /gsd:plan password-reset                # Next feature in focus group
 ...
@@ -431,9 +474,7 @@ GSD stores project settings in `.planning/config.json`. Configure during `/gsd:i
 ```bash
 /gsd:debug login-timeout               # Creates discovery brief, frames debugging
 /clear
-/gsd:plan login-timeout                 # Minimal fix plan + execute
-/clear
-/gsd:review login-timeout               # Verify the fix
+/gsd:plan login-timeout                 # Minimal fix plan + execute + review + doc
 ```
 
 ### Enhance Existing Feature
@@ -441,9 +482,7 @@ GSD stores project settings in `.planning/config.json`. Configure during `/gsd:i
 ```bash
 /gsd:enhance search-filters            # Frame the enhancement
 /clear
-/gsd:plan search-filters               # Plan preserving existing patterns + execute
-/clear
-/gsd:review search-filters              # Review the enhancement
+/gsd:plan search-filters               # Plan + execute + review + doc
 ```
 
 ### Existing Codebase
@@ -535,5 +574,6 @@ Set `commit_docs: false` during `/gsd:init`. Add `.planning/` to your `.gitignor
           research/             # Individual gatherer outputs (6 files)
           {nn}-PLAN.md          # Executable plans (01-PLAN.md, 02-PLAN.md, ...)
           {nn}-SUMMARY.md       # Execution outcomes per plan
-          review/               # Review traces, synthesis, decisions
+          doc-report.md         # Doc recommendations (retained after commit)
+          review/               # Review traces, synthesis, decisions (ephemeral)
 ```
