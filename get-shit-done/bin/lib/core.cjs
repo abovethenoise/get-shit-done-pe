@@ -427,42 +427,67 @@ function resolveSlugInternal(cwd, input, typeHint) {
     }
   }
 
-  // ── Tier 2: Fuzzy (substring) match ──
-  const candidates = [];
-  const norm = s => s.replace(/-/g, '');
-  const normInput = norm(trimmed);
+  // ── Tier 2: BM25 fuzzy match ──
+  // Tokenize on hyphens, score with BM25 using prefix-based token matching
+  const tokenize = s => s.split('-').filter(Boolean);
+  const tokenMatch = (qt, dt) => dt.startsWith(qt) || qt.startsWith(dt);
+  const queryTokens = tokenize(trimmed);
+
+  // Build corpus of all candidates
+  const corpus = [];
 
   if (typeHint !== 'feature') {
-    // Search capabilities
     const capabilitiesDir = path.join(cwd, '.planning', 'capabilities');
     try {
       const capEntries = fs.readdirSync(capabilitiesDir, { withFileTypes: true })
         .filter(e => e.isDirectory() && fs.existsSync(path.join(capabilitiesDir, e.name, 'CAPABILITY.md')))
         .map(e => e.name);
       for (const slug of capEntries) {
-        const normSlug = norm(slug);
-        if (slug.includes(trimmed) || trimmed.includes(slug) || normSlug.includes(normInput) || normInput.includes(normSlug)) {
-          candidates.push({ type: 'capability', capability_slug: slug, feature_slug: null, full_path: slug });
-        }
+        corpus.push({ type: 'capability', capability_slug: slug, feature_slug: null, full_path: slug, tokens: tokenize(slug) });
       }
     } catch { /* no capabilities dir */ }
   }
 
   if (typeHint !== 'capability') {
-    // Search all features
     const allFeatures = listAllFeaturesInternal(cwd);
     for (const f of allFeatures) {
-      const fullPath = f.capability_slug + '/' + f.feature_slug;
-      const normFeatSlug = norm(f.feature_slug);
-      const normFullPath = norm(fullPath);
-      if (f.feature_slug.includes(trimmed) || trimmed.includes(f.feature_slug) || fullPath.includes(trimmed) || normFeatSlug.includes(normInput) || normInput.includes(normFeatSlug) || normFullPath.includes(normInput)) {
-        // Avoid duplicates if already found as capability
-        if (!candidates.some(c => c.full_path === fullPath)) {
-          candidates.push({ type: 'feature', capability_slug: f.capability_slug, feature_slug: f.feature_slug, full_path: fullPath });
-        }
+      const fp = f.capability_slug + '/' + f.feature_slug;
+      if (!corpus.some(c => c.full_path === fp)) {
+        corpus.push({ type: 'feature', capability_slug: f.capability_slug, feature_slug: f.feature_slug, full_path: fp, tokens: tokenize(f.feature_slug) });
       }
     }
   }
+
+  // BM25 scoring
+  const N = corpus.length;
+  const avgdl = N > 0 ? corpus.reduce((sum, d) => sum + d.tokens.length, 0) / N : 1;
+  const k1 = 1.2, b = 0.75;
+
+  const idf = {};
+  for (const qt of queryTokens) {
+    const n = corpus.filter(d => d.tokens.some(dt => tokenMatch(qt, dt))).length;
+    idf[qt] = Math.log((N - n + 0.5) / (n + 0.5) + 1);
+  }
+
+  const scored = [];
+  for (const doc of corpus) {
+    let score = 0;
+    let matchedTokens = 0;
+    const dl = doc.tokens.length;
+    for (const qt of queryTokens) {
+      const tf = doc.tokens.filter(dt => tokenMatch(qt, dt)).length;
+      if (tf > 0) matchedTokens++;
+      score += idf[qt] * (tf * (k1 + 1)) / (tf + k1 * (1 - b + b * dl / avgdl));
+    }
+    // Require at least half of query tokens to match
+    if (matchedTokens >= Math.ceil(queryTokens.length / 2) && score > 0) {
+      scored.push({ ...doc, score });
+    }
+  }
+  scored.sort((a, b) => b.score - a.score);
+
+  // Clean up internal fields before returning
+  const candidates = scored.map(({ tokens, score, ...rest }) => rest);
 
   if (candidates.length === 1) {
     const c = candidates[0];
