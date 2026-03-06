@@ -48,6 +48,7 @@ Discovery Brief
 | scope-fluid-pipeline | P0 | — | exploring |
 | plan-presentation | P1 | scope-fluid-pipeline | exploring |
 | research-overhaul | — | — | planning |
+| slug-fuzzy-matching | P2 | — | complete |
 
 ## Decisions
 

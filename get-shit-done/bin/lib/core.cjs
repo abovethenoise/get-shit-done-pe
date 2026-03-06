@@ -461,7 +461,7 @@ function resolveSlugInternal(cwd, input, typeHint) {
   // BM25 scoring
   const N = corpus.length;
   const avgdl = N > 0 ? corpus.reduce((sum, d) => sum + d.tokens.length, 0) / N : 1;
-  const k1 = 1.2, b = 0.75;
+  const k1 = 1.2, b = 0.75; // standard BM25 defaults
 
   const idf = {};
   for (const qt of queryTokens) {
