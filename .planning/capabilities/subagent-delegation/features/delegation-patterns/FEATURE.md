@@ -1,7 +1,7 @@
 ---
 type: feature
 capability: "subagent-delegation"
-status: planning
+status: exploring
 created: "2026-03-07"
 ---
 
