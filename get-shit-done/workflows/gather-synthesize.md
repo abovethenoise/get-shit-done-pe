@@ -4,6 +4,10 @@ Reusable gather-synthesize orchestration pattern. Spawns N gatherer agents in pa
 Delegation patterns (model routing, shapes, heuristics) are in @{GSD_ROOT}/get-shit-done/references/delegation.md
 </purpose>
 
+<required_reading>
+@{GSD_ROOT}/get-shit-done/references/delegation.md
+</required_reading>
+
 <parameters>
 The calling workflow provides:
 

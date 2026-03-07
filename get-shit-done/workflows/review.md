@@ -5,6 +5,7 @@ Orchestrate the full review pipeline for a feature: spawn 4 specialist reviewers
 <required_reading>
 @{GSD_ROOT}/get-shit-done/workflows/gather-synthesize.md
 @{GSD_ROOT}/get-shit-done/references/ui-brand.md
+@{GSD_ROOT}/get-shit-done/references/delegation.md
 </required_reading>
 
 <inputs>
@@ -78,28 +79,24 @@ Spawn all 4 reviewers simultaneously (parallel Task calls — do NOT wait for on
 Task(
   prompt="First, read {GSD_ROOT}/agents/gsd-review-enduser.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Dimension: End-User\nFeature artifacts: {artifact_list}\nRequirement IDs: {requirement_ids}\nWrite your trace report to: {feature_dir}/review/enduser-trace.md</task_context>",
   subagent_type="gsd-review-enduser",
-  model="sonnet",
   description="Review End-User for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
 )
 
 Task(
   prompt="First, read {GSD_ROOT}/agents/gsd-review-functional.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Dimension: Functional\nFeature artifacts: {artifact_list}\nRequirement IDs: {requirement_ids}\nWrite your trace report to: {feature_dir}/review/functional-trace.md</task_context>",
   subagent_type="gsd-review-functional",
-  model="sonnet",
   description="Review Functional for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
 )
 
 Task(
   prompt="First, read {GSD_ROOT}/agents/gsd-review-technical.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Dimension: Technical\nFeature artifacts: {artifact_list}\nRequirement IDs: {requirement_ids}\nWrite your trace report to: {feature_dir}/review/technical-trace.md</task_context>",
   subagent_type="gsd-review-technical",
-  model="sonnet",
   description="Review Technical for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
 )
 
 Task(
   prompt="First, read {GSD_ROOT}/agents/gsd-review-quality.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG or 'all (capability scope)'}</subject>\n\n{context_payload}\n\n<task_context>Dimension: Quality\nExecution scope: {SCOPE}\nFeature artifacts: {artifact_list}\nRequirement IDs: {requirement_ids}\nCross-scope detection (when capability scope): check for cross-scope state conflicts, interface contract violations, conflicting assumptions between features, and spec coverage gaps in implementation.\nWrite your trace report to: {review_dir}/quality-trace.md</task_context>",
   subagent_type="gsd-universal-quality-reviewer",
-  model="sonnet",
   description="Review Quality for {CAPABILITY_SLUG}/{FEATURE_SLUG or 'all'}"
 )
 ```
@@ -121,7 +118,6 @@ Build reviewer manifest listing each dimension and its status (success | failed)
 Task(
   prompt="First, read {GSD_ROOT}/agents/gsd-review-synthesizer.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG or 'all (capability scope)'}</subject>\n\n{context_payload}\n\n<task_context>Review phase complete. Consolidate the following reviewer trace reports.\n\nExecution scope: {SCOPE} ({SCOPE == 'capability' ? 'reviewing all executed features in capability' : 'reviewing single feature'})\n\nReviewer outputs:\n- End-User: {review_dir}/enduser-trace.md [{status}]\n- Functional: {review_dir}/functional-trace.md [{status}]\n- Technical: {review_dir}/technical-trace.md [{status}]\n- Quality: {review_dir}/quality-trace.md [{status}]\n\nConflict priority: end-user > functional > technical > quality\n\nWrite your synthesis to: {review_dir}/synthesis.md\n\nNote the review scope (capability-level or feature-level) in the synthesis output header.\nIf any reviewer has status \"failed\", document the gap — do not fabricate findings for missing dimensions.</task_context>",
   subagent_type="gsd-review-synthesizer",
-  model="inherit",
   description="Synthesize Review for {CAPABILITY_SLUG}/{FEATURE_SLUG or 'all'}"
 )
 ```

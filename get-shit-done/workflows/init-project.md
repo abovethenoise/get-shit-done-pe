@@ -5,6 +5,7 @@ Initialize a project through auto-detected flow. Handles both new (greenfield) a
 <required_reading>
 Read all files referenced by the invoking prompt's execution_context before starting.
 @{GSD_ROOT}/get-shit-done/references/doc-tiers.md
+@{GSD_ROOT}/get-shit-done/references/delegation.md
 </required_reading>
 
 <question_protocol>

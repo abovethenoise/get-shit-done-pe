@@ -60,7 +60,7 @@ grep -n "type=\"checkpoint" ${feature_dir}/{plan_file}
 | Verify-only | B (segmented) | Segments between checkpoints. Subagent for auto, main for decisions |
 | Decision | C (main) | Execute entirely in main context |
 
-**Pattern A:** init_agent_tracking -> spawn Task(subagent_type="gsd-executor", model=executor_model) -> track -> wait -> report.
+**Pattern A:** init_agent_tracking -> spawn Task(subagent_type="gsd-executor") -> track -> wait -> report.
 **Pattern B:** Execute segment-by-segment. Auto segments via subagent (tasks only, no SUMMARY). Checkpoints in main. After all: aggregate, SUMMARY, commit.
 **Pattern C:** Execute in main using standard flow (step name="execute").
 </step>

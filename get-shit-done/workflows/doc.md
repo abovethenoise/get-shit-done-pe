@@ -5,6 +5,7 @@ Orchestrate the documentation pipeline for a feature: locate artifacts, spawn do
 <required_reading>
 @{GSD_ROOT}/get-shit-done/workflows/gather-synthesize.md
 @{GSD_ROOT}/get-shit-done/references/ui-brand.md
+@{GSD_ROOT}/get-shit-done/references/delegation.md
 </required_reading>
 
 <inputs>
@@ -87,42 +88,36 @@ Spawn all 6 explorers simultaneously (parallel Task calls — do NOT wait for on
 Task(
   prompt="First, read {GSD_ROOT}/agents/gsd-doc-explorer.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Focus area: inline-clarity\nFeature artifacts: {artifact_list}\nWrite your findings to: {feature_dir}/doc/inline-clarity-findings.md</task_context>",
   subagent_type="gsd-doc-explorer",
-  model="sonnet",
   description="Doc Explore: inline-clarity for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
 )
 
 Task(
   prompt="First, read {GSD_ROOT}/agents/gsd-doc-explorer.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Focus area: architecture-map\nFeature artifacts: {artifact_list}\nWrite your findings to: {feature_dir}/doc/architecture-map-findings.md</task_context>",
   subagent_type="gsd-doc-explorer",
-  model="sonnet",
   description="Doc Explore: architecture-map for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
 )
 
 Task(
   prompt="First, read {GSD_ROOT}/agents/gsd-doc-explorer.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Focus area: domain-context\nFeature artifacts: {artifact_list}\nResearch: {feature_dir}/RESEARCH.md\nPlans: {feature_dir}/*-PLAN.md\nWrite your findings to: {feature_dir}/doc/domain-context-findings.md</task_context>",
   subagent_type="gsd-doc-explorer",
-  model="sonnet",
   description="Doc Explore: domain-context for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
 )
 
 Task(
   prompt="First, read {GSD_ROOT}/agents/gsd-doc-explorer.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Focus area: agent-context\nFeature artifacts: {artifact_list}\nWrite your findings to: {feature_dir}/doc/agent-context-findings.md</task_context>",
   subagent_type="gsd-doc-explorer",
-  model="sonnet",
   description="Doc Explore: agent-context for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
 )
 
 Task(
   prompt="First, read {GSD_ROOT}/agents/gsd-doc-explorer.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Focus area: automation-surface\nFeature artifacts: {artifact_list}\nReview traces: {feature_dir}/review/*-trace.md\nReview decisions: {feature_dir}/review/review-decisions.md\nWrite your findings to: {feature_dir}/doc/automation-surface-findings.md</task_context>",
   subagent_type="gsd-doc-explorer",
-  model="sonnet",
   description="Doc Explore: automation-surface for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
 )
 
 Task(
   prompt="First, read {GSD_ROOT}/agents/gsd-doc-explorer.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Focus area: planning-hygiene\nFeature artifacts: {artifact_list}\nResearch: {feature_dir}/RESEARCH.md\nPlans: {feature_dir}/*-PLAN.md\nSummaries: {feature_dir}/*-SUMMARY.md\nWrite your findings to: {feature_dir}/doc/planning-hygiene-findings.md</task_context>",
   subagent_type="gsd-doc-explorer",
-  model="sonnet",
   description="Doc Explore: planning-hygiene for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
 )
 ```
@@ -155,7 +150,6 @@ If 3 or fewer fail: proceed to synthesis with partial results.
 Task(
   prompt="First, read {GSD_ROOT}/agents/gsd-doc-synthesizer.md for your role.\nThen read {GSD_ROOT}/get-shit-done/references/doc-tiers.md for tier registry.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Explorer findings to consolidate:\n- inline-clarity: {feature_dir}/doc/inline-clarity-findings.md [{status}]\n- architecture-map: {feature_dir}/doc/architecture-map-findings.md [{status}]\n- domain-context: {feature_dir}/doc/domain-context-findings.md [{status}]\n- agent-context: {feature_dir}/doc/agent-context-findings.md [{status}]\n- automation-surface: {feature_dir}/doc/automation-surface-findings.md [{status}]\n- planning-hygiene: {feature_dir}/doc/planning-hygiene-findings.md [{status}]\n\nFor any explorer with status 'failed': document the gap — do not fabricate findings.\n\nWrite consolidated doc-report.md to: {feature_dir}/doc-report.md</task_context>",
   subagent_type="gsd-doc-synthesizer",
-  model="inherit",
   description="Doc Synthesize for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
 )
 ```
@@ -197,7 +191,6 @@ For each non-empty group, spawn a writer in parallel:
 Task(
   prompt="First, read {GSD_ROOT}/agents/gsd-doc-writer.md for your role.\n\n<task_context>\nRoute group: {group_name}\nRecommendations to apply:\n{list of approved recommendations for this group with target_file, what_to_change}\n</task_context>",
   subagent_type="gsd-doc-writer",
-  model="sonnet",
   description="Doc Write: {group_name} for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
 )
 ```
@@ -256,7 +249,7 @@ Artifact: {feature_dir}/doc-report.md
 </process>
 
 <key_constraints>
-- Three agent roles: gsd-doc-explorer (6x sonnet), gsd-doc-synthesizer (1x inherit), gsd-doc-writer (Nx sonnet per route group)
+- Three agent roles: gsd-doc-explorer (6x), gsd-doc-synthesizer (1x), gsd-doc-writer (Nx per route group) -- model routing per agent frontmatter
 - Abort threshold: 4+ of 6 explorer failures = abort
 - mkdir -p "{FEATURE_DIR}/doc" required before explorer spawns
 - Q&A happens HERE via AskUserQuestion -- NOT inside doc agent

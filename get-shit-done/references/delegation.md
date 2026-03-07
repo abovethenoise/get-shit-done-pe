@@ -34,11 +34,11 @@ Spawn N gatherers in parallel, wait for all, synthesize results into one output.
 ### Flow
 
 1. Assemble context payload (see `gather-synthesize.md` for context layers).
-2. Spawn N gatherers in parallel (model=sonnet).
+2. Spawn N gatherers in parallel.
 3. Wait for all gatherers to complete.
 4. Retry failed gatherers once.
 5. If >50% failed: abort. Do not synthesize.
-6. Spawn 1 synthesizer (model=opus) with gatherer outputs.
+6. Spawn 1 synthesizer with gatherer outputs.
 7. Return synthesized output + manifest to calling workflow.
 
 ### Task Call Example
@@ -46,14 +46,12 @@ Spawn N gatherers in parallel, wait for all, synthesize results into one output.
 ```
 # Gatherer (spawn N in parallel)
 Task(
-  prompt="First, read {agent_path} for your role.\n\n<subject>{subject}</subject>\n\n{context}\n\n<task_context>Dimension: {dimension}\nWrite to: {output_path}</task_context>",
-  model="sonnet"
+  prompt="First, read {agent_path} for your role.\n\n<subject>{subject}</subject>\n\n{context}\n\n<task_context>Dimension: {dimension}\nWrite to: {output_path}</task_context>"
 )
 
 # Synthesizer (spawn 1 after gather completes)
 Task(
-  prompt="First, read {synth_agent_path} for your role.\n\n<subject>{subject}</subject>\n\n{context}\n\n<task_context>Synthesize gatherer outputs:\n{manifest}\nWrite to: {synth_output_path}</task_context>",
-  model="opus"
+  prompt="First, read {synth_agent_path} for your role.\n\n<subject>{subject}</subject>\n\n{context}\n\n<task_context>Synthesize gatherer outputs:\n{manifest}\nWrite to: {synth_output_path}</task_context>"
 )
 ```
 
@@ -69,7 +67,7 @@ Task(
 
 - Flat delegation only -- subagents cannot spawn subagents.
 - Pass file PATHS to agents, not file content.
-- Gatherers are model=sonnet. Synthesizer is model=opus.
+- Model routing per agent frontmatter.
 - No quality gate between gather and synthesize -- synthesizer handles filtering.
 
 </gather_synthesize>
@@ -91,18 +89,17 @@ Spawn 1 subagent for a scoped task, wait for completion, process the result.
 
 ```
 Task(
-  prompt="First, read {agent_path} for your role.\n\nThen read these files for context:\n- {plan_path}\n- {feature_path}\n\nExecute all tasks in the plan.",
-  model="sonnet"
+  prompt="First, read {agent_path} for your role.\n\nThen read these files for context:\n- {plan_path}\n- {feature_path}\n\nExecute all tasks in the plan."
 )
 ```
 
 ### Users
 
-| Workflow | Agent | Model |
-|----------|-------|-------|
-| execute-plan | gsd-executor | sonnet |
-| review (verification) | gsd-verifier | sonnet |
-| plan (validation) | gsd-plan-checker | sonnet |
+| Workflow | Agent |
+|----------|-------|
+| execute-plan | gsd-executor |
+| review (verification) | gsd-verifier |
+| plan (validation) | gsd-plan-checker |
 
 </single_delegation>
 

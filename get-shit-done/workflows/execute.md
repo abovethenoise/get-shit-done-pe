@@ -63,7 +63,6 @@ Execute each wave in sequence. Within a wave: parallel if `PARALLELIZATION=true`
    ```
    Task(
      subagent_type="gsd-executor",
-     model="{executor_model}",
      prompt="
        <objective>
        Execute plan {plan_number} of feature {CAPABILITY_SLUG}/{FEATURE_SLUG}.
@@ -165,8 +164,7 @@ Feature requirement IDs: {feature_req_ids from FEATURE.md}
 Check must_haves against actual codebase.
 Cross-reference requirement IDs from PLAN frontmatter against FEATURE.md.
 Create VERIFICATION.md.",
-  subagent_type="gsd-verifier",
-  model="{verifier_model}"
+  subagent_type="gsd-verifier"
 )
 ```
 

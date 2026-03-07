@@ -10,6 +10,7 @@ Read all files referenced by the invoking prompt's execution_context before star
 @{GSD_ROOT}/get-shit-done/references/framing-lenses.md
 @{GSD_ROOT}/get-shit-done/references/escalation-protocol.md
 @{GSD_ROOT}/get-shit-done/references/ui-brand.md
+@{GSD_ROOT}/get-shit-done/references/delegation.md
 </required_reading>
 
 <inputs>
@@ -415,7 +416,7 @@ Status: complete
 - Research is owned by plan.md (Step 5: 6 parallel gatherers + synthesizer). No separate research stage.
 - Requirements come from discuss-feature upstream. Pipeline receives pre-written requirements in FEATURE.md.
 - Review receives 3 inputs: requirements + lens metadata + brief. The brief check catches spec-complete-but-problem-incomplete work.
-- Doc stage uses three agents: gsd-doc-explorer (6x sonnet), gsd-doc-synthesizer (1x inherit), gsd-doc-writer (Nx sonnet).
+- Doc stage uses three agents: gsd-doc-explorer (6x), gsd-doc-synthesizer (1x), gsd-doc-writer (Nx) -- model routing per agent frontmatter.
 - Execute -> Review auto-chains (no user intervention, NO user gate). Review -> Doc auto-chain owned by review.md Step 12.
 - Full auto-chain: user kicks off pipeline -> plans -> builds code -> auto-reviews -> auto-documents -> done. Human gates ONLY at: review findings Q&A and doc approval Q&A.
 - Remediation loop owned by review.md (Step 9): max 2 re-review cycles. Pipeline does not duplicate this.
