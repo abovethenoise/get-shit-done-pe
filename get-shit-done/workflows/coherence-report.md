@@ -97,7 +97,12 @@ This is a single invocation — no staged pipeline within this step.
 <step name="spawn_synthesis_agent">
 Spawn the gsd-coherence-synthesizer agent with the assembled prompt.
 
-Agent definition: `@agents/gsd-coherence-synthesizer.md`
+```
+Task(
+  prompt="First, read agents/gsd-coherence-synthesizer.md for your role.\n\n{assembled_prompt}",
+  description="Synthesize coherence recommendations"
+)
+```
 
 The agent returns RECOMMENDATIONS.md content as its output.
 
