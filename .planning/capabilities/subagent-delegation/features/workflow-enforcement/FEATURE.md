@@ -27,7 +27,7 @@ created: "2026-03-07"
 
 **Acceptance Criteria:**
 
-- [ ] All 9 workflows with delegation content reference `delegation.md` via required_reading
+- [ ] All 8 workflows with delegation content reference `delegation.md` via required_reading (landscape-scan.md excluded — zero delegation content per research)
 - [ ] No workflow contains redundant inline delegation explanations (model routing rules, parallel spawning instructions, anti-patterns) that duplicate delegation.md
 - [ ] No Task() call in any workflow contains an explicit `model=` parameter — model comes from agent YAML frontmatter only
 - [ ] delegation.md's own Task() examples drop `model=` params to match the enforcement rule
