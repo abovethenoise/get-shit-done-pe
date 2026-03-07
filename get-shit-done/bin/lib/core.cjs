@@ -302,7 +302,7 @@ function resolveModelInternal(cwd, agentType) {
   // Check per-agent override first
   const override = config.model_overrides?.[agentType];
   if (override) {
-    return override === 'opus' ? 'inherit' : override;
+    return override;
   }
 
   // Default: sonnet for all agents (config overrides checked above)

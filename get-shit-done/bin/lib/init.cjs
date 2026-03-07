@@ -5,7 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
-const { loadConfig, resolveModelInternal, resolveModelFromFrontmatter, pathExistsInternal, generateSlugInternal, getMilestoneInfo, toPosixPath, findCapabilityInternal, findFeatureInternal, output, error } = require('./core.cjs');
+const { loadConfig, pathExistsInternal, generateSlugInternal, getMilestoneInfo, toPosixPath, findCapabilityInternal, findFeatureInternal, output, error } = require('./core.cjs');
 
 function detectBriefAndDesign(cwd, capInfo, capDir) {
   const result = { has_brief: false };
@@ -422,11 +422,6 @@ function cmdInitPlanFeature(cwd, capSlug, featSlug, raw) {
   const featInfo = findFeatureInternal(cwd, capSlug, featSlug);
 
   const result = {
-    // Models
-    researcher_model: resolveModelFromFrontmatter(cwd, path.join(cwd, '..', 'agents', 'gsd-researcher.md')),
-    planner_model: resolveModelInternal(cwd, 'gsd-planner'),
-    checker_model: resolveModelInternal(cwd, 'gsd-plan-checker'),
-
     // Workflow flags
     research_enabled: config.research,
     plan_checker_enabled: config.plan_checker,
@@ -505,10 +500,6 @@ function cmdInitExecuteFeature(cwd, capSlug, featSlug, raw) {
   const milestone = getMilestoneInfo(cwd);
 
   const result = {
-    // Models
-    executor_model: resolveModelInternal(cwd, 'gsd-executor'),
-    verifier_model: resolveModelInternal(cwd, 'gsd-verifier'),
-
     // Config flags
     commit_docs: config.commit_docs,
     parallelization: config.parallelization,
@@ -697,10 +688,6 @@ function cmdInitFeatureProgress(cwd, raw) {
   const totalSummaries = capabilities.reduce((sum, c) => sum + c.total_summaries, 0);
 
   const result = {
-    // Models
-    executor_model: resolveModelInternal(cwd, 'gsd-executor'),
-    planner_model: resolveModelInternal(cwd, 'gsd-planner'),
-
     // Config
     commit_docs: config.commit_docs,
 

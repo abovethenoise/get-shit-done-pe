@@ -171,11 +171,11 @@ describe('resolveModelInternal', () => {
       assert.strictEqual(resolveModelInternal(tmpDir, 'gsd-executor'), 'haiku');
     });
 
-    test('opus override resolves to inherit', () => {
+    test('opus override resolves to opus', () => {
       writeConfig({
-        model_overrides: { 'gsd-executor': 'opus' },
+        model_overrides: { 'gsd-planner': 'opus' },
       });
-      assert.strictEqual(resolveModelInternal(tmpDir, 'gsd-executor'), 'inherit');
+      assert.strictEqual(resolveModelInternal(tmpDir, 'gsd-planner'), 'opus');
     });
 
     test('agents not in override fall back to default sonnet', () => {
