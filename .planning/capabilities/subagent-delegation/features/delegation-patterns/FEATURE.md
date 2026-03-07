@@ -1,7 +1,7 @@
 ---
 type: feature
 capability: "subagent-delegation"
-status: exploring
+status: in-progress
 created: "2026-03-07"
 ---
 

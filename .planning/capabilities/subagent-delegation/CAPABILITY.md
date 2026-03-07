@@ -74,7 +74,7 @@ Features are listed in priority order. Higher priority features are listed first
 
 | Feature | Priority | Depends-On | Status |
 |---------|----------|------------|--------|
-| delegation-patterns | P1 | none | exploring |
+| delegation-patterns | P1 | none | in-progress |
 | workflow-enforcement | P1 | delegation-patterns | exploring |
 | skill-enforcement | P2 | delegation-patterns | exploring |
 
