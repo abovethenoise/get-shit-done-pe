@@ -6,6 +6,7 @@ Execute a feature plan (PLAN.md) and create the outcome summary (SUMMARY.md).
 Read STATE.md before any operation to load project context.
 Read config.json for planning behavior settings.
 @{GSD_ROOT}/get-shit-done/references/git-integration.md
+@{GSD_ROOT}/get-shit-done/references/delegation.md
 </required_reading>
 
 <inputs>

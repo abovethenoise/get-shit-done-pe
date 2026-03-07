@@ -46,8 +46,37 @@ change-application.md, discuss-capability.md, discuss-feature.md, execute.md, fo
 
 **Not an anti-pattern.** This reads a *template* file (prompt template with placeholders), not an agent definition. The template is filled with context and passed to a Task call. No agent role/goal/constraints are absorbed by the orchestrator.
 
+## Deferred from delegation-patterns Doc Phase
+
+The following findings were identified during `delegation-patterns` doc review and deferred to this feature:
+
+### 2. init.cjs uses resolveModelInternal for 5/6 agents (bypasses frontmatter)
+
+Lines 427-428, 509-510, 701-702 call `resolveModelInternal()` which ignores agent YAML frontmatter and defaults to sonnet. Only line 426 uses `resolveModelFromFrontmatter()`. Result: planner resolves to sonnet via init despite `model: opus` in frontmatter. **Action:** Migrate all calls to `resolveModelFromFrontmatter` or remove if dead code.
+
+### 3. opus-to-inherit conversion in resolveModelInternal (core.cjs line 305)
+
+`return override === 'opus' ? 'inherit' : override` silently converts opus config overrides to inherit. Contradicts review decision that opus is valid. **Action:** Remove the ternary — return override directly.
+
+### 4. Model resolution precedence undocumented
+
+YAML frontmatter always wins (user decision). Workflows should not pass `model=` in Task() calls that override frontmatter. **Action:** Document precedence in delegation.md. Remove or align Task() model params in workflows.
+
+### 5. resolveModelFromFrontmatter sonnet fallback (core.cjs)
+
+`fm.model || 'sonnet'` fallback contradicts delegation.md "no fallback resolution." **Action:** Evaluate if defensive fallback is needed or if it should warn/error.
+
+### 6. Workflow Task() calls use model="inherit" for opus synthesizers
+
+plan.md, review.md, doc.md pass `model="inherit"` for synthesizers while agent frontmatter says `model: opus`. Works because parent is Opus, but contradicts "use explicit values" convention. **Action:** Align Task() calls with frontmatter values.
+
+### 7. Stale gsd-researcher.md reference in init.cjs line 426
+
+`resolveModelFromFrontmatter(cwd, path.join(cwd, '..', 'agents', 'gsd-researcher.md'))` — file doesn't exist (research split into 6 agents). Silently returns sonnet. **Action:** Remove or update.
+
 ## Summary
 
 | Anti-pattern instances | Correct pattern instances | Not applicable |
 |----------------------|--------------------------|----------------|
 | 1 (coherence-report.md) | 5 workflows | 11 workflows |
+| + 6 deferred from delegation-patterns doc phase |

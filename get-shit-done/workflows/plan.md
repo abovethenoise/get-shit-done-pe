@@ -5,6 +5,7 @@ Create executable planning prompts (PLAN.md files) for a feature. Default flow: 
 <required_reading>
 Read all files referenced by the invoking prompt's execution_context before starting.
 @{GSD_ROOT}/get-shit-done/references/ui-brand.md
+@{GSD_ROOT}/get-shit-done/references/delegation.md
 </required_reading>
 
 <inputs>

@@ -12,7 +12,6 @@ Each agent's YAML frontmatter has a `model` field. Claude Code reads this direct
 |-------|---------|
 | sonnet | Gatherers, executors, doc writers, reviewers, checkers, verifiers |
 | opus | Synthesizers, planner, quality reviewer |
-| haiku | Slug resolution, timestamps, simple lookups |
 
 - `opus` for judgment/synthesis/planning roles that require critical thinking.
 - `sonnet` for execution/gathering roles that are parallelizable and scoped.

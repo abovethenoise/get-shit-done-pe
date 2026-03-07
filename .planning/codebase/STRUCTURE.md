@@ -31,7 +31,7 @@ get-shit-done-pe/                  # Package root (npm: get-shit-done-cc)
 │   ├── bin/
 │   │   ├── gsd-tools.cjs          # CLI utility entry point (node gsd-tools.cjs <cmd>)
 │   │   └── lib/                   # CLI module library
-│   │       ├── core.cjs           # Shared utils, MODEL_PROFILES, loadConfig, git helpers
+│   │       ├── core.cjs           # Shared utils, loadConfig, git helpers, model resolution
 │   │       ├── state.cjs          # STATE.md read/write/update
 │   │       ├── phase.cjs          # Phase CRUD, plan listing, lifecycle
 │   │       ├── roadmap.cjs        # ROADMAP.md parsing and updates
@@ -63,7 +63,7 @@ get-shit-done-pe/                  # Package root (npm: get-shit-done-cc)
 │   │   ├── codebase/              # Codebase map document templates (7 .md files)
 │   │   └── research-project/      # Research project document templates
 │   └── references/                # Shared behavioral specs and rules
-│       ├── model-profiles.md      # Agent → model tier mapping
+│       ├── delegation.md        # Delegation patterns, model routing, anti-patterns
 │       ├── planning-config.md     # config.json schema and behavior
 │       ├── checkpoints.md         # Checkpoint type definitions and patterns
 │       ├── verification-patterns.md # How to detect stubs vs real implementations
@@ -73,7 +73,6 @@ get-shit-done-pe/                  # Package root (npm: get-shit-done-cc)
 │       ├── tdd.md                 # TDD patterns reference
 │       ├── continuation-format.md # Context handoff format
 │       ├── decimal-phase-calculation.md
-│       ├── model-profile-resolution.md
 │       └── phase-argument-parsing.md
 ├── hooks/                         # Claude Code hooks (JS, compiled to hooks/dist/)
 │   ├── gsd-check-update.js        # Update checker hook
@@ -128,7 +127,7 @@ get-shit-done-pe/                  # Package root (npm: get-shit-done-cc)
 - Purpose: All stateful CLI operations — the only code layer in the framework
 - Contains: Node.js CJS modules, no external dependencies, pure stdlib
 - Module responsibilities:
-  - `core.cjs`: Constants (MODEL_PROFILES), `loadConfig`, git helpers, phase normalization, shared utilities
+  - `core.cjs`: `loadConfig`, git helpers, model resolution utilities, phase normalization, shared utilities
   - `state.cjs`: STATE.md CRUD
   - `phase.cjs`: Phase directory management, plan/summary inventory
   - `roadmap.cjs`: ROADMAP.md parsing (phase sections, progress tables)
@@ -202,7 +201,7 @@ get-shit-done-pe/                  # Package root (npm: get-shit-done-cc)
 - `.planning/config.json` (per-project): Runtime project configuration
 
 **Core Logic:**
-- `get-shit-done/bin/lib/core.cjs`: MODEL_PROFILES table, `loadConfig`, git utilities, phase normalization
+- `get-shit-done/bin/lib/core.cjs`: `loadConfig`, git utilities, model resolution, phase normalization
 - `get-shit-done/bin/lib/init.cjs`: `cmdInitExecutePhase`, `cmdInitPlanPhase`, `cmdInitNewProject` — bootstrap commands that return full JSON context to workflows
 - `get-shit-done/bin/lib/state.cjs`: STATE.md operations
 - `get-shit-done/bin/lib/phase.cjs`: Phase CRUD and plan inventory
@@ -238,8 +237,7 @@ get-shit-done-pe/                  # Package root (npm: get-shit-done-cc)
 - Primary file: `commands/gsd/<new-command>.md`
 - If it needs a workflow: `get-shit-done/workflows/<new-command>.md`
 - If it needs a new agent: `agents/gsd-<role>.md`
-- Add to MODEL_PROFILES table in: `get-shit-done/bin/lib/core.cjs`
-- Reference in: `get-shit-done/references/model-profiles.md`
+- Reference in: `get-shit-done/references/delegation.md`
 
 **New gsd-tools CLI operation:**
 - Implementation: Add function to appropriate module in `get-shit-done/bin/lib/`

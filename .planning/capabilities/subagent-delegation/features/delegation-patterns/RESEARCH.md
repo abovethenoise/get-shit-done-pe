@@ -23,7 +23,7 @@ Claude Code's Agent tool fully supports `model="sonnet"` and custom subagent typ
 
 ### `role_type` is GSD-internal; Claude Code only reads the `model` frontmatter field
 
-Claude Code's native model routing uses the `model` field in agent YAML frontmatter (`sonnet`, `haiku`, `inherit`, or `opus`). GSD's custom `role_type` field is invisible to Claude Code -- it is only consumed by GSD's `resolveModelFromRole()` function. No GSD agent file currently contains an explicit `model:` field, so Claude Code defaults all agents to `inherit` (parent model). This is a structural root cause of 0% Sonnet usage.
+Claude Code's native model routing uses the `model` field in agent YAML frontmatter (`sonnet`, `haiku`, `inherit`, or `opus`). GSD's custom `role_type` field is invisible to Claude Code -- it is only consumed by GSD's `resolveModelFromFrontmatter()` function. No GSD agent file currently contains an explicit `model:` field, so Claude Code defaults all agents to `inherit` (parent model). This is a structural root cause of 0% Sonnet usage.
 
 [Sources: Domain Truth, Tech Constraints, Existing System]
 
@@ -41,7 +41,7 @@ Moving model assignment into Claude Code-recognized frontmatter (`model: sonnet`
 
 ### All 20 GSD agent files already have `role_type` in frontmatter
 
-Complete coverage confirmed via grep. No migration needed for `role_type`. This means v1 fallback (`resolveModelInternal()`) is technically dead code -- every agent can be resolved via the v2 `resolveModelFromRole()` path.
+Complete coverage confirmed via grep. No migration needed for `role_type`. This means v1 fallback (`resolveModelInternal()`) is technically dead code -- every agent can be resolved via the v2 `resolveModelFromFrontmatter()` path.
 
 [Sources: Existing System, Tech Constraints, Edge Cases]
 
@@ -59,7 +59,7 @@ Claude Code enforces single-level delegation. All Agent/Task calls must originat
 
 ### Workflows bypass model resolution entirely for most agents
 
-`plan.md`, `review.md`, and `doc.md` hardcode `model="sonnet"` and `model="inherit"` as string literals in Task() blocks. The `resolveModelFromRole()` function is only called once in production (for a nonexistent `gsd-researcher.md`). The v1 `resolveModelInternal()` is actively used for planner, executor, verifier, and checker via init.cjs.
+`plan.md`, `review.md`, and `doc.md` hardcode `model="sonnet"` and `model="inherit"` as string literals in Task() blocks. The `resolveModelFromFrontmatter()` function is only called once in production (for a nonexistent `gsd-researcher.md`). The v1 `resolveModelInternal()` is actively used for planner, executor, verifier, and checker via init.cjs.
 
 [Sources: Existing System, Tech Constraints]
 
@@ -79,13 +79,13 @@ Disagreements between gatherers. Each conflict includes both positions and a res
 
 **Tech Constraints says:** `"opus"` IS now valid since Claude Code v1.0.64 (July 2025), per GitHub issue #4377 closed as implemented.
 
-**Resolution:** Tech Constraints has the more recent evidence. `"opus"` is now valid. However, `"inherit"` remains more flexible because it adapts to organizational model policies. The consolidated doc should note that `opus` is valid but recommend `inherit` for judge/synthesizer roles for flexibility. GSD's existing `inherit` convention is not wrong, just no longer strictly necessary.
+**Resolution:** Tech Constraints has the more recent evidence. `"opus"` is now valid. Review decision: use explicit `model: opus` for judge/synthesizer agents rather than `inherit`, for clarity and traceability.
 
 ### Is the v1 fallback path dead or actively used?
 
-**Tech Constraints says:** All agents have `role_type`, so `resolveModelFromRole()` (v2) could handle everything. v1 is logically dead.
+**Tech Constraints says:** All agents have `role_type`, so `resolveModelFromFrontmatter()` (v2) could handle everything. v1 is logically dead.
 
-**Existing System says:** v1 `resolveModelInternal()` is actively called by init.cjs for planner, executor, verifier, and checker (lines 427-428, 509-510). v2 `resolveModelFromRole()` is called exactly once -- for a nonexistent agent file. v1 is the *primary* resolution path in practice.
+**Existing System says:** v1 `resolveModelInternal()` is actively called by init.cjs for planner, executor, verifier, and checker (lines 427-428, 509-510). v2 `resolveModelFromFrontmatter()` is called exactly once -- for a nonexistent agent file. v1 is the *primary* resolution path in practice.
 
 **Resolution:** Both are correct but describe different things. v1 is dead *in principle* (no agent lacks `role_type`) but alive *in code* (init.cjs calls v1 functions). For the delegation-patterns feature (doc consolidation), the consolidated doc should describe v2 as canonical and note v1 as deprecated. Actually removing v1 code is out of scope (that's a code change, not a doc change). The doc should not document v1 internals.
 
@@ -168,9 +168,9 @@ Hard limits the planner MUST respect. These are non-negotiable.
 
 - **Modifying workflow files** (plan.md, review.md, doc.md, execute.md, execute-plan.md) -- Belongs to workflow-enforcement feature (P1, depends on this feature). [Source: User Intent]
 
-- **Removing v1 code** (`resolveModelInternal()`, `resolveModelFromRole()`) from core.cjs/init.cjs -- Code changes are out of scope. Doc consolidation only. [Source: User Intent]
+- **Removing v1 code** (`resolveModelInternal()`, `resolveModelFromFrontmatter()`) from core.cjs/init.cjs -- Code changes are out of scope. Doc consolidation only. [Source: User Intent]
 
-- **Removing `role_type` from agent frontmatter** -- Even if `model` is added, `role_type` still has value as a semantic label for GSD's resolution code. Removing it would break `resolveModelFromRole()`. [Source: Existing System, Tech Constraints]
+- **Removing `role_type` from agent frontmatter** -- Even if `model` is added, `role_type` still has value as a semantic label for GSD's resolution code. Removing it would break `resolveModelFromFrontmatter()`. [Source: Existing System, Tech Constraints]
 
 - **Measuring Sonnet usage outcomes** -- The success metric (Sonnet > 0%) is a downstream outcome, not this feature's deliverable. [Source: User Intent]
 

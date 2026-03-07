@@ -6,6 +6,8 @@ started: "2026-03-07"
 completed: "2026-03-07"
 ---
 
+**Post-review note:** Review decisions changed model values (inherit->opus) and removed role_type. See review/review-decisions.md.
+
 # Plan 02 Summary: Agent Frontmatter Model Field
 
 ## What Was Built
@@ -30,20 +32,20 @@ Added `model:` field to YAML frontmatter of all 20 GSD agent definition files. T
 | gsd-review-functional | executor | sonnet | |
 | gsd-review-quality | executor | sonnet | |
 | gsd-review-technical | executor | sonnet | |
-| gsd-coherence-synthesizer | judge | inherit | |
-| gsd-doc-synthesizer | judge | inherit | |
-| gsd-plan-checker | judge | inherit | |
-| gsd-research-synthesizer | judge | inherit | |
-| gsd-review-synthesizer | judge | inherit | |
-| gsd-verifier | judge | inherit | |
+| gsd-coherence-synthesizer | judge | opus | |
+| gsd-doc-synthesizer | judge | opus | |
+| gsd-plan-checker | judge | opus | |
+| gsd-research-synthesizer | judge | opus | |
+| gsd-review-synthesizer | judge | opus | |
+| gsd-verifier | judge | opus | |
 
 ## Verification
 
 - 20/20 agent files have `model:` field
 - 14 agents: `model: sonnet`
-- 6 agents: `model: inherit`
-- 0 agents: `model: opus`
-- All `role_type` values unchanged
+- 6 agents: `model: opus`
+- 0 agents: `model: inherit`
+- `role_type` removed from all 20 agent files (review decision, Finding 3)
 
 ## Requirement Coverage
 

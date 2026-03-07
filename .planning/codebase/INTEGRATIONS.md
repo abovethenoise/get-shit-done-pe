@@ -68,15 +68,7 @@ GSD is installed into one or more AI coding tool config directories. The install
 
 ## Model Resolution
 
-GSD does not directly call any AI model API. It resolves which model tier to use and passes that to the AI runtime via `Task()` spawning.
-
-**Resolution logic** (`get-shit-done/bin/lib/core.cjs` `resolveModelInternal`):
-1. Read `model_profile` from `.planning/config.json` (default: `balanced`)
-2. Check `model_overrides` for per-agent override
-3. Look up agent in `MODEL_PROFILES` table
-4. Return `"inherit"` (for opus-tier agents), `"sonnet"`, or `"haiku"`
-
-**Profiles:** `quality`, `balanced`, `budget` — defined in `get-shit-done/bin/lib/core.cjs` and documented in `get-shit-done/references/model-profiles.md`
+GSD does not directly call any AI model API. Model resolution uses the `model` field in agent YAML frontmatter. Claude Code reads this natively at spawn time. Values: `sonnet`, `opus`, `haiku`. See `get-shit-done/references/delegation.md` for routing conventions.
 
 ## Monitoring & Observability
 

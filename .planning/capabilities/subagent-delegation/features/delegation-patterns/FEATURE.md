@@ -11,12 +11,12 @@ created: "2026-03-07"
 
 | REQ | Research | Plan | Execute | Review | Docs | Status |
 |-----|----------|------|---------|--------|------|--------|
-| EU-01 | - | - | - | - | - | draft |
-| FN-01 | - | - | - | - | - | draft |
-| FN-02 | - | - | - | - | - | draft |
-| FN-03 | - | - | - | - | - | draft |
-| TC-01 | - | - | - | - | - | draft |
-| TC-02 | - | - | - | - | - | draft |
+| EU-01 | x | x | x | x | - | complete |
+| FN-01 | x | x | x | x | - | complete |
+| FN-02 | x | x | x | x | - | complete |
+| FN-03 | x | x | x | x | - | complete |
+| TC-01 | x | x | x | x | - | complete |
+| TC-02 | x | x | x | x | - | complete |
 
 ## End-User Requirements
 
@@ -40,17 +40,17 @@ created: "2026-03-07"
 
 ### FN-01: Model routing rules
 
-**Receives:** Agent role_type from YAML frontmatter (executor | judge | quick)
+**Receives:** Agent model field from YAML frontmatter (sonnet | opus | haiku)
 
-**Returns:** Model assignment (sonnet | inherit | haiku)
+**Returns:** Model assignment (sonnet | opus | haiku)
 
 **Behavior:**
 
-- executor role_type -> model="sonnet"
-- judge role_type -> model="inherit" (gets Opus from parent session)
-- quick role_type -> model="haiku"
-- No role_type -> fallback to v1 resolution (if retained) or error
-- "opus" is a valid model parameter value (confirmed in Claude Code docs), but prefer "inherit" for flexibility — it adapts to organizational model policies
+- executor agents -> model="sonnet"
+- judge/synthesizer agents -> model="opus"
+- quick agents -> model="haiku"
+- Claude Code reads `model` from agent frontmatter natively at spawn time
+- No intermediate resolution function needed; frontmatter is the single source of truth
 
 ### FN-02: Gather-synthesize delegation shape
 
@@ -63,7 +63,7 @@ created: "2026-03-07"
 - Spawn N gatherers in parallel via Agent/Task tool with model="sonnet"
 - Wait for all to complete
 - Retry failed gatherers once; abort if >50% fail
-- Spawn 1 synthesizer with model="inherit" after gather phase
+- Spawn 1 synthesizer with model="opus" after gather phase
 - Gatherers receive context (paths, not content); synthesizer reads gatherer outputs
 - Used by: research (6 gatherers), review (4 gatherers), doc (6 explorers)
 
@@ -75,7 +75,7 @@ created: "2026-03-07"
 
 **Behavior:**
 
-- Spawn 1 subagent via Agent/Task tool with model per role_type
+- Spawn 1 subagent via Agent/Task tool with model per agent frontmatter
 - Used for: plan execution (gsd-executor), verification (gsd-verifier), plan checking (gsd-plan-checker)
 - Orchestrator waits for completion, then processes result
 - Distinct from gather-synthesize: no parallel phase, no synthesis phase

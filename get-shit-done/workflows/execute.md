@@ -9,6 +9,7 @@ Execute all plans for a feature using wave-based parallel execution. Orchestrato
 
 <required_reading>
 Read STATE.md before any operation to load project context.
+@{GSD_ROOT}/get-shit-done/references/delegation.md
 </required_reading>
 
 <process>
