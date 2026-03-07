@@ -21,7 +21,7 @@ Read config.json for planning behavior settings.
 INIT=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" init execute-feature "$CAPABILITY_SLUG" "$FEATURE_SLUG")
 ```
 
-Extract: `executor_model`, `commit_docs`, `feature_dir`, `feature_slug`, `capability_slug`, `plans`, `summaries`, `incomplete_plans`, `state_path`, `config_path`.
+Extract: `commit_docs`, `feature_dir`, `feature_slug`, `capability_slug`, `plans`, `summaries`, `incomplete_plans`, `state_path`, `config_path`.
 
 If `.planning/` missing: error.
 </step>

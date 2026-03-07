@@ -6,7 +6,9 @@
 
 ## Findings
 
-### 1. coherence-report.md (line 100)
+### 1. coherence-report.md (line 100) — RESOLVED
+
+**Status:** Fixed in commit 4c62f97. Replaced @agents/ anti-pattern with proper `Task(subagent_type="gsd-coherence-synthesizer")` delegation. Note: the recommended fix below used the old `model="inherit"` pattern which is now an anti-pattern per FN-03 — the actual fix uses `subagent_type=` without `model=`.
 
 **Current instruction:**
 ```
@@ -15,7 +17,7 @@ Agent definition: `@agents/gsd-coherence-synthesizer.md`
 
 **Problem:** The `@` prefix is an `@file` reference, meaning the orchestrator loads and reads the agent definition into its own context before spawning the subagent. This is the exact anti-pattern -- the orchestrator absorbs the agent's role/goal/constraints, making it more likely to handle the work inline.
 
-**Recommended fix:** Remove the `@` reference. Instead, pass the agent path in the Task prompt:
+**Recommended fix (stale — see resolution above):**
 ```
 Task(
   prompt="First, read agents/gsd-coherence-synthesizer.md for your role.\n\n{assembled_prompt}",
@@ -50,27 +52,39 @@ change-application.md, discuss-capability.md, discuss-feature.md, execute.md, fo
 
 The following findings were identified during `delegation-patterns` doc review and deferred to this feature:
 
-### 2. init.cjs uses resolveModelInternal for 5/6 agents (bypasses frontmatter)
+### 2. init.cjs uses resolveModelInternal for 5/6 agents (bypasses frontmatter) — MOOT
+
+**Status:** Rendered moot by FN-03 — model= removed from all Task() calls, so CLI model resolution no longer affects delegation. Dead code should be cleaned up separately.
 
 Lines 427-428, 509-510, 701-702 call `resolveModelInternal()` which ignores agent YAML frontmatter and defaults to sonnet. Only line 426 uses `resolveModelFromFrontmatter()`. Result: planner resolves to sonnet via init despite `model: opus` in frontmatter. **Action:** Migrate all calls to `resolveModelFromFrontmatter` or remove if dead code.
 
-### 3. opus-to-inherit conversion in resolveModelInternal (core.cjs line 305)
+### 3. opus-to-inherit conversion in resolveModelInternal (core.cjs line 305) — MOOT
+
+**Status:** Rendered moot by FN-03 — workflows no longer consume model values from CLI output.
 
 `return override === 'opus' ? 'inherit' : override` silently converts opus config overrides to inherit. Contradicts review decision that opus is valid. **Action:** Remove the ternary — return override directly.
 
-### 4. Model resolution precedence undocumented
+### 4. Model resolution precedence undocumented — MOOT
+
+**Status:** Rendered moot by FN-03 — precedence is now simple: agent YAML frontmatter is sole authority. No Task() model= to conflict.
 
 YAML frontmatter always wins (user decision). Workflows should not pass `model=` in Task() calls that override frontmatter. **Action:** Document precedence in delegation.md. Remove or align Task() model params in workflows.
 
-### 5. resolveModelFromFrontmatter sonnet fallback (core.cjs)
+### 5. resolveModelFromFrontmatter sonnet fallback (core.cjs) — MOOT
+
+**Status:** Rendered moot by FN-03 — workflows no longer pass model= values, so fallback behavior is irrelevant to delegation.
 
 `fm.model || 'sonnet'` fallback contradicts delegation.md "no fallback resolution." **Action:** Evaluate if defensive fallback is needed or if it should warn/error.
 
-### 6. Workflow Task() calls use model="inherit" for opus synthesizers
+### 6. Workflow Task() calls use model="inherit" for opus synthesizers — MOOT
+
+**Status:** Rendered moot by FN-03 — all model= params removed from Task() calls. Agent YAML frontmatter is sole authority.
 
 plan.md, review.md, doc.md pass `model="inherit"` for synthesizers while agent frontmatter says `model: opus`. Works because parent is Opus, but contradicts "use explicit values" convention. **Action:** Align Task() calls with frontmatter values.
 
-### 7. Stale gsd-researcher.md reference in init.cjs line 426
+### 7. Stale gsd-researcher.md reference in init.cjs line 426 — MOOT
+
+**Status:** Rendered moot by FN-03 — model resolution output from init.cjs no longer consumed by workflows. Dead code should be cleaned up separately.
 
 `resolveModelFromFrontmatter(cwd, path.join(cwd, '..', 'agents', 'gsd-researcher.md'))` — file doesn't exist (research split into 6 agents). Silently returns sonnet. **Action:** Remove or update.
 

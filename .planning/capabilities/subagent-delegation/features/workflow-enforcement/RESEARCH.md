@@ -66,7 +66,7 @@ No new patterns need to be introduced. The required_reading pattern is proven (1
 
 ### Net line reduction is achievable
 
-Baseline: 2858 lines across 9 target workflows + delegation.md. Removing 28 model= instances, redundant inline delegation prose, and inline model-assignment summaries in key_constraints sections should yield net reduction. Adding ~5-6 required_reading lines offsets minimally. Key sections to strip: framing-pipeline.md line 418 and doc.md line 259 hardcode model names in key_constraints summaries.
+Baseline: 2619 lines across 9 target workflows + delegation.md (corrected from initial estimate of 2858 — delegation-patterns feature had already reduced counts). Removing 28 model= instances, redundant inline delegation prose, and inline model-assignment summaries in key_constraints sections should yield net reduction. Adding ~5-6 required_reading lines offsets minimally. Key sections to strip: framing-pipeline.md line 418 and doc.md line 259 hardcode model names in key_constraints summaries.
 
 [Sources: Existing System, Tech Constraints, User Intent]
 

@@ -4,6 +4,7 @@ Drive the full landscape scan pipeline: discover capabilities, enumerate pairs, 
 
 <required_reading>
 Read STATE.md before any operation to load project context.
+@{GSD_ROOT}/get-shit-done/references/delegation.md
 </required_reading>
 
 <inputs>

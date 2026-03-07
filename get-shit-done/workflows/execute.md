@@ -19,7 +19,7 @@ Read STATE.md before any operation to load project context.
 INIT=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" init execute-feature "$CAPABILITY_SLUG" "$FEATURE_SLUG")
 ```
 
-Parse JSON for: `executor_model`, `verifier_model`, `commit_docs`, `parallelization`, `feature_found`, `feature_dir`, `feature_slug`, `capability_slug`, `capability_dir`, `plans`, `incomplete_plans`, `plan_count`, `incomplete_count`, `state_exists`, `roadmap_exists`.
+Parse JSON for: `commit_docs`, `parallelization`, `feature_found`, `feature_dir`, `feature_slug`, `capability_slug`, `capability_dir`, `plans`, `incomplete_plans`, `plan_count`, `incomplete_count`, `state_exists`, `roadmap_exists`.
 
 **If `feature_found` is false:** Error -- feature directory not found.
 **If `plan_count` is 0:** Error -- no plans found for feature.

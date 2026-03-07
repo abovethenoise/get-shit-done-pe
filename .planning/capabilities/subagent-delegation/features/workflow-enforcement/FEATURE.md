@@ -1,7 +1,7 @@
 ---
 type: feature
 capability: "subagent-delegation"
-status: specified
+status: completed
 created: "2026-03-07"
 ---
 
@@ -11,13 +11,13 @@ created: "2026-03-07"
 
 | REQ | Research | Plan | Execute | Review | Docs | Status |
 |-----|----------|------|---------|--------|------|--------|
-| EU-01 | - | - | - | - | - | specified |
-| FN-01 | - | - | - | - | - | specified |
-| FN-02 | - | - | - | - | - | specified |
-| FN-03 | - | - | - | - | - | specified |
-| TC-01 | - | - | - | - | - | specified |
-| TC-02 | - | - | - | - | - | specified |
-| TC-03 | - | - | - | - | - | specified |
+| EU-01 | done | done | done | done | done | completed |
+| FN-01 | done | done | done | done | done | completed |
+| FN-02 | done | done | done | done | done | completed |
+| FN-03 | done | done | done | done | done | completed |
+| TC-01 | done | done | done | done | done | completed |
+| TC-02 | done | done | done | done | done | completed |
+| TC-03 | done | done | done | done | done | completed |
 
 ## End-User Requirements
 
@@ -135,3 +135,5 @@ created: "2026-03-07"
 - 2026-03-07: Audit of 4 already-updated workflows is inline fixes, no separate artifact
 - 2026-03-07: Contradictions resolved by trusting agent YAML (e.g. gsd-review-quality is opus per YAML, not sonnet per review.md Task() call)
 - 2026-03-07: skill-enforcement killed and folded in as TC-03 — command files are thin routing layers with no delegation logic; audit added here
+- 2026-03-07: AUDIT-FINDINGS items 2-7 (CLI .cjs code) rendered moot by FN-03 — removing model= from Task() calls eliminates the code path where CLI model resolution affects delegation. Dead code in init.cjs/core.cjs should be cleaned up separately.
+- 2026-03-07: All Task() calls use subagent_type= parameter instead of 'First, read {agent_path}' prompt pattern. subagent_type causes Claude Code to load the agent definition automatically, making explicit agent reads redundant (see delegation.md anti-patterns)

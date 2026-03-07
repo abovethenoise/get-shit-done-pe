@@ -12,12 +12,12 @@ Delegation patterns (model routing, shapes, heuristics) are in @{GSD_ROOT}/get-s
 The calling workflow provides:
 
 - `gatherers[]` -- Array of:
-  - `agent_path` -- Path to the gatherer agent definition
+  - `subagent_type` -- Agent name for the subagent_type parameter
   - `dimension_name` -- Human label for this gatherer's focus
   - `output_path` -- Where the gatherer writes its output
 
 - `synthesizer` -- Object:
-  - `agent_path` -- Path to the synthesizer agent definition
+  - `subagent_type` -- Agent name for the subagent_type parameter
   - `output_path` -- Where the synthesizer writes its consolidated output
 
 - `context` -- The assembled context payload (Layers 1-4, built in Context Assembly step below)
