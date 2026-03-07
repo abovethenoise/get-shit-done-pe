@@ -1,7 +1,7 @@
 ---
 type: feature
 capability: "subagent-delegation"
-status: exploring
+status: killed
 created: "2026-03-07"
 ---
 
@@ -66,4 +66,4 @@ created: "2026-03-07"
 
 ## Decisions
 
-{Notes, open questions, and decisions made during feature development.}
+- 2026-03-07: KILLED — folded into workflow-enforcement. Command/skill files are thin routing layers with no delegation logic. The audit work (verify Task in allowed-tools, verify no contradictions with delegation.md, verify execution_context loads) is added as a requirement in workflow-enforcement instead.

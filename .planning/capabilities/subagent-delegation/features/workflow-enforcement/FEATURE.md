@@ -17,6 +17,7 @@ created: "2026-03-07"
 | FN-03 | - | - | - | - | - | specified |
 | TC-01 | - | - | - | - | - | specified |
 | TC-02 | - | - | - | - | - | specified |
+| TC-03 | - | - | - | - | - | specified |
 
 ## End-User Requirements
 
@@ -34,7 +35,6 @@ created: "2026-03-07"
 
 **Out of Scope:**
 
-- Skill file enforcement (that's the skill-enforcement feature)
 - Modifying agent YAML frontmatter model assignments (trust current values)
 - Changing workflow stage sequencing or intent
 - Modifying gather-synthesize.md (context assembly is a separate concern)
@@ -111,6 +111,21 @@ created: "2026-03-07"
 - Net result must be fewer lines than baseline
 - Do not add new explanatory content — the reference doc handles that
 
+### TC-03: Command file coherence audit
+
+**Intent:** Command/skill files (`.claude/commands/gsd/`) are thin routing layers. Verify they don't interfere with delegation. Folded in from killed skill-enforcement feature.
+
+**Upstream:** 16 command files in `~/.claude/commands/gsd/`
+
+**Downstream:** Commands correctly enable delegation in the workflows they invoke.
+
+**Constraints:**
+
+- Verify `Task` is in `allowed-tools` for every command that invokes a delegation-heavy workflow
+- Verify no command contains inline delegation logic or Task() calls
+- Verify no command's process instructions contradict delegation.md patterns
+- Fix any gaps found; no separate audit artifact
+
 ## Decisions
 
 - 2026-03-07: Agent YAML frontmatter is sole authority for model routing — Task() calls must not override with `model=`
@@ -119,3 +134,4 @@ created: "2026-03-07"
 - 2026-03-07: Trust agent YAML model values as-is — no agent file modifications
 - 2026-03-07: Audit of 4 already-updated workflows is inline fixes, no separate artifact
 - 2026-03-07: Contradictions resolved by trusting agent YAML (e.g. gsd-review-quality is opus per YAML, not sonnet per review.md Task() call)
+- 2026-03-07: skill-enforcement killed and folded in as TC-03 — command files are thin routing layers with no delegation logic; audit added here
