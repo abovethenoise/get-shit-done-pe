@@ -13,13 +13,7 @@ function toPosixPath(p) {
   return p.split(path.sep).join('/');
 }
 
-// ─── v2 Role-Based Model Resolution ──────────────────────────────────────────
-
-const ROLE_MODEL_MAP = {
-  executor: 'sonnet',
-  judge: 'inherit',    // inherit = gets Opus from user's session (Claude Code constraint: cannot specify "opus" directly, only "sonnet"/"haiku"/"inherit")
-  quick: 'haiku',
-};
+// ─── Model Resolution ────────────────────────────────────────────────────────
 
 // ─── Output helpers ───────────────────────────────────────────────────────────
 
@@ -311,37 +305,24 @@ function resolveModelInternal(cwd, agentType) {
     return override === 'opus' ? 'inherit' : override;
   }
 
-  // Default: sonnet for all agents (v2 uses resolveModelFromRole with role_type frontmatter)
+  // Default: sonnet for all agents (config overrides checked above)
   return 'sonnet';
 }
 
-function resolveModelFromRole(cwd, agentPath) {
-  // Read agent file and parse frontmatter to get role_type
+function resolveModelFromFrontmatter(cwd, agentPath) {
+  // Read agent file and parse frontmatter to get model field
   // Inline require to avoid circular dependency: frontmatter.cjs requires core.cjs
   const { extractFrontmatter } = require('./frontmatter.cjs');
   const content = safeReadFile(agentPath);
   if (!content) {
-    // Agent file not found — fall through to v1
+    // Agent file not found — fall through to config-based resolution
     const agentName = path.basename(agentPath, '.md');
     return resolveModelInternal(cwd, agentName);
   }
 
   const fm = extractFrontmatter(content);
-  const roleType = fm.role_type;
-
-  if (!roleType) {
-    // No role_type in frontmatter — v1 agent, use v1 resolution
-    const agentName = fm.name || path.basename(agentPath, '.md');
-    return resolveModelInternal(cwd, agentName);
-  }
-
-  // v2 agent — resolve from role
-  const model = ROLE_MODEL_MAP[roleType];
-  if (!model) {
-    // Unknown role_type — default to sonnet
-    return 'sonnet';
-  }
-  return model;
+  // model field is the single source of truth (Claude Code reads it natively)
+  return fm.model || 'sonnet';
 }
 
 // ─── Misc utilities ───────────────────────────────────────────────────────────
@@ -579,7 +560,6 @@ function findFeatureInternal(cwd, capabilitySlug, featureInput) {
 }
 
 module.exports = {
-  ROLE_MODEL_MAP,
   output,
   error,
   safeReadFile,
@@ -593,7 +573,7 @@ module.exports = {
   findPhaseInternal,
   getRoadmapPhaseInternal,
   resolveModelInternal,
-  resolveModelFromRole,
+  resolveModelFromFrontmatter,
   pathExistsInternal,
   generateSlugInternal,
   getMilestoneInfo,

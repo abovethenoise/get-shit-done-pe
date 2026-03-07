@@ -28,7 +28,7 @@ created: "2026-03-07"
 
 - [ ] A single `delegation.md` reference doc exists in `get-shit-done/references/`
 - [ ] The doc defines model routing rules, delegation shapes, and when-to-delegate heuristics
-- [ ] The 3 source docs (model-profiles.md, model-profile-resolution.md, gather-synthesize.md) are replaced by the consolidated doc
+- [ ] Delegation content from the 3 source docs (model-profiles.md, model-profile-resolution.md, gather-synthesize.md) is consolidated into the new doc; context assembly content retained in gather-synthesize.md
 - [ ] Total line count of the consolidated doc is less than the combined 337 lines of the 3 source docs
 
 **Out of Scope:**
@@ -50,7 +50,7 @@ created: "2026-03-07"
 - judge role_type -> model="inherit" (gets Opus from parent session)
 - quick role_type -> model="haiku"
 - No role_type -> fallback to v1 resolution (if retained) or error
-- "opus" is never a valid model parameter value; use "inherit" instead
+- "opus" is a valid model parameter value (confirmed in Claude Code docs), but prefer "inherit" for flexibility — it adapts to organizational model policies
 
 ### FN-02: Gather-synthesize delegation shape
 
@@ -98,17 +98,17 @@ created: "2026-03-07"
 
 ### TC-02: Agent frontmatter consistency
 
-**Intent:** All agent definition files must have `role_type` in YAML frontmatter for v2 resolution.
+**Intent:** All agent definition files must have `model` in YAML frontmatter for direct model routing.
 
 **Upstream:** Agent .md files in `.claude/agents/`
 
-**Downstream:** Model resolution logic in delegation.md
+**Downstream:** Claude Code reads `model` field natively at spawn time.
 
 **Constraints:**
 
-- Audit all agent files for role_type presence
-- Add role_type where missing
-- Remove v1 fallback path if all agents have role_type
+- Audit all agent files for `model` presence
+- Add `model` where missing
+- `role_type` is not needed — `model` field is the direct authority
 
 ## Decisions
 

@@ -6,23 +6,23 @@ Consolidated delegation patterns for AI orchestrators. Covers model routing, del
 
 ## Model Routing
 
-Assign models by `role_type` from agent YAML frontmatter. Claude Code reads the `model` field natively.
+Each agent's YAML frontmatter has a `model` field. Claude Code reads this directly at spawn time.
 
-| role_type | model | Used by |
-|-----------|-------|---------|
-| executor | sonnet | Gatherers, planners, executors, doc writers, reviewers |
-| judge | inherit | Synthesizers, checkers, verifiers |
-| quick | haiku | Slug resolution, timestamps, simple lookups |
+| model | Used by |
+|-------|---------|
+| sonnet | Gatherers, executors, doc writers, reviewers, checkers, verifiers |
+| opus | Synthesizers, planner, quality reviewer |
+| haiku | Slug resolution, timestamps, simple lookups |
 
-- `inherit` = agent gets Opus from the parent session. Use `inherit` for judge/synthesizer roles -- it adapts to organizational model policies.
-- `opus` is a valid model value but prefer `inherit` for flexibility.
+- `opus` for judgment/synthesis/planning roles that require critical thinking.
+- `sonnet` for execution/gathering roles that are parallelizable and scoped.
+- `inherit` is also valid (gets parent session's model) but we use explicit values.
 - Orchestrator (main thread) runs at user session level (Opus). Do not spawn the orchestrator as a subagent.
 
 ### Resolution
 
 1. Read agent frontmatter `model` field -- Claude Code applies this automatically.
-2. If no `model` field: `role_type` maps via `ROLE_MODEL_MAP` -> `{executor: 'sonnet', judge: 'inherit', quick: 'haiku'}`.
-3. If neither exists: error. All agents must have at least `role_type`.
+2. All agents must have a `model` field. No fallback resolution.
 
 </model_routing>
 
@@ -39,7 +39,7 @@ Spawn N gatherers in parallel, wait for all, synthesize results into one output.
 3. Wait for all gatherers to complete.
 4. Retry failed gatherers once.
 5. If >50% failed: abort. Do not synthesize.
-6. Spawn 1 synthesizer (model=inherit) with gatherer outputs.
+6. Spawn 1 synthesizer (model=opus) with gatherer outputs.
 7. Return synthesized output + manifest to calling workflow.
 
 ### Task Call Example
@@ -54,7 +54,7 @@ Task(
 # Synthesizer (spawn 1 after gather completes)
 Task(
   prompt="First, read {synth_agent_path} for your role.\n\n<subject>{subject}</subject>\n\n{context}\n\n<task_context>Synthesize gatherer outputs:\n{manifest}\nWrite to: {synth_output_path}</task_context>",
-  model="inherit"
+  model="opus"
 )
 ```
 
@@ -63,14 +63,14 @@ Task(
 | Workflow | Gatherers | Synthesizer |
 |----------|-----------|-------------|
 | research | 6 (domain, system, intent, tech, edges, prior art) | 1 research synthesizer |
-| review | 4 (enduser, functional, technical, integration) | 1 review synthesizer |
+| review | 4 (enduser, functional, technical, quality) | 1 review synthesizer |
 | doc | 6 explorers (inline, arch, domain, agent, automation, hygiene) | 1 doc synthesizer |
 
 ### Constraints
 
 - Flat delegation only -- subagents cannot spawn subagents.
 - Pass file PATHS to agents, not file content.
-- Gatherers are model=sonnet (executor). Synthesizer is model=inherit (judge).
+- Gatherers are model=sonnet. Synthesizer is model=opus.
 - No quality gate between gather and synthesize -- synthesizer handles filtering.
 
 </gather_synthesize>
@@ -84,7 +84,7 @@ Spawn 1 subagent for a scoped task, wait for completion, process the result.
 ### Flow
 
 1. Construct prompt with agent path, task description, and context paths.
-2. Spawn 1 subagent via Task tool with model per role_type.
+2. Spawn 1 subagent via Task tool with model from agent frontmatter.
 3. Wait for completion.
 4. Process result (commit, verify, report).
 
@@ -102,8 +102,8 @@ Task(
 | Workflow | Agent | Model |
 |----------|-------|-------|
 | execute-plan | gsd-executor | sonnet |
-| review (verification) | gsd-verifier | inherit |
-| plan (validation) | gsd-plan-checker | inherit |
+| review (verification) | gsd-verifier | sonnet |
+| plan (validation) | gsd-plan-checker | sonnet |
 
 </single_delegation>
 

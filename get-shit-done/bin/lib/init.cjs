@@ -5,7 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
-const { loadConfig, resolveModelInternal, resolveModelFromRole, pathExistsInternal, generateSlugInternal, getMilestoneInfo, toPosixPath, findCapabilityInternal, findFeatureInternal, output, error } = require('./core.cjs');
+const { loadConfig, resolveModelInternal, resolveModelFromFrontmatter, pathExistsInternal, generateSlugInternal, getMilestoneInfo, toPosixPath, findCapabilityInternal, findFeatureInternal, output, error } = require('./core.cjs');
 
 function detectBriefAndDesign(cwd, capInfo, capDir) {
   const result = { has_brief: false };
@@ -423,7 +423,7 @@ function cmdInitPlanFeature(cwd, capSlug, featSlug, raw) {
 
   const result = {
     // Models
-    researcher_model: resolveModelFromRole(cwd, path.join(cwd, '..', 'agents', 'gsd-researcher.md')),
+    researcher_model: resolveModelFromFrontmatter(cwd, path.join(cwd, '..', 'agents', 'gsd-researcher.md')),
     planner_model: resolveModelInternal(cwd, 'gsd-planner'),
     checker_model: resolveModelInternal(cwd, 'gsd-plan-checker'),
 
