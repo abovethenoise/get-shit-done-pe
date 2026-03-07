@@ -99,7 +99,8 @@ Spawn the gsd-coherence-synthesizer agent with the assembled prompt.
 
 ```
 Task(
-  prompt="First, read agents/gsd-coherence-synthesizer.md for your role.\n\n{assembled_prompt}",
+  prompt="{assembled_prompt}",
+  subagent_type="gsd-coherence-synthesizer",
   description="Synthesize coherence recommendations"
 )
 ```
