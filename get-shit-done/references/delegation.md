@@ -46,12 +46,14 @@ Spawn N gatherers in parallel, wait for all, synthesize results into one output.
 ```
 # Gatherer (spawn N in parallel)
 Task(
-  prompt="First, read {agent_path} for your role.\n\n<subject>{subject}</subject>\n\n{context}\n\n<task_context>Dimension: {dimension}\nWrite to: {output_path}</task_context>"
+  prompt="<subject>{subject}</subject>\n\n{context}\n\n<task_context>Dimension: {dimension}\nWrite to: {output_path}</task_context>",
+  subagent_type="{gatherer_agent_name}"
 )
 
 # Synthesizer (spawn 1 after gather completes)
 Task(
-  prompt="First, read {synth_agent_path} for your role.\n\n<subject>{subject}</subject>\n\n{context}\n\n<task_context>Synthesize gatherer outputs:\n{manifest}\nWrite to: {synth_output_path}</task_context>"
+  prompt="<subject>{subject}</subject>\n\n{context}\n\n<task_context>Synthesize gatherer outputs:\n{manifest}\nWrite to: {synth_output_path}</task_context>",
+  subagent_type="{synthesizer_agent_name}"
 )
 ```
 
@@ -89,7 +91,8 @@ Spawn 1 subagent for a scoped task, wait for completion, process the result.
 
 ```
 Task(
-  prompt="First, read {agent_path} for your role.\n\nThen read these files for context:\n- {plan_path}\n- {feature_path}\n\nExecute all tasks in the plan."
+  prompt="Read these files for context:\n- {plan_path}\n- {feature_path}\n\nExecute all tasks in the plan.",
+  subagent_type="{agent_name}"
 )
 ```
 
@@ -126,10 +129,11 @@ Task(
 
 ### Orchestrator reads agent definitions
 
-Orchestrators MUST NOT read agent definition files. Agent definitions are for the subagent, not the orchestrator. Include `First, read {agent_path} for your role.` in the subagent's prompt. If the orchestrator reads agent definitions, it absorbs enough context to handle the task inline -- defeating delegation.
+Orchestrators MUST NOT read agent definition files. Use `subagent_type` to name the agent -- Claude Code loads the agent definition automatically. If the orchestrator reads agent definitions, it absorbs enough context to handle the task inline -- defeating delegation.
 
 **Wrong:** Orchestrator reads `agents/gsd-executor.md`, then spawns a Task.
-**Right:** Orchestrator spawns Task with prompt containing `First, read agents/gsd-executor.md for your role.`
+**Wrong:** Task prompt says `First, read agents/gsd-executor.md for your role.` (redundant -- subagent_type already loads it).
+**Right:** `Task(prompt=..., subagent_type="gsd-executor")` -- agent definition loaded automatically.
 
 ### Content passing between agents
 

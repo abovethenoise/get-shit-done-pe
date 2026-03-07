@@ -93,37 +93,37 @@ Spawn all 6 gatherers simultaneously (parallel Task calls -- do NOT wait for one
 
 ```
 Task(
-  prompt="First, read {GSD_ROOT}/agents/gsd-research-domain.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Dimension: Domain Truth\nWrite your complete analysis to: {feature_dir}/research/domain-truth-findings.md</task_context>",
+  prompt="<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Dimension: Domain Truth\nWrite your complete analysis to: {feature_dir}/research/domain-truth-findings.md</task_context>",
   subagent_type="gsd-research-domain",
   description="Research Domain Truth for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
 )
 
 Task(
-  prompt="First, read {GSD_ROOT}/agents/gsd-research-system.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Dimension: Existing System\nWrite your complete analysis to: {feature_dir}/research/existing-system-findings.md</task_context>",
+  prompt="<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Dimension: Existing System\nWrite your complete analysis to: {feature_dir}/research/existing-system-findings.md</task_context>",
   subagent_type="gsd-research-system",
   description="Research Existing System for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
 )
 
 Task(
-  prompt="First, read {GSD_ROOT}/agents/gsd-research-intent.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Dimension: User Intent\nWrite your complete analysis to: {feature_dir}/research/user-intent-findings.md</task_context>",
+  prompt="<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Dimension: User Intent\nWrite your complete analysis to: {feature_dir}/research/user-intent-findings.md</task_context>",
   subagent_type="gsd-research-intent",
   description="Research User Intent for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
 )
 
 Task(
-  prompt="First, read {GSD_ROOT}/agents/gsd-research-tech.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Dimension: Tech Constraints\nWrite your complete analysis to: {feature_dir}/research/tech-constraints-findings.md</task_context>",
+  prompt="<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Dimension: Tech Constraints\nWrite your complete analysis to: {feature_dir}/research/tech-constraints-findings.md</task_context>",
   subagent_type="gsd-research-tech",
   description="Research Tech Constraints for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
 )
 
 Task(
-  prompt="First, read {GSD_ROOT}/agents/gsd-research-edges.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Dimension: Edge Cases\nWrite your complete analysis to: {feature_dir}/research/edge-cases-findings.md</task_context>",
+  prompt="<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Dimension: Edge Cases\nWrite your complete analysis to: {feature_dir}/research/edge-cases-findings.md</task_context>",
   subagent_type="gsd-research-edges",
   description="Research Edge Cases for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
 )
 
 Task(
-  prompt="First, read {GSD_ROOT}/agents/gsd-research-prior-art.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Dimension: Prior Art\nWrite your complete analysis to: {feature_dir}/research/prior-art-findings.md</task_context>",
+  prompt="<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Dimension: Prior Art\nWrite your complete analysis to: {feature_dir}/research/prior-art-findings.md</task_context>",
   subagent_type="gsd-research-prior-art",
   description="Research Prior Art for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
 )
@@ -146,7 +146,7 @@ Build gatherer manifest listing each dimension path and its status (success | fa
 
 ```
 Task(
-  prompt="First, read {GSD_ROOT}/agents/gsd-research-synthesizer.md for your role.\n\n<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Gather phase complete. Synthesize the following gatherer outputs into a consolidated RESEARCH.md.\n\nGatherer outputs:\n- Domain Truth: {feature_dir}/research/domain-truth-findings.md [{status}]\n- Existing System: {feature_dir}/research/existing-system-findings.md [{status}]\n- User Intent: {feature_dir}/research/user-intent-findings.md [{status}]\n- Tech Constraints: {feature_dir}/research/tech-constraints-findings.md [{status}]\n- Edge Cases: {feature_dir}/research/edge-cases-findings.md [{status}]\n- Prior Art: {feature_dir}/research/prior-art-findings.md [{status}]\n\nWrite your synthesis to: {feature_dir}/RESEARCH.md\n\nIMPORTANT: Begin RESEARCH.md with YAML frontmatter:\n---\nlens: {LENS}\nsecondary_lens: {SECONDARY_LENS or null}\nsubject: {CAPABILITY_SLUG}/{FEATURE_SLUG}\ndate: {ISO date today}\n---\n\nIf any gatherer has status \"failed\", document the gap -- do not fabricate content for missing dimensions.</task_context>",
+  prompt="<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Gather phase complete. Synthesize the following gatherer outputs into a consolidated RESEARCH.md.\n\nGatherer outputs:\n- Domain Truth: {feature_dir}/research/domain-truth-findings.md [{status}]\n- Existing System: {feature_dir}/research/existing-system-findings.md [{status}]\n- User Intent: {feature_dir}/research/user-intent-findings.md [{status}]\n- Tech Constraints: {feature_dir}/research/tech-constraints-findings.md [{status}]\n- Edge Cases: {feature_dir}/research/edge-cases-findings.md [{status}]\n- Prior Art: {feature_dir}/research/prior-art-findings.md [{status}]\n\nWrite your synthesis to: {feature_dir}/RESEARCH.md\n\nIMPORTANT: Begin RESEARCH.md with YAML frontmatter:\n---\nlens: {LENS}\nsecondary_lens: {SECONDARY_LENS or null}\nsubject: {CAPABILITY_SLUG}/{FEATURE_SLUG}\ndate: {ISO date today}\n---\n\nIf any gatherer has status \"failed\", document the gap -- do not fabricate content for missing dimensions.</task_context>",
   subagent_type="gsd-research-synthesizer",
   description="Synthesize Research for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
 )
@@ -214,8 +214,8 @@ Output consumed by execute workflow. Plans need: frontmatter (wave, depends_on, 
 
 ```
 Task(
-  prompt="First, read {GSD_ROOT}/agents/gsd-planner.md for your role.\n\n" + filled_prompt,
-  subagent_type="general-purpose",
+  prompt=filled_prompt,
+  subagent_type="gsd-planner",
   description="Plan Feature {CAPABILITY_SLUG}/{FEATURE_SLUG}"
 )
 ```
