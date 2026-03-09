@@ -82,6 +82,20 @@ function validateCapabilityPlan(cwd, capSlug, allTasks) {
     }
   }
 
+  // Check ui_facing capabilities have at least one design/UI task
+  const fm = extractFrontmatter(content);
+  if (fm && (fm.ui_facing === true || fm.ui_facing === 'true')) {
+    const hasDesignTask = allTasks.some(t =>
+      t.title.toLowerCase().includes('design') ||
+      t.title.toLowerCase().includes('ui') ||
+      t.title.toLowerCase().includes('component') ||
+      t.reqIds.some(r => r.toLowerCase().includes('design'))
+    );
+    if (!hasDesignTask) {
+      warnings.push({ type: 'ui_facing_no_design_task', message: 'ui_facing capability has no task referencing design/UI work' });
+    }
+  }
+
   return {
     passed: errors.length === 0,
     errors,

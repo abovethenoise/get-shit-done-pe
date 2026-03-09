@@ -178,6 +178,8 @@ After EVERY AskUserQuestion return, write results to capability working state be
 4. **Open questions** — What is still unclear or undecided?
 5. **Suggested lens** — Based on the discussion, which framing lens fits? (debug/new/enhance/refactor)
 6. **Cross-capability concerns** — Surface insights from cross_capability_awareness when relevant
+7. **UI surface** — Is this capability user-facing? If yes, which design system entries apply?
+   (Only probe if `.docs/design-system.md` exists in the project)
 
 **Round loop:**
 
@@ -201,6 +203,22 @@ Embed the previous exploration summary IN the AskUserQuestion question field:
   - "Still accurate" — Keep prior notes, continue exploring gaps
   - "Something changed" — Let me update specific points
 Do NOT output the summary as separate plain text before the AskUserQuestion.
+
+**UI surface gate (checklist item 7):**
+After core idea + boundaries are established (items 1-3), if `.docs/design-system.md` exists in the project:
+
+Use AskUserQuestion:
+- header: "UI Surface"
+- question: "Is this capability user-facing (renders UI that users see or interact with)?"
+- options:
+  - "Yes — directly user-facing" → Read `.docs/design-system.md`, surface available tokens/components/patterns, ask which apply. Inject `## Design References` table into CAPABILITY.md. Set `ui_facing: true` in frontmatter.
+  - "Partially — has a UI surface" → Same as Yes.
+  - "No — backend/system only" → Set `ui_facing: false` in frontmatter. No Design References section written.
+
+If `.docs/design-system.md` does not exist, skip this gate entirely — no question asked.
+
+**Re-exploration: check ui_facing drift:**
+When re-running discuss-capability on an existing capability, check whether `ui_facing` status needs updating. A capability that started as non-UI may have gained a UI surface through feature composition. If a composed feature introduces UI concerns, surface this during re-exploration and offer to flip `ui_facing` and add Design References.
 
 **Cross-capability surfacing:**
 When discussion touches on something that overlaps with another capability, raise it naturally:

@@ -62,11 +62,13 @@ Read the feature file content. Extract:
 
 **Load composed capabilities:**
 For each capability in composes[], read `.planning/capabilities/{cap-slug}/CAPABILITY.md` for contract context.
+Parse `ui_facing` from each composed capability's frontmatter. If any are `true` and `.docs/design-system.md` exists, flag this feature as design-aware and load `.docs/design-system.md` into context.
 
 **Load project context for grounding (if files exist):**
 - `.docs/architecture.md` — system architecture context
 - `.docs/domain-vocabulary.md` — domain concepts and vocabulary
 - `.docs/brand.md` — voice, tone, design direction
+- `.docs/design-system.md` — design tokens, components, patterns (if exists AND any composed cap is ui_facing)
 
 Store capability contracts and project context for use during discussion — the feature discussion should be grounded in what the composed capabilities provide.
 </step>
@@ -140,6 +142,7 @@ After EVERY AskUserQuestion return, write results to feature working state befor
 4. **Composed capabilities** — Which capabilities does this feature compose? Are they all contracted?
 5. **User-facing failures** — What does the user see when a composed capability fails?
 6. **Context** — What flows between the composed capabilities (handoff contracts)?
+7. **Design references** — If any composed capability has `ui_facing: true`, which feature-level design patterns apply? (Auto-detected from composed caps — not a gate question. Surface naturally during discussion: "This feature composes {cap} which is UI-facing. Which layout/interaction patterns from the design system apply at the feature level?" Inject `## Design References` table into FEATURE.md only when relevant.)
 
 **Round loop:**
 

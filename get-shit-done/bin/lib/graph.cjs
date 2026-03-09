@@ -38,6 +38,7 @@ function buildGraph(cwd) {
         slug,
         name: fm.name || slug,
         status: fm.status || 'unknown',
+        ui_facing: fm.ui_facing === true || fm.ui_facing === 'true',
       });
     }
   } catch { /* no capabilities dir */ }
@@ -94,7 +95,7 @@ function querySequence(graph) {
   for (const feat of featureNodes) {
     const composedCaps = feat.composes || [];
     if (composedCaps.length === 0) {
-      executable.push({ slug: feat.slug, status: feat.status, composes: [], blockers: [] });
+      executable.push({ slug: feat.slug, status: feat.status, composes: [], blockers: [], has_ui: false });
       continue;
     }
 
@@ -106,10 +107,11 @@ function querySequence(graph) {
       }
     }
 
+    const hasUi = composedCaps.some(c => { const cn = getCapNode(nodes, c); return cn && cn.ui_facing; });
     if (blockers.length === 0) {
-      executable.push({ slug: feat.slug, status: feat.status, composes: composedCaps, blockers: [] });
+      executable.push({ slug: feat.slug, status: feat.status, composes: composedCaps, blockers: [], has_ui: hasUi });
     } else {
-      blocked.push({ slug: feat.slug, status: feat.status, composes: composedCaps, blockers });
+      blocked.push({ slug: feat.slug, status: feat.status, composes: composedCaps, blockers, has_ui: hasUi });
     }
   }
 
@@ -224,15 +226,16 @@ function queryWaves(graph, scopeCSV) {
   for (const feat of scopedFeatures) {
     const composedCaps = feat.composes || [];
     if (composedCaps.length === 0) {
-      wave1.push({ slug: feat.slug, composes: [] });
+      wave1.push({ slug: feat.slug, composes: [], has_ui: false });
       continue;
     }
 
+    const hasUi = composedCaps.some(c => { const cn = getCapNode(nodes, c); return cn && cn.ui_facing; });
     const unready = composedCaps.filter(c => !isCapReady(nodes, c));
     if (unready.length === 0) {
-      wave1.push({ slug: feat.slug, composes: composedCaps });
+      wave1.push({ slug: feat.slug, composes: composedCaps, has_ui: hasUi });
     } else {
-      blockedFeats.push({ slug: feat.slug, composes: composedCaps, unready_caps: unready });
+      blockedFeats.push({ slug: feat.slug, composes: composedCaps, unready_caps: unready, has_ui: hasUi });
     }
   }
 
@@ -268,6 +271,15 @@ function validateCapContract(cwd, capSlug) {
   const content = safeReadFile(capPath) || '';
   const requiredSections = ['### Receives', '### Returns', '### Rules'];
   const missing = requiredSections.filter(s => !content.includes(s));
+
+  // ui_facing caps must also have Design References
+  const fm = extractFrontmatter(content);
+  if (fm && (fm.ui_facing === true || fm.ui_facing === 'true')) {
+    if (!content.includes('## Design References')) {
+      missing.push('## Design References');
+    }
+  }
+
   return { contract_complete: missing.length === 0, missing };
 }
 
@@ -280,12 +292,14 @@ function queryUpstream(graph, slug, cwd) {
   const upstream = (featNode.composes || []).map(capSlug => {
     const cap = getCapNode(graph.nodes, capSlug);
     const contract = cwd ? validateCapContract(cwd, capSlug) : { contract_complete: false, missing: ['unknown'] };
+    const isUiFacing = cap ? cap.ui_facing : false;
     return {
       cap: capSlug,
       status: cap ? cap.status : 'missing',
       ready: cap ? isCapReady(graph.nodes, capSlug) : false,
       contract_complete: contract.contract_complete,
       missing: contract.missing,
+      ui_facing: isUiFacing,
     };
   });
   return { slug, upstream_capabilities: upstream };

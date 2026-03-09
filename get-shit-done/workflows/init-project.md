@@ -55,12 +55,20 @@ Use the round loop from `<question_protocol>`. Probe design decisions aligned to
 - Output formatting: JSON structure, logging conventions, CLI output style
 - DX priorities: documentation style, tooling preferences, onboarding experience
 
+**Round 3 — Design system (UI projects only, after Round 2):**
+- Existing design system or component library? (Tailwind, shadcn, MUI, Radix, custom, none)
+- Core tokens: colors (primary, secondary, neutral, accent), typography scale, spacing scale
+- Key component patterns: which matter most for this project (tables, cards, forms, modals, navigation)
+- Accessibility requirements: WCAG level (A, AA, AAA), specific needs (keyboard nav, screen reader, contrast)
+
+Done threshold for Round 3: enough to write `.docs/design-system.md` using `templates/design-system.md`.
+
 **If user declines to specify any area:**
 - Make assumptions based on project type + tech stack
-- Document assumptions explicitly as defaults in DESIGN.md
+- Document assumptions explicitly as defaults in DESIGN.md (and design-system.md for UI projects)
 - Mark assumed sections with "(Default — assumed from {reasoning})"
 
-Done threshold: enough design context to write a structured DESIGN.md using `templates/design-style.md`.
+Done threshold: enough design context to write a structured DESIGN.md using `templates/design-style.md`. For UI projects, also enough for `.docs/design-system.md` using `templates/design-system.md`.
 </design_qa_protocol>
 
 <process>
@@ -251,6 +259,17 @@ Synthesize design & style Q&A results into `.planning/DESIGN.md` using the templ
 node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs: initialize design guide" --files .planning/DESIGN.md
 ```
 
+**Write design-system.md (UI projects only):**
+
+If project is UI-facing (detected in Round 1), synthesize Round 3 Q&A results into `.docs/design-system.md` using `templates/design-system.md`.
+
+- Fill flat tables from Q&A answers (Tokens, Components, Patterns, Accessibility Baseline, Anti-Patterns)
+- Every row must have a `When to Use` / `Instead Do` column — agents need decision criteria, not just names
+- Anti-patterns must be imperative: "Never use X for Y" — not descriptive
+- Mark assumed/defaulted rows explicitly
+
+Skip entirely for non-UI projects — do not create the file.
+
 ### 3e.5. Write Capability Map
 
 Derive capabilities from the confirmed list (from step 3b). For each capability:
@@ -280,6 +299,7 @@ mkdir -p .docs
 - `architecture.md` — high-level architecture from Q&A
 - `domain-vocabulary.md` — domain concepts from Q&A (includes domain-to-code mapping; empty for new projects)
 - `brand.md` — voice, tone, design direction from Q&A
+- `design-system.md` — tokens, components, patterns, accessibility, anti-patterns from Round 3 Q&A (UI projects only)
 
 **Tier 5 — Create memory ledger:**
 - `.claude/memory-ledger.md` — empty with format header (solved gotchas accumulate during development)
@@ -290,8 +310,10 @@ No `decisions/` directory — architectural decisions go into `.docs/architectur
 
 ```bash
 mkdir -p .docs .claude
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs: seed documentation tiers" --files .docs/architecture.md .docs/domain-vocabulary.md .docs/brand.md .claude/memory-ledger.md
+node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs: seed documentation tiers" --files .docs/architecture.md .docs/domain-vocabulary.md .docs/brand.md .docs/design-system.md .claude/memory-ledger.md
 ```
+
+Note: `.docs/design-system.md` is only included in the commit if it was created (UI projects). For non-UI projects, git will ignore the missing file path.
 
 **Incremental write -- update init-state.json** with `completed_sections: ["goals", "capabilities", "tech_stack", "architecture", "design_style", "project_md", "capability_map", "doc_tiers"]`.
 
@@ -435,9 +457,12 @@ Display stage banner:
 GSD > INIT > EXISTING PROJECT > DESIGN & STYLE
 ```
 
-Follow `<design_qa_protocol>`. Additionally: reference existing patterns detected during codebase scan. Mark sections where existing patterns were detected vs user preferences.
+Follow `<design_qa_protocol>` (including Round 3 for UI projects). Additionally: reference existing patterns detected during codebase scan. Mark sections where existing patterns were detected vs user preferences.
 
 Write answers into `.planning/DESIGN.md` using the template from `templates/design-style.md`.
+
+**Write design-system.md (UI projects only):**
+If project is UI-facing, also write `.docs/design-system.md` using `templates/design-system.md` from Round 3 answers. Reference detected component libraries, tokens, and patterns from codebase scan. Skip entirely for non-UI projects.
 
 **Incremental write -- update init-state.json** with `completed_sections: ["scan", "validation", "gap_fill", "design_style"]`.
 
@@ -486,6 +511,7 @@ mkdir -p .docs
 - `architecture.md` — validated architecture from scan Phase 1+2
 - `domain-vocabulary.md` — domain context from gap fill Phase 3 (includes domain-to-code mapping from scan)
 - `brand.md` — voice, tone, design direction from design Q&A
+- `design-system.md` — tokens, components, patterns, accessibility, anti-patterns from Round 3 Q&A (UI projects only)
 
 **Tier 5 — Create memory ledger:**
 - `.claude/memory-ledger.md` — empty with format header
@@ -494,7 +520,7 @@ No `decisions/` directory — architectural decisions go into `.docs/architectur
 
 ```bash
 mkdir -p .docs .claude
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs: seed documentation tiers from codebase scan" --files .docs/architecture.md .docs/domain-vocabulary.md .docs/brand.md .claude/memory-ledger.md
+node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs: seed documentation tiers from codebase scan" --files .docs/architecture.md .docs/domain-vocabulary.md .docs/brand.md .docs/design-system.md .claude/memory-ledger.md
 ```
 
 **Incremental write -- update init-state.json** with `completed_sections: ["scan", "validation", "gap_fill", "design_style", "project_md", "capability_map", "doc_tiers"]`.
@@ -588,6 +614,7 @@ Mode: [New / Existing]
 | Architecture       | .docs/architecture.md             |
 | Domain Vocabulary  | .docs/domain-vocabulary.md        |
 | Brand              | .docs/brand.md                    |
+| Design System      | .docs/design-system.md (UI only)  |
 | Memory Ledger      | .claude/memory-ledger.md          |
 
 Project initialized with [N] capabilities and [M] feature stubs.

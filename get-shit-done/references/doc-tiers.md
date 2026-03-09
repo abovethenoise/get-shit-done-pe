@@ -27,7 +27,7 @@ Single source of truth for the 5-tier documentation structure. Referenced by ini
 
 | Attribute | Value |
 |-----------|-------|
-| **Path** | `.docs/architecture.md`, `.docs/domain-vocabulary.md`, `.docs/brand.md` |
+| **Path** | `.docs/architecture.md`, `.docs/domain-vocabulary.md`, `.docs/brand.md`, `.docs/design-system.md` |
 | **Loading** | On demand -- read when working on cross-boundary tasks, during init, discuss, or doc workflows |
 | **Contains** | System architecture and component connections; business domain vocabulary and where concepts manifest in code; architectural decisions (ADRs); voice/tone/design direction |
 | **Does NOT contain** | Rules the agent must follow (that's Tier 2), session-specific state, implementation details of single files |

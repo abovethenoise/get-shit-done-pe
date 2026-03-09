@@ -51,15 +51,15 @@ orphan_count: {N}
 
 ## What Can Execute Now
 
-| Feature | Composed Capabilities | Status |
-|---------|----------------------|--------|
-| {slug} | {cap1, cap2} | {status} |
+| Feature | Composed Capabilities | Status | UI |
+|---------|----------------------|--------|----|
+| {slug} | {cap1, cap2} | {status} | {✓ if has_ui, blank otherwise} |
 
 ## Blocked
 
-| Feature | Blocker | Blocker Status |
-|---------|---------|----------------|
-| {slug} | cap:{cap} | {status} |
+| Feature | Blocker | Blocker Status | UI |
+|---------|---------|----------------|----|
+| {slug} | cap:{cap} | {status} | {✓ if has_ui, blank otherwise} |
 
 ## Parallel Branches
 

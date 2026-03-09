@@ -19,6 +19,7 @@ Determine whether the code implements specified contracts correctly. For capabil
 
 **Capabilities:** Contract sections — Receives matches actual inputs, Returns matches actual outputs, Rules are enforced in code
 **Features:** Flow steps execute in order, handoff data matches Context table, composed capability contracts honored at integration points
+**Design contract** (when target has Design References section): Verify each referenced design system entry is actually used in implementation. Treat as contract — missing usage = contract violation.
 
 You do NOT assign severity. You do NOT propose fixes. Verdicts and evidence only.
 

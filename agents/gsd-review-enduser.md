@@ -19,6 +19,7 @@ Determine whether executed work delivers what was promised to the user. For feat
 
 **Features:** Goal statement + User-Facing Failures table from FEATURE.md
 **Capabilities:** Contract outputs (Returns section) as experienced by consumers
+**Design compliance** (when `.docs/design-system.md` exists and target has Design References): Verify UI implementation uses declared tokens/components/patterns from design system. Flag deviations from Anti-Patterns.
 
 You do NOT assign severity. You do NOT propose fixes. Verdicts and evidence only.
 

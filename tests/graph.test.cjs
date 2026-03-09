@@ -31,11 +31,25 @@ function writeCap(tmpDir, slug, fields = {}) {
   fs.writeFileSync(path.join(dir, 'CAPABILITY.md'), lines.join('\n'));
 }
 
-function writeFullCap(tmpDir, slug, status) {
+function writeFullCap(tmpDir, slug, status, uiFacing = false) {
+  const dir = path.join(tmpDir, '.planning', 'capabilities', slug);
+  fs.mkdirSync(dir, { recursive: true });
+  const lines = [
+    '---', `name: ${slug}`, `status: ${status}`, `ui_facing: ${uiFacing}`, '---',
+    `# ${slug}`, '## Contract', '### Receives', 'Input',
+    '### Returns', 'Output', '### Rules', '- Rule',
+  ];
+  if (uiFacing) {
+    lines.push('## Design References', '| Element | Design System Entry | Usage |', '|---------|-------------------|-------|', '| button | Components.primary-button | main CTA |');
+  }
+  fs.writeFileSync(path.join(dir, 'CAPABILITY.md'), lines.join('\n'));
+}
+
+function writeUiCapNoDesignRefs(tmpDir, slug, status) {
   const dir = path.join(tmpDir, '.planning', 'capabilities', slug);
   fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(path.join(dir, 'CAPABILITY.md'), [
-    '---', `name: ${slug}`, `status: ${status}`, '---',
+    '---', `name: ${slug}`, `status: ${status}`, 'ui_facing: true', '---',
     `# ${slug}`, '## Contract', '### Receives', 'Input',
     '### Returns', 'Output', '### Rules', '- Rule',
   ].join('\n'));
@@ -473,5 +487,123 @@ describe('graph-query sequence-stale', () => {
     const result = runQuery(tmpDir, ['sequence-stale']);
     assert.strictEqual(result.stale, true);
     assert.strictEqual(result.reason, 'planning_files_modified');
+  });
+});
+
+// ─── ui_facing support ───────────────────────────────────────────────────────
+
+describe('ui_facing node attribute', () => {
+  let tmpDir;
+
+  beforeEach(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-graph-test-'));
+    setupProject(tmpDir);
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  test('buildGraph propagates ui_facing from frontmatter', () => {
+    writeCap(tmpDir, 'button', { status: 'verified', ui_facing: true });
+    writeCap(tmpDir, 'auth', { status: 'verified' });
+
+    const graph = buildGraph(tmpDir);
+    const button = graph.nodes.find(n => n.slug === 'button');
+    const auth = graph.nodes.find(n => n.slug === 'auth');
+    assert.strictEqual(button.ui_facing, true);
+    assert.strictEqual(auth.ui_facing, false);
+  });
+
+  test('querySequence includes has_ui for features composing ui_facing caps', () => {
+    writeFullCap(tmpDir, 'button', 'verified', true);
+    writeFullCap(tmpDir, 'auth', 'verified', false);
+    writeFeat(tmpDir, 'login-form', ['button', 'auth']);
+    writeFeat(tmpDir, 'api-auth', ['auth']);
+
+    const result = runQuery(tmpDir, ['sequence']);
+    const loginForm = result.executable.find(f => f.slug === 'login-form');
+    const apiAuth = result.executable.find(f => f.slug === 'api-auth');
+    assert.strictEqual(loginForm.has_ui, true);
+    assert.strictEqual(apiAuth.has_ui, false);
+  });
+
+  test('queryWaves includes has_ui', () => {
+    writeFullCap(tmpDir, 'button', 'verified', true);
+    writeFullCap(tmpDir, 'auth', 'verified', false);
+    writeFeat(tmpDir, 'login-form', ['button', 'auth']);
+    writeFeat(tmpDir, 'api-auth', ['auth']);
+
+    const result = runQuery(tmpDir, ['waves', '--scope', 'login-form,api-auth']);
+    const loginForm = result.wave_1.find(f => f.slug === 'login-form');
+    const apiAuth = result.wave_1.find(f => f.slug === 'api-auth');
+    assert.strictEqual(loginForm.has_ui, true);
+    assert.strictEqual(apiAuth.has_ui, false);
+  });
+
+  test('queryUpstream includes ui_facing per cap', () => {
+    writeFullCap(tmpDir, 'button', 'verified', true);
+    writeFullCap(tmpDir, 'auth', 'verified', false);
+    writeFeat(tmpDir, 'login-form', ['button', 'auth']);
+
+    const result = runQuery(tmpDir, ['upstream', 'login-form']);
+    const button = result.upstream_capabilities.find(c => c.cap === 'button');
+    const auth = result.upstream_capabilities.find(c => c.cap === 'auth');
+    assert.strictEqual(button.ui_facing, true);
+    assert.strictEqual(auth.ui_facing, false);
+  });
+});
+
+describe('validateCapContract with ui_facing', () => {
+  let tmpDir;
+
+  beforeEach(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-graph-test-'));
+    setupProject(tmpDir);
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  test('ui_facing cap with Design References passes contract check', () => {
+    writeFullCap(tmpDir, 'button', 'verified', true);
+    writeFeat(tmpDir, 'form', ['button']);
+
+    const result = runQuery(tmpDir, ['upstream', 'form']);
+    const button = result.upstream_capabilities.find(c => c.cap === 'button');
+    assert.strictEqual(button.contract_complete, true);
+    assert.deepStrictEqual(button.missing, []);
+  });
+
+  test('ui_facing cap WITHOUT Design References fails contract check', () => {
+    writeUiCapNoDesignRefs(tmpDir, 'button', 'verified');
+    writeFeat(tmpDir, 'form', ['button']);
+
+    const result = runQuery(tmpDir, ['upstream', 'form']);
+    const button = result.upstream_capabilities.find(c => c.cap === 'button');
+    assert.strictEqual(button.contract_complete, false);
+    assert.ok(button.missing.includes('## Design References'));
+  });
+
+  test('non-ui_facing cap does not require Design References', () => {
+    writeFullCap(tmpDir, 'auth', 'verified', false);
+    writeFeat(tmpDir, 'login', ['auth']);
+
+    const result = runQuery(tmpDir, ['upstream', 'login']);
+    const auth = result.upstream_capabilities.find(c => c.cap === 'auth');
+    assert.strictEqual(auth.contract_complete, true);
+    assert.deepStrictEqual(auth.missing, []);
+  });
+
+  test('upstream-gaps flags ui_facing cap missing Design References', () => {
+    writeUiCapNoDesignRefs(tmpDir, 'button', 'verified');
+    writeFeat(tmpDir, 'form', ['button']);
+
+    const result = runQuery(tmpDir, ['upstream-gaps', 'form']);
+    assert.strictEqual(result.has_gaps, true);
+    assert.strictEqual(result.gaps.length, 1);
+    assert.strictEqual(result.gaps[0].cap, 'button');
+    assert.ok(result.gaps[0].missing.includes('## Design References'));
   });
 });

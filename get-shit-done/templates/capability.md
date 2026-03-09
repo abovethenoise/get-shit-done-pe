@@ -2,6 +2,7 @@
 type: capability
 name: "{name}"
 status: planning
+ui_facing: false
 created: "{date}"
 ---
 
