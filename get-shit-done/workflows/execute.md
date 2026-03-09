@@ -63,6 +63,7 @@ Execute waves sequentially. Within wave: parallel if enabled, sequential if not.
        @{GSD_ROOT}/get-shit-done/workflows/execute-plan.md
        @{GSD_ROOT}/get-shit-done/templates/summary.md
        @{GSD_ROOT}/get-shit-done/references/checkpoints.md
+       @{GSD_ROOT}/get-shit-done/references/executor-reference.md
        </execution_context>
        <files_to_read>
        - {target_dir}/{plan_file} (Plan)
@@ -114,7 +115,10 @@ Task(
 Target directory: {target_dir}
 Goal: {goal from spec}
 Check must_haves against actual codebase.
-Create VERIFICATION.md.",
+Create VERIFICATION.md.
+<execution_context>
+@{GSD_ROOT}/get-shit-done/references/verifier-reference.md
+</execution_context>",
   subagent_type="gsd-verifier"
 )
 ```

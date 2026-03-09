@@ -9,7 +9,7 @@ Detailed deviation handling rules, commit protocol, state update procedures, and
 ### 1. Load Project State
 
 ```bash
-INIT=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" init execute-feature "${CAP_SLUG}" "${FEAT_SLUG}")
+INIT=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" init execute-feature "${TARGET_SLUG}")
 ```
 
 Extract: `executor_model`, `commit_docs`, `feature_dir`, `plans`, `incomplete_plans`.
@@ -269,8 +269,8 @@ node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" state record-session \
 # Update ROADMAP.md progress
 node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" roadmap update-plan-progress "${PHASE_NUMBER}"
 
-# Mark requirements complete
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" requirements mark-complete ${REQ_IDS}
+# Update spec status if all plans complete
+node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" state update-progress
 ```
 
 ---
@@ -278,8 +278,8 @@ node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" requirements mark-complete 
 ## Final Commit
 
 ```bash
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs({feature}-{plan}): complete [plan-name] plan" \
-  --files .planning/capabilities/{cap}/{feat}/{feature}-{plan}-SUMMARY.md .planning/STATE.md .planning/ROADMAP.md
+node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs(${TARGET_SLUG}): complete [plan-name] plan" \
+  --files ${target_dir}/{plan_id}-SUMMARY.md .planning/STATE.md .planning/ROADMAP.md
 ```
 
 Separate from per-task commits -- captures execution results only.

@@ -14,6 +14,7 @@ const os = require('os');
 
 function createTmpDir() {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-feat-test-'));
+  fs.mkdirSync(path.join(tmp, '.planning', 'features'), { recursive: true });
   fs.mkdirSync(path.join(tmp, '.planning', 'capabilities'), { recursive: true });
   return tmp;
 }
@@ -51,8 +52,6 @@ function captureOutput(fn) {
   return { error: false, data: result ? JSON.parse(result) : null };
 }
 
-// We need capability.cjs too (to create parent capabilities)
-const { cmdCapabilityCreate } = require('../get-shit-done/bin/lib/capability.cjs');
 const {
   cmdFeatureCreate,
   cmdFeatureList,
@@ -61,104 +60,72 @@ const {
 
 describe('cmdFeatureCreate', () => {
   let tmp;
-  beforeEach(() => {
-    tmp = createTmpDir();
-    captureOutput(() => cmdCapabilityCreate(tmp, 'Auth', false));
-  });
+  beforeEach(() => { tmp = createTmpDir(); });
   afterEach(() => { cleanup(tmp); });
 
   test('creates feature directory and FEATURE.md', () => {
-    const res = captureOutput(() => cmdFeatureCreate(tmp, 'auth', 'Login', false));
+    const res = captureOutput(() => cmdFeatureCreate(tmp, 'Login', false));
     assert.strictEqual(res.error, false);
     assert.strictEqual(res.data.created, true);
     assert.strictEqual(res.data.slug, 'login');
-    assert.strictEqual(res.data.capability_slug, 'auth');
 
-    const featDir = path.join(tmp, '.planning', 'capabilities', 'auth', 'features', 'login');
+    const featDir = path.join(tmp, '.planning', 'features', 'login');
     assert.ok(fs.existsSync(featDir), 'feature dir exists');
     assert.ok(fs.existsSync(path.join(featDir, 'FEATURE.md')), 'FEATURE.md exists');
   });
 
-  test('FEATURE.md has correct frontmatter and 3-layer skeleton', () => {
-    captureOutput(() => cmdFeatureCreate(tmp, 'auth', 'Login', false));
+  test('FEATURE.md has correct frontmatter', () => {
+    captureOutput(() => cmdFeatureCreate(tmp, 'Login', false));
     const content = fs.readFileSync(
-      path.join(tmp, '.planning', 'capabilities', 'auth', 'features', 'login', 'FEATURE.md'), 'utf-8'
+      path.join(tmp, '.planning', 'features', 'login', 'FEATURE.md'), 'utf-8'
     );
     assert.ok(content.includes('type: feature'), 'has type');
-    assert.ok(content.includes('capability:'), 'has capability ref');
+    assert.ok(content.includes('composes:'), 'has composes');
     assert.ok(content.includes('status: planning'), 'has status');
     assert.ok(content.includes('# Login'), 'has title');
-    // 3-layer skeleton
-    assert.ok(content.includes('EU-01'), 'has EU requirement');
-    assert.ok(content.includes('FN-01'), 'has FN requirement');
-    assert.ok(content.includes('TC-01'), 'has TC requirement');
-    assert.ok(content.includes('## Trace Table'), 'has trace table');
-    assert.ok(content.includes('## End-User Requirements'), 'has EU section');
-    assert.ok(content.includes('## Functional Requirements'), 'has FN section');
-    assert.ok(content.includes('## Technical Specs'), 'has TC section');
-  });
-
-  test('errors on missing parent capability', () => {
-    const res = captureOutput(() => cmdFeatureCreate(tmp, 'nonexistent', 'Login', false));
-    assert.strictEqual(res.error, true);
-    assert.ok(res.message.includes('not found') || res.message.includes('does not exist'),
-      'error mentions capability not found');
   });
 
   test('errors on duplicate feature', () => {
-    captureOutput(() => cmdFeatureCreate(tmp, 'auth', 'Login', false));
-    const res = captureOutput(() => cmdFeatureCreate(tmp, 'auth', 'Login', false));
+    captureOutput(() => cmdFeatureCreate(tmp, 'Login', false));
+    const res = captureOutput(() => cmdFeatureCreate(tmp, 'Login', false));
     assert.strictEqual(res.error, true);
     assert.ok(res.message.includes('already exists'), 'shows already exists error');
   });
 
   test('errors on empty feature name', () => {
-    const res = captureOutput(() => cmdFeatureCreate(tmp, 'auth', '', false));
+    const res = captureOutput(() => cmdFeatureCreate(tmp, '', false));
     assert.strictEqual(res.error, true);
   });
 
   test('errors on null feature name', () => {
-    const res = captureOutput(() => cmdFeatureCreate(tmp, 'auth', null, false));
-    assert.strictEqual(res.error, true);
-  });
-
-  test('errors on empty capability slug', () => {
-    const res = captureOutput(() => cmdFeatureCreate(tmp, '', 'Login', false));
+    const res = captureOutput(() => cmdFeatureCreate(tmp, null, false));
     assert.strictEqual(res.error, true);
   });
 });
 
 describe('cmdFeatureList', () => {
   let tmp;
-  beforeEach(() => {
-    tmp = createTmpDir();
-    captureOutput(() => cmdCapabilityCreate(tmp, 'Auth', false));
-  });
+  beforeEach(() => { tmp = createTmpDir(); });
   afterEach(() => { cleanup(tmp); });
 
   test('returns empty array when no features', () => {
-    const res = captureOutput(() => cmdFeatureList(tmp, 'auth', false));
+    const res = captureOutput(() => cmdFeatureList(tmp, false));
     assert.strictEqual(res.error, false);
     assert.deepStrictEqual(res.data.features, []);
   });
 
-  test('returns features with status and capability', () => {
-    captureOutput(() => cmdFeatureCreate(tmp, 'auth', 'Login', false));
-    captureOutput(() => cmdFeatureCreate(tmp, 'auth', 'Signup', false));
-    const res = captureOutput(() => cmdFeatureList(tmp, 'auth', false));
+  test('returns features with status and composes', () => {
+    captureOutput(() => cmdFeatureCreate(tmp, 'Login', false));
+    captureOutput(() => cmdFeatureCreate(tmp, 'Signup', false));
+    const res = captureOutput(() => cmdFeatureList(tmp, false));
     assert.strictEqual(res.error, false);
     assert.strictEqual(res.data.features.length, 2);
     const slugs = res.data.features.map(f => f.slug).sort();
     assert.deepStrictEqual(slugs, ['login', 'signup']);
     for (const feat of res.data.features) {
       assert.ok('status' in feat, 'has status');
-      assert.strictEqual(feat.capability, 'auth');
+      assert.ok('composes' in feat, 'has composes');
     }
-  });
-
-  test('errors on non-existent capability', () => {
-    const res = captureOutput(() => cmdFeatureList(tmp, 'nonexistent', false));
-    assert.strictEqual(res.error, true);
   });
 });
 
@@ -166,30 +133,20 @@ describe('cmdFeatureStatus', () => {
   let tmp;
   beforeEach(() => {
     tmp = createTmpDir();
-    captureOutput(() => cmdCapabilityCreate(tmp, 'Auth', false));
-    captureOutput(() => cmdFeatureCreate(tmp, 'auth', 'Login', false));
+    captureOutput(() => cmdFeatureCreate(tmp, 'Login', false));
   });
   afterEach(() => { cleanup(tmp); });
 
-  test('returns feature status with requirement counts', () => {
-    const res = captureOutput(() => cmdFeatureStatus(tmp, 'auth', 'login', false));
+  test('returns feature status with composes', () => {
+    const res = captureOutput(() => cmdFeatureStatus(tmp, 'login', false));
     assert.strictEqual(res.error, false);
     assert.strictEqual(res.data.slug, 'login');
     assert.strictEqual(res.data.status, 'planning');
-    assert.strictEqual(res.data.capability, 'auth');
-    assert.ok(res.data.req_counts, 'has req_counts');
-    assert.strictEqual(res.data.req_counts.eu, 1);
-    assert.strictEqual(res.data.req_counts.fn, 1);
-    assert.strictEqual(res.data.req_counts.tc, 1);
+    assert.ok(Array.isArray(res.data.composes), 'has composes array');
   });
 
   test('errors on non-existent feature', () => {
-    const res = captureOutput(() => cmdFeatureStatus(tmp, 'auth', 'nonexistent', false));
-    assert.strictEqual(res.error, true);
-  });
-
-  test('errors on non-existent capability', () => {
-    const res = captureOutput(() => cmdFeatureStatus(tmp, 'nonexistent', 'login', false));
+    const res = captureOutput(() => cmdFeatureStatus(tmp, 'nonexistent', false));
     assert.strictEqual(res.error, true);
   });
 });

@@ -73,7 +73,6 @@ describe('cmdCapabilityCreate', () => {
 
     const capDir = path.join(tmp, '.planning', 'capabilities', 'auth-system');
     assert.ok(fs.existsSync(capDir), 'capability dir exists');
-    assert.ok(fs.existsSync(path.join(capDir, 'features')), 'features dir exists');
     assert.ok(fs.existsSync(path.join(capDir, 'CAPABILITY.md')), 'CAPABILITY.md exists');
   });
 
@@ -140,10 +139,9 @@ describe('cmdCapabilityList', () => {
     assert.strictEqual(res.data.capabilities.length, 2);
     const slugs = res.data.capabilities.map(c => c.slug).sort();
     assert.deepStrictEqual(slugs, ['auth', 'payments']);
-    // Each should have status and feature_count
+    // Each should have status
     for (const cap of res.data.capabilities) {
       assert.ok('status' in cap, 'has status');
-      assert.ok('feature_count' in cap, 'has feature_count');
     }
   });
 });
@@ -153,14 +151,12 @@ describe('cmdCapabilityStatus', () => {
   beforeEach(() => { tmp = createTmpDir(); });
   afterEach(() => { cleanup(tmp); });
 
-  test('returns capability status with features', () => {
+  test('returns capability status', () => {
     captureOutput(() => cmdCapabilityCreate(tmp, 'Auth', false));
     const res = captureOutput(() => cmdCapabilityStatus(tmp, 'auth', false));
     assert.strictEqual(res.error, false);
     assert.strictEqual(res.data.slug, 'auth');
     assert.strictEqual(res.data.status, 'planning');
-    assert.ok(Array.isArray(res.data.features), 'has features array');
-    assert.strictEqual(res.data.feature_count, 0);
   });
 
   test('errors on non-existent capability', () => {

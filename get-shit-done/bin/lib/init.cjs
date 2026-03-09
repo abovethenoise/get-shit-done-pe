@@ -7,22 +7,6 @@ const path = require('path');
 const { execSync } = require('child_process');
 const { loadConfig, pathExistsInternal, generateSlugInternal, getMilestoneInfo, toPosixPath, findCapabilityInternal, findFeatureInternal, output, error } = require('./core.cjs');
 
-function detectBriefAndDesign(cwd, capInfo, capDir) {
-  const result = { has_brief: false };
-  if (capInfo?.found) {
-    const briefFull = path.join(capInfo.directory, 'BRIEF.md');
-    if (fs.existsSync(briefFull)) {
-      result.has_brief = true;
-      result.brief_path = toPosixPath(path.join(capDir, 'BRIEF.md'));
-    }
-  }
-  const designFull = path.join(cwd, '.planning', 'DESIGN.md');
-  if (fs.existsSync(designFull)) {
-    result.design_path = '.planning/DESIGN.md';
-  }
-  return result;
-}
-
 function cmdInitResume(cwd, raw) {
   const config = loadConfig(cwd);
 

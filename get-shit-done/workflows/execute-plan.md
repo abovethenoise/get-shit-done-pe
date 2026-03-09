@@ -6,6 +6,7 @@ Execute a single plan (PLAN.md) and create outcome summary (SUMMARY.md).
 @{GSD_ROOT}/get-shit-done/references/git-integration.md
 @{GSD_ROOT}/get-shit-done/references/delegation.md
 @{GSD_ROOT}/get-shit-done/references/context-assembly.md
+@{GSD_ROOT}/get-shit-done/references/executor-reference.md
 </required_reading>
 
 <inputs>

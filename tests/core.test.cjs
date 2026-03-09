@@ -21,7 +21,6 @@ const {
   safeReadFile,
   pathExistsInternal,
   getMilestoneInfo,
-  getRoadmapPhaseInternal,
   searchPhaseInDir,
   findPhaseInternal,
   findCapabilityInternal,
@@ -585,88 +584,6 @@ describe('findPhaseInternal', () => {
   });
 });
 
-// ─── getRoadmapPhaseInternal ───────────────────────────────────────────────────
-
-describe('getRoadmapPhaseInternal', () => {
-  let tmpDir;
-
-  beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-core-test-'));
-    fs.mkdirSync(path.join(tmpDir, '.planning'), { recursive: true });
-  });
-
-  afterEach(() => {
-    fs.rmSync(tmpDir, { recursive: true, force: true });
-  });
-
-  // Bug: getRoadmapPhaseInternal was missing from module.exports
-  test('is exported from core.cjs (REG-02)', () => {
-    assert.strictEqual(typeof getRoadmapPhaseInternal, 'function');
-    // Also verify it works with a real roadmap (note: goal regex expects **Goal:** with colon inside bold)
-    fs.writeFileSync(
-      path.join(tmpDir, '.planning', 'ROADMAP.md'),
-      '### Phase 1: Foundation\n**Goal:** Build the base\n'
-    );
-    const result = getRoadmapPhaseInternal(tmpDir, '1');
-    assert.strictEqual(result.found, true);
-    assert.strictEqual(result.phase_name, 'Foundation');
-    assert.strictEqual(result.goal, 'Build the base');
-  });
-
-  test('extracts phase name and goal from roadmap', () => {
-    fs.writeFileSync(
-      path.join(tmpDir, '.planning', 'ROADMAP.md'),
-      '### Phase 2: API Layer\n**Goal:** Create REST endpoints\n**Depends on**: Phase 1\n'
-    );
-    const result = getRoadmapPhaseInternal(tmpDir, '2');
-    assert.strictEqual(result.phase_name, 'API Layer');
-    assert.strictEqual(result.goal, 'Create REST endpoints');
-  });
-
-  test('returns null goal when Goal uses colon-outside-bold format', () => {
-    // Actual ROADMAP.md uses **Goal**: (colon outside bold) which the regex does not match
-    fs.writeFileSync(
-      path.join(tmpDir, '.planning', 'ROADMAP.md'),
-      '### Phase 1: Foundation\n**Goal**: Build the base\n'
-    );
-    const result = getRoadmapPhaseInternal(tmpDir, '1');
-    assert.strictEqual(result.found, true);
-    assert.strictEqual(result.phase_name, 'Foundation');
-    assert.strictEqual(result.goal, null);
-  });
-
-  test('returns null when roadmap missing', () => {
-    const result = getRoadmapPhaseInternal(tmpDir, '1');
-    assert.strictEqual(result, null);
-  });
-
-  test('returns null when phase not in roadmap', () => {
-    fs.writeFileSync(
-      path.join(tmpDir, '.planning', 'ROADMAP.md'),
-      '### Phase 1: Foundation\n**Goal**: Build the base\n'
-    );
-    const result = getRoadmapPhaseInternal(tmpDir, '99');
-    assert.strictEqual(result, null);
-  });
-
-  test('returns null for null phase number', () => {
-    const result = getRoadmapPhaseInternal(tmpDir, null);
-    assert.strictEqual(result, null);
-  });
-
-  test('extracts full section text', () => {
-    fs.writeFileSync(
-      path.join(tmpDir, '.planning', 'ROADMAP.md'),
-      '### Phase 1: Foundation\n**Goal**: Build the base\n**Requirements**: TEST-01\nSome details here\n\n### Phase 2: API\n**Goal**: REST\n'
-    );
-    const result = getRoadmapPhaseInternal(tmpDir, '1');
-    assert.ok(result.section.includes('Phase 1: Foundation'));
-    assert.ok(result.section.includes('Some details here'));
-    // Should not include Phase 2 content
-    assert.ok(!result.section.includes('Phase 2: API'));
-  });
-});
-
 // ─── generateSlugInternal (hardening) ──────────────────────────────────────────
 
 describe('generateSlugInternal (hardening)', () => {
@@ -759,10 +676,8 @@ describe('findFeatureInternal', () => {
 
   beforeEach(() => {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-core-test-'));
-    // Set up a valid capability with features dir
-    const capDir = path.join(tmpDir, '.planning', 'capabilities', 'auth');
-    fs.mkdirSync(path.join(capDir, 'features'), { recursive: true });
-    fs.writeFileSync(path.join(capDir, 'CAPABILITY.md'), '# Auth');
+    // Set up top-level features dir
+    fs.mkdirSync(path.join(tmpDir, '.planning', 'features'), { recursive: true });
   });
 
   afterEach(() => {
@@ -770,42 +685,34 @@ describe('findFeatureInternal', () => {
   });
 
   test('returns found when FEATURE.md exists', () => {
-    const featDir = path.join(tmpDir, '.planning', 'capabilities', 'auth', 'features', 'login');
+    const featDir = path.join(tmpDir, '.planning', 'features', 'login');
     fs.mkdirSync(featDir, { recursive: true });
     fs.writeFileSync(path.join(featDir, 'FEATURE.md'), '# Login');
-    const result = findFeatureInternal(tmpDir, 'auth', 'login');
+    const result = findFeatureInternal(tmpDir, 'login');
     assert.strictEqual(result.found, true);
     assert.strictEqual(result.slug, 'login');
-    assert.strictEqual(result.capability_slug, 'auth');
     assert.ok(result.feature_path.endsWith('FEATURE.md'));
   });
 
   test('returns not found for missing feature', () => {
-    const result = findFeatureInternal(tmpDir, 'auth', 'nonexistent');
+    const result = findFeatureInternal(tmpDir, 'nonexistent');
     assert.strictEqual(result.found, false);
-  });
-
-  test('returns not found for missing parent capability', () => {
-    const result = findFeatureInternal(tmpDir, 'nonexistent-cap', 'login');
-    assert.strictEqual(result.found, false);
-    assert.strictEqual(result.reason, 'capability_not_found');
-    assert.strictEqual(result.capability_slug, 'nonexistent-cap');
   });
 
   test('returns not found when feature dir exists but FEATURE.md is missing', () => {
-    const featDir = path.join(tmpDir, '.planning', 'capabilities', 'auth', 'features', 'login');
+    const featDir = path.join(tmpDir, '.planning', 'features', 'login');
     fs.mkdirSync(featDir, { recursive: true });
     // No FEATURE.md
-    const result = findFeatureInternal(tmpDir, 'auth', 'login');
+    const result = findFeatureInternal(tmpDir, 'login');
     assert.strictEqual(result.found, false);
     assert.strictEqual(result.reason, 'no_feature_file');
   });
 
   test('slugifies feature input before lookup', () => {
-    const featDir = path.join(tmpDir, '.planning', 'capabilities', 'auth', 'features', 'user-login');
+    const featDir = path.join(tmpDir, '.planning', 'features', 'user-login');
     fs.mkdirSync(featDir, { recursive: true });
     fs.writeFileSync(path.join(featDir, 'FEATURE.md'), '# User Login');
-    const result = findFeatureInternal(tmpDir, 'auth', 'User Login');
+    const result = findFeatureInternal(tmpDir, 'User Login');
     assert.strictEqual(result.found, true);
     assert.strictEqual(result.slug, 'user-login');
   });

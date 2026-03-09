@@ -78,7 +78,8 @@ If plans exist: offer add more, view existing, or replan from scratch.
 Task(
   prompt=planning_prompt,
   subagent_type="gsd-planner",
-  description="Plan ${TARGET_TYPE} ${TARGET_SLUG}"
+  description="Plan ${TARGET_TYPE} ${TARGET_SLUG}",
+  references=["@{GSD_ROOT}/get-shit-done/references/planner-reference.md"]
 )
 ```
 
@@ -123,7 +124,7 @@ Finalize: "Yes, finalize" | "I want changes" | "Abort"
 ### 7.6 Plan Checker (if enabled)
 
 ```
-Task(prompt=checker_prompt, subagent_type="gsd-plan-checker", description="Verify ${TARGET_SLUG} plans")
+Task(prompt=checker_prompt, subagent_type="gsd-plan-checker", description="Verify ${TARGET_SLUG} plans", references=["@{GSD_ROOT}/get-shit-done/references/checker-reference.md"])
 ```
 
 Checker findings grouped by severity (blockers → warnings → info). Max 3 checker cycles.
