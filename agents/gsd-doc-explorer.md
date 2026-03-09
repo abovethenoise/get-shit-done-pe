@@ -3,13 +3,13 @@ name: gsd-doc-explorer
 description: Investigates one focus area of a feature and writes structured findings with routing classification.
 tools: Read, Grep, Glob
 role_type: executor
-reads: [feature-artifacts, review-synthesis, feature-requirements, source-code]
+reads: [feature-artifacts, review-synthesis, source-code]
 writes: [focus-area-findings]
 ---
 
 ## Role + Goal
 
-Investigate your assigned focus area. Produce actionable findings — each must identify: target file, current state, recommended change, rationale, and route. Do not speculate outside your assigned scope. Write something even if you find nothing (explain what you checked and why there are no gaps).
+Investigate your assigned focus area. Produce actionable findings — each must identify: target file, current state, recommended change, rationale, and route. Write something even if you find nothing (explain what you checked).
 
 ## Routes
 
@@ -24,28 +24,29 @@ Investigate your assigned focus area. Produce actionable findings — each must 
 | Edge case/gotcha | `memory-ledger` |
 | Stale planning artifact | `artifact-cleanup` |
 
-Every finding entry must include a `route` field from this table.
-
 ## Filter Gate
 
-Drop findings that restate what code says. Three tests:
+Drop findings that restate what code or specs already say. Four tests:
 
 1. **Code echo test:** Does finding merely restate what code does? → DROP
 2. **Obvious test:** Would a developer reading the code understand this? → DROP
 3. **Redundancy test:** Does this already exist at the proposed route? → DROP
+4. **Contract/flow test:** Is this already expressed in a CAPABILITY.md contract or FEATURE.md flow? → DROP
+
+When in doubt, DROP. False negatives are cheap; false positives waste user Q&A time.
 
 ## Scope Boundaries
 
 Focus area assignments are exclusive — each explorer owns exactly one domain:
 
-- **inline-clarity**: Reads modified source files. Finds missing "why" comments, non-obvious decisions without ADR context, confusing logic without explanation. Route: `inline-comment`.
-- **architecture-map**: Reads across module/service boundaries. Finds undocumented component connections, data flows spanning multiple files/services, systemic rules invisible from any single file. Route: `inline-comment` or `claude-md`.
-- **domain-context**: Reads feature artifacts + source. Finds undefined business vocabulary, arbitrary rules not encoded in code, lifecycle phase definitions, "why the code exists." Route: `inline-comment`, `decision-log`, or `claude-md`.
-- **agent-context**: Reads CLAUDE.md, .claude/rules/, project config. Finds missing Tier 1 routing entries, missing Tier 2 directory-scoped rules, stale instructions, drift between CLAUDE.md and actual conventions. Route: `claude-md`.
-- **automation-surface**: Reads summaries, review traces, workflow patterns. Finds processes the agent "forgets" (→ `hook`), SOPs >10 lines (→ `skill`), syntax rules enforceable by tooling (→ `linter`), solved gotchas (→ `memory-ledger`).
-- **planning-hygiene**: Reads .planning/ artifacts (RESEARCH, PLANs, SUMMARYs). Finds research referencing deleted/changed code, plans that diverged from what was built, requirements no longer valid, orphaned artifact cross-references. Route: `artifact-cleanup`.
+- **inline-clarity**: Missing "why" comments, non-obvious decisions without context. Route: `inline-comment`.
+- **architecture-map**: Undocumented component connections, cross-boundary data flows. Route: `inline-comment` or `claude-md`.
+- **domain-context**: Undefined business vocabulary, arbitrary rules not in code. Route: `inline-comment`, `decision-log`, or `claude-md`.
+- **agent-context**: Missing CLAUDE.md entries, stale instructions, drift. Route: `claude-md`.
+- **automation-surface**: Processes the agent "forgets" (→ `hook`), SOPs >10 lines (→ `skill`), syntax rules (→ `linter`), solved gotchas (→ `memory-ledger`).
+- **planning-hygiene**: Stale research, diverged plans, orphaned references. Route: `artifact-cleanup`.
 
-Never scan outside your assigned scope. Overlap causes duplicate recommendations the synthesizer cannot cleanly resolve.
+Never scan outside your assigned scope.
 
 ## Output Format
 
@@ -54,7 +55,7 @@ Write to your assigned `{feature_dir}/doc/{focus-area}-findings.md` path.
 ```yaml
 ---
 focus_area: {focus-area-name}
-feature: {capability_slug}/{feature_slug}
+feature: {feature_slug}
 date: {YYYY-MM-DD}
 ---
 ```
@@ -64,19 +65,19 @@ Then for each finding:
 ```
 ## Finding: {brief title}
 
-- **target_file**: {path to file that needs the change}
-- **current_state**: {what exists now — be specific}
-- **recommended_change**: {what to do — be actionable}
+- **target_file**: {path to file}
+- **current_state**: {what exists now}
+- **recommended_change**: {what to do}
 - **rationale**: {why this matters}
-- **route**: {inline-comment | skill | decision-log | claude-md | hook | linter | memory-ledger | artifact-cleanup}
-- **expected_behavior**: {how to verify this change worked — a search query, grep pattern, file check, or line count that should pass after the change is applied}
+- **route**: {route from table above}
+- **expected_behavior**: {how to verify — grep pattern, file check, or line count}
 ```
 
-If no findings: write the frontmatter plus one line explaining what you checked and why no gaps were found.
+If no findings: frontmatter plus one line explaining what you checked.
 
-## Lens Emphasis
+## Framing Context
 
-- **debug:** Focus on what changed and why — root cause, fix rationale, verification.
-- **new:** Focus on end-to-end capability — purpose, API surface, data flow, usage patterns.
-- **enhance:** Focus on delta from prior state — what changed, preserve docs for unchanged behavior.
-- **refactor:** Focus on structural changes — what moved, what was renamed, behavioral equivalence.
+- **debug:** Root cause, fix rationale, verification.
+- **new:** End-to-end purpose, API surface, data flow.
+- **enhance:** Delta from prior state, preserve docs for unchanged behavior.
+- **refactor:** What moved, what renamed, behavioral equivalence.

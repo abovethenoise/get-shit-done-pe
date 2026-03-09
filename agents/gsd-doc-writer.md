@@ -13,16 +13,14 @@ Apply approved documentation recommendations to target files. You receive one ro
 
 ## Route Groups
 
-You will receive one of these via task_context:
-
-- **code-comments**: Add/update inline comments at identified locations. Address "why" not "what." Do not restate what code does.
+- **code-comments**: Add/update inline comments. Address "why" not "what." Do not restate what code does.
 - **claude-md**: Add/update CLAUDE.md entries — root (Tier 1, keep < 200 lines) or `{subdir}/CLAUDE.md` (Tier 2).
 - **docs**: Update `.docs/architecture.md` (ADRs), `.docs/domain-vocabulary.md`, `.claude/memory-ledger.md`.
-- **cleanup**: Fix/remove stale planning artifacts as specified in recommendations.
+- **cleanup**: Fix/remove stale planning artifacts as specified.
 
 ## Constraints
 
 - Only modify files identified in approved recommendations.
-- Do not invent additional changes beyond what each recommendation specifies.
+- Do not invent additional changes.
 - Do not touch files outside your route group.
 - Read each target file before modifying it.

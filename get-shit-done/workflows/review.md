@@ -1,18 +1,17 @@
 <purpose>
-Orchestrate the full review pipeline for a feature: spawn 4 specialist reviewers in parallel (gather-synthesize pattern), consolidate via synthesizer, present findings one-at-a-time with 5 response options, handle re-review cycles after accepted fixes.
+Orchestrate review pipeline: spawn 4 specialist reviewers in parallel, consolidate via synthesizer, present findings with response options, handle re-review cycles. Branches on target type.
 </purpose>
 
 <required_reading>
-@{GSD_ROOT}/get-shit-done/workflows/gather-synthesize.md
 @{GSD_ROOT}/get-shit-done/references/ui-brand.md
 @{GSD_ROOT}/get-shit-done/references/delegation.md
+@{GSD_ROOT}/get-shit-done/references/context-assembly.md
 </required_reading>
 
 <inputs>
-- `CAPABILITY_SLUG`: The capability containing the feature(s)
-- `FEATURE_SLUG`: The feature being reviewed (null/empty for capability scope)
+- `TARGET_SLUG`: Capability or feature slug
+- `TARGET_TYPE`: "capability" or "feature"
 - `LENS`: Primary lens (debug | new | enhance | refactor)
-- `SCOPE`: Derived -- "feature" if FEATURE_SLUG provided, "capability" if null/empty
 </inputs>
 
 <process>
@@ -20,184 +19,122 @@ Orchestrate the full review pipeline for a feature: spawn 4 specialist reviewers
 ## 1. Initialize
 
 ```bash
-INIT=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" init feature-op "$CAPABILITY_SLUG" "$FEATURE_SLUG" review --raw)
+INIT=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" init feature-op "$TARGET_SLUG" review --raw)
 ```
 
-Parse: `commit_docs`, `capability_slug`, `capability_dir`, `feature_found`, `feature_slug`, `feature_dir`, `has_research`, `has_context`, `has_plans`, `state_path`, `roadmap_path`.
+Parse: `commit_docs`, `feature_found`, `feature_slug`, `feature_dir`, `has_research`, `has_plans`, `state_path`, `roadmap_path`.
 
-**If `feature_found` is false:** Error.
-
-Derive: reviewer agents (enduser, functional, technical, quality), synthesizer path, max_re_review_cycles=2, failure_threshold=2.
+Determine target directory:
+- Feature: `.planning/features/${TARGET_SLUG}`
+- Capability: `.planning/capabilities/${TARGET_SLUG}`
 
 ```bash
-mkdir -p "${FEATURE_DIR}/review"
+mkdir -p "${target_dir}/review"
 ```
 
 ## 2. Context Assembly
 
-Build payload (Layers 1-4):
-- **Layer 1:** PROJECT.md, STATE.md, ROADMAP.md
-- **Layer 2:** `${capability_dir}/CAPABILITY.md` (if exists)
-- **Layer 3:** `${feature_dir}/FEATURE.md` (EU/FN/TC requirements)
-- **Layer 4:** `get-shit-done/framings/${LENS}/anchor-questions.md` (if LENS provided)
+Per @get-shit-done/references/context-assembly.md:
+- Layer 1: PROJECT.md, STATE.md, ROADMAP.md
+- Layer 2: Target spec (CAPABILITY.md contract or FEATURE.md goal/flow/composes[])
+- Layer 3: SUMMARY.md files, key files created/modified
+- Layer 4: Lens-specific anchor questions
 
-## 3. Locate Artifacts (Scope-Fluid)
+**Review focus by type:**
+- **Capability:** Reviewers verify contract satisfaction (Receives/Returns/Rules), constraint compliance, side effect accuracy
+- **Feature:** Reviewers verify goal achievement, user-facing failure handling, composes[] accuracy, flow execution
 
-Determine scope: `SCOPE = if FEATURE_SLUG is provided then "feature" else "capability"`
+## 3. Spawn 4 Reviewers in Parallel
 
-**Feature scope (FEATURE_SLUG provided):**
-Read SUMMARY.md files from feature directory to build list of key files created/modified. Extract requirement IDs from FEATURE.md (EU-xx, FN-xx, TC-xx).
-
-**Capability scope (FEATURE_SLUG is null/empty):**
-Scan all feature directories under `.planning/capabilities/${CAPABILITY_SLUG}/features/`. For each feature directory that contains at least one `*-SUMMARY.md` file:
-- Collect SUMMARY.md paths and FEATURE.md path
-- Extract key files and requirement IDs from each
-- Build combined artifact list and combined requirement ID list across all features
-
-Log scope: "Reviewing at {SCOPE} scope: {feature count} feature(s)"
-
-**Ground truth framing:** Spec (FEATURE.md requirements) is ground truth for code review. Reviewers verify implementation against specified requirements -- the spec defines correctness.
-
-## 4. Spawn 4 Reviewers in Parallel
-
-Assemble context payload (read each path, embed content):
-```
-<core_context>{contents of PROJECT.md, STATE.md, ROADMAP.md}</core_context>
-<capability_context>{contents of CAPABILITY.md}</capability_context>
-<feature_context>{contents of FEATURE.md with EU/FN/TC requirements}</feature_context>
-<review_context>
-Lens: {LENS}
-Anchor questions: {GSD_ROOT}/get-shit-done/framings/{LENS}/anchor-questions.md
-Feature artifacts: {artifact list from Step 3}
-Requirement IDs: {EU-xx, FN-xx, TC-xx from FEATURE.md}
-</review_context>
-```
-
-Spawn all 4 reviewers simultaneously (parallel Task calls — do NOT wait for one before spawning the next):
+Assemble context payload embedding all layers.
 
 ```
-Task(
-  prompt="<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Dimension: End-User\nFeature artifacts: {artifact_list}\nRequirement IDs: {requirement_ids}\nWrite your trace report to: {feature_dir}/review/enduser-trace.md</task_context>",
-  subagent_type="gsd-review-enduser",
-  description="Review End-User for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
-)
-
-Task(
-  prompt="<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Dimension: Functional\nFeature artifacts: {artifact_list}\nRequirement IDs: {requirement_ids}\nWrite your trace report to: {feature_dir}/review/functional-trace.md</task_context>",
-  subagent_type="gsd-review-functional",
-  description="Review Functional for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
-)
-
-Task(
-  prompt="<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG}</subject>\n\n{context_payload}\n\n<task_context>Dimension: Technical\nFeature artifacts: {artifact_list}\nRequirement IDs: {requirement_ids}\nWrite your trace report to: {feature_dir}/review/technical-trace.md</task_context>",
-  subagent_type="gsd-review-technical",
-  description="Review Technical for {CAPABILITY_SLUG}/{FEATURE_SLUG}"
-)
-
-Task(
-  prompt="<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG or 'all (capability scope)'}</subject>\n\n{context_payload}\n\n<task_context>Dimension: Quality\nExecution scope: {SCOPE}\nFeature artifacts: {artifact_list}\nRequirement IDs: {requirement_ids}\nCross-scope detection (when capability scope): check for cross-scope state conflicts, interface contract violations, conflicting assumptions between features, and spec coverage gaps in implementation.\nWrite your trace report to: {review_dir}/quality-trace.md</task_context>",
-  subagent_type="gsd-universal-quality-reviewer",
-  description="Review Quality for {CAPABILITY_SLUG}/{FEATURE_SLUG or 'all'}"
-)
+Task(prompt=review_prompt, subagent_type="gsd-review-enduser",
+  description="Review End-User for ${TARGET_SLUG}")
+Task(prompt=review_prompt, subagent_type="gsd-review-functional",
+  description="Review Functional for ${TARGET_SLUG}")
+Task(prompt=review_prompt, subagent_type="gsd-review-technical",
+  description="Review Technical for ${TARGET_SLUG}")
+Task(prompt=review_prompt, subagent_type="gsd-universal-quality-reviewer",
+  description="Review Quality for ${TARGET_SLUG}")
 ```
 
-Wait for ALL 4 reviewers to complete.
+Each reviewer writes to `${target_dir}/review/{dimension}-trace.md`.
 
-## 5. Failure Handling
+Wait for ALL 4 to complete.
 
-Check each output exists and is non-empty. Missing -> retry ONCE. Still missing -> status "failed".
+## 4. Failure Handling
 
-If `failed_count >= 2`: abort synthesis, display error with failed dimensions.
-If fewer: proceed with partial results.
+Missing output → retry ONCE. Still missing → "failed". If ≥2 failed: abort synthesis.
 
-## 6. Synthesize
-
-Build reviewer manifest listing each dimension and its status (success | failed).
+## 5. Synthesize
 
 ```
-Task(
-  prompt="<subject>{CAPABILITY_SLUG}/{FEATURE_SLUG or 'all (capability scope)'}</subject>\n\n{context_payload}\n\n<task_context>Review phase complete. Consolidate the following reviewer trace reports.\n\nExecution scope: {SCOPE} ({SCOPE == 'capability' ? 'reviewing all executed features in capability' : 'reviewing single feature'})\n\nReviewer outputs:\n- End-User: {review_dir}/enduser-trace.md [{status}]\n- Functional: {review_dir}/functional-trace.md [{status}]\n- Technical: {review_dir}/technical-trace.md [{status}]\n- Quality: {review_dir}/quality-trace.md [{status}]\n\nConflict priority: end-user > functional > technical > quality\n\nWrite your synthesis to: {review_dir}/synthesis.md\n\nNote the review scope (capability-level or feature-level) in the synthesis output header.\nIf any reviewer has status \"failed\", document the gap — do not fabricate findings for missing dimensions.</task_context>",
-  subagent_type="gsd-review-synthesizer",
-  description="Synthesize Review for {CAPABILITY_SLUG}/{FEATURE_SLUG or 'all'}"
-)
+Task(prompt=synth_prompt, subagent_type="gsd-review-synthesizer",
+  description="Synthesize Review for ${TARGET_SLUG}")
 ```
 
-If synthesis output missing: error.
+Synthesizer reads all trace reports, writes `${target_dir}/review/synthesis.md`.
 
-## 7. Parse Synthesis
+Conflict priority: end-user > functional > technical > quality.
 
-Extract ordered findings list. If zero findings: display "NO ISSUES FOUND", skip to step 10.
+## 6. Parse Synthesis
 
-## 8. Present Findings (Q&A Loop)
+Extract ordered findings. If zero: display "NO ISSUES FOUND", skip to step 9.
 
-For each finding (ordered by severity, blockers first):
+## 7. Present Findings (Q&A Loop)
 
-Display: severity, requirement, verdict, source reviewer, evidence, spot-check result.
+For each finding (blockers first):
 
-Options via AskUserQuestion (header max 12 chars, e.g., "Find 1/7"):
-- **Accept** -- fix it
-- **Accept+Edit** -- fix with modifications
-- **Research** -- need investigation first
-- **Defer** -- valid but not now
-- **Dismiss** -- not valid/applicable
+Display: severity, spec section, verdict, source reviewer, evidence, spot-check result.
 
-After all processed: if accepted findings exist -> step 9. Otherwise -> step 10.
+Options via AskUserQuestion:
+- **Accept** — fix it
+- **Accept+Edit** — fix with modifications
+- **Research** — needs investigation
+- **Defer** — valid but not now
+- **Dismiss** — not valid
 
-## 9. Re-Review Loop
+After all processed: if accepted findings → step 8. Otherwise → step 9.
 
-Check `re_review_cycle < max_re_review_cycles` (2).
+## 8. Re-Review Loop
 
-If accepted findings AND cycles remaining: re-spawn only affected reviewers using the same Task() blocks from Step 4 (same prompt structure, same subagent_types). Always re-run synthesizer via Step 6 Task() block after affected reviewers complete. Present any new/changed findings (same Q&A). If max reached: surface remaining for manual resolution.
+Max 2 cycles. Re-spawn only affected reviewers + synthesizer. Present new/changed findings.
 
-## 10. Log Decisions
+## 9. Log Decisions
 
-Write `{feature_dir}/review/review-decisions.md` with accepted, deferred, and dismissed findings.
+Write `${target_dir}/review/review-decisions.md`.
 
-## 11. Completion
+## 10. Completion
 
 ```
-GSD > FEATURE REVIEWED: {capability_slug}/{feature_slug}
+GSD > ${TARGET_TYPE} REVIEWED: ${TARGET_SLUG}
 
 Findings: {total}
   Accepted: {count}
   Deferred: {count}
   Dismissed: {count}
-Re-review cycles: {N}/{max}
+Re-review cycles: {N}/2
 
-Review artifacts:
-  {feature_dir}/review/
+Review artifacts: ${target_dir}/review/
 ```
 
-## 12. Auto-Advance
+## 11. Auto-Advance
 
-After completion:
-
-**If 0 blocker/major findings remaining:**
-- Auto-invoke doc workflow: `@{GSD_ROOT}/get-shit-done/workflows/doc.md`
-- Pass: CAPABILITY_SLUG, FEATURE_SLUG, LENS
-- Display: "No blockers remaining. Auto-advancing to documentation generation."
-
-**If deferred findings but no blockers:**
-- Auto-invoke doc workflow with deferrals noted: `@{GSD_ROOT}/get-shit-done/workflows/doc.md`
-- Pass: CAPABILITY_SLUG, FEATURE_SLUG, LENS
-- Display: "Deferred findings noted. Auto-advancing to documentation generation."
-
-**If blockers remain:**
-- Do NOT auto-advance
-- Display: "Blockers remain. Resolve before documentation can be generated."
-- Surface blocker list for manual resolution
+**0 blocker/major remaining:** Auto-invoke doc workflow with TARGET_SLUG, TARGET_TYPE, LENS.
+**Deferred but no blockers:** Auto-invoke doc with deferrals noted.
+**Blockers remain:** Do NOT auto-advance. Surface blocker list.
 
 </process>
 
 <key_constraints>
 - Follows gather-synthesize pattern with review-specific parameters
-- Q&A happens HERE via AskUserQuestion -- NOT inside agents
+- Q&A happens HERE via AskUserQuestion — NOT inside agents
 - Reviewers spawned in parallel (prevents anchoring bias)
-- Synthesizer runs only after all reviewers complete (or abort if >=2 fail)
+- Synthesizer runs only after all reviewers complete (or abort if ≥2 fail)
 - Conflict priority: end-user > functional > technical > quality
 - Re-review is targeted: only affected reviewers + synthesizer
 - Max 2 re-review cycles
-- Requirements from FEATURE.md (EU/FN/TC), not separate REQUIREMENTS.md
-- Review traces are ephemeral — cleaned up by doc.md after doc stage completes (doc is review's downstream consumer)
-- Auto-advances to doc workflow when no blockers remain (step 12)
+- Review traces are ephemeral — cleaned up by doc.md after doc stage completes
+- Auto-advances to doc when no blockers remain
 </key_constraints>
