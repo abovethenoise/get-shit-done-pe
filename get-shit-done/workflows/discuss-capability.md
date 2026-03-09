@@ -63,6 +63,21 @@ If "No, show me the list": Display capability list with slugs and statuses, let 
 If "Create new": Ask for capability name, create via `capability-create`, then proceed.
 </step>
 
+<step name="semantic_pre_scan">
+Before committing to a design direction, run mgrep against the capability description
+(user's "core idea" from step 2 or existing Goal section).
+
+Surface to user:
+  - **Existing implementations**: Code that already does what this capability describes
+    (reuse opportunity — may not need a new capability at all)
+  - **Partial overlaps**: Code that covers part of the contract
+    (integration point, not a blocker)
+  - **Name collisions**: Existing capabilities with different names but
+    semantically similar goals (possible duplicate or needs differentiation)
+
+Present findings before Q&A step so user can adjust scope based on what exists.
+</step>
+
 <step name="load_capability">
 Load the capability file and check its status.
 
@@ -134,6 +149,12 @@ Parse all capabilities. Identify potential cross-cutting concerns:
 - Capabilities that share domain concepts (e.g., both touch "user sessions", "scoring", "scheduling")
 - Capabilities with dependency relationships (one produces what another consumes)
 - Capabilities that might conflict (competing approaches to the same problem)
+
+Enhance cross-capability awareness with mgrep:
+  Run mgrep against the capability's Goal to find other capabilities with
+  semantic overlap. Compare against explicit composes[] edges:
+    - Overlap WITH composes[] edge → expected dependency, skip
+    - Overlap WITHOUT edge → surface as "possible undeclared relationship"
 
 Store cross-capability insights internally for use during guided exploration. Surface them naturally when relevant — don't dump a list upfront.
 </step>

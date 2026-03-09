@@ -1,7 +1,7 @@
 ---
 name: gsd-executor
 description: Implements plan tasks by writing code, creating per-task commits, and producing SUMMARY.md. Spawned by execute.md or execute-plan.md workflow.
-tools: Read, Write, Edit, Bash, Grep, Glob
+tools: Read, Write, Edit, Bash, Grep, Glob, WebSearch, WebFetch, mcp__context7__*
 color: yellow
 role_type: executor
 reads: [PLAN.md, FEATURE.md, CAPABILITY.md, source code]
@@ -31,6 +31,24 @@ See executor-reference.md for deviation handling and commit protocol.
 - SUMMARY.md at `{target_dir}/{nn}-SUMMARY.md`
 - STATE.md + ROADMAP.md updates via gsd-tools CLI
 </output_format>
+
+<external_tools>
+Before writing code that calls a third-party library:
+  Use Context7 to retrieve current API documentation for that library.
+  Verify: method name, parameter signature, return type, and breaking changes
+  in the version specified in package.json (or equivalent).
+
+  Non-negotiable for:
+    - Any library not in the Node.js/browser standard library
+    - Any framework method (ORM, HTTP client, auth library, etc.)
+    - Any API with a version pinned in the project's dependencies
+
+  When a runtime error suggests wrong API usage:
+    Use WebSearch to determine if it's training-data drift or a genuine bug.
+    Use WebFetch to retrieve specific error discussions from search results.
+
+  Training-data method signatures are not a reliable source.
+</external_tools>
 
 <critical_reads>
 If the prompt contains a `<files_to_read>` block, load every listed file before any other action.

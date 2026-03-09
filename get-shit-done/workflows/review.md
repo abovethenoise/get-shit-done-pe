@@ -44,6 +44,29 @@ Per @get-shit-done/references/context-assembly.md:
 - **Capability:** Reviewers verify contract satisfaction (Receives/Returns/Rules), constraint compliance, side effect accuracy
 - **Feature:** Reviewers verify goal achievement, user-facing failure handling, composes[] accuracy, flow execution
 
+## 2b. Downstream Blast Radius
+
+**If capability target:** Query downstream consumers for blast radius context:
+
+```bash
+DOWNSTREAM=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" graph-query downstream "$TARGET_SLUG")
+```
+
+Parse JSON for features that compose this capability.
+Include in all reviewer prompts as `<downstream_consumers>`:
+  Feature slugs and their Goal lines.
+
+Purpose: when a reviewer finds a contract deviation, they can surface which
+features are affected. Without this, findings land without propagation context.
+
+**If feature target:** Skip — features don't have downstream consumers.
+
+## 2c. Semantic Context for Technical Reviewer
+
+Run mgrep against the target's Constraints and "Must Not Propagate" sections.
+Include results in the technical reviewer's prompt as `<semantic_call_sites>`:
+  Code that invokes or depends on constrained behavior.
+
 ## 3. Spawn 4 Reviewers in Parallel
 
 Assemble context payload embedding all layers.

@@ -71,6 +71,21 @@ For each capability in composes[], read `.planning/capabilities/{cap-slug}/CAPAB
 Store capability contracts and project context for use during discussion — the feature discussion should be grounded in what the composed capabilities provide.
 </step>
 
+<step name="semantic_composition_check">
+Run mgrep against the feature's Goal/Flow description.
+
+Surface to user if found:
+  - Code that satisfies parts of the flow but isn't covered by any composed capability
+    (possible missing composes[] entry)
+  - Semantic contradiction between feature flow steps and composed capability contracts
+    (capability may not actually do what the feature assumes)
+  - Implicit dependencies: code the feature will need that isn't in any composed cap's
+    contract (possible undeclared capability)
+
+This feeds into backward_routing — if mgrep reveals a gap, the user
+can route back to /gsd:discuss-capability before committing to the feature spec.
+</step>
+
 <step name="check_status">
 Check feature status before proceeding.
 

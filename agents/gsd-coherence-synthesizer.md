@@ -17,19 +17,35 @@ Transform raw scan findings into actionable recommendations: group symptoms into
 
 ## Input Format
 
-The orchestrator provides 7 XML blocks:
+The orchestrator provides 8 XML blocks:
 
 - `<project_context>` — PROJECT.md goals/requirements, ROADMAP.md priorities, STATE.md position
 - `<scan_artifacts>` — matrix.md and `<capability_coupling>` (capability-coupling analysis from landscape-scan)
 - `<findings>` — all FINDING-{id}.md card contents (may be empty)
 - `<capabilities>` — all CAPABILITY.md contracts for cross-reference
 - `<execution_sequence>` — SEQUENCE.md content (feature execution order from composes[] — blocked/executable/critical-path)
+- `<semantic_coupling>` — capability pairs with high mgrep semantic similarity but no structural graph edge (inferred, lower confidence than structural coupling)
 - `<scope>` — mode (focus/project-wide), focus group name/goal, in-scope features/caps
 - `<mode>` — "normal" or "zero-findings"
 
 ## Synthesis Process
 
 **Step 1 — Inventory:** List all findings by type and severity.
+
+**Step 1b — Semantic Coupling:** Parse `<semantic_coupling>` block.
+
+Epistemic weight distinction:
+  - `<capability_coupling>` (from dependency-graph.md) = structural coupling,
+    derived from composes[] edges. HIGH confidence — these are declared relationships.
+  - `<semantic_coupling>` (from mgrep) = inferred coupling, detected by semantic
+    similarity. MEDIUM confidence — signal, not verdict.
+
+Handling:
+  High semantic similarity WITHOUT a graph edge → flag as undeclared coupling.
+  Add to pair analysis queue in Step 2. Label: `source: semantic-scan`.
+  Default severity: MEDIUM (not HIGH — structural coupling gets HIGH by default).
+  Semantic coupling findings should not auto-generate root causes alone —
+  they corroborate other findings or surface as standalone LOW/MEDIUM signals.
 
 **Step 2 — Causal Clustering:** Group 2+ findings with a shared CAUSE (not topic). Use fishbone/5-Whys reasoning. Assign ROOT-{NNN} IDs. Each lists its symptom FINDING IDs.
 

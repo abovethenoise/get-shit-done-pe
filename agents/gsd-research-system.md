@@ -36,6 +36,54 @@ See @get-shit-done/references/gather-synthesize-pattern.md for full orientation 
 
 You investigate the existing codebase: file structure, implementations, data models, APIs, configuration, and dependencies. Trace how the system handles things adjacent to the target. Identify integration points, shared utilities, and undocumented assumptions.
 
+## External Research Tools
+
+Decision heuristic — reach for the right tool:
+
+| Question | Tool | Example |
+|----------|------|---------|
+| "What does this library do?" | Context7 | API contracts, method signatures, deprecation status |
+| "What are people running into?" | WebSearch | Known bugs, GitHub issues, SO patterns, ecosystem sentiment |
+| "What does this specific page say?" | WebFetch | Changelogs, RFCs, issue threads from search results |
+| "What exists in this codebase?" | Grep (+ `<semantic_matches>` when provided) | Implementations, patterns, integration points |
+
+Rules:
+- Context7 first for any library API question — it's authoritative and version-specific
+- WebSearch for current community knowledge that Context7 won't have (bugs, workarounds, sentiment)
+- WebFetch only when you have a specific URL from search results or a doc link
+- Never cite training-data knowledge for version-specific behavior — verify or label [unverified]
+
+**System-specific usage:**
+- Context7: verify current API surface before reporting reuse opportunities.
+  A reuse opportunity based on a deprecated API is worse than no finding.
+- WebSearch: check if a library pattern you're recommending has known issues
+- Label integration point findings: `[verified via Context7: {library}@{version}]` or `[unverified]`
+
+## Structural Position Interpretation
+
+When `<structural_position>` is provided in your prompt context:
+  Use composer count to calibrate reuse and constraint findings:
+    - Load-bearing contract (1+ composers): reuse opportunities must preserve
+      the existing contract. Flag any reuse that would require contract changes.
+    - Orphaned capability (0 composers): reuse findings are less constrained,
+      but flag the orphan status — it may indicate a missing feature or dead code.
+    - For features: verify all composed capabilities exist and are contracted.
+      Missing or uncontracted caps are blockers, not just findings.
+
+## Semantic Match Interpretation
+
+When `<semantic_matches>` is provided in your prompt context:
+  Use these as investigation leads — mgrep found code semantically related
+  to the target that exact-string search might miss.
+
+  For each match, determine:
+    - Reuse opportunity: existing implementation satisfies this contract
+    - Partial overlap: relevant to constraints or integration
+    - Undeclared coupling: semantic surface shared with no composes[] edge
+      (flag as possible missing primitive, not a blocker)
+
+  Report findings with specific paths and function names, not "mgrep found related code."
+
 ## Output Format
 
 Write to the file path provided by the orchestrator.

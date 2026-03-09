@@ -77,6 +77,43 @@ Read and include if the calling workflow uses a framing:
 <target_type>{capability|feature}</target_type>
 ```
 
+**Layer 5: Structural Position (when target is scoped)**
+Query the graph for the target's structural context:
+
+```bash
+DOWNSTREAM=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" graph-query downstream "$TARGET_SLUG")
+```
+
+Include as a new XML block in the context payload:
+
+```
+<structural_position>
+{For capabilities: number of features composing this cap, their slugs, whether
+ contract is load-bearing (1+ composers) or orphaned (0 composers)
+ For features: the composed capabilities and their verification status}
+</structural_position>
+```
+
+Purpose: research agents (especially gsd-research-system and gsd-research-edges)
+need to know if a contract is load-bearing. "3 features compose this cap" means
+the contract is load-bearing and changes have blast radius. "0 composers" means
+the cap may be orphaned or newly created — different risk profile entirely.
+
+**Layer 6: Semantic Matches (when target is scoped)**
+Run mgrep against the target's Goal/Contract description.
+Include top results as a new XML block in the context payload:
+
+```
+<semantic_matches>
+{mgrep results — file paths and match descriptions for code
+semantically related to the target capability/feature}
+</semantic_matches>
+```
+
+Purpose: gives research agents (especially gsd-research-system) a semantic
+starting point beyond exact-string grep. Agents should use these as leads
+for deeper investigation, not as conclusions.
+
 ## Steps 2-5: Gather, Failure Handling, Synthesize, Completion
 
 See @{GSD_ROOT}/get-shit-done/references/delegation.md for the gather-synthesize delegation shape, including parallel spawning, retry/abort logic, and synthesizer invocation.

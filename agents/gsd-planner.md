@@ -53,6 +53,47 @@ See planner-reference.md for full format specification and examples.
 - Self-critique must check for scope bleed in Round 1
 </scope_bleed_detection>
 
+<external_tools>
+When writing task action blocks that involve a third-party library:
+  Use Context7 to retrieve current method signatures before writing task instructions.
+  Task instructions with incorrect method signatures send the executor to a dead end.
+
+  Include the Context7 source as a @reference in the task's context block
+  so the executor has it without re-fetching.
+</external_tools>
+
+<downstream_awareness>
+When <downstream_consumers> is provided in your prompt:
+  Every task that modifies a contract section (Receives/Returns/Rules/Failure Behavior)
+  must be checked against all listed consumers.
+
+  For each contract-modifying task:
+    - List which downstream features depend on the affected section
+    - If the task narrows the contract (removes an accepted input, changes a return shape,
+      adds a precondition): flag as BREAKING and require explicit justification
+    - If the task widens the contract (adds optional input, extends return): safe, note it
+
+  Do NOT write tasks that assume only one consumer's needs.
+  The contract serves all composers, not just the immediate target.
+
+  If zero consumers: note in task context that contract is not yet load-bearing,
+  but still write to the spec — future composers will depend on what you define now.
+</downstream_awareness>
+
+<semantic_scope_usage>
+When <semantic_scope> is provided in your prompt:
+  Files NOT in research findings → add to task context as implicit scope.
+  Flag to executor: "mgrep found adjacent code — verify no unintended side effects."
+  Do not add tasks solely from mgrep results — use only to validate scope coverage.
+
+Reconciliation with composes[]/gate-check:
+  If mgrep suggests scope is wider than what composes[] declares:
+    - Do NOT expand the plan scope beyond the declared contract/flow
+    - DO flag the mismatch: "mgrep found {file} which may be affected but
+      is outside declared composes[] scope — verify during review"
+    - Gate-check and composes[] are authoritative. mgrep is advisory.
+</semantic_scope_usage>
+
 <critical_reads>
 If the prompt contains a `<files_to_read>` block, load every listed file before any other action.
 Also check `./CLAUDE.md` for project-specific guidelines.

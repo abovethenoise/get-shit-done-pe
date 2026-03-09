@@ -2,7 +2,7 @@
  * Graph — Dependency graph from composes[] edges
  *
  * Builds a DAG of capabilities and features from composes[] frontmatter.
- * Provides sequence, coupling, waves, downstream, and staleness queries.
+ * Provides sequence, coupling, waves, downstream, upstream, upstream-gaps, and staleness queries.
  */
 
 const fs = require('fs');
@@ -263,6 +263,41 @@ function queryDownstream(graph, capSlug) {
   return { cap: capSlug, downstream_features: downstream };
 }
 
+function validateCapContract(cwd, capSlug) {
+  const capPath = path.join(cwd, '.planning', 'capabilities', capSlug, 'CAPABILITY.md');
+  const content = safeReadFile(capPath) || '';
+  const requiredSections = ['### Receives', '### Returns', '### Rules'];
+  const missing = requiredSections.filter(s => !content.includes(s));
+  return { contract_complete: missing.length === 0, missing };
+}
+
+function queryUpstream(graph, slug, cwd) {
+  const featNode = graph.nodes.find(n => n.id === `feat:${slug}`);
+  if (!featNode) {
+    return { slug, upstream_capabilities: [], error: 'feature not found in graph' };
+  }
+
+  const upstream = (featNode.composes || []).map(capSlug => {
+    const cap = getCapNode(graph.nodes, capSlug);
+    const contract = cwd ? validateCapContract(cwd, capSlug) : { contract_complete: false, missing: ['unknown'] };
+    return {
+      cap: capSlug,
+      status: cap ? cap.status : 'missing',
+      ready: cap ? isCapReady(graph.nodes, capSlug) : false,
+      contract_complete: contract.contract_complete,
+      missing: contract.missing,
+    };
+  });
+  return { slug, upstream_capabilities: upstream };
+}
+
+function queryUpstreamGaps(graph, slug, cwd) {
+  const result = queryUpstream(graph, slug, cwd);
+  if (result.error) return result;
+  const gaps = result.upstream_capabilities.filter(c => !c.ready || !c.contract_complete);
+  return { slug, has_gaps: gaps.length > 0, gaps };
+}
+
 function querySequenceStale(cwd) {
   const planningDir = path.join(cwd, '.planning');
   if (!fs.existsSync(planningDir)) {
@@ -317,7 +352,7 @@ function cmdGraphQuery(cwd, queryArgs, raw) {
   const queryType = queryArgs[0];
 
   if (!queryType) {
-    error('Usage: graph-query <sequence|coupling|waves|downstream|sequence-stale> [args]');
+    error('Usage: graph-query <sequence|coupling|waves|downstream|upstream|upstream-gaps|sequence-stale> [args]');
   }
 
   switch (queryType) {
@@ -353,13 +388,33 @@ function cmdGraphQuery(cwd, queryArgs, raw) {
       output(result, raw);
       break;
     }
+    case 'upstream': {
+      const featSlug = queryArgs[1];
+      if (!featSlug) {
+        error('upstream requires <feat-slug>');
+      }
+      const graph = buildGraph(cwd);
+      const result = queryUpstream(graph, featSlug, cwd);
+      output(result, raw);
+      break;
+    }
+    case 'upstream-gaps': {
+      const gapSlug = queryArgs[1];
+      if (!gapSlug) {
+        error('upstream-gaps requires <feat-slug>');
+      }
+      const graph = buildGraph(cwd);
+      const result = queryUpstreamGaps(graph, gapSlug, cwd);
+      output(result, raw);
+      break;
+    }
     case 'sequence-stale': {
       const result = querySequenceStale(cwd);
       output(result, raw);
       break;
     }
     default:
-      error(`Unknown graph query: ${queryType}. Available: sequence, coupling, waves, downstream, sequence-stale`);
+      error(`Unknown graph query: ${queryType}. Available: sequence, coupling, waves, downstream, upstream, upstream-gaps, sequence-stale`);
   }
 }
 

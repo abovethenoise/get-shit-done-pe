@@ -134,7 +134,22 @@ Parse ROADMAP.md directly for focus groups. Do NOT use `focus_groups` from init 
      Warning: {next-feature} blocked by cap:{cap_slug} (status: {status}).
      Suggested: Complete cap:{cap_slug} verification first.
      ```
-   - If all dependencies satisfied, proceed with routing
+   - For each routable feature (wave_1), check upstream readiness:
+     ```bash
+     GAPS=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" graph-query upstream-gaps "$FEAT_SLUG")
+     ```
+     Parse JSON. If `has_gaps` is true, for each gap entry:
+     - If `ready` is false: status gap — cap not verified/complete
+     - If `contract_complete` is false: contract gap — missing sections: `{missing}`
+     - Both can be true simultaneously
+     ```
+     Warning: {feat} has upstream gaps:
+       - cap:{slug} — status: {status} (not ready)
+       - cap:{slug} — verified but contract missing: {missing sections}
+     Gate-check passes on status alone. The planner will hit incomplete spec.
+     Suggested: Run /gsd:discuss-capability {cap_slug} to fill contract gaps first.
+     ```
+   - If all dependencies satisfied and no upstream gaps, proceed with routing
 4. Detect parallel-safe work from disjoint branches in sequence data (features in different branches can run in parallel)
 5. If multiple parallel-safe paths exist: present all options and use AskUserQuestion to ask which to advance
 6. If single clear next step: present concrete command

@@ -1,7 +1,7 @@
 ---
 name: gsd-verifier
 description: Verifies implementation against spec. Capability — contract satisfied. Feature — goal met + user-facing failures handled.
-tools: Read, Write, Bash, Grep, Glob
+tools: Read, Write, Bash, Grep, Glob, mcp__context7__*
 color: green
 role_type: judge
 reads: [FEATURE.md, CAPABILITY.md, PLAN.md, SUMMARY.md, source code]
@@ -42,6 +42,18 @@ VERIFICATION.md with:
 
 See verifier-reference.md for procedures and evidence templates.
 </output_format>
+
+<external_tools>
+When verifying a capability contract against implementation:
+  For any contract element that references third-party library behavior
+  (e.g., "Returns a Promise that rejects with X on timeout"):
+    Use Context7 to confirm the library actually behaves this way at the
+    project's pinned version.
+
+  A contract that accurately describes incorrect library behavior is still
+  a contract violation — the implementation may be correct but the spec is wrong.
+  Flag both cases.
+</external_tools>
 
 <critical_reads>
 If the prompt contains a `<files_to_read>` block, load every listed file before any other action.

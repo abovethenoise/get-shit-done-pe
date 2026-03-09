@@ -69,6 +69,14 @@ Read project context files:
 Log: "Loaded project context + {N} capability definitions + SEQUENCE.md + scope:{SCOPE_MODE}"
 </step>
 
+<step name="semantic_coupling_scan">
+For each in-scope capability:
+  Run mgrep against the capability's Goal + Contract description.
+  Collect capability pairs with high semantic similarity but no graph edge.
+
+Store results for inclusion in agent prompt as `<semantic_coupling>` block.
+</step>
+
 <step name="assemble_agent_prompt">
 Build the full prompt with XML context blocks:
 
@@ -104,6 +112,11 @@ Build the full prompt with XML context blocks:
 <execution_sequence>
 {SEQUENCE.md content or "No SEQUENCE.md available."}
 </execution_sequence>
+
+<semantic_coupling>
+{For each capability pair with high semantic similarity but no graph edge:
+  cap_a, cap_b, shared_surface_description, mgrep_confidence}
+</semantic_coupling>
 
 <scope mode="{SCOPE_MODE}">
 {if focus: "Focus group: {name}\nGoal: {goal}\nFeatures: {feature_list}\nIn-scope capabilities: {cap_list}"}

@@ -72,6 +72,31 @@ If research fails (>3 gatherer failures): offer "Provide context directly" or "A
 
 If plans exist: offer add more, view existing, or replan from scratch.
 
+## 5b. Downstream Consumer Context
+
+**If capability target:** Query downstream consumers:
+
+```bash
+DOWNSTREAM=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" graph-query downstream "$TARGET_SLUG")
+```
+
+Parse JSON for features that compose this capability.
+Include in planner's prompt as `<downstream_consumers>`:
+  Feature slugs, their Goal lines, and which contract sections they depend on.
+
+Purpose: the planner must write contract-preserving tasks. A task that narrows
+the contract to fit the immediate need silently breaks other composers.
+If zero downstream consumers: note "no composers yet — contract is not load-bearing."
+
+**If feature target:** Skip — features don't have downstream consumers.
+
+## 5c. Semantic Scope Scan
+
+Run mgrep against the capability contract or feature flow description.
+Include results in the planner's prompt as `<semantic_scope>`:
+  Files NOT already in research findings → flag as implicit scope
+  Files already in research → confirm scope coverage
+
 ## 6. Spawn Planner
 
 ```

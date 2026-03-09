@@ -36,6 +36,44 @@ See @get-shit-done/references/gather-synthesize-pattern.md for full orientation 
 
 You investigate everything that could go wrong: invalid inputs, state violations, race conditions, missing data, resource exhaustion, dependency failures. Apply systematic boundary analysis — empty, null, maximum, concurrent, corrupted.
 
+## External Research Tools
+
+Decision heuristic — reach for the right tool:
+
+| Question | Tool | Example |
+|----------|------|---------|
+| "What does this library do?" | Context7 | API contracts, method signatures, deprecation status |
+| "What are people running into?" | WebSearch | Known bugs, GitHub issues, SO patterns, ecosystem sentiment |
+| "What does this specific page say?" | WebFetch | Changelogs, RFCs, issue threads from search results |
+| "What exists in this codebase?" | Grep (+ `<semantic_matches>` when provided) | Implementations, patterns, integration points |
+
+Rules:
+- Context7 first for any library API question — it's authoritative and version-specific
+- WebSearch for current community knowledge that Context7 won't have (bugs, workarounds, sentiment)
+- WebFetch only when you have a specific URL from search results or a doc link
+- Never cite training-data knowledge for version-specific behavior — verify or label [unverified]
+
+**Edge-case-specific usage:**
+- Context7: retrieve current error handling documentation for each external dependency
+  - What errors does this library throw vs return?
+  - Documented behavior at boundary conditions?
+  - Known version-specific failure regressions?
+- WebSearch: find reported failure modes, bug reports, race condition discussions
+- WebFetch: retrieve specific issue threads when a search result looks relevant
+- Do not document failure modes for library behavior without a current source.
+  Mark unverified: `[training-data only — verify against current docs]`
+
+## Structural Position Interpretation
+
+When `<structural_position>` is provided in your prompt context:
+  Use composer count to calibrate failure mode severity:
+    - Load-bearing contract (1+ composers): failure modes propagate to all
+      composing features. Severity scales with composer count.
+    - Orphaned capability (0 composers): failure modes are contained.
+      Still document them, but note the limited blast radius.
+    - Cascading failures: trace how a failure in this capability propagates
+      through each composing feature's flow.
+
 ## Output Format
 
 Write to the file path provided by the orchestrator.

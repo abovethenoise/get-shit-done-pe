@@ -87,22 +87,30 @@ For each capability in scope:
 
 ## 4b. mgrep Gap Scan
 
-Run mgrep against the Context sections of all in-scope features to detect shared file paths:
+For each in-scope feature:
+  Run mgrep against the feature's Goal and Context description from FEATURE.md.
+  mgrep finds semantic overlap that file-path matching misses — two features
+  may share behavioral surface area with completely different file paths.
 
-For each pair of in-scope features:
-- Check if their Context sections reference overlapping file paths
-- Cross-reference against `composes[]` overlap:
-  - **Shared paths explained by shared composes[]:** Both features compose at least one common capability. No signal — skip.
-  - **Shared paths NOT explained by any composes[] overlap:** Surface as "possible undeclared capability"
+For each pair of in-scope features with overlapping mgrep results:
+  Cross-reference against composes[] overlap:
+    - Shared semantic surface WITH shared composes[]: expected, skip
+    - Shared semantic surface WITHOUT composes[] overlap:
+      Surface as "possible undeclared capability"
 
 For each unexplained signal:
 - Use AskUserQuestion:
   - header: "Undeclared Capability Signal"
-  - question: "Features '{feat_a}' and '{feat_b}' both reference {shared_path} but share no composed capabilities. This may indicate an undeclared capability."
+  - question: "Features '{feat_a}' and '{feat_b}' share semantic surface
+    ({shared_description}) but no composed capabilities. This may indicate
+    an undeclared capability."
   - options:
     - "Create a new capability" → route to `/gsd:discuss-capability`
     - "Add to an existing capability's scope"
     - "Ignore"
+
+composes[] is the authoritative edge source. mgrep is a gap detector only.
+Do NOT create DAG edges from mgrep results.
 
 Track count of signals found as `undeclared_cap_signals`. Display only when > 0.
 
@@ -145,6 +153,25 @@ For each feature in wave 1:
   ```
 - Confirm FEATURE.md exists with Goal/Flow/composes[] sections populated
 - If not discussed: flag as gap
+
+**Upstream contract validation:**
+
+For each feature in the scoped set:
+```bash
+GAPS=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" graph-query upstream-gaps "$FEAT_SLUG")
+```
+Parse JSON. If `has_gaps` is true, surface before the focus group is committed.
+
+Gate-check catches status mismatches (cap not verified). `upstream-gaps` catches
+the subtler case: a capability is verified but its contract has thin or missing
+sections (Receives/Returns/Rules). A feature composing it will pass gate-check
+and enter the focus group, but the planner will hit the gap at step 2.
+
+If gaps found:
+- Surface as warning per gap entry:
+  - `ready: false` → "cap:{slug} status is {status} (not verified)"
+  - `contract_complete: false` → "cap:{slug} verified but contract missing: {missing}"
+- Do NOT block inclusion — surface before the focus group is committed so user can decide
 
 **If gate-check fails for a feature:**
 Use AskUserQuestion:

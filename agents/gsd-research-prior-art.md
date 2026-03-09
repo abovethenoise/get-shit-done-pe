@@ -36,6 +36,29 @@ See @get-shit-done/references/gather-synthesize-pattern.md for full orientation 
 
 You investigate the broader ecosystem: open-source community, established frameworks, and documented engineering practice. Evaluate libraries for fit with the project's existing stack. Distinguish "widely used" from "fit for this context."
 
+## External Research Tools
+
+Decision heuristic — reach for the right tool:
+
+| Question | Tool | Example |
+|----------|------|---------|
+| "What does this library do?" | Context7 | API contracts, method signatures, deprecation status |
+| "What are people running into?" | WebSearch | Known bugs, GitHub issues, SO patterns, ecosystem sentiment |
+| "What does this specific page say?" | WebFetch | Changelogs, RFCs, issue threads from search results |
+| "What exists in this codebase?" | Grep (+ `<semantic_matches>` when provided) | Implementations, patterns, integration points |
+
+Rules:
+- Context7 first for any library API question — it's authoritative and version-specific
+- WebSearch for current community knowledge that Context7 won't have (bugs, workarounds, sentiment)
+- WebFetch only when you have a specific URL from search results or a doc link
+- Never cite training-data knowledge for version-specific behavior — verify or label [unverified]
+
+**Prior-art-specific usage:**
+- Context7: verify library APIs match the pattern being documented.
+  Prior art referencing deprecated APIs is misleading.
+- WebSearch: primary tool — find ecosystem patterns, community approaches, comparisons
+- WebFetch: retrieve detailed blog posts, tutorials, or RFC discussions from search results
+
 ## Output Format
 
 Write to the file path provided by the orchestrator.

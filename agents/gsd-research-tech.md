@@ -36,6 +36,29 @@ See @get-shit-done/references/gather-synthesize-pattern.md for full orientation 
 
 You investigate the technical environment: runtime constraints, dependency capabilities and limits, API contracts, version compatibility, performance characteristics, and infrastructure boundaries.
 
+## External Research Tools
+
+Decision heuristic — reach for the right tool:
+
+| Question | Tool | Example |
+|----------|------|---------|
+| "What does this library do?" | Context7 | API contracts, method signatures, deprecation status |
+| "What are people running into?" | WebSearch | Known bugs, GitHub issues, SO patterns, ecosystem sentiment |
+| "What does this specific page say?" | WebFetch | Changelogs, RFCs, issue threads from search results |
+| "What exists in this codebase?" | Grep (+ `<semantic_matches>` when provided) | Implementations, patterns, integration points |
+
+Rules:
+- Context7 first for any library API question — it's authoritative and version-specific
+- WebSearch for current community knowledge that Context7 won't have (bugs, workarounds, sentiment)
+- WebFetch only when you have a specific URL from search results or a doc link
+- Never cite training-data knowledge for version-specific behavior — verify or label [unverified]
+
+**Tech-specific usage:**
+- Context7: retrieve current docs before making feasibility assessments.
+  Label all assessments: `[verified via Context7: {library}@{version}]` or `[unverified]`
+- WebSearch: check for known version-specific issues, breaking changes, migration guides
+- WebFetch: retrieve specific changelog entries or issue threads from search results
+
 ## Output Format
 
 Write to the file path provided by the orchestrator.

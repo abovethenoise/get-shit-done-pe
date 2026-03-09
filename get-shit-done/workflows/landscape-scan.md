@@ -38,7 +38,20 @@ fi
 Parse the JSON result. Extract `capabilities` array and `gap_findings` array.
 
 **If `SCOPED_CAPS` is set:**
-- Filter `capabilities` to only slugs present in SCOPED_CAPS
+- Expand scope to include adjacent capabilities via downstream traversal:
+  ```bash
+  for each cap in SCOPED_CAPS:
+    DOWNSTREAM=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" graph-query downstream "$CAP_SLUG")
+  ```
+  For each downstream feature: read its composes[] to find capabilities NOT already
+  in SCOPED_CAPS. Add those to an `ADJACENT_CAPS` set.
+  Merge: `EFFECTIVE_SCOPE = SCOPED_CAPS ∪ ADJACENT_CAPS`
+  Log: "Scope expanded: {N} direct + {M} adjacent = {total} effective"
+
+  Purpose: if cap:checkout-flow composes cap:payment-gateway, and payment-gateway
+  has consumers with incomplete specs, the scan needs to see that gap.
+  Without scope expansion, indirect gaps surface during execution instead of refinement.
+- Filter `capabilities` to only slugs present in EFFECTIVE_SCOPE
 - Log: "Scope filter applied: {N} of {total} capabilities in scope"
 - Load SEQUENCE.md orphan data as additional gap_findings (orphan caps within scope)
 
