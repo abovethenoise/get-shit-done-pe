@@ -38,7 +38,7 @@ if [ "$has_interrupted_agent" = "true" ]; then
 fi
 
 # Features with PLANs but missing SUMMARYs
-for feat_dir in .planning/capabilities/*/features/*/; do
+for feat_dir in .planning/features/*/; do
   for plan in "${feat_dir}"*-PLAN.md; do
     [ -f "$plan" ] || continue
     summary="${plan/PLAN/SUMMARY}"
@@ -47,7 +47,7 @@ for feat_dir in .planning/capabilities/*/features/*/; do
 done 2>/dev/null
 
 # Continue-here files
-ls .planning/capabilities/*/features/*/.continue-here*.md 2>/dev/null
+ls .planning/features/*/.continue-here*.md 2>/dev/null
 ```
 
 Flag findings: mid-plan checkpoint, incomplete execution, interrupted agent.

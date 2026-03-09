@@ -15,13 +15,13 @@ Read all files referenced by the invoking prompt's execution_context before star
 
 <inputs>
 The invoking workflow passes these as context:
-- `BRIEF_PATH`: Absolute path to the completed Discovery Brief (.planning/capabilities/{cap}/features/{feat}/DISCOVERY-BRIEF.md)
+- `BRIEF_PATH`: Absolute path to the completed Discovery Brief (.planning/features/{feat}/DISCOVERY-BRIEF.md or .planning/capabilities/{cap}/DISCOVERY-BRIEF.md)
 - `LENS`: Primary lens identifier (debug | new | enhance | refactor)
 - `SECONDARY_LENS`: Secondary lens identifier (optional, for compound work)
 - `CAPABILITY_SLUG`: The resolved capability slug
 - `CAPABILITY_NAME`: The resolved capability name
 - `FEATURE_SLUG`: The feature being processed (may be null for capability scope)
-- `FEATURE_DIR`: Absolute path to the feature directory (.planning/capabilities/{cap}/features/{feat})
+- `FEATURE_DIR`: Absolute path to the feature directory (.planning/features/{feat})
 
 Derived:
 - `SCOPE`: "capability" if FEATURE_SLUG is null/empty, "feature" if FEATURE_SLUG is provided
@@ -86,13 +86,14 @@ ESCALATION_STATE:
 
 ### 2a. Build Feature DAG
 
-Read CAPABILITY.md at `.planning/capabilities/${CAPABILITY_SLUG}/CAPABILITY.md`.
+Build a DAG from top-level features that compose capabilities under this scope.
 
-Extract the Features table columns: Feature | Priority | Depends-On | Status.
+Scan `.planning/features/*/FEATURE.md` for features whose `composes[]` includes capabilities under CAPABILITY_SLUG.
 
 Build a directed acyclic graph:
 - Each feature is a node
-- Each `Depends-On` entry creates a directed edge (dependency -> feature)
+- Each `depends_on` entry creates a directed edge (dependency -> feature)
+- Shared `composes[]` entries suggest ordering (capability must be built before features that compose it)
 - Skip features with status "complete"
 
 ### 2b. Cycle Detection
@@ -120,10 +121,11 @@ Group features into execution waves:
 For each wave (in order), for each feature in the wave (sequentially):
 
 1. Set `FEATURE_SLUG` and `FEATURE_DIR` for the current feature
-2. Check `DISCOVERY-BRIEF.md` existence at `${FEATURE_DIR}/DISCOVERY-BRIEF.md`
+2. Set `FEATURE_DIR` to `.planning/features/${FEATURE_SLUG}`
+3. Check `DISCOVERY-BRIEF.md` existence at `${FEATURE_DIR}/DISCOVERY-BRIEF.md`
    - If missing: invoke `framing-discovery.md` for this feature first
    - Pass: LENS, CAPABILITY_SLUG, FEATURE_SLUG
-3. Set `BRIEF_PATH` to `${FEATURE_DIR}/DISCOVERY-BRIEF.md`
+4. Set `BRIEF_PATH` to `${FEATURE_DIR}/DISCOVERY-BRIEF.md`
 4. Run **Stage 1 (Plan)** for this feature (see Section 4)
 5. Run **Stage 2 (Execute)** for this feature (see Section 5)
 
@@ -215,7 +217,7 @@ Execution approach guidance (from lens):
 
 Review receives three inputs -- not just requirements:
 
-1. **Requirements** (the contract) -- "Did we build what was specified?"
+1. **Spec** (contract for capabilities, goal/flow for features) -- "Did we build what was specified?"
 2. **Lens metadata** (the disposition) -- "Are we reviewing this the right way?"
 3. **Brief** (the intent) -- "Does this actually solve the original problem?"
 
@@ -246,7 +248,7 @@ Execution scope: {SCOPE}
 
 Review disposition (from lens):
 - debug: Verify root cause is addressed (not just symptom). Check reproduction path no longer triggers. Verify no regressions in adjacent paths.
-- new: Verify capability matches problem statement. Check boundaries hold. Verify acceptance criteria from EU requirements.
+- new: Verify capability matches problem statement. Check boundaries hold. Verify acceptance criteria from spec.
 - enhance: Verify delta is correct (desired - current = implemented change). Check invariants preserved. Verify existing behavior untouched.
 - refactor: Verify external behavior unchanged. Check structural goals met. Verify migration completed (no half-states). Run full behavioral test suite.
 
@@ -311,7 +313,7 @@ Lens-specific doc emphasis:
 
 **After documentation completes:**
 - Update FEATURE.md frontmatter status to "complete" (all 4 stages passed)
-- Update FEATURE.md trace table to mark all columns complete
+- Update FEATURE.md frontmatter status
 - For capability scope: update CAPABILITY.md status if all features complete
 - Proceed to completion
 
@@ -414,8 +416,8 @@ Status: complete
 - LENS and ANCHOR_QUESTIONS_PATH propagated to all 4 pipeline stages.
 - Each stage receives lens framing context that affects its Q&A, discovery, and agent behavior.
 - Research is owned by plan.md (Step 5: 6 parallel gatherers + synthesizer). No separate research stage.
-- Requirements come from discuss-feature upstream. Pipeline receives pre-written requirements in FEATURE.md.
-- Review receives 3 inputs: requirements + lens metadata + brief. The brief check catches spec-complete-but-problem-incomplete work.
+- Specs come from discuss-feature upstream. Pipeline receives pre-written Goal/Flow/composes[] in FEATURE.md.
+- Review receives 3 inputs: spec (contract/goal) + lens metadata + brief. The brief check catches spec-complete-but-problem-incomplete work.
 - Doc stage uses three agents: gsd-doc-explorer (6x), gsd-doc-synthesizer (1x), gsd-doc-writer (Nx) -- model routing per agent frontmatter.
 - Execute -> Review auto-chains (no user intervention, NO user gate). Review -> Doc auto-chain owned by review.md Step 12.
 - Full auto-chain: user kicks off pipeline -> plans -> builds code -> auto-reviews -> auto-documents -> done. Human gates ONLY at: review findings Q&A and doc approval Q&A.

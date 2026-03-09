@@ -254,23 +254,17 @@ function cmdStateUpdateProgress(cwd, raw) {
     }
   }
 
-  // v2: also count from capabilities/*/features/*/
-  if (fs.existsSync(capabilitiesDir)) {
+  // v2: also count from .planning/features/*/
+  const topFeaturesDir = path.join(cwd, '.planning', 'features');
+  if (fs.existsSync(topFeaturesDir)) {
     try {
-      const capDirs = fs.readdirSync(capabilitiesDir, { withFileTypes: true })
+      const featDirs = fs.readdirSync(topFeaturesDir, { withFileTypes: true })
         .filter(e => e.isDirectory()).map(e => e.name);
-      for (const capSlug of capDirs) {
-        const featuresDir = path.join(capabilitiesDir, capSlug, 'features');
-        try {
-          const featDirs = fs.readdirSync(featuresDir, { withFileTypes: true })
-            .filter(e => e.isDirectory()).map(e => e.name);
-          for (const featSlug of featDirs) {
-            const featPath = path.join(featuresDir, featSlug);
-            const files = fs.readdirSync(featPath);
-            totalPlans += files.filter(f => f.match(/-PLAN\.md$/i)).length;
-            totalSummaries += files.filter(f => f.match(/-SUMMARY\.md$/i)).length;
-          }
-        } catch {}
+      for (const featSlug of featDirs) {
+        const featPath = path.join(topFeaturesDir, featSlug);
+        const files = fs.readdirSync(featPath);
+        totalPlans += files.filter(f => f.match(/-PLAN\.md$/i)).length;
+        totalSummaries += files.filter(f => f.match(/-SUMMARY\.md$/i)).length;
       }
     } catch {}
   }

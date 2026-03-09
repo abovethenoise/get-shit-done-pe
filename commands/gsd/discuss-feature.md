@@ -18,10 +18,10 @@ Guided exploration of a feature's implementation approach, edge cases, and depen
 2. Check status (killed/deferred shows reasoning, offers override)
 3. Guided Q&A exploring HOW (implementation, edge cases, dependencies, data flow)
 4. Detect backward routing needs (feature reveals capability misconception)
-5. Update feature notes that feed into requirements files (EU, FN, TC)
+5. Update feature spec (Goal, Flow, Scope, composes[], User-Facing Failures)
 6. Can kill or defer features with reasoning
 
-**Output:** Updated feature notes at `.planning/capabilities/{cap}/features/{feat}/` informing requirements generation
+**Output:** Updated feature spec at `.planning/features/{feat}/FEATURE.md`
 </objective>
 
 <execution_context>

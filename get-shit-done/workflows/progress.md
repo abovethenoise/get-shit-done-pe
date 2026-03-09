@@ -87,11 +87,11 @@ Route using 3-tier priority. Start at Tier 1; fall through when the tier has no 
 
 **Artifact-based pipeline state detection (used by all tiers):**
 
-For each feature directory under `.planning/capabilities/{cap}/features/{feat}/`:
-- Has FEATURE.md but no `*-PLAN.md` files -> **needs planning** -> `/gsd:plan {cap/feat}`
-- Has `*-PLAN.md` files without matching `*-SUMMARY.md` -> **needs execution** -> `/gsd:execute {cap/feat}`
-- Has `*-SUMMARY.md` files but no `review/` directory -> **needs review** -> `/gsd:review {cap/feat}`
-- Has `review/` directory but no `doc-report.md` -> **needs doc** -> `/gsd:doc {cap/feat}`
+For each feature directory under `.planning/features/{feat}/`:
+- Has FEATURE.md but no `*-PLAN.md` files -> **needs planning** -> `/gsd:plan {feat}`
+- Has `*-PLAN.md` files without matching `*-SUMMARY.md` -> **needs execution** -> `/gsd:execute {feat}`
+- Has `*-SUMMARY.md` files but no `review/` directory -> **needs review** -> `/gsd:review {feat}`
+- Has `review/` directory but no `doc-report.md` -> **needs doc** -> `/gsd:doc {feat}`
 - Has `doc-report.md` -> **complete**
 
 ---
@@ -136,7 +136,7 @@ If STATE.md has no session continuity or the referenced feature is complete, fal
 
 When neither focus groups nor session continuity provide a next step:
 
-1. Scan all feature directories under `.planning/capabilities/`
+1. Scan all feature directories under `.planning/features/`
 2. For each, determine pipeline state using artifact detection above
 3. Collect all features with incomplete pipeline stages
 4. Present prioritized list with concrete commands (execution > review > planning order)
@@ -146,7 +146,7 @@ If no incomplete features found, report project complete.
 ---
 
 **Anti-pattern guards:**
-- NEVER suggest "add feature" or "discuss features" when a feature has FEATURE.md with requirements but no PLANs -- the next step is `/gsd:plan`, not more discussion
+- NEVER suggest "add feature" or "discuss features" when a feature has FEATURE.md with Goal/Flow/composes[] but no PLANs -- the next step is `/gsd:plan`, not more discussion
 - NEVER suggest `/gsd:new` when existing features need execution
 - Always present the most progressing action: execute > review > plan > discuss
 

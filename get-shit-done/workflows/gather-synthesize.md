@@ -23,6 +23,8 @@ The calling workflow provides:
 - `context` -- The assembled context payload (Layers 1-4, built in Context Assembly step below)
 
 - `subject` -- What is being analyzed (e.g., "capability: user-auth", "feature: password-reset")
+
+- `target_type` -- "capability" or "feature" (passed to gatherers and synthesizer for type-aware orientation)
 </parameters>
 
 <process>
@@ -40,14 +42,14 @@ Read and include:
 - `.planning/STATE.md` -- Current position, decisions, blockers
 - `.planning/ROADMAP.md` -- Phase structure and dependencies
 
-**Layer 2: Capability Context (when scoped to a capability)**
-Read and include if the subject is within a specific capability:
-- `.planning/capabilities/{capability-slug}/CAPABILITY.md`
+**Layer 2: Target Context (when scoped)**
+Read and include based on target_type:
+- Capability: `.planning/capabilities/{capability-slug}/CAPABILITY.md` (contract)
+- Feature: `.planning/features/{feature-slug}/FEATURE.md` (goal/flow/composes[])
 
-**Layer 3: Feature Context (when scoped to a feature)**
-Read and include if the subject is a specific feature:
-- `.planning/capabilities/{capability-slug}/features/{feature-slug}/FEATURE.md`
-- `.planning/REQUIREMENTS.md` -- Relevant requirement IDs for this feature
+**Layer 3: Composition Context (feature targets only)**
+If target is a feature, read composed capability contracts:
+- For each slug in FEATURE.md `composes[]`: read `.planning/capabilities/{slug}/CAPABILITY.md`
 
 **Layer 4: Framing Context (when inside a workflow framing)**
 Read and include if the calling workflow uses a framing:
@@ -60,17 +62,19 @@ Read and include if the calling workflow uses a framing:
 {contents of PROJECT.md, STATE.md, ROADMAP.md}
 </core_context>
 
-<capability_context>
-{contents of CAPABILITY.md -- omit block if not applicable}
-</capability_context>
+<target_context>
+{contents of CAPABILITY.md contract or FEATURE.md goal/flow/composes[] -- omit block if not applicable}
+</target_context>
 
-<feature_context>
-{contents of FEATURE.md + relevant requirements -- omit block if not applicable}
-</feature_context>
+<composition_context>
+{contracts of composed capabilities -- omit block if not a feature target}
+</composition_context>
 
 <framing_context>
 {contents of {role}-questions.md -- omit block if not applicable}
 </framing_context>
+
+<target_type>{capability|feature}</target_type>
 ```
 
 ## Steps 2-5: Gather, Failure Handling, Synthesize, Completion
@@ -78,3 +82,4 @@ Read and include if the calling workflow uses a framing:
 See @{GSD_ROOT}/get-shit-done/references/delegation.md for the gather-synthesize delegation shape, including parallel spawning, retry/abort logic, and synthesizer invocation.
 
 </process>
+</output>

@@ -40,7 +40,7 @@ grep -l "must_haves:" "$PHASE_DIR"/*-PLAN.md 2>/dev/null
 
 **Option B: Success Criteria from FEATURE.md**
 
-Use EU/FN/TC requirements directly as truths, derive artifacts and key_links.
+Use contract sections (capability) or goal/flow (feature) directly as truths, derive artifacts and key_links.
 
 **Option C: Derive from feature goal** (fallback)
 
@@ -143,7 +143,7 @@ Status: WIRED (state displayed) | NOT_WIRED (state exists, not rendered)
 ### Step 6: Check Requirements Coverage
 
 **6a.** Extract requirement IDs from PLAN frontmatter
-**6b.** Cross-reference against FEATURE.md EU/FN/TC requirements
+**6b.** Cross-reference against spec (CAPABILITY.md contract or FEATURE.md goal/flow)
 **6c.** Check for orphaned requirements (FEATURE.md has IDs no plan claims)
 
 Requirement statuses:

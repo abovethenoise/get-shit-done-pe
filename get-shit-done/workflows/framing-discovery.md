@@ -282,5 +282,5 @@ The pipeline workflow handles all subsequent stages. Discovery is complete.
 - [ ] Lens pivot resets Specification section
 - [ ] All three exit signals functional (MVU met, user override, diminishing returns)
 - [ ] Summary playback mandatory before finalization
-- [ ] Brief written to .planning/capabilities/{slug}/BRIEF.md
+- [ ] Brief written to target directory BRIEF.md
 </success_criteria>

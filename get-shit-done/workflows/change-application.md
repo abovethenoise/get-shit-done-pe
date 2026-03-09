@@ -54,7 +54,7 @@ node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" capability-create {slug} --
 
 **If action says create feature:**
 ```bash
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" feature-create {cap} {feat} --raw
+node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" feature-create {feat} --raw
 ```
 
 **Everything else (modify, defer, kill, reinstate, move, metadata):**
@@ -142,7 +142,7 @@ Next: Run refinement-artifact to generate the refinement report.
 
 <success_criteria>
 - CHANGESET.md parsed via changeset-parse CLI route
-- Creates use CLI routes with positional args (capability-create {slug}, feature-create {cap} {feat})
+- Creates use CLI routes with positional args (capability-create {slug}, feature-create {feat})
 - Everything else applied via direct Read + Edit
 - Failure halts with AskUserQuestion: fix/skip/abort
 - EXECUTION-LOG.md written once at end with all results

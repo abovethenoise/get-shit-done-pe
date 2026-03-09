@@ -222,10 +222,10 @@ If exploration surfaced a suggested framing lens, add it to the Decisions table.
 After updating the capability file, create feature directories and FEATURE.md stubs for each feature identified during discussion. For each feature:
 
 ```bash
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" feature-create "{cap-slug}" "{feature-name}"
+node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" feature-create "{feature-name}"
 ```
 
-This creates `.planning/capabilities/{cap-slug}/features/{feat-slug}/FEATURE.md` using the standard template with EU/FN/TC placeholder sections. These placeholders get filled during discuss-feature.
+This creates `.planning/features/{feat-slug}/FEATURE.md` using the standard template with Goal/Flow/Scope/composes[] placeholder sections. These placeholders get filled during discuss-feature.
 
 Skip this step if the capability was killed or deferred.
 </step>
@@ -254,13 +254,13 @@ Reasoning: {reasoning}
 {If exploring/specified — scan feature statuses in capability dir:}
 
   {List undiscussed features:}
-  - `/gsd:discuss-feature {cap}/{feat}` — for each undiscussed feature
+  - `/gsd:discuss-feature {feat}` — for each undiscussed feature
 
   {If related/cross-cutting capabilities surfaced during discussion:}
   - `/gsd:discuss-capability {related-cap}` — Explore related capability
 
   {Always:}
-  - "If you'd like me to assume requirements for undiscussed features, just say so."
+  - "If you'd like me to assume specs for undiscussed features, just say so."
 
 {If killed:}
 - Capability marked as killed. Can be overridden later via `/gsd:discuss-capability {slug}`.

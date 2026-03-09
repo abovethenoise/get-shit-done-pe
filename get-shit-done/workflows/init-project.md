@@ -233,7 +233,7 @@ Include:
 - Key decisions made during Q&A
 
 ```bash
-mkdir -p .planning
+mkdir -p .planning .planning/capabilities .planning/features
 node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs: initialize project" --files .planning/PROJECT.md
 ```
 
@@ -582,6 +582,7 @@ Mode: [New / Existing]
 |--------------------|-----------------------------------|
 | Project            | .planning/PROJECT.md              |
 | Capabilities       | .planning/capabilities/           |
+| Features           | .planning/features/               |
 | Roadmap            | .planning/ROADMAP.md              |
 | State              | .planning/STATE.md                |
 | Architecture       | .docs/architecture.md             |

@@ -90,21 +90,21 @@ If $ARGUMENTS is empty: treat as no_match (skip resolution, go to Step 2 no_matc
 
 Before invoking framing-pipeline, ensure feature directories exist for all features listed in CAPABILITY.md.
 
-Read `.planning/capabilities/{CAPABILITY_SLUG}/CAPABILITY.md`. Parse the Features table to extract all feature slugs.
+Scan `.planning/features/*/FEATURE.md` for features whose `composes[]` includes capabilities related to CAPABILITY_SLUG. Also check if discuss-capability created feature stubs.
 
-**If the features table has zero data rows (no features listed):**
-- Display error: "No features found in CAPABILITY.md for '{CAPABILITY_SLUG}'."
+**If no features found that compose this capability:**
+- Display error: "No features found composing '{CAPABILITY_SLUG}'."
 - Suggest: "Run /gsd:discuss-capability {CAPABILITY_SLUG} to define features first."
 - Stop.
 
-**For each feature slug in the features table:**
-- Check if `.planning/capabilities/{CAPABILITY_SLUG}/features/{feature_slug}/` directory exists
+**For each feature slug that needs stub creation:**
+- Check if `.planning/features/{feature_slug}/` directory exists
 - **If it does not exist:**
   ```bash
-  node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" feature-create "{CAPABILITY_SLUG}" "{feature_slug}"
+  node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" feature-create "{feature_slug}"
   ```
-  After creation, open the created FEATURE.md at `.planning/capabilities/{CAPABILITY_SLUG}/features/{feature_slug}/FEATURE.md` and change `status: planning` to `status: exploring` in the YAML frontmatter.
-  Log: "Created feature stub: {CAPABILITY_SLUG}/{feature_slug}"
+  After creation, open the created FEATURE.md at `.planning/features/{feature_slug}/FEATURE.md` and change `status: planning` to `status: exploring` in the YAML frontmatter.
+  Log: "Created feature stub: {feature_slug}"
 - **If it already exists:** Skip silently (no log, no error)
 
 After the loop completes, proceed to Step 4 (framing-pipeline invocation — direct path, no fan-out offer).

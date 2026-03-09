@@ -74,16 +74,16 @@ STATUS=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" capability-status 
 
 Display:
 - Capability name, status
-- Feature list with per-feature: name, status, requirement counts (EU/FN/TC), plan count, summary count
+- Feature list with per-feature: name, status, spec completeness (Goal/Flow/composes[]), plan count, summary count
 
 **If resolved to feature:**
 ```bash
-STATUS=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" feature-status "$CAPABILITY_SLUG" "$FEATURE_SLUG")
+STATUS=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" feature-status "$FEATURE_SLUG")
 ```
 
 Display:
-- Feature name, status, parent capability
-- Requirement counts per layer (EU, FN, TC)
+- Feature name, status, composes[] list
+- Spec completeness (Goal/Flow/Scope filled)
 - Plans and summaries in feature directory
 - Discovery brief status
 

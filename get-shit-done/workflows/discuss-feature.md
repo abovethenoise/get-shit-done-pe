@@ -1,15 +1,15 @@
 <purpose>
 Guided exploration of HOW a specific feature works. Thinking partner for feature-level clarity between planning and execution.
 
-You are a thinking partner, not an interviewer. The user is the visionary — you are the builder. Your job is to help clarify implementation approach, edge cases, and dependencies for a specific feature within a capability.
+You are a thinking partner, not an interviewer. The user is the visionary — you are the builder. Your job is to help clarify implementation approach, edge cases, and dependencies for a specific feature.
 
-This command is optional per feature. It can kill or defer features, and can route backward to discuss-capability or replan when the feature reveals a capability-level misconception.
+This command is optional per feature. It can kill or defer features, and can route backward to discuss-capability when the feature reveals a capability-level misconception.
 </purpose>
 
 <downstream_awareness>
 **discuss-feature feeds into:**
 
-1. **Requirements files** at `.planning/capabilities/{cap-slug}/features/{feat-slug}/requirements/` — EU, FN, TC files
+1. **FEATURE.md** at `.planning/features/{feat-slug}/FEATURE.md` — Goal, Flow, Scope, composes[]
 2. **Planning** — Feature-level clarity informs task decomposition
 3. **discuss-capability** — Backward routing when feature reveals capability misconception
 
@@ -31,50 +31,44 @@ Parse JSON for: `capability_list`, `feature_list`, `feature_count`, `capabilitie
 <step name="fuzzy_resolve">
 Resolve the user's natural language reference to a specific feature.
 
-**Input:** The user's argument text (e.g., "drill timing", "the spaced repetition thing", "mistake-grading/auto-classify")
+**Input:** The user's argument text (e.g., "drill timing", "the spaced repetition thing", "password-reset")
 
 **Resolution using feature-list output from init:**
 
-Parse the `feature_list` array. Match the user's reference against feature slugs and full paths (`capability/feature`):
+Parse the `feature_list` array. Match the user's reference against feature slugs:
 
 1. **Exact slug match** — Direct hit on feature slug, use it
-2. **Full path match** — User provides `capability/feature` format
-3. **Substring match** — User text is substring of a feature slug (or vice versa). If unique, auto-select. If multiple, present top 3.
-4. **Capability-scoped** — If user provides a capability slug followed by a feature hint, narrow search to that capability's features
-5. **No match** — Ask user to clarify. Show available capabilities and their features.
+2. **Substring match** — User text is substring of a feature slug (or vice versa). If unique, auto-select. If multiple, present top 3.
+3. **No match** — Ask user to clarify. Show available features.
 
 **After resolving, confirm explicitly:**
 
 Use AskUserQuestion:
 - header: "Feature"
-- question: "Resolved to: **{feature-slug}** under capability **{capability-slug}** (status: {status}). Is this correct?"
+- question: "Resolved to: **{feature-slug}** (status: {status}). Is this correct?"
 - options:
   - "Yes, continue" — Proceed with this feature
   - "No, show me the list" — Display all features for manual selection
-  - "Different capability" — Pick a different capability first, then feature
-
-If "No, show me the list": Display feature list grouped by capability, let user pick.
-If "Different capability": List capabilities, let user select, then show features within it.
 </step>
 
 <step name="load_feature">
-Load the feature file and its parent capability context.
+Load the feature file and relevant capability context.
 
-**Feature file location:** `.planning/capabilities/{cap-slug}/features/{feat-slug}/FEATURE.md`
+**Feature file location:** `.planning/features/{feat-slug}/FEATURE.md`
 
 Read the feature file content. Extract:
 - **status**: exploring | specified | in-progress | complete | killed | deferred
-- **Existing requirements**: EU, FN, TC files in the requirements subdirectory (if any)
+- **composes[]**: list of capability slugs from frontmatter
 
-**Also load parent capability:**
-Read `.planning/capabilities/{cap-slug}/CAPABILITY.md` for capability-level context (exploration notes and suggested lens are in the Decisions table).
+**Load composed capabilities:**
+For each capability in composes[], read `.planning/capabilities/{cap-slug}/CAPABILITY.md` for contract context.
 
 **Load project context for grounding (if files exist):**
 - `.docs/architecture.md` — system architecture context
 - `.docs/domain-vocabulary.md` — domain concepts and vocabulary
 - `.docs/brand.md` — voice, tone, design direction
 
-Store capability and project context for use during discussion — the feature discussion should be grounded in capability-level understanding, project architecture, and domain.
+Store capability contracts and project context for use during discussion — the feature discussion should be grounded in what the composed capabilities provide.
 </step>
 
 <step name="check_status">
@@ -125,18 +119,18 @@ After EVERY AskUserQuestion return, write results to feature working state befor
 
 **Background checklist (not sequential stages — use to assess gaps):**
 
-1. **Implementation approach** — How should this feature work at a high level?
-2. **Edge cases** — What happens in unusual situations? Error states? Empty data?
-3. **Dependencies** — What does this feature need from other features or external systems?
-4. **User interaction** — How does the user interact with this feature? What do they see/do?
-5. **Data flow** — What data does this feature consume and produce?
-6. **Constraints** — Performance requirements? Compatibility? Platform limitations?
+1. **Goal** — What is the one verifiable sentence describing what this feature achieves?
+2. **Flow** — What capabilities execute in what order? What's the happy path? Failure paths?
+3. **Scope** — What's in (only these capabilities), what's out (no new logic here)?
+4. **Composed capabilities** — Which capabilities does this feature compose? Are they all contracted?
+5. **User-facing failures** — What does the user see when a composed capability fails?
+6. **Context** — What flows between the composed capabilities (handoff contracts)?
 
 **Round loop:**
 
 1. Call AskUserQuestion (1-4 questions informed by what's unknown from the checklist)
 2. Write answers to feature working notes (in the FEATURE.md Decisions section)
-4. Assess: do I have enough to fill out EU, FN, and TC requirements in FEATURE.md?
+4. Assess: do I have enough to fill out Goal, Flow, Scope, and composes[] in FEATURE.md?
    - YES → AskUserQuestion: "I think I have what I need for this feature. Anything else?"
      - User says done → proceed to update_feature_notes
      - User has more → back to step 1
@@ -144,10 +138,10 @@ After EVERY AskUserQuestion return, write results to feature working state befor
 
 No round limit — model self-assesses against done threshold.
 
-**Done threshold:** enough clarity to fill out EU (user stories + acceptance criteria), FN (input/output contracts + behavior rules + edge cases), and TC (constraints + upstream/downstream + approach) requirements in FEATURE.md.
+**Done threshold:** enough clarity to fill out Goal (verifiable sentence), Flow (capability sequence + branches), Scope (in/out), composes[] (capability list), and User-Facing Failures.
 
-**Grounding in capability context:**
-Reference the parent capability's exploration notes during discussion. "The capability suggests {lens} framing — does that align with how you see this feature?"
+**Grounding in capability contracts:**
+Reference the composed capabilities' contracts during discussion. "Capability {X} returns {output} — does this feature need to transform that before passing to {Y}?"
 
 **Kill/defer detection:**
 If during discussion the user expresses doubt about the feature's value or feasibility:
@@ -165,10 +159,10 @@ Use AskUserQuestion:
 Detect when feature discussion reveals a capability-level problem.
 
 **Backward routing triggers:**
-- Feature doesn't make sense given the capability definition
+- Feature composes a capability whose contract is incomplete or wrong
 - Feature reveals the capability was misconceived or mis-scoped
-- Feature conflicts with another feature in the same capability
-- Implementation approach fundamentally changes what the capability is
+- Feature conflicts with another feature composing the same capability
+- Implementation approach fundamentally changes what a capability does
 
 **When detected:**
 
@@ -184,11 +178,11 @@ If "Route to discuss-capability":
 ```
 The feature discussion revealed: {issue}
 
-Recommend re-exploring the parent capability first:
+Recommend re-exploring the affected capability first:
 `/gsd:discuss-capability {capability-slug}`
 
 Then return to this feature:
-`/gsd:discuss-feature {capability-slug}/{feature-slug}`
+`/gsd:discuss-feature {feature-slug}`
 ```
 Exit workflow.
 
@@ -197,9 +191,9 @@ If "Route to replan":
 The feature discussion revealed: {issue}
 
 Recommend replanning the capability:
-`/gsd:discuss-capability {capability}` (with updated context)
+`/gsd:discuss-capability {capability-slug}` (with updated context)
 
-This feature's requirements may change after replanning.
+This feature's composition may change after replanning.
 ```
 Exit workflow.
 
@@ -209,48 +203,48 @@ If "Continue here": Note the issue but proceed with feature exploration.
 <step name="update_feature_notes">
 After exploration is complete (or kill/defer/backward-route decided), update feature artifacts.
 
-**If kill/defer:** Update the feature file status and add reasoning. Skip requirement generation.
+**If kill/defer:** Update the feature file status and add reasoning. Skip spec generation.
 
-**If exploration complete:** Write actual EU, FN, TC content into FEATURE.md.
+**If exploration complete:** Write Goal, Flow, Scope, composes[], and User-Facing Failures into FEATURE.md.
 
-The template at `get-shit-done/templates/feature.md` already has the right structure. Fill the sections from discussion:
+The template at `get-shit-done/templates/feature.md` has the right structure. Fill the sections from discussion:
 
-**End-User Requirements (EU):**
-- Write user stories with acceptance criteria gathered during discussion
-- Format: `As a {who}, I want {what}, so that {why}`
-- Each story gets observable acceptance criteria as checkboxes
-- Include out-of-scope notes where discussed
+**Goal:**
+- One verifiable sentence describing what this feature achieves
 
-**Functional Requirements (FN):**
-- Write input/output contracts from discussion
-- Behavior rules and logic
-- Edge case handling identified during exploration
-- Error conditions and responses
+**Flow:**
+- Ordered sequence: which capabilities execute in what order
+- Branch logic, happy path + failure paths
 
-**Technical Specs (TC):**
-- Technical constraints discussed (language, libs, patterns, performance)
-- Upstream: what feeds into this feature
-- Downstream: what consumes this feature's output
-- Implementation approach from discussion
+**Scope:**
+- What's in (only these capabilities)
+- What's out (no new logic here)
 
-**Update the Trace Table** at the top of FEATURE.md to reflect the requirements written (EU-01, EU-02, FN-01, etc.).
+**composes[] (frontmatter):**
+- List of capability slugs this feature composes
 
-**Feature file location:** `.planning/capabilities/{cap-slug}/features/{feat-slug}/FEATURE.md`
+**User-Facing Failures:**
+- What the user sees when each composed capability fails
 
-Update status to `specified` if requirements were written.
+**Context:**
+- What flows between the composed capabilities (handoff contracts)
+
+**Feature file location:** `.planning/features/{feat-slug}/FEATURE.md`
+
+Update status to `specified` if spec was written.
 </step>
 
 <step name="summarize_and_next">
 Present summary of what was captured and next steps.
 
 ```
-## Feature: {capability}/{feature}
+## Feature: {feature-slug}
 Status: {status}
 
 ### Exploration Summary
-- Implementation approach: {summary}
+- Goal: {one sentence}
+- Composes: {list of capability slugs}
 - Key edge cases: {count identified}
-- Dependencies: {list or "none identified"}
 - Open questions: {count}
 
 {If killed or deferred:}
@@ -266,16 +260,8 @@ Action: {discuss-capability or replan}
 
 ## Next Steps
 
-{If specified (EU/FN/TC written):}
-
-  {If undiscussed sibling features exist:}
-  - `/gsd:discuss-feature {cap}/{next-undiscussed}` — for each
-
-  {If ALL features in capability specified:}
-  - `/gsd:plan {cap}` — Plan the full capability
-
-  {Otherwise:}
-  - `/gsd:plan {cap}/{this-feat}` — Plan this feature
+{If specified (Goal/Flow/composes[] written):}
+- `/gsd:plan {this-feat}` — Plan this feature
 
 {If killed:}
 - Feature marked as killed. Can be overridden later.
@@ -289,12 +275,7 @@ Action: {discuss-capability or replan}
 Commit the feature notes update:
 
 ```bash
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs(feature): update {cap-slug}/{feat-slug} exploration" --files ".planning/capabilities/{cap-slug}/features/{feat-slug}/FEATURE.md"
-```
-
-Include any requirements files created:
-```bash
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs(feature): update {cap-slug}/{feat-slug} exploration" --files ".planning/capabilities/{cap-slug}/features/{feat-slug}/FEATURE.md" ".planning/capabilities/{cap-slug}/features/{feat-slug}/requirements/"
+node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs(feature): update {feat-slug} exploration" --files ".planning/features/{feat-slug}/FEATURE.md"
 ```
 </step>
 
@@ -303,9 +284,10 @@ node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs(feature): upda
 <success_criteria>
 - Feature resolved from fuzzy reference (confirmed with user)
 - Status checked (killed/deferred shows reasoning, offers override)
-- Guided exploration covered implementation approach, edge cases, and dependencies
+- Guided exploration covered goal, flow, scope, and composed capabilities
 - Backward routing detected and handled when capability-level issues surface
 - Feature notes updated with exploration results
 - Kill/defer handled with reasoning persisted
 - User knows next steps
 </success_criteria>
+</output>

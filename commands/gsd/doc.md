@@ -67,15 +67,15 @@ Skip slug resolution. Go to Step 3 (no-arg path).
 
 Read `.planning/STATE.md`. Look in the "Session Continuity" section for "Stopped at:" line.
 
-If "Stopped at:" references a feature (format: `{cap}/{feat} --`):
-- Extract capability_slug and feature_slug
-- Confirm with user via AskUserQuestion: "Inferred target: {cap}/{feat}. Proceed?" (Yes / Specify different target)
+If "Stopped at:" references a feature (format: `{feat} --`):
+- Extract feature_slug
+- Confirm with user via AskUserQuestion: "Inferred target: {feat}. Proceed?" (Yes / Specify different target)
 - If Yes: go to Step 4 (infer LENS) then Step 5 (feature-level invocation)
 - If Specify: ask for slug, re-resolve via Step 1
 
 If "Stopped at:" does not reference a deterministic feature:
 - Try git log fallback: `git log --oneline -10 --grep="docs\\|feat\\|fix" | head -5` to find recent feature-scoped commits
-- Parse commit messages for `{capability}/{feature}` patterns (e.g., `feat(pipeline-execution/doc-writer-overhaul):`)
+- Parse commit messages for feature slug patterns (e.g., `feat(doc-writer-overhaul):`)
 - If a feature is found: confirm with user via AskUserQuestion, then proceed as above
 - If no feature found: Use AskUserQuestion: "No recent feature detected. Provide a feature or capability slug to document:" (free text response)
 - Re-resolve via Step 1
@@ -103,12 +103,14 @@ Pass: CAPABILITY_SLUG, FEATURE_SLUG, LENS
 Verify at least one feature under the capability has review artifacts:
 
 ```bash
-# Check for any review/synthesis.md under capability features
-ls ${capability_dir}/features/*/review/synthesis.md 2>/dev/null
+# Check for any review/synthesis.md under features that compose this capability
+for feat_dir in .planning/features/*/; do
+  grep -l "${CAPABILITY_SLUG}" "${feat_dir}FEATURE.md" 2>/dev/null && ls "${feat_dir}review/synthesis.md" 2>/dev/null
+done
 ```
 
 If no reviewed features found:
-- Inform user: "No reviewed features found in {capability_slug}. Run `/gsd:review {cap/feat}` first."
+- Inform user: "No reviewed features found composing {capability_slug}. Run `/gsd:review {feat}` first."
 - Stop.
 
 Invoke doc.md ONCE with capability scope (matches review command pattern):

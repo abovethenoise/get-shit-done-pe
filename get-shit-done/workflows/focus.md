@@ -54,18 +54,17 @@ For each resolved item, trace dependencies to build the focus group's DAG.
 ### 4a. Explicit Dependencies (from metadata)
 
 For each feature in scope:
-- Read parent CAPABILITY.md Features table `Depends-On` column
-- Read FEATURE.md frontmatter `depends_on` field (if present)
-- Build edges: `feature_a -> depends_on -> [feature_b, feature_c]`
+- Read FEATURE.md frontmatter `composes[]` and `depends_on` fields
+- Build edges from composes[]: features sharing composed capabilities have implicit ordering
+- Build edges from depends_on: `feature_a -> depends_on -> [feature_b, feature_c]`
 
 For each capability in scope:
-- Expand to all its features
-- Read inter-feature dependencies from CAPABILITY.md
+- Expand to features that compose it (search `.planning/features/*/FEATURE.md` for composes[] containing this cap)
 
 ### 4b. Implicit Dependencies (from code overlap)
 
 For each feature in scope:
-- Read FEATURE.md for TC-xx requirements mentioning file paths (Upstream/Downstream fields)
+- Read FEATURE.md Context section for file paths mentioned in handoff contracts
 - Collect all referenced file paths per feature
 
 Cross-reference: find file paths that appear in multiple features' requirements.
@@ -138,8 +137,8 @@ Wave 3:
 **Wave readiness validation:**
 
 For Wave 1 items:
-- Confirm each feature has been discussed (FEATURE.md exists with EU/FN/TC sections populated)
-- If not discussed: flag as gap — "Feature '{feat}' in Wave 1 has no requirements yet. Run `/gsd:discuss-feature {cap}/{feat}` first."
+- Confirm each feature has been discussed (FEATURE.md exists with Goal/Flow/composes[] sections populated)
+- If not discussed: flag as gap — "Feature '{feat}' in Wave 1 has no spec yet. Run `/gsd:discuss-feature {feat}` first."
 
 For Wave 2+ items:
 - Confirm upstream dependencies (in earlier waves) are at least planned (have PLAN.md files)
@@ -212,7 +211,7 @@ Next: Run `/gsd:plan {first_item}` to start planning the first item.
 <success_criteria>
 - [ ] Focus group name and goal captured via Q&A
 - [ ] All scope items resolved via slug-resolve
-- [ ] Explicit dependencies traced from CAPABILITY.md and FEATURE.md
+- [ ] Explicit dependencies traced from FEATURE.md composes[] and depends_on
 - [ ] Implicit dependencies detected via shared file path analysis
 - [ ] Cycles detected and resolved with user input
 - [ ] Overlap with existing focus groups detected and resolved (merge/parallel/remove)
