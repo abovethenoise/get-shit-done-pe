@@ -22,17 +22,9 @@ function cmdCapabilityCreate(cwd, name, raw) {
   }
 
   const capDir = path.join(cwd, '.planning', 'capabilities', slug);
-  const featuresDir = path.join(capDir, 'features');
   const capPath = path.join(capDir, 'CAPABILITY.md');
 
-  // Handle partial creation: dir exists but no CAPABILITY.md
-  if (capResult.reason === 'no_capability_file') {
-    // Dir exists, just needs the file. Ensure features dir exists too.
-    fs.mkdirSync(featuresDir, { recursive: true });
-  } else {
-    // Create fresh
-    fs.mkdirSync(featuresDir, { recursive: true });
-  }
+  fs.mkdirSync(capDir, { recursive: true });
 
   const today = new Date().toISOString().split('T')[0];
   const content = fillTemplate('capability', { name, slug, date: today });
@@ -63,20 +55,12 @@ function cmdCapabilityList(cwd, raw) {
   for (const slug of entries) {
     const capPath = path.join(capabilitiesDir, slug, 'CAPABILITY.md');
     const content = safeReadFile(capPath);
-    if (!content) continue; // Skip dirs without CAPABILITY.md
+    if (!content) continue;
 
     const fm = extractFrontmatter(content);
-    const featuresDir = path.join(capabilitiesDir, slug, 'features');
-    let featureCount = 0;
-    try {
-      const featEntries = fs.readdirSync(featuresDir, { withFileTypes: true });
-      featureCount = featEntries.filter(e => e.isDirectory() && fs.existsSync(path.join(featuresDir, e.name, 'FEATURE.md'))).length;
-    } catch { /* no features dir */ }
-
     capabilities.push({
       slug,
       status: fm.status || 'unknown',
-      feature_count: featureCount,
     });
   }
 
@@ -92,31 +76,47 @@ function cmdCapabilityStatus(cwd, slug, raw) {
   const content = safeReadFile(capResult.capability_path);
   const fm = extractFrontmatter(content || '');
 
-  const featuresDir = path.join(capResult.directory, 'features');
-  const features = [];
-  try {
-    const featEntries = fs.readdirSync(featuresDir, { withFileTypes: true })
-      .filter(e => e.isDirectory())
-      .map(e => e.name)
-      .sort();
-
-    for (const featSlug of featEntries) {
-      const featPath = path.join(featuresDir, featSlug, 'FEATURE.md');
-      const featContent = safeReadFile(featPath);
-      if (!featContent) continue;
-      const featFm = extractFrontmatter(featContent);
-      features.push({
-        slug: featSlug,
-        status: featFm.status || 'unknown',
-      });
-    }
-  } catch { /* no features dir */ }
-
   output({
     slug: capResult.slug,
     status: fm.status || 'unknown',
-    features,
-    feature_count: features.length,
+  }, raw);
+}
+
+/** Validate capability contract completeness */
+function cmdCapabilityValidate(cwd, slug, raw) {
+  const capResult = findCapabilityInternal(cwd, slug);
+  if (!capResult.found) {
+    error("Capability '" + slug + "' not found");
+  }
+
+  const content = safeReadFile(capResult.capability_path) || '';
+  const errors = [];
+  const warnings = [];
+
+  const requiredSections = ['## Contract', '### Receives', '### Returns', '### Rules'];
+  for (const section of requiredSections) {
+    if (!content.includes(section)) {
+      errors.push({ type: 'missing_section', section, message: `Contract section '${section}' not found` });
+    }
+  }
+
+  // Check for placeholder content in required sections
+  if (content.includes('{typed inputs}') || content.includes('{typed outputs}')) {
+    warnings.push({ type: 'placeholder_content', message: 'Contract still contains placeholder text' });
+  }
+
+  const optionalSections = ['## Failure Behavior', '## Constraints', '## Context'];
+  for (const section of optionalSections) {
+    if (!content.includes(section)) {
+      warnings.push({ type: 'missing_optional', section, message: `Optional section '${section}' not found` });
+    }
+  }
+
+  output({
+    passed: errors.length === 0,
+    slug,
+    errors,
+    warnings,
   }, raw);
 }
 
@@ -124,4 +124,5 @@ module.exports = {
   cmdCapabilityCreate,
   cmdCapabilityList,
   cmdCapabilityStatus,
+  cmdCapabilityValidate,
 };

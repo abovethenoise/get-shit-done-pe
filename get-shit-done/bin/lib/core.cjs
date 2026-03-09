@@ -374,47 +374,32 @@ function getMilestoneInfo(cwd) {
 
 function resolveSlugInternal(cwd, input, typeHint) {
   if (!input || !input.trim()) {
-    return { resolved: false, tier: 0, type: null, capability_slug: null, feature_slug: null, full_path: null, candidates: [], reason: 'empty_input' };
+    return { resolved: false, tier: 0, type: null, slug: null, full_path: null, candidates: [], reason: 'empty_input' };
   }
 
   const trimmed = input.trim().toLowerCase();
 
   // ── Tier 1: Exact match ──
-  if (trimmed.includes('/')) {
-    // cap/feat format
-    const [capPart, featPart] = trimmed.split('/', 2);
-    if (typeHint !== 'capability') {
-      const featResult = findFeatureInternal(cwd, capPart, featPart);
-      if (featResult.found) {
-        return { resolved: true, tier: 1, type: 'feature', capability_slug: capPart, feature_slug: featResult.slug, full_path: capPart + '/' + featResult.slug, candidates: [], reason: 'exact' };
-      }
+  // Single slug — try capability first (unless type hint says feature)
+  if (typeHint !== 'feature') {
+    const capResult = findCapabilityInternal(cwd, trimmed);
+    if (capResult.found) {
+      return { resolved: true, tier: 1, type: 'capability', slug: capResult.slug, full_path: capResult.slug, candidates: [], reason: 'exact' };
     }
-    // Even with /, could be a capability slug that contains a hyphen misread; fall through to fuzzy
-  } else {
-    // Single slug — try capability first (unless type hint says feature)
-    if (typeHint !== 'feature') {
-      const capResult = findCapabilityInternal(cwd, trimmed);
-      if (capResult.found) {
-        return { resolved: true, tier: 1, type: 'capability', capability_slug: capResult.slug, feature_slug: null, full_path: capResult.slug, candidates: [], reason: 'exact' };
-      }
-    }
-    // Try as feature across all capabilities (if not capability-only)
-    if (typeHint !== 'capability') {
-      const allFeatures = listAllFeaturesInternal(cwd);
-      const exactFeat = allFeatures.find(f => f.feature_slug === trimmed);
-      if (exactFeat) {
-        return { resolved: true, tier: 1, type: 'feature', capability_slug: exactFeat.capability_slug, feature_slug: exactFeat.feature_slug, full_path: exactFeat.capability_slug + '/' + exactFeat.feature_slug, candidates: [], reason: 'exact' };
-      }
+  }
+  // Try as feature (if not capability-only)
+  if (typeHint !== 'capability') {
+    const featResult = findFeatureInternal(cwd, trimmed);
+    if (featResult.found) {
+      return { resolved: true, tier: 1, type: 'feature', slug: featResult.slug, full_path: featResult.slug, candidates: [], reason: 'exact' };
     }
   }
 
   // ── Tier 2: BM25 fuzzy match ──
-  // Tokenize on hyphens, score with BM25 using prefix-based token matching
   const tokenize = s => s.split('-').filter(Boolean);
   const tokenMatch = (qt, dt) => dt.startsWith(qt) || qt.startsWith(dt);
   const queryTokens = tokenize(trimmed);
 
-  // Build corpus of all candidates
   const corpus = [];
 
   if (typeHint !== 'feature') {
@@ -424,7 +409,7 @@ function resolveSlugInternal(cwd, input, typeHint) {
         .filter(e => e.isDirectory() && fs.existsSync(path.join(capabilitiesDir, e.name, 'CAPABILITY.md')))
         .map(e => e.name);
       for (const slug of capEntries) {
-        corpus.push({ type: 'capability', capability_slug: slug, feature_slug: null, full_path: slug, tokens: tokenize(slug) });
+        corpus.push({ type: 'capability', slug, full_path: slug, tokens: tokenize(slug) });
       }
     } catch { /* no capabilities dir */ }
   }
@@ -432,17 +417,14 @@ function resolveSlugInternal(cwd, input, typeHint) {
   if (typeHint !== 'capability') {
     const allFeatures = listAllFeaturesInternal(cwd);
     for (const f of allFeatures) {
-      const fp = f.capability_slug + '/' + f.feature_slug;
-      if (!corpus.some(c => c.full_path === fp)) {
-        corpus.push({ type: 'feature', capability_slug: f.capability_slug, feature_slug: f.feature_slug, full_path: fp, tokens: tokenize(f.feature_slug) });
-      }
+      corpus.push({ type: 'feature', slug: f.feature_slug, full_path: f.feature_slug, tokens: tokenize(f.feature_slug) });
     }
   }
 
   // BM25 scoring
   const N = corpus.length;
   const avgdl = N > 0 ? corpus.reduce((sum, d) => sum + d.tokens.length, 0) / N : 1;
-  const k1 = 1.2, b = 0.75; // standard BM25 defaults
+  const k1 = 1.2, b = 0.75;
 
   const idf = {};
   for (const qt of queryTokens) {
@@ -460,53 +442,42 @@ function resolveSlugInternal(cwd, input, typeHint) {
       if (tf > 0) matchedTokens++;
       score += idf[qt] * (tf * (k1 + 1)) / (tf + k1 * (1 - b + b * dl / avgdl));
     }
-    // Require at least half of query tokens to match
     if (matchedTokens >= Math.ceil(queryTokens.length / 2) && score > 0) {
       scored.push({ ...doc, score });
     }
   }
   scored.sort((a, b) => b.score - a.score);
 
-  // Clean up internal fields before returning
   const candidates = scored.map(({ tokens, score, ...rest }) => rest);
 
   if (candidates.length === 1) {
     const c = candidates[0];
-    return { resolved: true, tier: 2, type: c.type, capability_slug: c.capability_slug, feature_slug: c.feature_slug, full_path: c.full_path, candidates: [], reason: 'fuzzy_unique' };
+    return { resolved: true, tier: 2, type: c.type, slug: c.slug, full_path: c.full_path, candidates: [], reason: 'fuzzy_unique' };
   }
 
   if (candidates.length > 1) {
-    return { resolved: false, tier: 2, type: null, capability_slug: null, feature_slug: null, full_path: null, candidates, reason: 'ambiguous' };
+    return { resolved: false, tier: 2, type: null, slug: null, full_path: null, candidates, reason: 'ambiguous' };
   }
 
   // ── Tier 3: Fall-through (no match) ──
-  return { resolved: false, tier: 3, type: null, capability_slug: null, feature_slug: null, full_path: null, candidates: [], reason: 'no_match' };
+  return { resolved: false, tier: 3, type: null, slug: null, full_path: null, candidates: [], reason: 'no_match' };
 }
 
-/** List all features across all capabilities. Returns [{capability_slug, feature_slug}] */
+/** List all features. Returns [{feature_slug, composes}] */
 function listAllFeaturesInternal(cwd) {
   const results = [];
-  const capabilitiesDir = path.join(cwd, '.planning', 'capabilities');
+  const featuresDir = path.join(cwd, '.planning', 'features');
   try {
-    const capEntries = fs.readdirSync(capabilitiesDir, { withFileTypes: true })
+    const entries = fs.readdirSync(featuresDir, { withFileTypes: true })
       .filter(e => e.isDirectory())
       .map(e => e.name)
       .sort();
-    for (const capSlug of capEntries) {
-      const featuresDir = path.join(capabilitiesDir, capSlug, 'features');
-      try {
-        const featEntries = fs.readdirSync(featuresDir, { withFileTypes: true })
-          .filter(e => e.isDirectory())
-          .map(e => e.name)
-          .sort();
-        for (const featSlug of featEntries) {
-          if (fs.existsSync(path.join(featuresDir, featSlug, 'FEATURE.md'))) {
-            results.push({ capability_slug: capSlug, feature_slug: featSlug });
-          }
-        }
-      } catch { /* no features dir */ }
+    for (const slug of entries) {
+      if (fs.existsSync(path.join(featuresDir, slug, 'FEATURE.md'))) {
+        results.push({ feature_slug: slug });
+      }
     }
-  } catch { /* no capabilities dir */ }
+  } catch { /* no features dir */ }
   return results;
 }
 
@@ -533,30 +504,25 @@ function findCapabilityInternal(cwd, capabilityInput) {
   return { found: true, directory, slug, capability_path: capabilityPath };
 }
 
-function findFeatureInternal(cwd, capabilitySlug, featureInput) {
-  const capResult = findCapabilityInternal(cwd, capabilitySlug);
-  if (!capResult.found) {
-    return { found: false, reason: 'capability_not_found', capability_slug: capabilitySlug };
-  }
-
+function findFeatureInternal(cwd, featureInput) {
   const featureSlug = generateSlugInternal(featureInput);
-  if (!featureSlug) return { found: false, reason: 'empty_slug', capability_slug: capabilitySlug };
+  if (!featureSlug) return { found: false, reason: 'empty_slug' };
 
-  const directory = path.join(capResult.directory, 'features', featureSlug);
+  const directory = path.join(cwd, '.planning', 'features', featureSlug);
 
   try {
     const stat = fs.statSync(directory);
-    if (!stat.isDirectory()) return { found: false, slug: featureSlug, reason: 'not_a_directory', capability_slug: capabilitySlug };
+    if (!stat.isDirectory()) return { found: false, slug: featureSlug, reason: 'not_a_directory' };
   } catch {
-    return { found: false, slug: featureSlug, reason: 'directory_not_found', capability_slug: capabilitySlug };
+    return { found: false, slug: featureSlug, reason: 'directory_not_found' };
   }
 
   const featurePath = path.join(directory, 'FEATURE.md');
   if (!fs.existsSync(featurePath)) {
-    return { found: false, slug: featureSlug, reason: 'no_feature_file', capability_slug: capabilitySlug };
+    return { found: false, slug: featureSlug, reason: 'no_feature_file' };
   }
 
-  return { found: true, directory, slug: featureSlug, feature_path: featurePath, capability_slug: capabilitySlug };
+  return { found: true, directory, slug: featureSlug, feature_path: featurePath };
 }
 
 module.exports = {

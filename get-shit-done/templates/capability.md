@@ -9,44 +9,64 @@ created: "{date}"
 
 ## Goal
 
-{One sentence: what this capability delivers to the user.}
+{One sentence: what this primitive does.}
 
-## Why
+## Contract
 
-{Why this capability matters. What problem it solves. What happens without it. 2-3 sentences max.}
+### Receives
 
-## Domain Model
+| Input | Type | Required | Description |
+|-------|------|----------|-------------|
+| {input} | {type} | {yes/no} | {description} |
 
-| Entity | Description | Relationships |
-|--------|-------------|---------------|
-| {entity} | {description} | {relationships} |
+### Returns
 
-## Invariants
+| Output | Type | Description |
+|--------|------|-------------|
+| {output} | {type} | {description} |
 
-1. {Rule that applies across ALL features in this capability.}
-2. {Another invariant.}
+### Rules
 
-## Boundaries
+1. {Invariant that can be violated = bug.}
+2. {Another deterministic rule.}
 
-### Owns
-
-- {What this capability is solely responsible for.}
-
-### Consumes
-
-- {What this capability reads/uses from other capabilities.}
-
-### Does Not Touch
-
-- {What this capability explicitly avoids, even if related.}
-
-## Architecture Spine
-
-{Data flow, layer ownership, where logic lives. Use ASCII diagrams where helpful.}
+### Sample Payload
 
 ```
-{input} --> [{layer}] --> [{layer}] --> {output}
+{Concrete I/O example.}
 ```
+
+## Failure Behavior
+
+| Condition | Behavior | Propagates? |
+|-----------|----------|-------------|
+| {bad input} | {what happens} | {yes/no} |
+
+## Atomic Boundaries
+
+- {What succeeds or fails together as a unit.}
+
+## Side Effects
+
+- {What always fires: logging, events, state mutations.}
+
+## Constraints
+
+- {Hard limits: libs, patterns, performance, what not to touch.}
+
+## Context
+
+### Inputs From Other Capabilities
+
+- {capability}: {what this receives}
+
+### Outputs To Other Capabilities
+
+- {capability}: {what this produces}
+
+### Must Not Propagate
+
+- {What stays encapsulated inside this capability.}
 
 ## Dependencies
 
@@ -54,14 +74,6 @@ created: "{date}"
 |-----------|------------|------|-------|
 | Produces  | {slug}     | {what this provides} | {notes} |
 | Consumes  | {slug}     | {what this uses}     | {notes} |
-
-## Features
-
-Features are listed in priority order. Higher priority features are listed first.
-
-| Feature | Priority | Depends-On | Status |
-|---------|----------|------------|--------|
-| {feature} | P1 | none | planning |
 
 ## Decisions
 

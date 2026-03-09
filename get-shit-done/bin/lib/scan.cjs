@@ -18,78 +18,58 @@ function listDirs(dirPath) {
 
 // ─── Commands ───────────────────────────────────────────────────────────────
 
-/** Scan .planning/capabilities/ to build full capability inventory with artifacts and completeness classification. */
+/** Scan .planning/capabilities/ and .planning/features/ to build full inventory. */
 function cmdScanDiscover(cwd, raw) {
   const capabilitiesDir = path.join(cwd, '.planning', 'capabilities');
-
-  if (!fs.existsSync(capabilitiesDir)) {
-    output({ capabilities: [], gap_findings: [] }, raw);
-    return;
-  }
-
-  const entries = listDirs(capabilitiesDir);
+  const featuresDir = path.join(cwd, '.planning', 'features');
 
   const capabilities = [];
+  const features = [];
   const gapFindings = [];
 
-  for (const slug of entries) {
-    const capPath = path.join(capabilitiesDir, slug, 'CAPABILITY.md');
-    const featuresDir = path.join(capabilitiesDir, slug, 'features');
+  // Scan capabilities
+  if (fs.existsSync(capabilitiesDir)) {
+    const entries = listDirs(capabilitiesDir);
+    for (const slug of entries) {
+      const capPath = path.join(capabilitiesDir, slug, 'CAPABILITY.md');
+      const capContent = safeReadFile(capPath);
+      const completeness = capContent ? 'has_spec' : 'no_spec';
 
-    const capContent = safeReadFile(capPath);
+      capabilities.push({
+        slug,
+        artifacts: {
+          capability: capContent ? { path: path.relative(cwd, capPath), content: capContent } : null,
+        },
+        completeness,
+      });
 
-    // Load features
-    const features = [];
-    if (fs.existsSync(featuresDir)) {
-      const featEntries = listDirs(featuresDir);
-
-      for (const featSlug of featEntries) {
-        const featPath = path.join(featuresDir, featSlug, 'FEATURE.md');
-        const featContent = safeReadFile(featPath);
-        features.push({
-          slug: featSlug,
-          path: path.relative(cwd, featPath),
-          content: featContent,
+      if (!capContent) {
+        gapFindings.push({
+          type: 'GAP',
+          severity: 'HIGH',
+          affected: [slug],
+          summary: `Capability directory '${slug}' exists with no CAPABILITY.md`,
+          recommendation: `Create CAPABILITY.md for '${slug}' or remove the directory`,
         });
       }
     }
+  }
 
-    // Compute completeness: CAPABILITY.md is the anchor — directories without it are orphaned (completeness 'none'), not 'partial'.
-    let completeness;
-    if (capContent && features.length > 0) {
-      completeness = 'full';
-    } else if (capContent || features.length > 0) {
-      completeness = 'partial';
-    } else {
-      completeness = 'none';
-    }
-
-    capabilities.push({
-      slug,
-      artifacts: {
-        capability: capContent ? { path: path.relative(cwd, capPath), content: capContent } : null,
-        features,
-      },
-      completeness,
-    });
-
-    // GAP finding for directories without CAPABILITY.md
-    if (completeness === 'none') {
-      gapFindings.push({
-        id: 'FINDING-XXX',
-        type: 'GAP',
-        severity: 'HIGH',
-        confidence: 'HIGH',
-        affected_capabilities: [slug],
-        doc_sources: [],
-        summary: `Capability directory '${slug}' exists with no specification (no CAPABILITY.md)`,
-        recommendation: `Create CAPABILITY.md for '${slug}' or remove the directory if it was created in error`,
-        root_cause: null,
+  // Scan features
+  if (fs.existsSync(featuresDir)) {
+    const entries = listDirs(featuresDir);
+    for (const slug of entries) {
+      const featPath = path.join(featuresDir, slug, 'FEATURE.md');
+      const featContent = safeReadFile(featPath);
+      features.push({
+        slug,
+        path: path.relative(cwd, featPath),
+        content: featContent,
       });
     }
   }
 
-  output({ capabilities, gap_findings: gapFindings }, raw);
+  output({ capabilities, features, gap_findings: gapFindings }, raw);
 }
 
 /** Generate all unique capability pairs for pairwise analysis. Classifies project tier by capability count. */

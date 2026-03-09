@@ -57,9 +57,9 @@
  *   init discuss-capability             All context for discuss-capability workflow
  *   init discuss-feature                All context for discuss-feature workflow
  *   init framing-discovery <lens> [cap] All context for framing-discovery workflow
- *   init plan-feature <cap> <feat>     All context for plan workflow
- *   init execute-feature <cap> <feat>  All context for execute workflow
- *   init feature-op <cap> <feat> [op]  All context for feature operations
+ *   init plan-feature <feat>            All context for plan workflow
+ *   init execute-feature <feat>        All context for execute workflow
+ *   init feature-op <feat> [op]        All context for feature operations
  *   init feature-progress              All context for progress workflow
  *
  * Slug Resolution:
@@ -69,9 +69,12 @@
  *   capability-create <slug>           Create capability directory
  *   capability-list                    List all capabilities
  *   capability-status <slug>           Get capability status
- *   feature-create <cap> <slug>        Create feature directory
- *   feature-list <cap>                 List features for capability
- *   feature-status <cap> <feat>        Get feature status
+ *   capability-validate <slug>         Validate capability contract completeness
+ *   feature-create <slug>              Create feature directory
+ *   feature-list                       List all features
+ *   feature-status <feat>              Get feature status + composed capabilities
+ *   feature-validate <feat>            Validate feature composes[] integrity
+ *   gate-check <feat>                  Check if all composed capabilities are ready
  *
  * Scan:
  *   scan-discover                      Discover all capabilities with contents and completeness
@@ -133,7 +136,7 @@ async function main() {
   const command = args[0];
 
   if (!command) {
-    error('Usage: gsd-tools <command> [args] [--raw] [--cwd <path>]\nCommands: state, commit, verify, frontmatter, template, config-get, config-set, init, plan-validate, progress, roadmap, requirements, summary-extract, state-snapshot, slug-resolve, capability-create, capability-list, capability-status, feature-create, feature-list, feature-status');
+    error('Usage: gsd-tools <command> [args] [--raw] [--cwd <path>]\nCommands: state, commit, verify, frontmatter, template, config-get, config-set, init, plan-validate, progress, roadmap, requirements, summary-extract, state-snapshot, slug-resolve, capability-create, capability-list, capability-status, capability-validate, feature-create, feature-list, feature-status, feature-validate, gate-check');
   }
 
   switch (command) {
@@ -331,13 +334,13 @@ async function main() {
           break;
         // v2 capability/feature init commands
         case 'plan-feature':
-          init.cmdInitPlanFeature(cwd, args[2], args[3], raw);
+          init.cmdInitPlanFeature(cwd, args[2], raw);
           break;
         case 'execute-feature':
-          init.cmdInitExecuteFeature(cwd, args[2], args[3], raw);
+          init.cmdInitExecuteFeature(cwd, args[2], raw);
           break;
         case 'feature-op':
-          init.cmdInitFeatureOp(cwd, args[2], args[3], args[4], raw);
+          init.cmdInitFeatureOp(cwd, args[2], args[3], raw);
           break;
         case 'feature-progress':
           init.cmdInitFeatureProgress(cwd, raw);
@@ -400,17 +403,32 @@ async function main() {
     // ─── Feature flat-verb commands ─────────────────────────────────────────
     case 'feature-create': {
       const { cmdFeatureCreate } = require('./lib/feature.cjs');
-      cmdFeatureCreate(cwd, args[1], args[2], raw);
+      cmdFeatureCreate(cwd, args[1], raw);
       break;
     }
     case 'feature-list': {
       const { cmdFeatureList } = require('./lib/feature.cjs');
-      cmdFeatureList(cwd, args[1], raw);
+      cmdFeatureList(cwd, raw);
       break;
     }
     case 'feature-status': {
       const { cmdFeatureStatus } = require('./lib/feature.cjs');
-      cmdFeatureStatus(cwd, args[1], args[2], raw);
+      cmdFeatureStatus(cwd, args[1], raw);
+      break;
+    }
+    case 'feature-validate': {
+      const { cmdFeatureValidate } = require('./lib/feature.cjs');
+      cmdFeatureValidate(cwd, args[1], raw);
+      break;
+    }
+    case 'gate-check': {
+      const { cmdGateCheck } = require('./lib/feature.cjs');
+      cmdGateCheck(cwd, args[1], raw);
+      break;
+    }
+    case 'capability-validate': {
+      const { cmdCapabilityValidate } = require('./lib/capability.cjs');
+      cmdCapabilityValidate(cwd, args[1], raw);
       break;
     }
 

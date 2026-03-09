@@ -159,7 +159,7 @@ function cmdTemplateFill(cwd, templateType, options, raw) {
       const capSlug = options.slug || generateSlugInternal(options.name || '');
       if (!capSlug) { error('--name or --slug required for capability template'); return; }
       const capDir = path.join(cwd, '.planning', 'capabilities', capSlug);
-      fs.mkdirSync(path.join(capDir, 'features'), { recursive: true });
+      fs.mkdirSync(capDir, { recursive: true });
       const capContent = fillTemplate('capability', {
         name: options.name || capSlug,
         slug: capSlug,
@@ -175,11 +175,9 @@ function cmdTemplateFill(cwd, templateType, options, raw) {
       return;
     }
     case 'feature': {
-      const featCapSlug = options.capability;
-      if (!featCapSlug) { error('--capability required for feature template'); return; }
       const featSlug = options.slug || generateSlugInternal(options.name || '');
       if (!featSlug) { error('--name or --slug required for feature template'); return; }
-      const featDir = path.join(cwd, '.planning', 'capabilities', featCapSlug, 'features', featSlug);
+      const featDir = path.join(cwd, '.planning', 'features', featSlug);
       fs.mkdirSync(featDir, { recursive: true });
       const featContent = fillTemplate('feature', {
         name: options.name || featSlug,
@@ -262,7 +260,7 @@ function fillTemplate(type, options) {
       let content = fs.readFileSync(templatePath, 'utf-8');
       content = content.replace(/\{date\}/g, date);
       content = content.replace(/\{feature\}/g, name);
-      content = content.replace(/\{slug\}/g, options.capability || slug);
+      content = content.replace(/\{slug\}/g, slug);
       return content;
     }
     case 'discovery-brief': {

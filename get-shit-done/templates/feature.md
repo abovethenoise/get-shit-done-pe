@@ -1,68 +1,48 @@
 ---
 type: feature
-capability: "{slug}"
+composes: []
 status: planning
 created: "{date}"
 ---
 
 # {feature}
 
-## Trace Table
+## Goal
 
-| REQ | Research | Plan | Execute | Review | Docs | Status |
-|-----|----------|------|---------|--------|------|--------|
-| EU-01 | - | - | - | - | - | draft |
-| FN-01 | - | - | - | - | - | draft |
-| TC-01 | - | - | - | - | - | draft |
+{One verifiable sentence: what the user gets when this is done.}
 
-## End-User Requirements
+## Flow
 
-### EU-01: {title}
+{Ordered sequence of capability invocations. Use numbered steps for happy path, indented bullets for branches/failures.}
 
-**Story:** As a {who}, I want {what}, so that {why}.
+1. {capability-a}: {what it does in this context}
+2. {capability-b}: {what it does with output from step 1}
+   - On failure: {what happens}
+3. {capability-c}: {final step}
 
-**Acceptance Criteria:**
+## Scope
 
-- [ ] {Observable outcome 1}
-- [ ] {Observable outcome 2}
+### In
 
-**Out of Scope:**
+- {Only these capabilities, only this orchestration.}
 
-- {What this requirement explicitly does NOT cover.}
+### Out
 
-## Functional Requirements
+- {No new implementation logic. No changes to capability internals.}
 
-### FN-01: {title}
+## User-Facing Failures
 
-**Receives:** {Inputs, triggers, data the feature consumes.}
+| Composed Capability | Failure Mode | User Sees |
+|---------------------|-------------|-----------|
+| {capability} | {what goes wrong} | {what user experiences} |
 
-**Returns:** {Outputs, side effects, data the feature produces.}
+## Context
 
-**Behavior:**
+{What flows between composed capabilities — the handoff contracts.}
 
-- {Rule or logic}
-- {Edge case handling}
-- {Error condition and response}
-
-## Technical Specs
-
-### TC-01: {title}
-
-**Intent:** {Why this approach, not just what.}
-
-**Upstream:** {What feeds into this.}
-
-**Downstream:** {What consumes this output.}
-
-**Constraints:**
-
-- {Hard limits: language, libs, patterns, performance.}
-
-**Example:**
-
-```
-{Concrete illustration of the spec in action.}
-```
+| From | To | Data | Format |
+|------|----|------|--------|
+| {cap-a} | {cap-b} | {what's passed} | {shape/type} |
 
 ## Decisions
 
