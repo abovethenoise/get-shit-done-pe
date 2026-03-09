@@ -5,7 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
-const { loadConfig, pathExistsInternal, generateSlugInternal, getMilestoneInfo, toPosixPath, findCapabilityInternal, findFeatureInternal, output, error } = require('./core.cjs');
+const { loadConfig, pathExistsInternal, generateSlugInternal, toPosixPath, findCapabilityInternal, findFeatureInternal, output, error } = require('./core.cjs');
 
 function cmdInitResume(cwd, raw) {
   const config = loadConfig(cwd);
@@ -382,7 +382,6 @@ function cmdInitExecuteFeature(cwd, featSlug, raw) {
 
   const config = loadConfig(cwd);
   const featInfo = findFeatureInternal(cwd, featSlug);
-  const milestone = getMilestoneInfo(cwd);
 
   const result = {
     commit_docs: config.commit_docs,
@@ -398,9 +397,6 @@ function cmdInitExecuteFeature(cwd, featSlug, raw) {
     incomplete_plans: [],
     plan_count: 0,
     incomplete_count: 0,
-
-    milestone_version: milestone.version,
-    milestone_name: milestone.name,
 
     state_exists: pathExistsInternal(cwd, '.planning/STATE.md'),
     roadmap_exists: pathExistsInternal(cwd, '.planning/ROADMAP.md'),
@@ -480,7 +476,6 @@ function cmdInitFeatureOp(cwd, featSlug, op, raw) {
 
 function cmdInitFeatureProgress(cwd, raw) {
   const config = loadConfig(cwd);
-  const milestone = getMilestoneInfo(cwd);
 
   // Scan capabilities
   const capabilitiesDir = path.join(cwd, '.planning', 'capabilities');
@@ -528,8 +523,6 @@ function cmdInitFeatureProgress(cwd, raw) {
 
   output({
     commit_docs: config.commit_docs,
-    milestone_version: milestone.version,
-    milestone_name: milestone.name,
     capabilities,
     capability_count: capabilities.length,
     features,

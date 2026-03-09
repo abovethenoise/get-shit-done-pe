@@ -186,7 +186,7 @@ All features shipped
 
 Extract: `**Authentication** — JWT login flow with refresh tokens`
 
-### For plans (from ROADMAP.md):
+### For plans (from PLAN.md):
 
 ```markdown
 Plans:

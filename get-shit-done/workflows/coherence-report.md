@@ -63,8 +63,9 @@ Read project context files:
    ```bash
    FOCUS=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" state get active-focus)
    ```
-   Parse for active focus group name, goal, and feature list.
-   Set `SCOPE_MODE` = "focus" if active focus exists, else "project-wide".
+   Parse for active focus groups array (each has name, goal, feature list).
+   Set `SCOPE_MODE` = "focus" if any active focus groups exist, else "project-wide".
+   If multiple focus groups: scope includes features from all active groups.
 
 Log: "Loaded project context + {N} capability definitions + SEQUENCE.md + scope:{SCOPE_MODE}"
 </step>

@@ -27,7 +27,7 @@ status: pending
 
 ## End-User Reviewer
 
-Traces against: story + acceptance criteria (EU-xx requirements)
+Traces against: Goal (verifiable sentence) + User-Facing Failures table from FEATURE.md
 
 ### {REQ ID}: {title}
 
@@ -47,7 +47,7 @@ Traces against: story + acceptance criteria (EU-xx requirements)
 
 ## Functional Reviewer
 
-Traces against: behavior specs (FN-xx requirements)
+Traces against: Flow (capability sequence + branches) + Context (handoff contracts) from FEATURE.md
 
 ### {REQ ID}: {title}
 
@@ -67,7 +67,7 @@ Traces against: behavior specs (FN-xx requirements)
 
 ## Technical Reviewer
 
-Traces against: implementation specs (TC-xx requirements)
+Traces against: composed capability contracts (Receives/Returns/Rules) from CAPABILITY.md
 
 ### {REQ ID}: {title}
 

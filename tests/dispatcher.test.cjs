@@ -87,20 +87,6 @@ describe('dispatcher error paths', () => {
     assert.ok(result.error.includes('Unknown verify subcommand'), `Expected "Unknown verify subcommand" in stderr, got: ${result.error}`);
   });
 
-  // Unknown subcommand: roadmap
-  test('roadmap unknown subcommand errors', () => {
-    const result = runGsdTools('roadmap bogus', tmpDir);
-    assert.strictEqual(result.success, false, 'Should exit non-zero');
-    assert.ok(result.error.includes('Unknown roadmap subcommand'), `Expected "Unknown roadmap subcommand" in stderr, got: ${result.error}`);
-  });
-
-  // Unknown subcommand: requirements
-  test('requirements unknown subcommand errors', () => {
-    const result = runGsdTools('requirements bogus', tmpDir);
-    assert.strictEqual(result.success, false, 'Should exit non-zero');
-    assert.ok(result.error.includes('Unknown requirements subcommand'), `Expected "Unknown requirements subcommand" in stderr, got: ${result.error}`);
-  });
-
   // Unknown subcommand: init
   test('init unknown workflow errors', () => {
     const result = runGsdTools('init bogus', tmpDir);
@@ -133,30 +119,6 @@ describe('dispatcher routing branches', () => {
     assert.strictEqual(result.success, true, `init resume failed: ${result.error}`);
     const parsed = JSON.parse(result.output);
     assert.ok(typeof parsed === 'object', 'Output should be valid JSON object');
-  });
-
-  // roadmap update-plan-progress
-  test('roadmap update-plan-progress updates phase progress', () => {
-    // Create ROADMAP.md with progress table
-    fs.writeFileSync(
-      path.join(tmpDir, '.planning', 'ROADMAP.md'),
-      '# Roadmap\n\n## Milestone: v1.0 Test\n\n### Phase 1: Test Phase\n**Goal**: Test goal\n**Depends on**: None\n**Requirements**: TEST-01\n**Success Criteria**:\n  1. Tests pass\n**Plans**: 1 plan\nPlans:\n- [ ] 01-01-PLAN.md\n\n## Progress\n\n| Phase | Plans | Status | Date |\n|-------|-------|--------|------|\n| 1 | 0/1 | Not Started | - |\n'
-    );
-
-    // Create phase dir with PLAN and SUMMARY
-    const phaseDir = path.join(tmpDir, '.planning', 'phases', '01-test-phase');
-    fs.mkdirSync(phaseDir, { recursive: true });
-    fs.writeFileSync(
-      path.join(phaseDir, '01-01-PLAN.md'),
-      '---\nphase: 01-test-phase\nplan: "01"\n---\n\n# Plan\n'
-    );
-    fs.writeFileSync(
-      path.join(phaseDir, '01-01-SUMMARY.md'),
-      '---\nphase: 01-test-phase\nplan: "01"\n---\n\n# Summary\n'
-    );
-
-    const result = runGsdTools('roadmap update-plan-progress 1', tmpDir);
-    assert.strictEqual(result.success, true, `roadmap update-plan-progress failed: ${result.error}`);
   });
 
   // state (no subcommand) -- default load

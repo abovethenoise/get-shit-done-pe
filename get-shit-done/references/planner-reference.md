@@ -8,8 +8,7 @@ Detailed procedures, schemas, templates, and examples for the gsd-planner agent.
 
 ```yaml
 ---
-phase: XX-name                 # Phase identifier
-plan: NN                       # Plan number within phase
+plan: NN                       # Plan number
 type: execute                  # Always "execute"
 wave: N                        # Execution wave number
 depends_on: []                 # Plan IDs this plan requires
@@ -29,8 +28,7 @@ must_haves:
 
 | Field | Required | Purpose |
 |-------|----------|---------|
-| `phase` | Yes | Phase identifier (e.g., `01-foundation`) |
-| `plan` | Yes | Plan number within phase |
+| `plan` | Yes | Plan number |
 | `type` | Yes | `execute` |
 | `wave` | Yes | Execution wave (1 = no deps, 2+ = after prior waves) |
 | `depends_on` | Yes | Plan IDs this plan requires completed first |
@@ -109,7 +107,6 @@ One atomic commit per task. If a task requires more than one commit, split it.
 
 ```markdown
 ---
-phase: XX-name
 plan: NN
 type: execute
 wave: N
@@ -162,7 +159,7 @@ Output: [Artifacts created]
 </tasks>
 
 <verification>
-[Overall phase checks]
+[Overall plan checks]
 </verification>
 
 <success_criteria>

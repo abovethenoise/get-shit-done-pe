@@ -18,7 +18,7 @@ Read STATE.md for position, decisions, blockers.
 
 ### 2. Load Plan
 
-Parse PLAN.md: frontmatter (phase, plan, type, autonomous, wave, depends_on), objective, context (@-references), tasks with types, verification/success criteria, output spec.
+Parse PLAN.md: frontmatter (plan, type, autonomous, wave, depends_on), objective, context (@-references), tasks with types, verification/success criteria, output spec.
 
 If plan references CONTEXT.md: honor user's vision throughout execution.
 
@@ -87,7 +87,7 @@ Examples: new DB table (not column), major schema changes, new service layer, sw
 
 Only auto-fix issues directly caused by the current task's changes. Pre-existing warnings, linting errors, or failures in unrelated files are out of scope.
 
-Log out-of-scope discoveries to `deferred-items.md` in the phase directory.
+Log out-of-scope discoveries to `deferred-items.md` in the feature directory.
 
 ### Fix Attempt Limit
 
@@ -205,7 +205,7 @@ When spawned as continuation agent (`<completed_tasks>` in prompt):
 
 Use the Write tool to create files. Use the summary template from `@{GSD_ROOT}/get-shit-done/templates/summary.md`.
 
-**Frontmatter:** phase, plan, subsystem, tags, dependency graph (requires/provides/affects), tech-stack (added/patterns), key-files (created/modified), decisions, metrics (duration, completed date).
+**Frontmatter:** plan, subsystem, tags, dependency graph (requires/provides/affects), tech-stack (added/patterns), key-files (created/modified), decisions, metrics (duration, completed date).
 
 **One-liner must be substantive.** Good: "JWT auth with refresh rotation using jose library". Bad: "Authentication implemented".
 
@@ -253,24 +253,13 @@ node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" state advance-plan
 # Recalculate progress bar
 node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" state update-progress
 
-# Record execution metrics
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" state record-metric \
-  --phase "${PHASE}" --plan "${PLAN}" --duration "${DURATION}" \
-  --tasks "${TASK_COUNT}" --files "${FILE_COUNT}"
-
 # Add decisions
 node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" state add-decision \
-  --phase "${PHASE}" --summary "${decision}"
+  --summary "${decision}"
 
 # Update session info
 node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" state record-session \
-  --stopped-at "Completed ${PHASE}-${PLAN}-PLAN.md"
-
-# Update ROADMAP.md progress
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" roadmap update-plan-progress "${PHASE_NUMBER}"
-
-# Update spec status if all plans complete
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" state update-progress
+  --stopped-at "Completed ${TARGET_SLUG} plan ${PLAN}"
 ```
 
 ---
@@ -279,7 +268,7 @@ node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" state update-progress
 
 ```bash
 node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs(${TARGET_SLUG}): complete [plan-name] plan" \
-  --files ${target_dir}/{plan_id}-SUMMARY.md .planning/STATE.md .planning/ROADMAP.md
+  --files ${target_dir}/{plan_id}-SUMMARY.md .planning/STATE.md
 ```
 
 Separate from per-task commits -- captures execution results only.

@@ -3,7 +3,7 @@
  */
 const fs = require('fs');
 const path = require('path');
-const { loadConfig, isGitIgnored, execGit, comparePhaseNum, getMilestoneInfo, output, error } = require('./core.cjs');
+const { loadConfig, isGitIgnored, execGit, output, error } = require('./core.cjs');
 const { extractFrontmatter } = require('./frontmatter.cjs');
 
 function cmdCommit(cwd, message, files, raw, amend) {
@@ -111,24 +111,20 @@ function cmdSummaryExtract(cwd, summaryPath, fields, raw) {
 }
 
 function cmdProgressRender(cwd, format, raw) {
-  const phasesDir = path.join(cwd, '.planning', 'phases');
-  const milestone = getMilestoneInfo(cwd);
+  const featuresDir = path.join(cwd, '.planning', 'features');
 
-  const phases = [];
+  const features = [];
   let totalPlans = 0;
   let totalSummaries = 0;
 
   try {
-    const entries = fs.readdirSync(phasesDir, { withFileTypes: true });
-    const dirs = entries.filter(e => e.isDirectory()).map(e => e.name).sort((a, b) => comparePhaseNum(a, b));
+    const entries = fs.readdirSync(featuresDir, { withFileTypes: true });
+    const dirs = entries.filter(e => e.isDirectory()).map(e => e.name).sort();
 
-    for (const dir of dirs) {
-      const dm = dir.match(/^(\d+(?:\.\d+)*)-?(.*)/);
-      const phaseNum = dm ? dm[1] : dir;
-      const phaseName = dm && dm[2] ? dm[2].replace(/-/g, ' ') : '';
-      const phaseFiles = fs.readdirSync(path.join(phasesDir, dir));
-      const plans = phaseFiles.filter(f => f.endsWith('-PLAN.md') || f === 'PLAN.md').length;
-      const summaries = phaseFiles.filter(f => f.endsWith('-SUMMARY.md') || f === 'SUMMARY.md').length;
+    for (const slug of dirs) {
+      const featFiles = fs.readdirSync(path.join(featuresDir, slug));
+      const plans = featFiles.filter(f => f.endsWith('-PLAN.md') || f === 'PLAN.md').length;
+      const summaries = featFiles.filter(f => f.endsWith('-SUMMARY.md') || f === 'SUMMARY.md').length;
 
       totalPlans += plans;
       totalSummaries += summaries;
@@ -139,23 +135,21 @@ function cmdProgressRender(cwd, format, raw) {
       else if (summaries > 0) status = 'In Progress';
       else status = 'Planned';
 
-      phases.push({ number: phaseNum, name: phaseName, plans, summaries, status });
+      features.push({ slug, plans, summaries, status });
     }
   } catch {}
 
   const percent = totalPlans > 0 ? Math.min(100, Math.round((totalSummaries / totalPlans) * 100)) : 0;
 
   if (format === 'table') {
-    // Render markdown table
     const barWidth = 10;
     const filled = Math.round((percent / 100) * barWidth);
     const bar = '\u2588'.repeat(filled) + '\u2591'.repeat(barWidth - filled);
-    let out = `# ${milestone.version} ${milestone.name}\n\n`;
-    out += `**Progress:** [${bar}] ${totalSummaries}/${totalPlans} plans (${percent}%)\n\n`;
-    out += `| Phase | Name | Plans | Status |\n`;
-    out += `|-------|------|-------|--------|\n`;
-    for (const p of phases) {
-      out += `| ${p.number} | ${p.name} | ${p.summaries}/${p.plans} | ${p.status} |\n`;
+    let out = `**Progress:** [${bar}] ${totalSummaries}/${totalPlans} plans (${percent}%)\n\n`;
+    out += `| Feature | Plans | Status |\n`;
+    out += `|---------|-------|--------|\n`;
+    for (const f of features) {
+      out += `| ${f.slug} | ${f.summaries}/${f.plans} | ${f.status} |\n`;
     }
     output({ rendered: out }, raw, out);
   } else if (format === 'bar') {
@@ -165,11 +159,8 @@ function cmdProgressRender(cwd, format, raw) {
     const text = `[${bar}] ${totalSummaries}/${totalPlans} plans (${percent}%)`;
     output({ bar: text, percent, completed: totalSummaries, total: totalPlans }, raw, text);
   } else {
-    // JSON format
     output({
-      milestone_version: milestone.version,
-      milestone_name: milestone.name,
-      phases,
+      features,
       total_plans: totalPlans,
       total_summaries: totalSummaries,
       percent,

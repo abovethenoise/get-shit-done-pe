@@ -22,6 +22,8 @@ npx get-shit-done-pe@latest
 
 ## Changelog
 
+**3.0.0** — Architecture overhaul: capabilities and features decoupled into independent directories (`.planning/capabilities/` and `.planning/features/`). Capabilities are now primitives with formal contracts (Receives/Returns/Rules); features compose capabilities via `composes[]` frontmatter edges. New dependency graph layer builds a DAG from composes[] and powers sequence, coupling, waves, downstream (blast radius), upstream (readiness), and upstream-gaps (contract completeness) queries. New `/gsd:sequence` command generates SEQUENCE.md with executable/blocked ordering, parallel branches, coordinate points, critical path, and orphan detection. Focus groups now use graph-driven wave ordering with mgrep semantic gap detection for undeclared capabilities. External tool activation across the full pipeline: Context7 for live library docs (research agents, planner, executor, verifier, review-technical), WebSearch/WebFetch for ecosystem knowledge (research agents, executor, review-technical), mgrep semantic search for gap detection in focus, plan, review, and coherence workflows. Upstream-gaps checks integrated into progress routing, focus scope validation, and refine scope expansion. Downstream consumer awareness added to planner (contract-preserving tasks) and reviewer (blast radius context).
+
 **2.0.4** — Subagent delegation overhaul: consolidated 4 scattered delegation docs into a single `delegation.md` reference (model routing, delegation shapes, heuristics, anti-patterns). All workflow command files audited and updated to use `subagent_type` parameter in `Task()` calls instead of reading agent definitions for model info. Removed redundant agent-file reads from orchestrators, dead model-routing code from CLI layer. Slug resolution upgraded from substring matching to BM25 scoring with hyphen-normalized fuzzy matching.
 
 **2.0.3** — Requirements refinement + pipeline overhaul: new `/gsd:refine` command runs a 5-stage coherence audit across all capabilities (landscape scan, coherence synthesis, interactive Q&A, change application, delta computation). Pipeline consolidated into a single scope-fluid orchestrator (`framing-pipeline.md`) — capability scope fans out plan+execute per feature in DAG wave order, then runs review+doc once for the full scope; feature scope runs linearly. Execute→review→doc auto-chains with no user gates between stages (human checkpoints only at review findings Q&A and doc approval). Progress routing rewritten with focus-aware 3-tier routing. Doc pipeline split into three purpose-built agents: gsd-doc-explorer (6x sonnet, one per focus area), gsd-doc-synthesizer (1x inherit, route validation + deduplication), gsd-doc-writer (Nx sonnet, parallel by route group) with post-write verification via expected_behavior assertions. New doc-tiers reference for 5-tier documentation hierarchy.
@@ -58,7 +60,7 @@ So I forked it.
 |---|---|
 | Phases and milestones | Capabilities and features |
 | "How do we sequence the work?" | "What should the work be?" |
-| Requirements are implicit | Three-layer requirement contracts (EU/FN/TC) |
+| Requirements are implicit | Capability contracts (Receives/Returns/Rules) + feature composition (composes[]) |
 | Discovery happens once, then build | Human-in-the-loop at every stage |
 | Review = "does the code work?" | Review = UX + behavioral contracts + tech specs + code quality |
 | Fix problems when found | Discuss problems → decide if re-research or re-plan is needed |
@@ -66,25 +68,25 @@ So I forked it.
 
 ### Capabilities and Features, Not Phases
 
-Instead of organizing work into milestones and phases (project management), PE organizes work into **capabilities** (what your product can do) and **features** (what needs to be built to deliver each capability).
+Instead of organizing work into milestones and phases (project management), PE organizes work into **capabilities** (primitives with formal contracts) and **features** (shippable units that compose capabilities).
 
-A capability has a vision: *this is what the user will be doing and why they need to do it.* That informs the features: *what specifically needs to be built.* Each feature carries structured requirements that travel through the entire pipeline — research, plan, execute, review.
+**Capabilities** are the building blocks. Each defines a contract: what it Receives, what it Returns, and what Rules govern its behavior. They live independently in `.planning/capabilities/`.
 
-### Three-Layer Requirement Contracts
+**Features** declare which capabilities they need via `composes[]` frontmatter. A feature composing `[auth, database]` can't execute until both capabilities are verified. Features live independently in `.planning/features/`.
 
-Every feature defines requirements at three levels:
+This composition model creates a dependency graph. The system uses it to compute execution order (waves), detect blast radius (downstream), check readiness (upstream), and find contract gaps — all automatically.
 
-| Layer | Who It's For | What It Tests |
-|---|---|---|
-| **EU** — End-User Stories | Product owner | Can the user do what we said they could? |
-| **FN** — Functional Behavior | Developers | Does the system behave as specified? |
-| **TC** — Technical Constraints | Architects | Are we using the right approach with the right constraints? |
+Each feature carries structured requirements that travel through the entire pipeline — research, plan, execute, review.
 
-These aren't decorative. They're contracts. When agents execute, they're building against FN and TC specs. When reviewers evaluate, they check all three layers independently — four specialized reviewers plus a synthesizer:
+### Contract-Based Verification
 
-1. **End-user reviewer** — Does the user get what they wanted?
-2. **Functional reviewer** — Do the behavioral contracts hold?
-3. **Technical reviewer** — Are the specs met?
+Capabilities define contracts: what they Receive, what they Return, and what Rules govern behavior. Features define a Goal (verifiable sentence), a Flow (capability sequence with branches), and a composes[] list of which capabilities they orchestrate.
+
+These aren't decorative. When agents execute, they're building against capability contracts. When reviewers evaluate, four specialized reviewers check from different perspectives:
+
+1. **End-user reviewer** — Does the Goal hold? Do User-Facing Failures match?
+2. **Functional reviewer** — Does the Flow execute correctly? Are handoff contracts honored?
+3. **Technical reviewer** — Are composed capability contracts (Receives/Returns/Rules) satisfied?
 4. **Quality reviewer** — DRY, KISS, no unjustified complexity?
 
 ### Human-in-the-Loop at Every Stage
@@ -107,7 +109,7 @@ The system is proactive about what it doesn't understand. Where are the ambiguit
 
 Project management still exists — but it's lightweight scaffolding, not the main automation mechanism.
 
-**Focus groups** are a simple Q&A: "What capabilities and features do you want to focus on building?" The system analyzes dependencies, detects cross-feature and cross-capability conflicts, and suggests execution order. It might tell you: "You need to build these features first before you can tackle A, B, and C."
+**Focus groups** are a simple Q&A: "What capabilities and features do you want to focus on building?" The system queries the dependency graph for wave ordering, runs mgrep semantic search to detect undeclared capability signals, validates upstream contract completeness, and checks for overlap with existing groups. It might tell you: "You need to build these features first before you can tackle A, B, and C" — and it knows *why*, because it's reading the composes[] graph.
 
 Focus groups inform direction. They don't drive the autonomy.
 
@@ -129,12 +131,13 @@ Not every piece of work is "build a new thing." PE recognizes four modes, each w
 ```
 /gsd:init                                  Initialize project (auto-detects existing code)
     ↓
-/gsd:discuss-capability <cap>              Define capability scope
-/gsd:discuss-feature <cap/feat>            Lock in feature preferences
+/gsd:discuss-capability <cap>              Define capability scope + contract
+/gsd:discuss-feature <cap/feat>            Lock in feature preferences + composes[]
     ↓
 /gsd:refine                                (Optional) Cross-capability coherence audit
     ↓
-/gsd:focus <cap>                           Sequence features by dependency
+/gsd:sequence                              Build dependency graph → SEQUENCE.md
+/gsd:focus <cap>                           Create focus group (graph-driven wave ordering)
     ↓
 /gsd:new|enhance|refactor|debug <slug>     Frame the work
     ↓
@@ -194,7 +197,7 @@ npx get-shit-done-pe --claude --local --uninstall
 
 ## Attribution
 
-Built on [GSD by TÂCHES](https://github.com/glittercowboy/get-shit-done). The engineering harness — markdown structure, hooks, CLI commands, subagent patterns — comes from that foundation. This fork reimagines the thinking model: capabilities replace phases, three-layer requirements replace implicit specs, and the pipeline is optimized for getting it right over getting it shipped.
+Built on [GSD by TÂCHES](https://github.com/glittercowboy/get-shit-done). The engineering harness — markdown structure, hooks, CLI commands, subagent patterns — comes from that foundation. This fork reimagines the thinking model: capabilities with formal contracts replace phases, features compose capabilities via dependency graphs, and the pipeline is optimized for getting it right over getting it shipped.
 
 **Author:** [abovethenoise](https://github.com/abovethenoise)
 **License:** MIT

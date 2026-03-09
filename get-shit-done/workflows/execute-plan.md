@@ -149,21 +149,12 @@ One-liner SUBSTANTIVE: "JWT auth with refresh rotation using jose library" not "
 ```bash
 node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" state advance-plan
 node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" state update-progress
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" state record-metric \
-  --phase "${PHASE}" --plan "${PLAN}" --duration "${DURATION}" \
-  --tasks "${TASK_COUNT}" --files "${FILE_COUNT}"
-```
-</step>
-
-<step name="update_roadmap">
-```bash
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" roadmap update-plan-progress "${PHASE}"
 ```
 </step>
 
 <step name="git_commit_metadata">
 ```bash
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs(${TARGET_SLUG}): complete [plan-name] plan" --files ${target_dir}/{plan_id}-SUMMARY.md .planning/STATE.md .planning/ROADMAP.md
+node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs(${TARGET_SLUG}): complete [plan-name] plan" --files ${target_dir}/{plan_id}-SUMMARY.md .planning/STATE.md
 ```
 </step>
 

@@ -23,7 +23,6 @@ If missing ROADMAP.md but PROJECT.md exists: no focus groups available -- skip t
 <step name="load_context">
 Use structured extraction:
 ```bash
-ROADMAP=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" roadmap analyze)
 STATE=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" state-snapshot)
 ```
 </step>

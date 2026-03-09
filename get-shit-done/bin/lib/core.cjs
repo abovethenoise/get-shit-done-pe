@@ -135,131 +135,6 @@ function execGit(cwd, args) {
   }
 }
 
-// ─── Phase utilities ──────────────────────────────────────────────────────────
-
-function escapeRegex(value) {
-  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-function normalizePhaseName(phase) {
-  const match = String(phase).match(/^(\d+)([A-Z])?((?:\.\d+)*)/i);
-  if (!match) return phase;
-  const padded = match[1].padStart(2, '0');
-  const letter = match[2] ? match[2].toUpperCase() : '';
-  const decimal = match[3] || '';
-  return padded + letter + decimal;
-}
-
-function comparePhaseNum(a, b) {
-  const pa = String(a).match(/^(\d+)([A-Z])?((?:\.\d+)*)/i);
-  const pb = String(b).match(/^(\d+)([A-Z])?((?:\.\d+)*)/i);
-  if (!pa || !pb) return String(a).localeCompare(String(b));
-  const intDiff = parseInt(pa[1], 10) - parseInt(pb[1], 10);
-  if (intDiff !== 0) return intDiff;
-  // No letter sorts before letter: 12 < 12A < 12B
-  const la = (pa[2] || '').toUpperCase();
-  const lb = (pb[2] || '').toUpperCase();
-  if (la !== lb) {
-    if (!la) return -1;
-    if (!lb) return 1;
-    return la < lb ? -1 : 1;
-  }
-  // Segment-by-segment decimal comparison: 12A < 12A.1 < 12A.1.2 < 12A.2
-  const aDecParts = pa[3] ? pa[3].slice(1).split('.').map(p => parseInt(p, 10)) : [];
-  const bDecParts = pb[3] ? pb[3].slice(1).split('.').map(p => parseInt(p, 10)) : [];
-  const maxLen = Math.max(aDecParts.length, bDecParts.length);
-  if (aDecParts.length === 0 && bDecParts.length > 0) return -1;
-  if (bDecParts.length === 0 && aDecParts.length > 0) return 1;
-  for (let i = 0; i < maxLen; i++) {
-    const av = Number.isFinite(aDecParts[i]) ? aDecParts[i] : 0;
-    const bv = Number.isFinite(bDecParts[i]) ? bDecParts[i] : 0;
-    if (av !== bv) return av - bv;
-  }
-  return 0;
-}
-
-function searchPhaseInDir(baseDir, relBase, normalized) {
-  try {
-    const entries = fs.readdirSync(baseDir, { withFileTypes: true });
-    const dirs = entries.filter(e => e.isDirectory()).map(e => e.name).sort((a, b) => comparePhaseNum(a, b));
-    const match = dirs.find(d => d.startsWith(normalized));
-    if (!match) return null;
-
-    const dirMatch = match.match(/^(\d+[A-Z]?(?:\.\d+)*)-?(.*)/i);
-    const phaseNumber = dirMatch ? dirMatch[1] : normalized;
-    const phaseName = dirMatch && dirMatch[2] ? dirMatch[2] : null;
-    const phaseDir = path.join(baseDir, match);
-    const phaseFiles = fs.readdirSync(phaseDir);
-
-    const plans = phaseFiles.filter(f => f.endsWith('-PLAN.md') || f === 'PLAN.md').sort();
-    const summaries = phaseFiles.filter(f => f.endsWith('-SUMMARY.md') || f === 'SUMMARY.md').sort();
-    const hasResearch = phaseFiles.some(f => f.endsWith('-RESEARCH.md') || f === 'RESEARCH.md');
-    const hasContext = phaseFiles.some(f => f.endsWith('-CONTEXT.md') || f === 'CONTEXT.md');
-    const hasVerification = phaseFiles.some(f => f.endsWith('-VERIFICATION.md') || f === 'VERIFICATION.md');
-
-    const completedPlanIds = new Set(
-      summaries.map(s => s.replace('-SUMMARY.md', '').replace('SUMMARY.md', ''))
-    );
-    const incompletePlans = plans.filter(p => {
-      const planId = p.replace('-PLAN.md', '').replace('PLAN.md', '');
-      return !completedPlanIds.has(planId);
-    });
-
-    return {
-      found: true,
-      directory: toPosixPath(path.join(relBase, match)),
-      phase_number: phaseNumber,
-      phase_name: phaseName,
-      phase_slug: phaseName ? phaseName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') : null,
-      plans,
-      summaries,
-      incomplete_plans: incompletePlans,
-      has_research: hasResearch,
-      has_context: hasContext,
-      has_verification: hasVerification,
-    };
-  } catch {
-    return null;
-  }
-}
-
-function findPhaseInternal(cwd, phase) {
-  if (!phase) return null;
-
-  const phasesDir = path.join(cwd, '.planning', 'phases');
-  const normalized = normalizePhaseName(phase);
-
-  // Search current phases first
-  const current = searchPhaseInDir(phasesDir, '.planning/phases', normalized);
-  if (current) return current;
-
-  // Search archived milestone phases (newest first)
-  const milestonesDir = path.join(cwd, '.planning', 'milestones');
-  if (!fs.existsSync(milestonesDir)) return null;
-
-  try {
-    const milestoneEntries = fs.readdirSync(milestonesDir, { withFileTypes: true });
-    const archiveDirs = milestoneEntries
-      .filter(e => e.isDirectory() && /^v[\d.]+-phases$/.test(e.name))
-      .map(e => e.name)
-      .sort()
-      .reverse();
-
-    for (const archiveName of archiveDirs) {
-      const version = archiveName.match(/^(v[\d.]+)-phases$/)[1];
-      const archivePath = path.join(milestonesDir, archiveName);
-      const relBase = '.planning/milestones/' + archiveName;
-      const result = searchPhaseInDir(archivePath, relBase, normalized);
-      if (result) {
-        result.archived = version;
-        return result;
-      }
-    }
-  } catch {}
-
-  return null;
-}
-
 // ─── Model utilities ─────────────────────────────────────────────────────────
 
 function resolveModelInternal(cwd, agentType) {
@@ -312,29 +187,6 @@ function generateSlugInternal(text) {
   return slug;
 }
 
-function getMilestoneInfo(cwd) {
-  try {
-    const roadmap = fs.readFileSync(path.join(cwd, '.planning', 'ROADMAP.md'), 'utf-8');
-    // Strip <details>...</details> blocks so shipped milestones don't interfere
-    const cleaned = roadmap.replace(/<details>[\s\S]*?<\/details>/gi, '');
-    // Extract version and name from the same ## heading for consistency
-    const headingMatch = cleaned.match(/## .*v(\d+\.\d+)[:\s]+([^\n(]+)/);
-    if (headingMatch) {
-      return {
-        version: 'v' + headingMatch[1],
-        name: headingMatch[2].trim(),
-      };
-    }
-    // Fallback: try bare version match
-    const versionMatch = cleaned.match(/v(\d+\.\d+)/);
-    return {
-      version: versionMatch ? versionMatch[0] : 'v1.0',
-      name: 'milestone',
-    };
-  } catch {
-    return { version: 'v1.0', name: 'milestone' };
-  }
-}
 
 // ─── Slug Resolution (3-tier: exact -> fuzzy -> fall-through) ────────────────
 
@@ -504,16 +356,10 @@ module.exports = {
   loadConfig,
   isGitIgnored,
   execGit,
-  escapeRegex,
-  normalizePhaseName,
-  comparePhaseNum,
-  searchPhaseInDir,
-  findPhaseInternal,
   resolveModelInternal,
   resolveModelFromFrontmatter,
   pathExistsInternal,
   generateSlugInternal,
-  getMilestoneInfo,
   toPosixPath,
   findCapabilityInternal,
   findFeatureInternal,

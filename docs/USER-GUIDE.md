@@ -9,9 +9,11 @@ A detailed reference for workflows, commands, and configuration. For quick-start
 - [How It Works](#how-it-works)
 - [Framing Modes](#framing-modes)
 - [Workflow Overview](#workflow-overview)
+- [Dependency Graph](#dependency-graph)
 - [Command Reference](#command-reference)
 - [Requirements Model](#requirements-model)
 - [Focus Groups](#focus-groups)
+- [External Tool Integration](#external-tool-integration)
 - [Configuration Reference](#configuration-reference)
 - [Usage Examples](#usage-examples)
 - [Troubleshooting](#troubleshooting)
@@ -26,11 +28,14 @@ Every piece of work starts with a **framing mode** that shapes how the system ap
 
 ### Core Concepts
 
-- **Capability** -- A major area of the product (e.g., Authentication, Payments, Search)
-- **Feature** -- A shippable unit within a capability (e.g., JWT Login, Password Reset)
-- **Focus Group** -- A set of features sequenced for execution with dependency ordering
+- **Capability** -- A primitive with a formal contract: Receives, Returns, Rules (e.g., Authentication, Payments, Search)
+- **Feature** -- A shippable unit that composes one or more capabilities via `composes[]` frontmatter (e.g., JWT Login, Password Reset)
+- **composes[]** -- The edge model. Features declare which capabilities they need. This creates a dependency graph.
+- **Dependency Graph** -- A DAG built from composes[] edges. Powers sequence ordering, wave computation, blast radius analysis, and readiness checks.
+- **Focus Group** -- A set of features sequenced for execution using graph-driven wave ordering
 - **Discovery Brief** -- The output of a framing command: a structured problem definition
 - **Lens** -- The framing mode (debug/new/enhance/refactor) that weights every pipeline stage
+- **Contract** -- A capability's Receives/Returns/Rules sections. Used for readiness validation and upstream-gaps detection.
 
 ---
 
@@ -89,13 +94,14 @@ Each framing command creates a **BRIEF.md** (at the capability level) that ancho
 ```
   /gsd:init                          <- Initialize project
          |
-  /gsd:discuss-capability <cap>      <- Define capability scope
+  /gsd:discuss-capability <cap>      <- Define capability scope + contract
          |
-  /gsd:discuss-feature <cap/feat>    <- Lock in feature preferences
+  /gsd:discuss-feature <cap/feat>    <- Lock in preferences + composes[]
          |
   /gsd:refine                        <- (Optional) Cross-capability coherence audit
          |
-  /gsd:focus <cap>                   <- Create focus group (sequence features)
+  /gsd:sequence                      <- Build dependency graph -> SEQUENCE.md
+  /gsd:focus <cap>                   <- Create focus group (graph-driven wave ordering)
          |
   /gsd:debug|new|enhance|refactor    <- Frame the work (creates Discovery Brief)
          |
@@ -124,17 +130,27 @@ Each feature passes through a pipeline. The framing lens weights every stage dif
 ```
   /gsd:plan <feat>
          |
+         +-- Context assembly (6 layers):
+         |     structural position (graph downstream)
+         |     semantic matches (mgrep)
+         |     capability contracts + research findings
+         |
          +-- 6 parallel research gatherers:
          |     +-- User intent
          |     +-- Domain truth
-         |     +-- Existing system
-         |     +-- Tech constraints
+         |     +-- Existing system   (+ semantic match leads)
+         |     +-- Tech constraints  (+ structural position context)
          |     +-- Prior art
-         |     +-- Edge cases
+         |     +-- Edge cases        (+ structural position context)
+         |           |
+         |     Each gatherer has: Context7, WebSearch, WebFetch
          |           |
          |     Synthesizer -> RESEARCH.md
          |
          +-- Planner (reads CONTEXT.md, RESEARCH.md, FEATURE.md)
+         |     + downstream consumer context (blast radius)
+         |     + semantic scope scan (mgrep)
+         |     + Context7 for method signatures
          |           |
          |     Plan Checker (up to 3 iterations)
          |           |
@@ -163,10 +179,14 @@ After execution completes, review auto-chains (no user gate).
 ```
   (auto-chained from execute)
          |
+         +-- Context assembly:
+         |     downstream blast radius (graph)
+         |     semantic call sites (mgrep)
+         |
          +-- 4 parallel reviewers:
          |     +-- End-user (EU requirements)
          |     +-- Functional (FN requirements)
-         |     +-- Technical (TC requirements)
+         |     +-- Technical (TC + downstream + Context7 + WebSearch)
          |     +-- Quality (DRY/KISS/complexity)
          |           |
          |     Synthesizer -> findings + remediation
@@ -223,6 +243,48 @@ After execution completes, review auto-chains (no user gate).
 
 ---
 
+## Dependency Graph
+
+GSD builds a directed acyclic graph (DAG) from `composes[]` frontmatter edges. Features are nodes that point to capability nodes via "composes" edges. This graph powers sequencing, readiness checks, and impact analysis across the pipeline.
+
+### How It Works
+
+```
+Feature: checkout-flow                 Feature: order-history
+  composes: [payments, inventory]        composes: [payments, reporting]
+       |           |                          |           |
+       v           v                          v           v
+  cap:payments  cap:inventory            cap:payments  cap:reporting
+```
+
+The graph engine answers six types of queries:
+
+| Query | What It Returns | Used By |
+|-------|----------------|---------|
+| **sequence** | Executable features, blocked features, parallel branches, critical path, orphans | `/gsd:sequence`, progress routing |
+| **coupling** | Features sharing a composed capability (change one, affect all) | Coherence report |
+| **waves** `--scope <csv>` | Wave 1 (ready), blocked (waiting), coordinate flags (shared caps in wave) | Focus groups, progress routing |
+| **downstream** `<cap-slug>` | Features that compose this capability (blast radius) | Planner, reviewer, research agents |
+| **upstream** `<feat-slug>` | Capabilities this feature depends on + status + contract completeness | Readiness validation |
+| **upstream-gaps** `<feat-slug>` | Only the upstream caps with status or contract gaps | Progress routing, focus validation, refine scope |
+
+### Sequence Output
+
+`/gsd:sequence` generates `.planning/SEQUENCE.md` with six sections:
+
+1. **What Can Execute Now** -- features whose composed capabilities are all verified/complete
+2. **Blocked** -- features waiting on unverified capabilities
+3. **Parallel Branches** -- independent feature groups (no shared capabilities)
+4. **Coordinate Points** -- capabilities shared by 2+ features (change here affects multiple)
+5. **Critical Path** -- blocking capabilities sorted by how many features they unblock
+6. **Orphans** -- capabilities composed by nothing, features with empty composes[]
+
+### Contract Completeness
+
+A capability's contract has three required sections: `### Receives`, `### Returns`, `### Rules`. The `upstream-gaps` query checks both status readiness (verified/complete) and contract completeness independently — a capability can be "verified" but still have a thin contract that will trip up planners.
+
+---
+
 ## Command Reference
 
 ### Initialization
@@ -247,11 +309,17 @@ After execution completes, review auto-chains (no user gate).
 | `/gsd:discuss-capability <cap>` | Define capability scope and boundaries | Before planning features in a capability |
 | `/gsd:discuss-feature <cap/feat>` | Capture implementation decisions for a feature | Before planning, to shape how it gets built |
 
+### Sequencing & Focus
+
+| Command | Purpose | When to Use |
+|---------|---------|-------------|
+| `/gsd:sequence` | Build dependency graph from composes[] → SEQUENCE.md | After defining capabilities/features, before focus groups |
+| `/gsd:focus <cap>` | Create a focus group: graph-driven wave ordering + mgrep gap scan | After sequencing, before planning |
+
 ### Planning & Review
 
 | Command | Purpose | When to Use |
 |---------|---------|-------------|
-| `/gsd:focus <cap>` | Create a focus group: sequence features for execution | After discussing features, before planning |
 | `/gsd:plan <slug>` | Research + plan + verify for a feature (or all features in a capability) | Before execution |
 | `/gsd:execute <slug>` | Execute plans for a feature or capability | After planning, or to resume interrupted execution |
 | `/gsd:review <feat>` | Code review by 4 specialized reviewers + synthesizer | Auto-chains from execute, or run standalone |
@@ -339,57 +407,118 @@ All artifacts live in `.planning/refinement/`:
 
 ## Requirements Model
 
-GSD uses a 3-layer requirements model that structures requirements by audience and detail level. Requirements populate FEATURE.md directly.
+GSD uses a two-level requirements model: **capability contracts** define primitives, **feature specifications** define how those primitives compose into user-facing behavior.
 
-### Three Layers
+### Capability Contracts
 
-| Layer | Code | Audience | Example |
-|-------|------|----------|---------|
-| **End-User Stories** | EU | Users | "User can log in with email and password" |
-| **Functional Behavior** | FN | Developers | "Login endpoint validates email format and returns JWT" |
-| **Technical Constraints** | TC | Architects | "JWT uses RS256 with 15-min expiry, refresh via httpOnly cookie" |
+Every capability defines a formal contract in CAPABILITY.md with three required sections:
 
-### How They Work
+| Section | What It Defines | Example |
+|---------|----------------|---------|
+| **Receives** | What inputs this capability accepts | `{ email: string, password: string }` |
+| **Returns** | What outputs this capability produces | `{ token: JWT, refresh: httpOnly cookie }` |
+| **Rules** | Invariants and constraints governing behavior | "Token expires after 15 minutes, RS256 signing" |
 
-**EU requirements** define what users can do. They're testable from a user's perspective.
+Contract completeness is checked by `upstream-gaps` — a feature composing a capability with missing contract sections gets flagged before planning.
 
-**FN requirements** define how the system behaves. They're testable from an API/integration perspective.
+### Feature Specifications
 
-**TC requirements** define implementation constraints. They're testable from a code/architecture perspective.
+Every feature defines its specification in FEATURE.md:
 
-Each feature's FEATURE.md contains all three layers. The lens affects which layer gets the most attention:
-- **debug**: TC layer (technical root cause)
-- **new**: All three layers equally
-- **enhance**: EU + FN layers (what changes for users)
-- **refactor**: TC layer (structural improvements)
+| Section | What It Defines | Example |
+|---------|----------------|---------|
+| **Goal** | One verifiable sentence — what the user gets | "User can log in with email and password" |
+| **Flow** | Ordered capability invocations with branches | "1. auth: validate → 2. session: create → On failure: show error" |
+| **composes[]** | Which capabilities this feature orchestrates | `[auth, session-management]` |
+| **User-Facing Failures** | What the user sees when a composed capability fails | "auth timeout → 'Service unavailable, try again'" |
+| **Context** | Data handoffs between composed capabilities | "auth returns JWT → session stores in httpOnly cookie" |
+
+### How Review Maps to Requirements
+
+Four specialized reviewers each check from a different perspective:
+
+| Reviewer | Traces Against | From |
+|----------|---------------|------|
+| **End-user** | Goal + User-Facing Failures | FEATURE.md |
+| **Functional** | Flow + Context (handoff contracts) | FEATURE.md |
+| **Technical** | Composed capability contracts (Receives/Returns/Rules) | CAPABILITY.md |
+| **Quality** | DRY, KISS, complexity, dependencies | Code |
+
+The framing lens affects which reviewer's findings carry the most weight:
+- **debug**: Technical reviewer (root cause in capability contracts)
+- **new**: All four equally
+- **enhance**: End-user + Functional (what changes for users)
+- **refactor**: Technical + Quality (structural improvements)
 
 ---
 
 ## Focus Groups
 
-Focus groups replace milestones as the sequencing mechanism. They're lightweight, DAG-based, and operate at the feature level.
+Focus groups are the sequencing mechanism. They use the dependency graph for wave ordering and mgrep for gap detection.
 
 ### What They Are
 
-A focus group is a set of features from one or more capabilities, ordered by their dependencies. Running `/gsd:focus <cap>` analyzes feature dependencies and creates an execution sequence.
+A focus group is a set of features from one or more capabilities, ordered by the dependency graph. Running `/gsd:focus <cap>` queries graph waves, validates upstream readiness, and creates an execution sequence.
 
 ### How They Work
 
 ```
 /gsd:focus Authentication
   |
-  Analyzes feature dependencies:
-    JWT Setup (no deps)
-    Registration (depends on JWT Setup)
-    Password Reset (depends on Registration)
+  1. Check SEQUENCE.md staleness (rebuild if needed)
+  2. Q&A: name, goal, scope
+  3. Query graph waves for dependency ordering
+  4. mgrep semantic gap scan:
+       Shared semantic surface WITHOUT composes[] overlap
+       → surface as "possible undeclared capability"
+  5. Upstream contract validation:
+       upstream-gaps per feature → surface status + contract gaps
+  6. Overlap detection against existing focus groups
+  7. Priority ordering (wave constraints + user preference)
   |
   Creates focus group:
-    Wave 1: JWT Setup
-    Wave 2: Registration
-    Wave 3: Password Reset
+    Wave 1: JWT Setup (all deps verified, contract complete)
+    Wave 2: Registration (depends on JWT Setup)
+    Wave 3: Password Reset (depends on Registration)
 ```
 
 Features within the same wave can be planned and executed in parallel. Features in later waves wait for their dependencies.
+
+### Gap Detection
+
+Focus creation runs two types of gap detection:
+
+- **mgrep semantic scan**: Finds features with shared behavioral surface area but no `composes[]` overlap — signals a possible undeclared capability
+- **upstream-gaps check**: For each feature, verifies composed capabilities are both status-ready (verified/complete) AND contract-complete (Receives/Returns/Rules sections present)
+
+---
+
+## External Tool Integration
+
+GSD agents use three external tools for live information beyond the codebase:
+
+| Tool | What It Does | When To Use |
+|------|-------------|-------------|
+| **Context7** | Retrieves current library documentation (APIs, signatures, deprecation status) | Any library API question — authoritative and version-specific |
+| **WebSearch** | Searches current community knowledge (bugs, workarounds, patterns) | Known issues, ecosystem sentiment, breaking changes |
+| **WebFetch** | Fetches specific URLs (changelogs, RFCs, issue threads) | When you have a URL from search results or doc links |
+| **mgrep** | Semantic code search via MixedBread embeddings | Gap detection, scope validation, call site discovery |
+
+### Where Each Tool Is Used
+
+| Agent/Workflow | Context7 | WebSearch | WebFetch | mgrep |
+|---------------|----------|-----------|----------|-------|
+| Research agents (all 6) | Library APIs | Ecosystem patterns | Specific URLs | via `<semantic_matches>` context |
+| Planner | Method signatures | -- | -- | via `<semantic_scope>` context |
+| Executor | API verification | Error diagnosis | Error discussions | -- |
+| Verifier | Contract vs library behavior | -- | -- | -- |
+| Review (technical) | Constraint verification | Known issues | -- | via `<semantic_call_sites>` context |
+| Focus workflow | -- | -- | -- | Undeclared capability detection |
+| Coherence report | -- | -- | -- | Semantic coupling scan |
+| Plan workflow | -- | -- | -- | Scope validation |
+| Review workflow | -- | -- | -- | Call site discovery |
+
+**Note:** mgrep is a skill (main conversation only). Agents receive mgrep results via XML context blocks assembled by orchestrating workflows — they interpret results, they don't invoke mgrep directly.
 
 ---
 
@@ -457,11 +586,13 @@ GSD stores project settings in `.planning/config.json`. Configure during `/gsd:i
 ```bash
 /gsd:init                              # Answer questions, configure, approve roadmap
 /clear
-/gsd:discuss-capability Authentication  # Define capability scope
-/gsd:discuss-feature auth/jwt-login     # Lock in preferences
-/gsd:focus Authentication               # Create focus group
+/gsd:discuss-capability Authentication  # Define capability scope + contract
+/gsd:discuss-feature jwt-login          # Lock in preferences + composes[]
 /clear
-/gsd:new auth/jwt-login                 # Frame the work
+/gsd:sequence                          # Build dependency graph -> SEQUENCE.md
+/gsd:focus Authentication               # Create focus group (graph-driven ordering)
+/clear
+/gsd:new jwt-login                     # Frame the work
 /clear
 /gsd:plan jwt-login                     # Research + plan + execute + review + doc
 /clear
@@ -544,12 +675,14 @@ Set `commit_docs: false` during `/gsd:init`. Add `.planning/` to your `.gitignor
 
 ## Project File Structure
 
+Capabilities and features live in separate top-level directories. Features reference capabilities via `composes[]` frontmatter — they are not nested.
+
 ```
 .planning/
   PROJECT.md                    # Project vision and context
-  REQUIREMENTS.md               # 3-layer requirements (EU/FN/TC) with IDs
   ROADMAP.md                    # Capability/feature breakdown with status
   STATE.md                      # Decisions, blockers, session memory
+  SEQUENCE.md                   # Dependency graph output (generated by /gsd:sequence)
   config.json                   # Workflow configuration
   research/                     # Domain research from /gsd:init
   codebase/                     # Brownfield codebase mapping (auto-generated)
@@ -562,18 +695,18 @@ Set `commit_docs: false` during `/gsd:init`. Add `.planning/` to your `.gitignor
     dependency-graph.md         # Cross-capability dependency table
     findings/FINDING-{NNN}.md   # Individual coherence finding cards
     pairs/{A}__{B}.complete     # Checkpoint markers for resume
-  capabilities/
+  capabilities/                 # Primitives with formal contracts
     {cap-name}/
-      CAPABILITY.md             # Capability definition and scope
-      BRIEF.md                  # Discovery Brief from framing (debug/new/enhance/refactor)
-      features/
-        {feat-name}/
-          FEATURE.md            # Feature definition with EU/FN/TC requirements
-          CONTEXT.md            # Implementation preferences from /gsd:discuss-feature
-          RESEARCH.md           # Ecosystem research findings
-          research/             # Individual gatherer outputs (6 files)
-          {nn}-PLAN.md          # Executable plans (01-PLAN.md, 02-PLAN.md, ...)
-          {nn}-SUMMARY.md       # Execution outcomes per plan
-          doc-report.md         # Doc recommendations (retained after commit)
-          review/               # Review traces, synthesis, decisions (ephemeral)
+      CAPABILITY.md             # Contract: Receives, Returns, Rules, Failure Behavior
+      BRIEF.md                  # Discovery Brief from framing
+  features/                     # Shippable units that compose capabilities
+    {feat-name}/
+      FEATURE.md                # Goal, Flow, composes[], User-Facing Failures, Context
+      CONTEXT.md                # Implementation preferences from /gsd:discuss-feature
+      RESEARCH.md               # Ecosystem research findings
+      research/                 # Individual gatherer outputs (6 files)
+      {nn}-PLAN.md              # Executable plans (01-PLAN.md, 02-PLAN.md, ...)
+      {nn}-SUMMARY.md           # Execution outcomes per plan
+      doc-report.md             # Doc recommendations (retained after commit)
+      review/                   # Review traces, synthesis, decisions (ephemeral)
 ```

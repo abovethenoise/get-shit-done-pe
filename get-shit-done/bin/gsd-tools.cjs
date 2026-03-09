@@ -4,7 +4,7 @@
  * GSD Tools — CLI utility for GSD workflow operations
  *
  * Replaces repetitive inline bash patterns across ~50 GSD command/workflow/agent files.
- * Centralizes: config parsing, phase lookup, git commits, state progression.
+ * Centralizes: config parsing, git commits, state progression.
  *
  * Usage: node gsd-tools.cjs <command> [args] [--raw]
  *
@@ -17,14 +17,6 @@
  *   commit <message> [--files f1 f2]   Commit planning docs
  *   summary-extract <path> [--fields]  Extract structured data from SUMMARY.md
  *   state-snapshot                     Structured parse of STATE.md
- *
- * Roadmap Operations:
- *   roadmap get-phase <phase>          Extract phase section from ROADMAP.md
- *   roadmap analyze                    Full roadmap parse with disk status
- *   roadmap update-plan-progress <N>   Update progress table row from disk
- *
- * Requirements Operations:
- *   requirements mark-complete <ids>   Mark requirement IDs as complete
  *
  * Progress:
  *   progress [json|table|bar]          Render progress in various formats
@@ -41,7 +33,7 @@
  *
  * State Progression:
  *   state advance-plan                 Increment plan counter
- *   state record-metric --phase N      Record execution metrics
+ *   state record-metric --target X     Record execution metrics
  *   state update-progress              Recalculate progress bar
  *   state add-decision --summary "..."  Add decision to STATE.md
  *   state add-blocker --text "..."     Add blocker
@@ -94,11 +86,10 @@ const fs = require('fs');
 const path = require('path');
 const { error } = require('./lib/core.cjs');
 const state = require('./lib/state.cjs');
-const roadmap = require('./lib/roadmap.cjs');
 const verify = require('./lib/verify.cjs');
 const config = require('./lib/config.cjs');
 const template = require('./lib/template.cjs');
-const milestone = require('./lib/milestone.cjs');
+
 const commands = require('./lib/commands.cjs');
 const init = require('./lib/init.cjs');
 const frontmatter = require('./lib/frontmatter.cjs');
@@ -136,7 +127,7 @@ async function main() {
   const command = args[0];
 
   if (!command) {
-    error('Usage: gsd-tools <command> [args] [--raw] [--cwd <path>]\nCommands: state, commit, verify, frontmatter, template, config-get, config-set, init, plan-validate, progress, roadmap, requirements, summary-extract, state-snapshot, slug-resolve, capability-create, capability-list, capability-status, capability-validate, feature-create, feature-list, feature-status, feature-validate, gate-check, graph-build, graph-query');
+    error('Usage: gsd-tools <command> [args] [--raw] [--cwd <path>]\nCommands: state, commit, verify, frontmatter, template, config-get, config-set, init, plan-validate, progress, summary-extract, state-snapshot, slug-resolve, capability-create, capability-list, capability-status, capability-validate, feature-create, feature-list, feature-status, feature-validate, gate-check, graph-build, graph-query');
   }
 
   switch (command) {
@@ -163,13 +154,13 @@ async function main() {
       } else if (subcommand === 'advance-plan') {
         state.cmdStateAdvancePlan(cwd, raw);
       } else if (subcommand === 'record-metric') {
-        const phaseIdx = args.indexOf('--phase');
+        const targetIdx = args.indexOf('--target');
         const planIdx = args.indexOf('--plan');
         const durationIdx = args.indexOf('--duration');
         const tasksIdx = args.indexOf('--tasks');
         const filesIdx = args.indexOf('--files');
         state.cmdStateRecordMetric(cwd, {
-          phase: phaseIdx !== -1 ? args[phaseIdx + 1] : null,
+          target: targetIdx !== -1 ? args[targetIdx + 1] : null,
           plan: planIdx !== -1 ? args[planIdx + 1] : null,
           duration: durationIdx !== -1 ? args[durationIdx + 1] : null,
           tasks: tasksIdx !== -1 ? args[tasksIdx + 1] : null,
@@ -178,13 +169,13 @@ async function main() {
       } else if (subcommand === 'update-progress') {
         state.cmdStateUpdateProgress(cwd, raw);
       } else if (subcommand === 'add-decision') {
-        const phaseIdx = args.indexOf('--phase');
+        const targetIdx = args.indexOf('--target');
         const summaryIdx = args.indexOf('--summary');
         const summaryFileIdx = args.indexOf('--summary-file');
         const rationaleIdx = args.indexOf('--rationale');
         const rationaleFileIdx = args.indexOf('--rationale-file');
         state.cmdStateAddDecision(cwd, {
-          phase: phaseIdx !== -1 ? args[phaseIdx + 1] : null,
+          target: targetIdx !== -1 ? args[targetIdx + 1] : null,
           summary: summaryIdx !== -1 ? args[summaryIdx + 1] : null,
           summary_file: summaryFileIdx !== -1 ? args[summaryFileIdx + 1] : null,
           rationale: rationaleIdx !== -1 ? args[rationaleIdx + 1] : '',
@@ -224,19 +215,15 @@ async function main() {
       const subcommand = args[1];
       if (subcommand === 'fill') {
         const templateType = args[2];
-        const phaseIdx = args.indexOf('--phase');
-        const planIdx = args.indexOf('--plan');
         const nameIdx = args.indexOf('--name');
-        const typeIdx = args.indexOf('--type');
-        const waveIdx = args.indexOf('--wave');
+        const slugIdx = args.indexOf('--slug');
+        const lensIdx = args.indexOf('--lens');
         const fieldsIdx = args.indexOf('--fields');
+        const fields = fieldsIdx !== -1 ? JSON.parse(args[fieldsIdx + 1]) : {};
         template.cmdTemplateFill(cwd, templateType, {
-          phase: phaseIdx !== -1 ? args[phaseIdx + 1] : null,
-          plan: planIdx !== -1 ? args[planIdx + 1] : null,
-          name: nameIdx !== -1 ? args[nameIdx + 1] : null,
-          type: typeIdx !== -1 ? args[typeIdx + 1] : 'execute',
-          wave: waveIdx !== -1 ? args[waveIdx + 1] : '1',
-          fields: fieldsIdx !== -1 ? JSON.parse(args[fieldsIdx + 1]) : {},
+          name: nameIdx !== -1 ? args[nameIdx + 1] : (fields.capability || fields.feature || null),
+          slug: slugIdx !== -1 ? args[slugIdx + 1] : null,
+          lens: lensIdx !== -1 ? args[lensIdx + 1] : (fields.lens || null),
         }, raw);
       } else {
         error('Unknown template subcommand. Available: fill');
@@ -275,30 +262,6 @@ async function main() {
 
     case 'config-get': {
       config.cmdConfigGet(cwd, args[1], raw);
-      break;
-    }
-
-    case 'roadmap': {
-      const subcommand = args[1];
-      if (subcommand === 'get-phase') {
-        roadmap.cmdRoadmapGetPhase(cwd, args[2], raw);
-      } else if (subcommand === 'analyze') {
-        roadmap.cmdRoadmapAnalyze(cwd, raw);
-      } else if (subcommand === 'update-plan-progress') {
-        roadmap.cmdRoadmapUpdatePlanProgress(cwd, args[2], raw);
-      } else {
-        error('Unknown roadmap subcommand. Available: get-phase, analyze, update-plan-progress');
-      }
-      break;
-    }
-
-    case 'requirements': {
-      const subcommand = args[1];
-      if (subcommand === 'mark-complete') {
-        milestone.cmdRequirementsMarkComplete(cwd, args.slice(2), raw);
-      } else {
-        error('Unknown requirements subcommand. Available: mark-complete');
-      }
       break;
     }
 

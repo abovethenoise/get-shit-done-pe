@@ -4,7 +4,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { loadConfig, getMilestoneInfo, output, error } = require('./core.cjs');
+const { loadConfig, output, error } = require('./core.cjs');
 const { extractFrontmatter, reconstructFrontmatter } = require('./frontmatter.cjs');
 
 function cmdStateLoad(cwd, raw) {
@@ -170,11 +170,11 @@ function cmdStateAdvancePlan(cwd, raw) {
 
   let content = fs.readFileSync(statePath, 'utf-8');
   const currentPlan = parseInt(stateExtractField(content, 'Current Plan'), 10);
-  const totalPlans = parseInt(stateExtractField(content, 'Total Plans in Phase'), 10);
+  const totalPlans = parseInt(stateExtractField(content, 'Total Plans'), 10);
   const today = new Date().toISOString().split('T')[0];
 
   if (isNaN(currentPlan) || isNaN(totalPlans)) {
-    output({ error: 'Cannot parse Current Plan or Total Plans in Phase from STATE.md' }, raw);
+    output({ error: 'Cannot parse Current Plan or Total Plans from STATE.md' }, raw);
     return;
   }
 
@@ -183,7 +183,7 @@ function cmdStateAdvancePlan(cwd, raw) {
   const activeFeature = stateExtractField(content, 'Active feature');
 
   if (currentPlan >= totalPlans) {
-    content = stateReplaceField(content, 'Status', 'Phase complete — ready for verification') || content;
+    content = stateReplaceField(content, 'Status', 'Complete — ready for verification') || content;
     content = stateReplaceField(content, 'Last Activity', today) || content;
     writeStateMd(statePath, content, cwd);
     output({ advanced: false, reason: 'last_plan', current_plan: currentPlan, total_plans: totalPlans, status: 'ready_for_verification', active_capability: activeCapability, active_feature: activeFeature }, raw, 'false');
@@ -202,10 +202,10 @@ function cmdStateRecordMetric(cwd, options, raw) {
   if (!fs.existsSync(statePath)) { output({ error: 'STATE.md not found' }, raw); return; }
 
   let content = fs.readFileSync(statePath, 'utf-8');
-  const { phase, plan, duration, tasks, files } = options;
+  const { target, plan, duration, tasks, files } = options;
 
-  if (!phase || !plan || !duration) {
-    output({ error: 'phase, plan, and duration required' }, raw);
+  if (!target || !plan || !duration) {
+    output({ error: 'target, plan, and duration required' }, raw);
     return;
   }
 
@@ -215,7 +215,7 @@ function cmdStateRecordMetric(cwd, options, raw) {
 
   if (metricsMatch) {
     let tableBody = metricsMatch[2].trimEnd();
-    const newRow = `| Phase ${phase} P${plan} | ${duration} | ${tasks || '-'} tasks | ${files || '-'} files |`;
+    const newRow = `| ${target} P${plan} | ${duration} | ${tasks || '-'} tasks | ${files || '-'} files |`;
 
     if (tableBody.trim() === '' || tableBody.includes('None yet')) {
       tableBody = newRow;
@@ -225,7 +225,7 @@ function cmdStateRecordMetric(cwd, options, raw) {
 
     content = content.replace(metricsPattern, (_match, header) => `${header}${tableBody}\n`);
     writeStateMd(statePath, content, cwd);
-    output({ recorded: true, phase, plan, duration }, raw, 'true');
+    output({ recorded: true, target, plan, duration }, raw, 'true');
   } else {
     output({ recorded: false, reason: 'Performance Metrics section not found in STATE.md' }, raw, 'false');
   }
@@ -237,24 +237,11 @@ function cmdStateUpdateProgress(cwd, raw) {
 
   let content = fs.readFileSync(statePath, 'utf-8');
 
-  // Count summaries across all phases (v1) and capabilities/features (v2)
-  const phasesDir = path.join(cwd, '.planning', 'phases');
-  const capabilitiesDir = path.join(cwd, '.planning', 'capabilities');
+  // Count summaries across all features
   let totalPlans = 0;
   let totalSummaries = 0;
 
-  // v1: count from phases/
-  if (fs.existsSync(phasesDir)) {
-    const phaseDirs = fs.readdirSync(phasesDir, { withFileTypes: true })
-      .filter(e => e.isDirectory()).map(e => e.name);
-    for (const dir of phaseDirs) {
-      const files = fs.readdirSync(path.join(phasesDir, dir));
-      totalPlans += files.filter(f => f.match(/-PLAN\.md$/i)).length;
-      totalSummaries += files.filter(f => f.match(/-SUMMARY\.md$/i)).length;
-    }
-  }
-
-  // v2: also count from .planning/features/*/
+  // Count from .planning/features/*/
   const topFeaturesDir = path.join(cwd, '.planning', 'features');
   if (fs.existsSync(topFeaturesDir)) {
     try {
@@ -289,7 +276,7 @@ function cmdStateAddDecision(cwd, options, raw) {
   const statePath = path.join(cwd, '.planning', 'STATE.md');
   if (!fs.existsSync(statePath)) { output({ error: 'STATE.md not found' }, raw); return; }
 
-  const { phase, summary, summary_file, rationale, rationale_file } = options;
+  const { target, summary, summary_file, rationale, rationale_file } = options;
   let summaryText = null;
   let rationaleText = '';
 
@@ -304,7 +291,7 @@ function cmdStateAddDecision(cwd, options, raw) {
   if (!summaryText) { output({ error: 'summary required' }, raw); return; }
 
   let content = fs.readFileSync(statePath, 'utf-8');
-  const entry = `- [Phase ${phase || '?'}]: ${summaryText}${rationaleText ? ` — ${rationaleText}` : ''}`;
+  const entry = `- [${target || 'general'}]: ${summaryText}${rationaleText ? ` — ${rationaleText}` : ''}`;
 
   // Find Decisions section (various heading patterns)
   const sectionPattern = /(###?\s*(?:Decisions|Decisions Made|Accumulated.*Decisions)\s*\n)([\s\S]*?)(?=\n###?|\n##[^#]|$)/i;
@@ -409,26 +396,22 @@ function cmdStateSnapshot(cwd, raw) {
   };
 
   // Extract basic fields
-  const currentPhase = extractField('Current Phase');
-  const currentPhaseName = extractField('Current Phase Name');
-  const totalPhasesRaw = extractField('Total Phases');
   const currentPlan = extractField('Current Plan');
-  const totalPlansRaw = extractField('Total Plans in Phase');
+  const totalPlansRaw = extractField('Total Plans');
   const status = extractField('Status');
   const progressRaw = extractField('Progress');
   const lastActivity = extractField('Last Activity');
   const lastActivityDesc = extractField('Last Activity Description');
   const pausedAt = extractField('Paused At');
 
-  // v2 capability/feature fields
+  // Capability/feature fields
   const activeCapabilitySnap = extractField('Active capability');
   const activeFeatureSnap = extractField('Active feature');
   const pipelinePositionSnap = extractField('Pipeline position');
   const lastAgentSummarySnap = extractField('Last agent summary');
 
   // Parse numeric fields
-  const totalPhases = totalPhasesRaw ? parseInt(totalPhasesRaw, 10) : null;
-  const totalPlansInPhase = totalPlansRaw ? parseInt(totalPlansRaw, 10) : null;
+  const totalPlans = totalPlansRaw ? parseInt(totalPlansRaw, 10) : null;
   const progressPercent = progressRaw ? parseInt(progressRaw.replace('%', ''), 10) : null;
 
   // Extract decisions table
@@ -441,7 +424,7 @@ function cmdStateSnapshot(cwd, raw) {
       const cells = row.split('|').map(c => c.trim()).filter(Boolean);
       if (cells.length >= 3) {
         decisions.push({
-          phase: cells[0],
+          target: cells[0],
           summary: cells[1],
           rationale: cells[2],
         });
@@ -480,12 +463,8 @@ function cmdStateSnapshot(cwd, raw) {
   }
 
   const result = {
-    // v1 fields
-    current_phase: currentPhase,
-    current_phase_name: currentPhaseName,
-    total_phases: totalPhases,
     current_plan: currentPlan,
-    total_plans_in_phase: totalPlansInPhase,
+    total_plans: totalPlans,
     status,
     progress_percent: progressPercent,
     last_activity: lastActivity,
@@ -494,7 +473,6 @@ function cmdStateSnapshot(cwd, raw) {
     blockers,
     paused_at: pausedAt,
     session,
-    // v2 fields
     active_capability: activeCapabilitySnap,
     active_feature: activeFeatureSnap,
     pipeline_position: pipelinePositionSnap,
@@ -518,11 +496,8 @@ function buildStateFrontmatter(bodyContent, cwd) {
     return match ? match[1].trim() : null;
   };
 
-  const currentPhase = extractField('Current Phase');
-  const currentPhaseName = extractField('Current Phase Name');
   const currentPlan = extractField('Current Plan');
-  const totalPhasesRaw = extractField('Total Phases');
-  const totalPlansRaw = extractField('Total Plans in Phase');
+  const totalPlansRaw = extractField('Total Plans');
   const status = extractField('Status');
   const progressRaw = extractField('Progress');
   const lastActivity = extractField('Last Activity');
@@ -537,41 +512,31 @@ function buildStateFrontmatter(bodyContent, cwd) {
   const pipelinePosition = extractField('Pipeline position');
   const lastAgentSummary = extractField('Last agent summary');
 
-  let milestone = null;
-  let milestoneName = null;
-  if (cwd) {
-    try {
-      const info = getMilestoneInfo(cwd);
-      milestone = info.version;
-      milestoneName = info.name;
-    } catch {}
-  }
-
-  let totalPhases = totalPhasesRaw ? parseInt(totalPhasesRaw, 10) : null;
-  let completedPhases = null;
   let totalPlans = totalPlansRaw ? parseInt(totalPlansRaw, 10) : null;
   let completedPlans = null;
+  let totalFeatures = null;
+  let completedFeatures = null;
 
   if (cwd) {
     try {
-      const phasesDir = path.join(cwd, '.planning', 'phases');
-      if (fs.existsSync(phasesDir)) {
-        const phaseDirs = fs.readdirSync(phasesDir, { withFileTypes: true })
+      const featuresDir = path.join(cwd, '.planning', 'features');
+      if (fs.existsSync(featuresDir)) {
+        const featDirs = fs.readdirSync(featuresDir, { withFileTypes: true })
           .filter(e => e.isDirectory()).map(e => e.name);
         let diskTotalPlans = 0;
         let diskTotalSummaries = 0;
-        let diskCompletedPhases = 0;
+        let diskCompletedFeatures = 0;
 
-        for (const dir of phaseDirs) {
-          const files = fs.readdirSync(path.join(phasesDir, dir));
+        for (const dir of featDirs) {
+          const files = fs.readdirSync(path.join(featuresDir, dir));
           const plans = files.filter(f => f.match(/-PLAN\.md$/i)).length;
           const summaries = files.filter(f => f.match(/-SUMMARY\.md$/i)).length;
           diskTotalPlans += plans;
           diskTotalSummaries += summaries;
-          if (plans > 0 && summaries >= plans) diskCompletedPhases++;
+          if (plans > 0 && summaries >= plans) diskCompletedFeatures++;
         }
-        if (totalPhases === null) totalPhases = phaseDirs.length;
-        completedPhases = diskCompletedPhases;
+        totalFeatures = featDirs.length;
+        completedFeatures = diskCompletedFeatures;
         totalPlans = diskTotalPlans;
         completedPlans = diskTotalSummaries;
       }
@@ -605,10 +570,6 @@ function buildStateFrontmatter(bodyContent, cwd) {
 
   const fm = { gsd_state_version: '1.0' };
 
-  if (milestone) fm.milestone = milestone;
-  if (milestoneName) fm.milestone_name = milestoneName;
-  if (currentPhase) fm.current_phase = currentPhase;
-  if (currentPhaseName) fm.current_phase_name = currentPhaseName;
   if (currentPlan) fm.current_plan = currentPlan;
   fm.status = normalizedStatus;
   if (stoppedAt) fm.stopped_at = stoppedAt;
@@ -624,8 +585,8 @@ function buildStateFrontmatter(bodyContent, cwd) {
   if (lastActivity) fm.last_activity = lastActivity;
 
   const progress = {};
-  if (totalPhases !== null) progress.total_phases = totalPhases;
-  if (completedPhases !== null) progress.completed_phases = completedPhases;
+  if (totalFeatures !== null) progress.total_features = totalFeatures;
+  if (completedFeatures !== null) progress.completed_features = completedFeatures;
   if (totalPlans !== null) progress.total_plans = totalPlans;
   if (completedPlans !== null) progress.completed_plans = completedPlans;
   if (progressPercent !== null) progress.percent = progressPercent;
@@ -678,65 +639,60 @@ function cmdStateGetActiveFocus(cwd, raw) {
   const statePath = path.join(cwd, '.planning', 'STATE.md');
   const roadmapPath = path.join(cwd, '.planning', 'ROADMAP.md');
 
-  // Read STATE.md for active focus group name
-  let focusName = null;
+  // Read STATE.md for active focus group names
+  const focusNames = [];
   try {
     const stateContent = fs.readFileSync(statePath, 'utf-8');
     const sectionMatch = stateContent.match(/##\s*Active Focus Groups?[ \t]*\n([\s\S]*?)(?=\n##|$)/i);
     if (sectionMatch) {
       const sectionBody = sectionMatch[1].trim();
-      // First non-empty line that isn't a placeholder
       const lines = sectionBody.split('\n').map(l => l.trim()).filter(l => l && !l.match(/^none/i));
-      if (lines.length > 0) {
-        // Strip list markers and checkbox markers
-        let rawName = lines[0].replace(/^[-*]\s*(\[.\]\s*)?/, '').trim();
-        // Strip trailing ": feature-list" if present (STATE.md may list features inline)
+      for (const line of lines) {
+        let rawName = line.replace(/^[-*]\s*(\[.\]\s*)?/, '').trim();
         const colonIdx = rawName.indexOf(':');
         if (colonIdx > 0) rawName = rawName.substring(0, colonIdx).trim();
-        focusName = rawName;
+        if (rawName && !focusNames.includes(rawName)) focusNames.push(rawName);
       }
     }
   } catch { /* STATE.md not found */ }
 
-  if (!focusName) {
-    output({ active_focus: null }, raw, '');
+  if (focusNames.length === 0) {
+    output({ active_focus: [] }, raw, '');
     return;
   }
 
-  // Parse ROADMAP.md for focus group detail
-  let goal = null;
-  const features = [];
+  // Parse ROADMAP.md for focus group details
+  let roadmapContent = null;
   try {
-    const roadmapContent = fs.readFileSync(roadmapPath, 'utf-8');
-    const focusEscaped = focusName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const focusPattern = new RegExp(`###\\s*Focus:\\s*${focusEscaped}\\s*\\n([\\s\\S]*?)(?=\\n###|\\n##[^#]|$)`, 'i');
-    const focusMatch = roadmapContent.match(focusPattern);
-    if (focusMatch) {
-      const body = focusMatch[1];
-      const goalMatch = body.match(/\*\*Goal:\*\*\s*(.+)/i);
-      if (goalMatch) goal = goalMatch[1].trim();
+    roadmapContent = fs.readFileSync(roadmapPath, 'utf-8');
+  } catch { /* ROADMAP.md not found */ }
 
-      // Extract feature slugs from priority order or status checklist
-      const listItems = body.match(/^[-*\d.]+\s*\[?\s*[x ]?\s*\]?\s*(.+)$/gim) || [];
-      for (const item of listItems) {
-        // Skip bold field patterns like **Goal:**, **Status:**, **Priority Order:**
-        if (/\*\*\w+.*:\*\*/.test(item)) continue;
-        // Extract the slug part (before -> depends: or parenthetical)
-        const cleaned = item.replace(/^[-*\d.]+\s*\[?\s*[x ]?\s*\]?\s*/, '').split(/\s*->\s*|\s*\(/)[0].trim();
-        if (cleaned && !cleaned.startsWith('**') && !features.includes(cleaned)) {
-          features.push(cleaned);
+  const groups = focusNames.map(name => {
+    let goal = null;
+    const features = [];
+    if (roadmapContent) {
+      const focusEscaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const focusPattern = new RegExp(`###\\s*Focus:\\s*${focusEscaped}\\s*\\n([\\s\\S]*?)(?=\\n###|\\n##[^#]|$)`, 'i');
+      const focusMatch = roadmapContent.match(focusPattern);
+      if (focusMatch) {
+        const body = focusMatch[1];
+        const goalMatch = body.match(/\*\*Goal:\*\*\s*(.+)/i);
+        if (goalMatch) goal = goalMatch[1].trim();
+
+        const listItems = body.match(/^[-*\d.]+\s*\[?\s*[x ]?\s*\]?\s*(.+)$/gim) || [];
+        for (const item of listItems) {
+          if (/\*\*\w+.*:\*\*/.test(item)) continue;
+          const cleaned = item.replace(/^[-*\d.]+\s*\[?\s*[x ]?\s*\]?\s*/, '').split(/\s*->\s*|\s*\(/)[0].trim();
+          if (cleaned && !cleaned.startsWith('**') && !features.includes(cleaned)) {
+            features.push(cleaned);
+          }
         }
       }
     }
-  } catch { /* ROADMAP.md not found */ }
+    return { name, goal, features };
+  });
 
-  output({
-    active_focus: {
-      name: focusName,
-      goal,
-      features,
-    },
-  }, raw);
+  output({ active_focus: groups }, raw);
 }
 
 module.exports = {

@@ -11,7 +11,7 @@ allowed-tools:
 ---
 
 <objective>
-Create a focus group via guided Q&A. Focus groups are the v2 replacement for milestones -- lightweight sequencing with dependency tracing and overlap detection.
+Create a focus group via guided Q&A. Focus groups provide lightweight sequencing with dependency tracing and overlap detection.
 
 **Flow:** Q&A (goal, scope) -> slug-resolve each item -> dependency trace (explicit + implicit) -> overlap detection against existing groups -> priority ordering -> write to ROADMAP.md + STATE.md
 </objective>

@@ -168,7 +168,7 @@ Returns JSON: `{ truths: [...], artifacts: [...], key_links: [...] }`
 
 ```yaml
 issue:
-  plan: "01"                       # Which plan (null if phase-level)
+  plan: "01"                       # Which plan (null if target-level)
   dimension: "contract_coverage"   # Which dimension failed
   severity: "blocker"              # blocker | warning | info
   description: "..."

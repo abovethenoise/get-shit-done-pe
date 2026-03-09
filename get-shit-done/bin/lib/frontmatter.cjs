@@ -153,10 +153,10 @@ function parseMustHavesBlock(content, blockName) {
 // ─── Frontmatter CRUD commands ────────────────────────────────────────────────
 
 const FRONTMATTER_SCHEMAS = {
-  plan: { required: ['phase', 'plan', 'type', 'wave', 'depends_on', 'files_modified', 'autonomous', 'must_haves'] },
-  summary: { required: ['phase', 'plan', 'subsystem', 'tags', 'duration', 'completed'] },
-  verification: { required: ['phase', 'verified', 'status', 'score'] },
-  review: { required: ['type', 'feature', 'capability', 'phase', 'reviewer', 'status'] },
+  plan: { required: ['plan', 'type', 'wave', 'depends_on', 'files_modified', 'autonomous', 'must_haves'] },
+  summary: { required: ['plan', 'subsystem', 'tags', 'duration', 'completed'] },
+  verification: { required: ['verified', 'status', 'score'] },
+  review: { required: ['type', 'feature', 'capability', 'reviewer', 'status'] },
 };
 
 function cmdFrontmatterGet(cwd, filePath, field, raw) {

@@ -37,8 +37,6 @@ patterns-established:
   - "Pattern 1: description"
   - "Pattern 2: description"
 
-requirements-completed: []  # REQUIRED — Copy ALL requirement IDs from this plan's `requirements` frontmatter field.
-
 # Metrics
 duration: Xmin
 completed: YYYY-MM-DD

@@ -32,11 +32,8 @@ describe('state-snapshot command', () => {
       path.join(tmpDir, '.planning', 'STATE.md'),
       `# Project State
 
-**Current Phase:** 03
-**Current Phase Name:** API Layer
-**Total Phases:** 6
 **Current Plan:** 03-02
-**Total Plans in Phase:** 3
+**Total Plans:** 3
 **Status:** In progress
 **Progress:** 45%
 **Last Activity:** 2024-01-15
@@ -48,11 +45,8 @@ describe('state-snapshot command', () => {
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
-    assert.strictEqual(output.current_phase, '03', 'current phase extracted');
-    assert.strictEqual(output.current_phase_name, 'API Layer', 'phase name extracted');
-    assert.strictEqual(output.total_phases, 6, 'total phases extracted');
     assert.strictEqual(output.current_plan, '03-02', 'current plan extracted');
-    assert.strictEqual(output.total_plans_in_phase, 3, 'total plans extracted');
+    assert.strictEqual(output.total_plans, 3, 'total plans extracted');
     assert.strictEqual(output.status, 'In progress', 'status extracted');
     assert.strictEqual(output.progress_percent, 45, 'progress extracted');
     assert.strictEqual(output.last_activity, '2024-01-15', 'last activity date extracted');
@@ -63,14 +57,12 @@ describe('state-snapshot command', () => {
       path.join(tmpDir, '.planning', 'STATE.md'),
       `# Project State
 
-**Current Phase:** 01
-
 ## Decisions Made
 
-| Phase | Decision | Rationale |
-|-------|----------|-----------|
-| 01 | Use Prisma | Better DX than raw SQL |
-| 02 | JWT auth | Stateless authentication |
+| Target | Decision | Rationale |
+|--------|----------|-----------|
+| auth/setup | Use Prisma | Better DX than raw SQL |
+| auth/tokens | JWT auth | Stateless authentication |
 `
     );
 
@@ -79,7 +71,7 @@ describe('state-snapshot command', () => {
 
     const output = JSON.parse(result.output);
     assert.strictEqual(output.decisions.length, 2, 'should have 2 decisions');
-    assert.strictEqual(output.decisions[0].phase, '01', 'first decision phase');
+    assert.strictEqual(output.decisions[0].target, 'auth/setup', 'first decision target');
     assert.strictEqual(output.decisions[0].summary, 'Use Prisma', 'first decision summary');
     assert.strictEqual(output.decisions[0].rationale, 'Better DX than raw SQL', 'first decision rationale');
   });
@@ -88,8 +80,6 @@ describe('state-snapshot command', () => {
     fs.writeFileSync(
       path.join(tmpDir, '.planning', 'STATE.md'),
       `# Project State
-
-**Current Phase:** 03
 
 ## Blockers
 
@@ -113,13 +103,11 @@ describe('state-snapshot command', () => {
       path.join(tmpDir, '.planning', 'STATE.md'),
       `# Project State
 
-**Current Phase:** 03
-
 ## Session
 
 **Last Date:** 2024-01-15
-**Stopped At:** Phase 3, Plan 2, Task 1
-**Resume File:** .planning/phases/03-api/03-02-PLAN.md
+**Stopped At:** auth/tokens Plan 2 Task 1
+**Resume File:** .planning/features/auth-tokens/02-PLAN.md
 `
     );
 
@@ -128,8 +116,8 @@ describe('state-snapshot command', () => {
 
     const output = JSON.parse(result.output);
     assert.strictEqual(output.session.last_date, '2024-01-15', 'session date extracted');
-    assert.strictEqual(output.session.stopped_at, 'Phase 3, Plan 2, Task 1', 'stopped at extracted');
-    assert.strictEqual(output.session.resume_file, '.planning/phases/03-api/03-02-PLAN.md', 'resume file extracted');
+    assert.strictEqual(output.session.stopped_at, 'auth/tokens Plan 2 Task 1', 'stopped at extracted');
+    assert.strictEqual(output.session.resume_file, '.planning/features/auth-tokens/02-PLAN.md', 'resume file extracted');
   });
 
   test('handles paused_at field', () => {
@@ -137,8 +125,7 @@ describe('state-snapshot command', () => {
       path.join(tmpDir, '.planning', 'STATE.md'),
       `# Project State
 
-**Current Phase:** 03
-**Paused At:** Phase 3, Plan 1, Task 2 - mid-implementation
+**Paused At:** auth/login Plan 1 Task 2 - mid-implementation
 `
     );
 
@@ -146,7 +133,7 @@ describe('state-snapshot command', () => {
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
-    assert.strictEqual(output.paused_at, 'Phase 3, Plan 1, Task 2 - mid-implementation', 'paused_at extracted');
+    assert.strictEqual(output.paused_at, 'auth/login Plan 1 Task 2 - mid-implementation', 'paused_at extracted');
   });
 
   test('supports --cwd override when command runs outside project root', () => {
@@ -154,7 +141,6 @@ describe('state-snapshot command', () => {
       path.join(tmpDir, '.planning', 'STATE.md'),
       `# Session State
 
-**Current Phase:** 03
 **Status:** Ready to plan
 `
     );
@@ -165,7 +151,6 @@ describe('state-snapshot command', () => {
       assert.ok(result.success, `Command failed: ${result.error}`);
 
       const output = JSON.parse(result.output);
-      assert.strictEqual(output.current_phase, '03', 'should read STATE.md from overridden cwd');
       assert.strictEqual(output.status, 'Ready to plan', 'should parse status from overridden cwd');
     } finally {
       cleanup(outsideDir);
@@ -205,7 +190,7 @@ None
     );
 
     const result = runGsdTools(
-      ['state', 'add-decision', '--phase', '11-01', '--summary', 'Benchmark prices moved from $0.50 to $2.00 to $5.00', '--rationale', 'track cost growth'],
+      ['state', 'add-decision', '--target', 'auth/login', '--summary', 'Benchmark prices moved from $0.50 to $2.00 to $5.00', '--rationale', 'track cost growth'],
       tmpDir
     );
     assert.ok(result.success, `Command failed: ${result.error}`);
@@ -213,7 +198,7 @@ None
     const state = fs.readFileSync(path.join(tmpDir, '.planning', 'STATE.md'), 'utf-8');
     assert.match(
       state,
-      /- \[Phase 11-01\]: Benchmark prices moved from \$0\.50 to \$2\.00 to \$5\.00 — track cost growth/,
+      /- \[auth\/login\]: Benchmark prices moved from \$0\.50 to \$2\.00 to \$5\.00 — track cost growth/,
       'decision entry should preserve literal dollar values'
     );
     assert.strictEqual((state.match(/^## Decisions$/gm) || []).length, 1, 'Decisions heading should not be duplicated');
@@ -260,7 +245,7 @@ None
     fs.writeFileSync(rationalePath, 'Keep exact currency literals for budgeting\n');
 
     const result = runGsdTools(
-      `state add-decision --phase 11-02 --summary-file "${summaryPath}" --rationale-file "${rationalePath}"`,
+      `state add-decision --target auth/tokens --summary-file "${summaryPath}" --rationale-file "${rationalePath}"`,
       tmpDir
     );
     assert.ok(result.success, `Command failed: ${result.error}`);
@@ -268,7 +253,7 @@ None
     const state = fs.readFileSync(path.join(tmpDir, '.planning', 'STATE.md'), 'utf-8');
     assert.match(
       state,
-      /- \[Phase 11-02\]: Price tiers: \$0\.50, \$2\.00, else \$5\.00 — Keep exact currency literals for budgeting/,
+      /- \[auth\/tokens\]: Price tiers: \$0\.50, \$2\.00, else \$5\.00 — Keep exact currency literals for budgeting/,
       'file-based decision input should preserve literal dollar values'
     );
   });
@@ -325,11 +310,8 @@ describe('state json command', () => {
       path.join(tmpDir, '.planning', 'STATE.md'),
       `# Project State
 
-**Current Phase:** 05
-**Current Phase Name:** Deployment
-**Total Phases:** 8
 **Current Plan:** 05-03
-**Total Plans in Phase:** 4
+**Total Plans:** 4
 **Status:** In progress
 **Progress:** 60%
 **Last Activity:** 2026-01-20
@@ -341,8 +323,6 @@ describe('state json command', () => {
 
     const output = JSON.parse(result.output);
     assert.strictEqual(output.gsd_state_version, '1.0', 'should have version 1.0');
-    assert.strictEqual(output.current_phase, '05', 'current phase extracted');
-    assert.strictEqual(output.current_phase_name, 'Deployment', 'phase name extracted');
     assert.strictEqual(output.current_plan, '05-03', 'current plan extracted');
     assert.strictEqual(output.status, 'executing', 'status normalized to executing');
     assert.ok(output.last_updated, 'should have last_updated timestamp');
@@ -356,14 +336,12 @@ describe('state json command', () => {
       path.join(tmpDir, '.planning', 'STATE.md'),
       `---
 gsd_state_version: 1.0
-current_phase: 03
 status: paused
-stopped_at: Plan 2 of Phase 3
+stopped_at: Plan 2 of auth/tokens
 ---
 
 # Project State
 
-**Current Phase:** 03
 **Status:** Paused
 `
     );
@@ -373,9 +351,8 @@ stopped_at: Plan 2 of Phase 3
 
     const output = JSON.parse(result.output);
     assert.strictEqual(output.gsd_state_version, '1.0', 'version from frontmatter');
-    assert.strictEqual(output.current_phase, '03', 'phase from frontmatter');
     assert.strictEqual(output.status, 'paused', 'status from frontmatter');
-    assert.strictEqual(output.stopped_at, 'Plan 2 of Phase 3', 'stopped_at from frontmatter');
+    assert.strictEqual(output.stopped_at, 'Plan 2 of auth/tokens', 'stopped_at from frontmatter');
   });
 
   test('normalizes various status values', () => {
@@ -384,14 +361,14 @@ stopped_at: Plan 2 of Phase 3
       { input: 'Ready to execute', expected: 'executing' },
       { input: 'Paused at Plan 3', expected: 'paused' },
       { input: 'Ready to plan', expected: 'planning' },
-      { input: 'Phase complete — ready for verification', expected: 'verifying' },
-      { input: 'Milestone complete', expected: 'completed' },
+      { input: 'Complete — ready for verification', expected: 'verifying' },
+      { input: 'Feature complete', expected: 'completed' },
     ];
 
     for (const { input, expected } of statusTests) {
       fs.writeFileSync(
         path.join(tmpDir, '.planning', 'STATE.md'),
-        `# State\n\n**Current Phase:** 01\n**Status:** ${input}\n`
+        `# State\n\n**Status:** ${input}\n`
       );
 
       const result = runGsdTools('state json', tmpDir);
@@ -422,7 +399,6 @@ describe('STATE.md frontmatter sync', () => {
       path.join(tmpDir, '.planning', 'STATE.md'),
       `# Project State
 
-**Current Phase:** 02
 **Status:** Ready to execute
 `
     );
@@ -433,8 +409,6 @@ describe('STATE.md frontmatter sync', () => {
     const content = fs.readFileSync(path.join(tmpDir, '.planning', 'STATE.md'), 'utf-8');
     assert.ok(content.startsWith('---\n'), 'should start with frontmatter delimiter');
     assert.ok(content.includes('gsd_state_version: 1.0'), 'should have version field');
-    assert.ok(content.includes('current_phase: 02'), 'frontmatter should have current phase');
-    assert.ok(content.includes('**Current Phase:** 02'), 'body field should be preserved');
     assert.ok(content.includes('**Status:** Executing Plan 1'), 'updated field in body');
   });
 
@@ -443,7 +417,6 @@ describe('STATE.md frontmatter sync', () => {
       path.join(tmpDir, '.planning', 'STATE.md'),
       `# Project State
 
-**Current Phase:** 04
 **Status:** Planning
 **Current Plan:** 04-01
 `
@@ -461,7 +434,6 @@ describe('STATE.md frontmatter sync', () => {
       path.join(tmpDir, '.planning', 'STATE.md'),
       `# Project State
 
-**Current Phase:** 01
 **Status:** Ready to execute
 `
     );
@@ -480,9 +452,6 @@ describe('STATE.md frontmatter sync', () => {
       path.join(tmpDir, '.planning', 'STATE.md'),
       `# Project State
 
-**Current Phase:** 07
-**Current Phase Name:** Production
-**Total Phases:** 10
 **Status:** In progress
 **Current Plan:** 07-05
 **Progress:** 70%
@@ -495,8 +464,6 @@ describe('STATE.md frontmatter sync', () => {
     assert.ok(result.success, `state json failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
-    assert.strictEqual(output.current_phase, '07', 'round-trip: phase preserved');
-    assert.strictEqual(output.current_phase_name, 'Production', 'round-trip: phase name preserved');
     assert.strictEqual(output.status, 'executing', 'round-trip: status normalized');
     assert.ok(output.last_updated, 'round-trip: timestamp present');
   });
@@ -731,7 +698,6 @@ describe('cmdStatePatch and cmdStateUpdate (state patch, state update)', () => {
   const stateMd = [
     '# Project State',
     '',
-    '**Current Phase:** 03',
     '**Status:** In progress',
     '**Last Activity:** 2024-01-15',
   ].join('\n') + '\n';
@@ -747,12 +713,12 @@ describe('cmdStatePatch and cmdStateUpdate (state patch, state update)', () => {
   test('state patch updates multiple fields at once', () => {
     fs.writeFileSync(path.join(tmpDir, '.planning', 'STATE.md'), stateMd);
 
-    const result = runGsdTools('state patch --Status Complete --"Current Phase" 04', tmpDir);
+    const result = runGsdTools('state patch --Status Complete --"Last Activity" 2024-02-01', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const updated = fs.readFileSync(path.join(tmpDir, '.planning', 'STATE.md'), 'utf-8');
     assert.ok(updated.includes('**Status:** Complete'), 'Status should be updated to Complete');
-    assert.ok(updated.includes('**Last Activity:** 2024-01-15'), 'Last Activity should be unchanged');
+    assert.ok(updated.includes('**Last Activity:** 2024-02-01'), 'Last Activity should be updated');
   });
 
   test('state patch reports failed fields that do not exist', () => {
@@ -771,15 +737,14 @@ describe('cmdStatePatch and cmdStateUpdate (state patch, state update)', () => {
   test('state update changes a single field', () => {
     fs.writeFileSync(path.join(tmpDir, '.planning', 'STATE.md'), stateMd);
 
-    const result = runGsdTools('state update Status "Phase complete"', tmpDir);
+    const result = runGsdTools('state update Status "Complete"', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
     assert.strictEqual(output.updated, true, 'updated should be true');
 
     const updated = fs.readFileSync(path.join(tmpDir, '.planning', 'STATE.md'), 'utf-8');
-    assert.ok(updated.includes('**Status:** Phase complete'), 'Status should be updated');
-    assert.ok(updated.includes('**Current Phase:** 03'), 'Current Phase should be unchanged');
+    assert.ok(updated.includes('**Status:** Complete'), 'Status should be updated');
     assert.ok(updated.includes('**Last Activity:** 2024-01-15'), 'Last Activity should be unchanged');
   });
 
@@ -818,7 +783,7 @@ describe('cmdStateAdvancePlan (state advance-plan)', () => {
     '# Project State',
     '',
     '**Current Plan:** 1',
-    '**Total Plans in Phase:** 3',
+    '**Total Plans:** 3',
     '**Status:** Executing',
     '**Last Activity:** 2024-01-10',
   ].join('\n') + '\n';
@@ -867,7 +832,7 @@ describe('cmdStateAdvancePlan (state advance-plan)', () => {
     assert.strictEqual(output.status, 'ready_for_verification', 'status should be ready_for_verification');
 
     const updated = fs.readFileSync(path.join(tmpDir, '.planning', 'STATE.md'), 'utf-8');
-    assert.ok(updated.includes('Phase complete'), 'Status should contain Phase complete');
+    assert.ok(updated.includes('Complete — ready for verification'), 'Status should contain Complete — ready for verification');
   });
 
   test('returns error when STATE.md missing', () => {
@@ -904,7 +869,7 @@ describe('cmdStateRecordMetric (state record-metric)', () => {
     '',
     '| Plan | Duration | Tasks | Files |',
     '|------|----------|-------|-------|',
-    '| Phase 1 P1 | 3min | 2 tasks | 3 files |',
+    '| auth/login P1 | 3min | 2 tasks | 3 files |',
     '',
     '## Session Continuity',
   ].join('\n') + '\n';
@@ -920,15 +885,15 @@ describe('cmdStateRecordMetric (state record-metric)', () => {
   test('appends metric row to existing table', () => {
     fs.writeFileSync(path.join(tmpDir, '.planning', 'STATE.md'), metricsFixture);
 
-    const result = runGsdTools('state record-metric --phase 2 --plan 1 --duration 5min --tasks 3 --files 4', tmpDir);
+    const result = runGsdTools('state record-metric --target auth/tokens --plan 1 --duration 5min --tasks 3 --files 4', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const output = JSON.parse(result.output);
     assert.strictEqual(output.recorded, true, 'recorded should be true');
 
     const updated = fs.readFileSync(path.join(tmpDir, '.planning', 'STATE.md'), 'utf-8');
-    assert.ok(updated.includes('| Phase 2 P1 | 5min | 3 tasks | 4 files |'), 'new row should be present');
-    assert.ok(updated.includes('| Phase 1 P1 | 3min | 2 tasks | 3 files |'), 'existing row should still be present');
+    assert.ok(updated.includes('| auth/tokens P1 | 5min | 3 tasks | 4 files |'), 'new row should be present');
+    assert.ok(updated.includes('| auth/login P1 | 3min | 2 tasks | 3 files |'), 'existing row should still be present');
   });
 
   test('replaces None yet placeholder with first metric', () => {
@@ -945,30 +910,30 @@ describe('cmdStateRecordMetric (state record-metric)', () => {
     ].join('\n') + '\n';
     fs.writeFileSync(path.join(tmpDir, '.planning', 'STATE.md'), noneYetFixture);
 
-    const result = runGsdTools('state record-metric --phase 1 --plan 1 --duration 2min --tasks 1 --files 2', tmpDir);
+    const result = runGsdTools('state record-metric --target auth/login --plan 1 --duration 2min --tasks 1 --files 2', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
 
     const updated = fs.readFileSync(path.join(tmpDir, '.planning', 'STATE.md'), 'utf-8');
     assert.ok(!updated.includes('None yet'), 'None yet placeholder should be removed');
-    assert.ok(updated.includes('| Phase 1 P1 | 2min | 1 tasks | 2 files |'), 'new row should be present');
+    assert.ok(updated.includes('| auth/login P1 | 2min | 1 tasks | 2 files |'), 'new row should be present');
   });
 
   test('returns error when required fields missing', () => {
     fs.writeFileSync(path.join(tmpDir, '.planning', 'STATE.md'), metricsFixture);
 
-    const result = runGsdTools('state record-metric --phase 1', tmpDir);
+    const result = runGsdTools('state record-metric --target auth/login', tmpDir);
     assert.ok(result.success, `Command should exit 0: ${result.error}`);
 
     const output = JSON.parse(result.output);
     assert.ok(output.error !== undefined, 'output should have error field');
     assert.ok(
-      output.error.includes('phase') || output.error.includes('plan') || output.error.includes('duration'),
+      output.error.includes('target') || output.error.includes('plan') || output.error.includes('duration'),
       'error should mention missing required fields'
     );
   });
 
   test('returns error when STATE.md missing', () => {
-    const result = runGsdTools('state record-metric --phase 1 --plan 1 --duration 2min', tmpDir);
+    const result = runGsdTools('state record-metric --target auth/login --plan 1 --duration 2min', tmpDir);
     assert.ok(result.success, `Command should exit 0: ${result.error}`);
 
     const output = JSON.parse(result.output);
@@ -994,16 +959,16 @@ describe('cmdStateUpdateProgress (state update-progress)', () => {
       '# Project State\n\n**Progress:** [░░░░░░░░░░] 0%\n'
     );
 
-    // Phase 01: 1 PLAN + 1 SUMMARY = completed
-    const phase01Dir = path.join(tmpDir, '.planning', 'phases', '01');
-    fs.mkdirSync(phase01Dir, { recursive: true });
-    fs.writeFileSync(path.join(phase01Dir, '01-01-PLAN.md'), '# Plan\n');
-    fs.writeFileSync(path.join(phase01Dir, '01-01-SUMMARY.md'), '# Summary\n');
+    // Feature auth: 1 PLAN + 1 SUMMARY = completed
+    const feat01Dir = path.join(tmpDir, '.planning', 'features', 'auth');
+    fs.mkdirSync(feat01Dir, { recursive: true });
+    fs.writeFileSync(path.join(feat01Dir, '01-PLAN.md'), '# Plan\n');
+    fs.writeFileSync(path.join(feat01Dir, '01-SUMMARY.md'), '# Summary\n');
 
-    // Phase 02: 1 PLAN only = not completed
-    const phase02Dir = path.join(tmpDir, '.planning', 'phases', '02');
-    fs.mkdirSync(phase02Dir, { recursive: true });
-    fs.writeFileSync(path.join(phase02Dir, '02-01-PLAN.md'), '# Plan\n');
+    // Feature api: 1 PLAN only = not completed
+    const feat02Dir = path.join(tmpDir, '.planning', 'features', 'api');
+    fs.mkdirSync(feat02Dir, { recursive: true });
+    fs.writeFileSync(path.join(feat02Dir, '01-PLAN.md'), '# Plan\n');
 
     const result = runGsdTools('state update-progress', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
@@ -1168,14 +1133,14 @@ describe('cmdStateGetActiveFocus (state get active-focus)', () => {
     cleanup(tmpDir);
   });
 
-  test('returns null when STATE.md does not exist', () => {
+  test('returns empty array when STATE.md does not exist', () => {
     const result = runGsdTools(['state', 'get', 'active-focus'], tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
     const output = JSON.parse(result.output);
-    assert.strictEqual(output.active_focus, null);
+    assert.deepStrictEqual(output.active_focus, []);
   });
 
-  test('returns null when STATE.md has no Active Focus Groups section', () => {
+  test('returns empty array when STATE.md has no Active Focus Groups section', () => {
     fs.writeFileSync(
       path.join(tmpDir, '.planning', 'STATE.md'),
       '# State\n\n**Status:** Active\n'
@@ -1183,10 +1148,10 @@ describe('cmdStateGetActiveFocus (state get active-focus)', () => {
     const result = runGsdTools(['state', 'get', 'active-focus'], tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
     const output = JSON.parse(result.output);
-    assert.strictEqual(output.active_focus, null);
+    assert.deepStrictEqual(output.active_focus, []);
   });
 
-  test('returns null when Active Focus Groups section is empty', () => {
+  test('returns empty array when Active Focus Groups section is empty', () => {
     fs.writeFileSync(
       path.join(tmpDir, '.planning', 'STATE.md'),
       '# State\n\n## Active Focus Groups\n\n## Other Section\n'
@@ -1194,7 +1159,7 @@ describe('cmdStateGetActiveFocus (state get active-focus)', () => {
     const result = runGsdTools(['state', 'get', 'active-focus'], tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
     const output = JSON.parse(result.output);
-    assert.strictEqual(output.active_focus, null);
+    assert.deepStrictEqual(output.active_focus, []);
   });
 
   test('strips inline feature list from focus name (colon format)', () => {
@@ -1209,8 +1174,8 @@ describe('cmdStateGetActiveFocus (state get active-focus)', () => {
     const result = runGsdTools(['state', 'get', 'active-focus'], tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
     const output = JSON.parse(result.output);
-    assert.strictEqual(output.active_focus.name, 'my-focus');
-    assert.strictEqual(output.active_focus.goal, 'Test goal');
+    assert.strictEqual(output.active_focus[0].name, 'my-focus');
+    assert.strictEqual(output.active_focus[0].goal, 'Test goal');
   });
 
   test('extracts features from ROADMAP.md without duplicates', () => {
@@ -1234,7 +1199,7 @@ describe('cmdStateGetActiveFocus (state get active-focus)', () => {
     const result = runGsdTools(['state', 'get', 'active-focus'], tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
     const output = JSON.parse(result.output);
-    assert.deepStrictEqual(output.active_focus.features, ['feat-one', 'feat-two']);
+    assert.deepStrictEqual(output.active_focus[0].features, ['feat-one', 'feat-two']);
   });
 
   test('skips bold field patterns in feature extraction', () => {
@@ -1256,8 +1221,7 @@ describe('cmdStateGetActiveFocus (state get active-focus)', () => {
     const result = runGsdTools(['state', 'get', 'active-focus'], tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
     const output = JSON.parse(result.output);
-    // Should only contain feat-x, not **Goal:** or **Priority Order:** or **Status:**
-    assert.deepStrictEqual(output.active_focus.features, ['feat-x']);
+    assert.deepStrictEqual(output.active_focus[0].features, ['feat-x']);
   });
 
   test('returns null goal and empty features when ROADMAP.md missing', () => {
@@ -1268,9 +1232,39 @@ describe('cmdStateGetActiveFocus (state get active-focus)', () => {
     const result = runGsdTools(['state', 'get', 'active-focus'], tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
     const output = JSON.parse(result.output);
-    assert.strictEqual(output.active_focus.name, 'orphan-group');
-    assert.strictEqual(output.active_focus.goal, null);
-    assert.deepStrictEqual(output.active_focus.features, []);
+    assert.strictEqual(output.active_focus[0].name, 'orphan-group');
+    assert.strictEqual(output.active_focus[0].goal, null);
+    assert.deepStrictEqual(output.active_focus[0].features, []);
+  });
+
+  test('returns multiple focus groups from STATE.md', () => {
+    fs.writeFileSync(
+      path.join(tmpDir, '.planning', 'STATE.md'),
+      '## Active Focus Groups\n- auth-sprint\n- payments-sprint\n'
+    );
+    fs.writeFileSync(
+      path.join(tmpDir, '.planning', 'ROADMAP.md'),
+      [
+        '### Focus: auth-sprint',
+        '**Goal:** Ship authentication',
+        '1. auth/login',
+        '2. auth/tokens',
+        '',
+        '### Focus: payments-sprint',
+        '**Goal:** Ship payments',
+        '1. commerce/checkout',
+      ].join('\n')
+    );
+    const result = runGsdTools(['state', 'get', 'active-focus'], tmpDir);
+    assert.ok(result.success, `Command failed: ${result.error}`);
+    const output = JSON.parse(result.output);
+    assert.strictEqual(output.active_focus.length, 2, 'should return 2 focus groups');
+    assert.strictEqual(output.active_focus[0].name, 'auth-sprint');
+    assert.strictEqual(output.active_focus[0].goal, 'Ship authentication');
+    assert.deepStrictEqual(output.active_focus[0].features, ['auth/login', 'auth/tokens']);
+    assert.strictEqual(output.active_focus[1].name, 'payments-sprint');
+    assert.strictEqual(output.active_focus[1].goal, 'Ship payments');
+    assert.deepStrictEqual(output.active_focus[1].features, ['commerce/checkout']);
   });
 });
 

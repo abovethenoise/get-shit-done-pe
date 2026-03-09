@@ -9,7 +9,7 @@ Detailed verification procedures, stub detection patterns, evidence gathering te
 ### Step 0: Check for Previous Verification
 
 ```bash
-cat "$PHASE_DIR"/*-VERIFICATION.md 2>/dev/null
+cat "$FEATURE_DIR"/*-VERIFICATION.md 2>/dev/null
 ```
 
 If previous verification exists with `gaps:` section: **RE-VERIFICATION MODE**
@@ -23,9 +23,9 @@ If no previous verification: **INITIAL MODE** -- proceed with Step 1.
 ### Step 1: Load Context (Initial Mode)
 
 ```bash
-ls "$PHASE_DIR"/*-PLAN.md 2>/dev/null
-ls "$PHASE_DIR"/*-SUMMARY.md 2>/dev/null
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" roadmap get-phase "$PHASE_NUM"
+ls "$FEATURE_DIR"/*-PLAN.md 2>/dev/null
+ls "$FEATURE_DIR"/*-SUMMARY.md 2>/dev/null
+cat "$FEATURE_DIR"/FEATURE.md 2>/dev/null
 ```
 
 Extract feature goal from FEATURE.md -- this is the outcome to verify.
@@ -35,7 +35,7 @@ Extract feature goal from FEATURE.md -- this is the outcome to verify.
 **Option A: Must-haves from PLAN frontmatter** (preferred)
 
 ```bash
-grep -l "must_haves:" "$PHASE_DIR"/*-PLAN.md 2>/dev/null
+grep -l "must_haves:" "$FEATURE_DIR"/*-PLAN.md 2>/dev/null
 ```
 
 **Option B: Success Criteria from FEATURE.md**
@@ -262,7 +262,6 @@ return <div>No messages</div>  // Always shows "no messages"
 
 ```markdown
 ---
-phase: XX-name
 verified: YYYY-MM-DDTHH:MM:SSZ
 status: passed | gaps_found | human_needed
 score: N/M must-haves verified
@@ -287,9 +286,9 @@ human_verification:
     why_human: "..."
 ---
 
-# Phase {X}: {Name} Verification Report
+# {Feature Name} Verification Report
 
-**Phase Goal:** {goal from FEATURE.md}
+**Goal:** {goal from FEATURE.md}
 **Verified:** {timestamp}
 **Status:** {status}
 

@@ -66,15 +66,11 @@ describe('progress command', () => {
   });
 
   test('renders JSON progress', () => {
-    fs.writeFileSync(
-      path.join(tmpDir, '.planning', 'ROADMAP.md'),
-      `# Roadmap v1.0 MVP\n`
-    );
-    const p1 = path.join(tmpDir, '.planning', 'phases', '01-foundation');
-    fs.mkdirSync(p1, { recursive: true });
-    fs.writeFileSync(path.join(p1, '01-01-PLAN.md'), '# Plan');
-    fs.writeFileSync(path.join(p1, '01-01-SUMMARY.md'), '# Done');
-    fs.writeFileSync(path.join(p1, '01-02-PLAN.md'), '# Plan 2');
+    const f1 = path.join(tmpDir, '.planning', 'features', 'jwt-login');
+    fs.mkdirSync(f1, { recursive: true });
+    fs.writeFileSync(path.join(f1, '01-PLAN.md'), '# Plan');
+    fs.writeFileSync(path.join(f1, '01-SUMMARY.md'), '# Done');
+    fs.writeFileSync(path.join(f1, '02-PLAN.md'), '# Plan 2');
 
     const result = runGsdTools('progress json', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
@@ -83,19 +79,15 @@ describe('progress command', () => {
     assert.strictEqual(output.total_plans, 2, '2 total plans');
     assert.strictEqual(output.total_summaries, 1, '1 summary');
     assert.strictEqual(output.percent, 50, '50%');
-    assert.strictEqual(output.phases.length, 1, '1 phase');
-    assert.strictEqual(output.phases[0].status, 'In Progress', 'phase in progress');
+    assert.strictEqual(output.features.length, 1, '1 feature');
+    assert.strictEqual(output.features[0].status, 'In Progress', 'feature in progress');
   });
 
   test('renders bar format', () => {
-    fs.writeFileSync(
-      path.join(tmpDir, '.planning', 'ROADMAP.md'),
-      `# Roadmap v1.0\n`
-    );
-    const p1 = path.join(tmpDir, '.planning', 'phases', '01-test');
-    fs.mkdirSync(p1, { recursive: true });
-    fs.writeFileSync(path.join(p1, '01-01-PLAN.md'), '# Plan');
-    fs.writeFileSync(path.join(p1, '01-01-SUMMARY.md'), '# Done');
+    const f1 = path.join(tmpDir, '.planning', 'features', 'jwt-login');
+    fs.mkdirSync(f1, { recursive: true });
+    fs.writeFileSync(path.join(f1, '01-PLAN.md'), '# Plan');
+    fs.writeFileSync(path.join(f1, '01-SUMMARY.md'), '# Done');
 
     const result = runGsdTools('progress bar --raw', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
@@ -104,31 +96,23 @@ describe('progress command', () => {
   });
 
   test('renders table format', () => {
-    fs.writeFileSync(
-      path.join(tmpDir, '.planning', 'ROADMAP.md'),
-      `# Roadmap v1.0 MVP\n`
-    );
-    const p1 = path.join(tmpDir, '.planning', 'phases', '01-foundation');
-    fs.mkdirSync(p1, { recursive: true });
-    fs.writeFileSync(path.join(p1, '01-01-PLAN.md'), '# Plan');
+    const f1 = path.join(tmpDir, '.planning', 'features', 'jwt-login');
+    fs.mkdirSync(f1, { recursive: true });
+    fs.writeFileSync(path.join(f1, '01-PLAN.md'), '# Plan');
 
     const result = runGsdTools('progress table --raw', tmpDir);
     assert.ok(result.success, `Command failed: ${result.error}`);
-    assert.ok(result.output.includes('Phase'), 'should have table header');
-    assert.ok(result.output.includes('foundation'), 'should include phase name');
+    assert.ok(result.output.includes('Feature'), 'should have table header');
+    assert.ok(result.output.includes('jwt-login'), 'should include feature slug');
   });
 
   test('does not crash when summaries exceed plans (orphaned SUMMARY.md)', () => {
-    fs.writeFileSync(
-      path.join(tmpDir, '.planning', 'ROADMAP.md'),
-      `# Roadmap v1.0 MVP\n`
-    );
-    const p1 = path.join(tmpDir, '.planning', 'phases', '01-foundation');
-    fs.mkdirSync(p1, { recursive: true });
+    const f1 = path.join(tmpDir, '.planning', 'features', 'jwt-login');
+    fs.mkdirSync(f1, { recursive: true });
     // 1 plan but 2 summaries (orphaned SUMMARY.md after PLAN.md deletion)
-    fs.writeFileSync(path.join(p1, '01-01-PLAN.md'), '# Plan');
-    fs.writeFileSync(path.join(p1, '01-01-SUMMARY.md'), '# Done');
-    fs.writeFileSync(path.join(p1, '01-02-SUMMARY.md'), '# Orphaned summary');
+    fs.writeFileSync(path.join(f1, '01-PLAN.md'), '# Plan');
+    fs.writeFileSync(path.join(f1, '01-SUMMARY.md'), '# Done');
+    fs.writeFileSync(path.join(f1, '02-SUMMARY.md'), '# Orphaned summary');
 
     // bar format - should not crash with RangeError
     const barResult = runGsdTools('progress bar --raw', tmpDir);

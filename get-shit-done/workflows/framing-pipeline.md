@@ -90,11 +90,13 @@ Build a DAG from top-level features that compose capabilities under this scope.
 
 Scan `.planning/features/*/FEATURE.md` for features whose `composes[]` includes capabilities under CAPABILITY_SLUG.
 
-Build a directed acyclic graph:
-- Each feature is a node
-- Each `depends_on` entry creates a directed edge (dependency -> feature)
-- Shared `composes[]` entries suggest ordering (capability must be built before features that compose it)
-- Skip features with status "complete"
+Use the dependency graph to determine feature ordering:
+
+```bash
+WAVES=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" graph-query waves --scope "$FEATURE_CSV")
+```
+
+The graph builds edges from `composes[]` frontmatter — capabilities must be verified before features that compose them can execute. Skip features with status "complete".
 
 ### 2b. Cycle Detection
 

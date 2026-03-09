@@ -56,9 +56,7 @@ Completed focus groups collapse to a simple checklist:
 
 <guidelines>
 
-**Focus groups replace phases.** There are no phase numbers, no phase-level success criteria, no requirement mappings in the roadmap. Those live in FEATURE.md.
-
-**Per-item dependency lines** (`-> depends:`) replace phase-level `**Depends on**`. Each feature knows what it needs.
+**Per-item dependency lines** (`-> depends:`) declare ordering within a focus group. Each feature knows what it needs via `composes[]` in FEATURE.md.
 
 **No plan lists.** Plan progression is tracked in the feature directory and visible via `/gsd:progress`.
 

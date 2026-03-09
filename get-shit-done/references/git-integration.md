@@ -13,12 +13,12 @@ The git log should read like a changelog of what shipped, not a diary of plannin
 
 | Event                   | Commit? | Why                                              |
 | ----------------------- | ------- | ------------------------------------------------ |
-| BRIEF + ROADMAP created | YES     | Project initialization                           |
+| PROJECT.md + ROADMAP created | YES     | Project initialization                      |
 | PLAN.md created         | NO      | Intermediate - commit with plan completion       |
 | RESEARCH.md created     | NO      | Intermediate                                     |
 | DISCOVERY.md created    | NO      | Intermediate                                     |
 | **Task completed**      | YES     | Atomic unit of work (1 commit per task)         |
-| **Plan completed**      | YES     | Metadata commit (SUMMARY + STATE + ROADMAP)     |
+| **Plan completed**      | YES     | Metadata commit (SUMMARY + STATE)               |
 | Handoff created         | YES     | WIP state preserved                              |
 
 </commit_points>
@@ -35,23 +35,18 @@ If NO_GIT: Run `git init` silently. GSD projects always get their own repo.
 <commit_formats>
 
 <format name="initialization">
-## Project Initialization (brief + roadmap together)
+## Project Initialization
 
 ```
-docs: initialize [project-name] ([N] phases)
+docs: initialize [project-name]
 
 [One-liner from PROJECT.md]
-
-Phases:
-1. [phase-name]: [goal]
-2. [phase-name]: [goal]
-3. [phase-name]: [goal]
 ```
 
 What to commit:
 
 ```bash
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs: initialize [project-name] ([N] phases)" --files .planning/
+node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs: initialize [project-name]" --files .planning/
 ```
 
 </format>
@@ -111,7 +106,7 @@ SUMMARY: .planning/capabilities/{cap}/features/{feat}/{plan}-SUMMARY.md
 What to commit:
 
 ```bash
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs({cap}/{feat}): complete [plan-name] plan" --files .planning/capabilities/{cap}/features/{feat}/{plan}-PLAN.md .planning/capabilities/{cap}/features/{feat}/{plan}-SUMMARY.md .planning/STATE.md .planning/ROADMAP.md
+node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs({cap}/{feat}): complete [plan-name] plan" --files .planning/capabilities/{cap}/features/{feat}/{plan}-PLAN.md .planning/capabilities/{cap}/features/{feat}/{plan}-SUMMARY.md .planning/STATE.md
 ```
 
 **Note:** Code files NOT included - already committed per-task.
@@ -145,7 +140,7 @@ a7f2d1 feat(checkout): Stripe payments with webhook verification
 3e9c4b feat(products): catalog with search, filters, and pagination
 8a1b2c feat(auth): JWT with refresh rotation using jose
 5c3d7e feat(foundation): Next.js 15 + Prisma + Tailwind scaffold
-2f4a8d docs: initialize ecommerce-app (5 phases)
+2f4a8d docs: initialize ecommerce-app
 ```
 
 **New approach (per-task commits):**
@@ -191,7 +186,7 @@ Each plan produces 2-4 commits (tasks + metadata). Clear, granular, bisectable.
 - RESEARCH.md (intermediate)
 - DISCOVERY.md (intermediate)
 - Minor planning tweaks
-- "Fixed typo in roadmap"
+- "Fixed typo in planning doc"
 
 **Do commit (outcomes):**
 - Each task completion (feat/fix/test/refactor)
