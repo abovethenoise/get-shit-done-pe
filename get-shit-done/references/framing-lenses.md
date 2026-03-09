@@ -2,6 +2,10 @@
 
 Authoritative behavioral specification for the four discovery lenses. All framing workflows, pipeline stages, and review processes reference this document.
 
+Discovery produces different outputs by target type:
+- **Capability**: Lenses converge on a contract (Receives/Returns/Rules/Failure Behavior/Constraints)
+- **Feature**: Lenses converge on a flow/composition spec (Goal/Flow/Scope/composes[])
+
 ---
 
 ## Lens Definitions
@@ -11,6 +15,10 @@ Authoritative behavioral specification for the four discovery lenses. All framin
 **Direction:** Backward -- from symptom to root cause.
 **Tone:** Convergent. Narrow the search space. Eliminate hypotheses.
 **Anchor questions:** `framings/debug/anchor-questions.md`
+
+**Produces:**
+- Capability: contract amendments (failure behavior, new constraint rules)
+- Feature: flow corrections (step ordering, missing error handling in composition)
 
 **MVU Slots:**
 
@@ -30,11 +38,15 @@ Authoritative behavioral specification for the four discovery lenses. All framin
 **Tone:** Exploratory but disciplined. Define before designing.
 **Anchor questions:** `framings/new/anchor-questions.md`
 
+**Produces:**
+- Capability: full contract draft (Receives/Returns/Rules/Failure/Constraints)
+- Feature: composition spec (Goal/Flow/Scope/composes[])
+
 **MVU Slots:**
 
 | Slot | Completion Criteria |
 |------|-------------------|
-| problem | The problem this capability solves, stated in one sentence. Audience identified. |
+| problem | The problem this solves, stated in one sentence. Audience identified. |
 | who | Who experiences this problem. Not "users" -- specific role, persona, or context. |
 | done_criteria | At least one observable, testable outcome that defines success. |
 | constraints | Non-negotiable limits: technical, business, timeline, dependency. If none, explicitly stated as unconstrained. |
@@ -48,6 +60,10 @@ Authoritative behavioral specification for the four discovery lenses. All framin
 **Direction:** Outward -- from current state to extended state.
 **Tone:** Pragmatic, surgical. Find the seam, extend through it.
 **Anchor questions:** `framings/enhance/anchor-questions.md`
+
+**Produces:**
+- Capability: contract delta (new Returns fields, amended Rules, extended Receives)
+- Feature: flow extension (new steps, additional composed capabilities)
 
 **MVU Slots:**
 
@@ -66,6 +82,10 @@ Authoritative behavioral specification for the four discovery lenses. All framin
 **Direction:** Underneath -- restructure without changing external behavior.
 **Tone:** Risk-aware. Understand load-bearing walls before moving them.
 **Anchor questions:** `framings/refactor/anchor-questions.md`
+
+**Produces:**
+- Capability: contract preservation proof (same Receives/Returns, restructured internals)
+- Feature: composition restructuring (same Goal, reorganized Flow/composes[])
 
 **MVU Slots:**
 
@@ -93,34 +113,30 @@ Three conditions can end discovery. They apply identically across all lenses.
 
 ## Cross-Framing Detection Rules
 
-During discovery, the system monitors for lens misclassification. Detection can trigger at two points:
+During discovery, the system monitors for lens misclassification:
 
-**1. Upfront validation (before first anchor question):**
+**Upfront validation (before first anchor question):**
 - /new but user describes existing functionality -> suggest /enhance
 - /enhance but no existing behavior to extend -> suggest /new
 - /refactor but user describes correctness issues -> suggest /debug
 - /debug but user describes desired structural changes -> suggest /refactor
 
-**2. Mid-discovery pivot (during anchor questions):**
-- If answers to anchor questions consistently describe a different lens's domain, offer to switch.
+**Mid-discovery pivot (during anchor questions):**
+- If answers consistently describe a different lens's domain, offer to switch.
 - On lens pivot: zero out the Specification section in the brief. Meta and Context survive. Wrong-lens data is worse than empty.
 
 ---
 
 ## Compound Work
 
-Some work spans two lenses. The compound model handles this without separate runs.
-
-**Structure:** Primary lens leads discovery. Secondary lens informs specific areas.
-
-**Example:** "This is primarily /enhance with a /refactor component" -- editor-mode discovery drives the process, but Question 2 (desired behavior) triggers surgeon-mode probing of the structural changes needed.
+Some work spans two lenses. Primary lens leads discovery, secondary lens informs specific areas.
 
 **Precedence rules by pipeline stage:**
 
 | Stage | Primary Lens Governs | Secondary Lens Informs |
 |-------|---------------------|----------------------|
 | Discovery | Anchor questions, MVU slots, exit conditions | Additional probing on relevant questions |
-| Requirements | Weight distribution (which layer is richest) | Additional requirements in secondary lens's strong layer |
+| Contract/Flow | Primary shape (which sections are richest) | Additional sections from secondary lens |
 | Plan | Decomposition strategy, risk posture | Task ordering for secondary concerns |
 | Execute | Solution approach, what to preserve vs replace | Implementation constraints from secondary lens |
 | Review | Definition of done, primary validation targets | Regression checks from secondary lens's invariants |
@@ -131,7 +147,7 @@ Some work spans two lenses. The compound model handles this without separate run
 
 ## Brief Reset on Lens Pivot
 
-When discovery pivots from one lens to another (either upfront or mid-discovery):
+When discovery pivots from one lens to another:
 
 1. **Preserve:** Meta (update lens fields), Context (existing state, modules, prior exploration), Unknowns, Scope Boundary
 2. **Zero out:** Specification section entirely. Replace with the new lens's variant template.

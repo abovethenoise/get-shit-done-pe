@@ -10,10 +10,6 @@
 
 **Why:** Executors need full context to implement complex tasks. If the orchestrator passes content instead of paths, it exhausts its own context window and degrades quality for subsequent plans.
 
-**Where:**
-- `get-shit-done/workflows/execute.md` -- `execute_waves` step spawns Task per plan
-- `get-shit-done/workflows/framing-pipeline.md` -- stage 4 spawns executor
-
 **Verify:** Check that execute.md uses `Task()` with `<files_to_read>` paths, not inline content.
 
 ---
@@ -24,11 +20,7 @@
 
 **Why:** Executing dependent plans before their prerequisites produces broken code, missing imports, or incomplete state.
 
-**Where:**
-- `get-shit-done/workflows/execute.md` -- `discover_and_group_plans` step
-- Plan frontmatter `wave` and `depends_on` fields determine execution order
-
-**Verify:** Plans in feature directory are grouped by wave with correct dependency chains.
+**Verify:** Plans in target directory are grouped by wave with correct dependency chains.
 
 ---
 
@@ -37,9 +29,6 @@
 **What:** Draft plans go through: planner creates -> checker verifies -> Q&A loop if issues -> planner revises -> checker re-verifies. Max 3 revision rounds.
 
 **Why:** Plans are prompts for executors. A bad plan produces bad execution. Catching issues before execution saves context budget and prevents rework.
-
-**Where:**
-- `get-shit-done/workflows/plan.md` -- steps 10-12 (spawn checker, handle verdict, revision loop)
 
 **Verify:** plan.md contains checker spawn, verdict parsing, and revision loop with iteration limit.
 
@@ -51,10 +40,6 @@
 
 **Why:** Atomic commits enable: git bisect for debugging, clear audit trail, per-task revert capability, SUMMARY.md commit hash tracking.
 
-**Where:**
-- `get-shit-done/workflows/execute-plan.md` -- `task_commit_protocol` section
-- `agents/gsd-executor.md` -- `task_commit_protocol` section
-
 **Verify:** After execution, `git log --oneline` shows one commit per task with correct format.
 
 ---
@@ -63,13 +48,9 @@
 
 **What:** Orchestrators pass file paths to subagents. Agents read files themselves in their own context window. No content is passed between agents.
 
-**Why:** Passing content bloats the orchestrator context. File paths are ~50 bytes; file content can be 10-50KB. The orchestrator would run out of context after 2-3 plans.
+**Why:** Passing content bloats the orchestrator context. File paths are ~50 bytes; file content can be 10-50KB.
 
-**Where:**
-- All workflow `.md` files use `<files_to_read>` blocks with paths
-- `get-shit-done/workflows/execute.md` -- Task prompts contain paths only
-
-**Verify:** Search workflow files for `<files_to_read>` blocks; confirm they contain paths (starting with `.planning/` or `get-shit-done/`), not inline markdown content.
+**Verify:** Search workflow files for `<files_to_read>` blocks; confirm they contain paths, not inline markdown content.
 
 ---
 
@@ -79,10 +60,6 @@
 
 **Why:** Direct writes can corrupt frontmatter sync, break field patterns, or lose concurrent updates. The CLI ensures: frontmatter stays in sync, field names are consistent, timestamp updates happen automatically.
 
-**Where:**
-- `get-shit-done/bin/gsd-tools.cjs` -- `state advance-plan`, `state update-progress`, `state record-metric`, `state add-decision`, `state add-blocker`, `state record-session`
-- `get-shit-done/bin/lib/state.cjs` -- all `cmdState*` functions
-
 **Verify:** `node gsd-tools.cjs state json` returns valid JSON with all STATE.md fields.
 
 ---
@@ -91,55 +68,57 @@
 
 **What:** STATE.md `Session Continuity` section + SUMMARY.md frontmatter provide complete context for recovering from `/clear` or session interruption.
 
-**Why:** Claude Code sessions have limited lifetime. When a session ends mid-execution, the next session needs: current position, completed work, decisions, blockers, and what to do next. Without handoff, work gets repeated or lost.
-
-**Where:**
-- `get-shit-done/templates/state.md` -- `Session Continuity` section template
-- `get-shit-done/workflows/execute.md` -- updates session fields via state commands
-- SUMMARY.md frontmatter -- `key-decisions`, `requirements-completed`, `key-files`
+**Why:** Claude Code sessions have limited lifetime. When a session ends mid-execution, the next session needs: current position, completed work, decisions, blockers, and what to do next.
 
 **Verify:** STATE.md `Stopped at` field is current. SUMMARY.md exists for completed plans. `state record-session` writes correct values.
 
 ---
 
-## 8. Requirement ID Chain
+## 8. Two-Level Planning
 
-**What:** Every task traces to at least one requirement ID. Plans declare `requirements: [REQ-01, ...]` in frontmatter. Tasks include `<reqs>` tags. Execution marks requirements complete.
+**What:** Planning maps to the target type. Capability plans: tasks map to contract sections (Receives/Returns/Rules/Failure/Constraints). Feature plans: tasks map to flow steps from FEATURE.md.
 
-**Why:** Untraceable work means: no way to verify coverage, no way to detect gaps, no audit trail from requirement to implementation.
+**Why:** Misaligned planning produces scope bleed -- capability plans with UX tasks or feature plans with implementation tasks. Each level has its own shape and verification criteria.
 
-**Where:**
-- `get-shit-done/workflows/plan.md` -- step 9.7 (`plan-validate` CLI)
-- `get-shit-done/workflows/execute-plan.md` -- `update_requirements` step
-- `get-shit-done/bin/gsd-tools.cjs` -- `plan-validate`, `requirements mark-complete`
-
-**Verify:** `node gsd-tools.cjs plan-validate REQUIREMENTS.md {plan-file}` returns coverage analysis. REQUIREMENTS.md checkboxes match completed plans.
+**Verify:** Capability plan tasks trace to contract sections. Feature plan tasks trace to flow steps. No cross-level contamination.
 
 ---
 
-## 9. Summary Frontmatter
+## 9. Feature Gate
 
-**What:** Every completed plan produces a SUMMARY.md with structured YAML frontmatter: `requires`, `provides`, `affects`, `key-files`, `key-decisions`, `requirements-completed`, `duration`.
+**What:** Feature planning is blocked until all composed capabilities (listed in `composes: []` frontmatter) are verified. Run `gsd-tools gate-check <feat> --raw` before planning.
+
+**Why:** Features compose capabilities. If a composed capability has no contract or is unverified, the feature plan will reference non-existent primitives. Downstream execution fails.
+
+**Verify:** `gsd-tools gate-check` returns all-clear before any feature plan is created.
+
+---
+
+## 10. Composition Invariant
+
+**What:** Features compose capabilities via `composes: []` frontmatter. Features orchestrate existing capability contracts -- they never implement new logic directly. Features live at `.planning/features/{slug}/`, capabilities at `.planning/capabilities/{slug}/`.
+
+**Why:** If features implement logic, capability contracts become unreliable. The contract boundary is the system's primary correctness guarantee.
+
+**Verify:** Feature PLAN.md tasks reference capability contracts, not raw implementation. No feature task creates new primitive logic.
+
+---
+
+## 11. Summary Frontmatter
+
+**What:** Every completed plan produces a SUMMARY.md with structured YAML frontmatter: `requires`, `provides`, `affects`, `key-files`, `key-decisions`, `duration`.
 
 **Why:** SUMMARY.md frontmatter is the machine-readable record of what happened. It feeds: progress tracking, dependency analysis, session handoff, verification, and the history digest.
-
-**Where:**
-- `get-shit-done/workflows/execute-plan.md` -- `create_summary` step
-- `get-shit-done/templates/summary.md` -- template structure
 
 **Verify:** `node gsd-tools.cjs summary-extract {path}` returns valid structured data. Frontmatter contains all required fields.
 
 ---
 
-## 10. Spot-Check on Executor Output
+## 12. Spot-Check on Executor Output
 
 **What:** After an executor reports completion, verify claims before accepting: check files exist, check git commits exist, check Self-Check marker in SUMMARY.md.
 
 **Why:** Executors can hallucinate completion. A "PASS" with missing files or phantom commits wastes the entire downstream pipeline.
-
-**Where:**
-- `get-shit-done/workflows/execute.md` -- `execute_waves` step 4 (post-execution verification)
-- `agents/gsd-executor.md` -- `self_check` section
 
 **Verify:** SUMMARY.md contains `## Self-Check: PASSED`. Files listed in `key-files` exist on disk. Commit hashes in task table appear in `git log`.
 
@@ -147,15 +126,17 @@
 
 ## Quick Reference
 
-| # | Invariant | Impact if Violated | v2 Impact |
-|---|-----------|-------------------|-----------|
-| 1 | Fresh context per executor | Quality degradation, context exhaustion | None |
-| 2 | Wave dependency analysis | Broken builds, missing prerequisites | Low (path update) |
-| 3 | Plan-checker verification loop | Bad plans waste execution context | None |
-| 4 | Atomic commits per task | Lost audit trail, can't bisect/revert | None |
-| 5 | Context via paths not content | Orchestrator context exhaustion | None |
-| 6 | State progression via CLI | Corrupted STATE.md, lost sync | Medium (v2 fields) |
-| 7 | Session handoff | Lost work on /clear | Medium (v2 fields) |
-| 8 | Requirement ID chain | No coverage verification | Low (namespace) |
-| 9 | Summary frontmatter | Broken progress tracking | Low (field rename) |
-| 10 | Spot-check executor output | Phantom completions propagate | None |
+| # | Invariant | Impact if Violated |
+|---|-----------|-------------------|
+| 1 | Fresh context per executor | Quality degradation, context exhaustion |
+| 2 | Wave dependency analysis | Broken builds, missing prerequisites |
+| 3 | Plan-checker verification loop | Bad plans waste execution context |
+| 4 | Atomic commits per task | Lost audit trail, can't bisect/revert |
+| 5 | Context via paths not content | Orchestrator context exhaustion |
+| 6 | State progression via CLI | Corrupted STATE.md, lost sync |
+| 7 | Session handoff | Lost work on /clear |
+| 8 | Two-level planning | Scope bleed between capability and feature |
+| 9 | Feature gate | Plans reference non-existent contracts |
+| 10 | Composition invariant | Capability contracts become unreliable |
+| 11 | Summary frontmatter | Broken progress tracking |
+| 12 | Spot-check executor output | Phantom completions propagate |

@@ -29,12 +29,12 @@ Each agent's YAML frontmatter has a `model` field. Claude Code reads this direct
 
 ## Gather-Synthesize Shape
 
-Spawn N gatherers in parallel, wait for all, synthesize results into one output.
+Spawn N gatherers in parallel, wait for all, synthesize results into one output. See [Gather-Synthesize Pattern](gather-synthesize-pattern.md) for type-specific orientation tables.
 
 ### Flow
 
-1. Assemble context payload (see `gather-synthesize.md` for context layers).
-2. Spawn N gatherers in parallel.
+1. Assemble context per [Context Assembly Pattern](context-assembly.md), including `target_type` (capability|feature).
+2. Spawn N gatherers in parallel with type orientation.
 3. Wait for all gatherers to complete.
 4. Retry failed gatherers once.
 5. If >50% failed: abort. Do not synthesize.
@@ -46,13 +46,13 @@ Spawn N gatherers in parallel, wait for all, synthesize results into one output.
 ```
 # Gatherer (spawn N in parallel)
 Task(
-  prompt="<subject>{subject}</subject>\n\n{context}\n\n<task_context>Dimension: {dimension}\nWrite to: {output_path}</task_context>",
+  prompt="<subject>{subject}</subject>\n\n{context}\n\n<task_context>Dimension: {dimension}\nTarget type: {target_type}\nWrite to: {output_path}</task_context>",
   subagent_type="{gatherer_agent_name}"
 )
 
 # Synthesizer (spawn 1 after gather completes)
 Task(
-  prompt="<subject>{subject}</subject>\n\n{context}\n\n<task_context>Synthesize gatherer outputs:\n{manifest}\nWrite to: {synth_output_path}</task_context>",
+  prompt="<subject>{subject}</subject>\n\n{context}\n\n<task_context>Synthesize gatherer outputs:\n{manifest}\nTarget type: {target_type}\nWrite to: {synth_output_path}</task_context>",
   subagent_type="{synthesizer_agent_name}"
 )
 ```
@@ -91,7 +91,7 @@ Spawn 1 subagent for a scoped task, wait for completion, process the result.
 
 ```
 Task(
-  prompt="Read these files for context:\n- {plan_path}\n- {feature_path}\n\nExecute all tasks in the plan.",
+  prompt="Read these files for context:\n- {plan_path}\n- {spec_path}\n\nTarget type: {target_type}\nExecute all tasks in the plan.",
   subagent_type="{agent_name}"
 )
 ```
@@ -129,15 +129,14 @@ Task(
 
 ### Orchestrator reads agent definitions
 
-Orchestrators MUST NOT read agent definition files. Use `subagent_type` to name the agent -- Claude Code loads the agent definition automatically. If the orchestrator reads agent definitions, it absorbs enough context to handle the task inline -- defeating delegation.
+Orchestrators MUST NOT read agent definition files. Use `subagent_type` to name the agent -- Claude Code loads the agent definition automatically.
 
 **Wrong:** Orchestrator reads `agents/gsd-executor.md`, then spawns a Task.
-**Wrong:** Task prompt says `First, read agents/gsd-executor.md for your role.` (redundant -- subagent_type already loads it).
 **Right:** `Task(prompt=..., subagent_type="gsd-executor")` -- agent definition loaded automatically.
 
 ### Content passing between agents
 
-Do not pass content between agents -- pass file PATHS. Each agent reads files in its own context window. Passing content inflates the orchestrator's context and risks truncation.
+Do not pass content between agents -- pass file PATHS. Each agent reads files in its own context window.
 
 **Wrong:** Orchestrator reads PLAN.md, includes full text in subagent prompt.
 **Right:** Subagent prompt says `Read /path/to/PLAN.md for your instructions.`

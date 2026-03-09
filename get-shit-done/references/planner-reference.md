@@ -15,7 +15,7 @@ wave: N                        # Execution wave number
 depends_on: []                 # Plan IDs this plan requires
 files_modified: []             # Files this plan touches
 autonomous: true               # false if checkpoints present
-requirements: []               # FEATURE.md REQ IDs (EU/FN/TC)
+target_type: capability|feature  # What this plan addresses
 user_setup: []                 # Human-required setup (omit if empty)
 
 must_haves:
@@ -36,19 +36,41 @@ must_haves:
 | `depends_on` | Yes | Plan IDs this plan requires completed first |
 | `files_modified` | Yes | Files this plan creates or modifies (enables parallel conflict detection) |
 | `autonomous` | Yes | `true` if no checkpoints, `false` if any checkpoint task present |
-| `requirements` | Yes | EU/FN/TC REQ IDs from FEATURE.md that this plan addresses |
+| `target_type` | Yes | `capability` or `feature` -- determines plan shape |
 | `user_setup` | No | Human-required setup items (API keys, accounts) |
 | `must_haves` | Yes | Goal-backward verification criteria |
 
 ---
 
-## Task Anatomy (v2)
+## Two Plan Shapes
+
+### Capability Plan (tasks map to contract sections)
+
+Each task addresses one or more contract sections: Receives, Returns, Rules, Failure Behavior, Constraints. Every contract section must be covered by at least one task.
+
+**Scope bleed detection:** A capability plan with UX/user-flow tasks is wrong. Capabilities are primitives -- they implement contracts, not user experiences.
+
+### Feature Plan (tasks map to flow steps)
+
+Each task addresses one or more flow steps from FEATURE.md. Before planning, verify all `composes: []` capabilities are contracted and verified via `gsd-tools gate-check`.
+
+**Scope bleed detection:** A feature plan with new implementation logic is wrong. Features compose existing capability contracts -- they wire and orchestrate, not build primitives.
+
+---
+
+## Context Loading
+
+Follow the [Context Assembly Pattern](context-assembly.md) to load project, target spec, prior work, and state context before planning.
+
+---
+
+## Task Anatomy
 
 Every task has five required fields:
 
 **`<name>`** -- What the task does. Good: "Create frontmatter validation for v2 task schema". Bad: "Validation stuff".
 
-**`<reqs>`** -- Requirement IDs this task addresses. Every task references at least one REQ. Prevents orphan work and scope creep.
+**`<reqs>`** -- Contract section (capability) or flow step (feature) this task addresses. Prevents orphan work and scope creep.
 
 **`<files>`** -- Exact file paths to create or modify. Prevents wrong file, wrong location.
 
@@ -57,12 +79,6 @@ Every task has five required fields:
 **`<done>`** -- Observable exit condition. Good: "gsd plan-validate returns 0 errors". Bad: "it works".
 
 **`<verify>`** -- Automated verification command and/or manual check.
-
-### Cross-Layer Constraint
-
-A task references either EU-layer or TC-layer REQs, not both. Bridge through FN if needed. Project-level IDs (PLAN-xx, REQS-xx) are exempt.
-
-Rationale: EU verified via UI/integration, TC verified against code. Mixing creates two verification methods for one artifact.
 
 ### Task Types
 
@@ -100,7 +116,7 @@ wave: N
 depends_on: []
 files_modified: []
 autonomous: true
-requirements: []
+target_type: capability|feature
 must_haves:
   truths: []
   artifacts: []
@@ -121,7 +137,6 @@ Output: [Artifacts created]
 
 <context>
 @.planning/PROJECT.md
-@.planning/ROADMAP.md
 @.planning/STATE.md
 
 <interfaces>
@@ -133,7 +148,7 @@ Output: [Artifacts created]
 
 <task type="auto">
   <name>Task name</name>
-  <reqs>REQ-01, REQ-02</reqs>
+  <reqs>Contract: Returns | Flow: Step 2</reqs>
   <files>path/to/file.ts</files>
   <action>
   Specific implementation steps.
@@ -167,9 +182,9 @@ Forward planning asks "what should we build?" and produces tasks. Goal-backward 
 
 ### Process
 
-**Step 0: Extract Requirement IDs.** Read FEATURE.md EU/FN/TC requirements. Distribute IDs across plans -- each plan's `requirements` field lists the IDs its tasks address. Every requirement ID appears in at least one plan.
+**Step 0: Extract coverage targets.** For capabilities: read contract sections from CAPABILITY.md. For features: read flow steps from FEATURE.md. Distribute across plans -- each plan covers specific sections/steps. Every target appears in at least one plan.
 
-**Step 1: State the Goal.** Take the feature goal from FEATURE.md. Outcome-shaped, not task-shaped.
+**Step 1: State the Goal.** Take the goal from CAPABILITY.md or FEATURE.md. Outcome-shaped, not task-shaped.
 
 **Step 2: Derive Observable Truths.** "What must be TRUE for this goal to be achieved?" List 3-7 truths from the user's perspective.
 
@@ -202,13 +217,6 @@ must_haves:
 
 ## Dependency Graph and Wave Assignment
 
-### Per-task dependency recording
-
-For each task, record:
-- `needs`: What must exist before this runs
-- `creates`: What this produces
-- `has_checkpoint`: Requires user interaction?
-
 ### Wave assignment algorithm
 
 ```
@@ -223,7 +231,7 @@ for each plan in plan_order:
 
 ### Vertical slices preferred
 
-Vertical slices (feature = model + API + UI per plan) run in parallel. Horizontal layers (all models, then all APIs) are sequential. Prefer vertical unless shared foundation requires horizontal (auth before protected features, infrastructure setup).
+Vertical slices (feature = model + API + UI per plan) run in parallel. Horizontal layers (all models, then all APIs) are sequential. Prefer vertical unless shared foundation requires horizontal.
 
 ### File ownership for parallel execution
 
@@ -253,15 +261,14 @@ After producing all PLAN.md files, run two critique rounds before returning.
 
 ### Round 1 -- Fix Silently
 
-For each requirement ID in FEATURE.md:
-- Is there a task with this REQ in its `<reqs>`? If no, add a task.
+For capability plans -- verify every contract section is covered by a task.
+For feature plans -- verify every flow step is covered by a task.
 
 For each task in every plan:
-- Does every REQ in `<reqs>` exist in FEATURE.md? If no, remove the reference.
 - Does `<files>` specify exact file paths? If no, fix it.
 - Does `<done>` state an observable exit condition? If no, rewrite it.
 
-Apply all fixes. Do not surface Round 1 fixes mid-task; capture them in the `### Round 1 Fixes` return section for user presentation.
+Apply all fixes. Capture them in the `### Round 1 Fixes` return section.
 
 ### Round 2 -- Surface Issues
 
@@ -279,24 +286,13 @@ After Round 2, return plan files + findings list. Do not attempt Round 3.
 
 ## Discovery Levels
 
-**Level 0 -- Skip**: Pure internal work, existing patterns only. All work follows established codebase patterns.
+**Level 0 -- Skip**: Pure internal work, existing patterns only.
 
 **Level 1 -- Quick Verification**: Single known library, confirming syntax/version. Context7 resolve + query, no DISCOVERY.md.
 
 **Level 2 -- Standard Research**: Choosing between 2-3 options, new external integration. Route to discovery workflow.
 
 **Level 3 -- Deep Dive**: Architectural decision with long-term impact. Full research with DISCOVERY.md.
-
----
-
-## Quality Degradation Curve
-
-| Context Usage | Quality | Claude's State |
-|---------------|---------|----------------|
-| 0-30% | PEAK | Thorough, comprehensive |
-| 30-50% | GOOD | Confident, solid work |
-| 50-70% | DEGRADING | Efficiency mode begins |
-| 70%+ | POOR | Rushed, minimal |
 
 ---
 
@@ -348,7 +344,6 @@ Triggered by `--gaps` flag. Creates plans from VERIFICATION.md gaps.
 2. Load existing SUMMARYs for context
 3. Group gaps by artifact/concern
 4. Create gap closure tasks with `gap_closure: true` frontmatter
-5. Each task traces to affected REQ IDs
 
 ---
 
@@ -358,7 +353,8 @@ Triggered when orchestrator provides `<revision_context>` with checker issues. T
 
 | Dimension | Revision Strategy |
 |-----------|-------------------|
-| requirement_coverage | Add task(s) for missing requirement |
+| contract_coverage | Add task(s) for missing contract section |
+| flow_coverage | Add task(s) for missing flow step |
 | task_completeness | Add missing elements to existing task |
 | dependency_correctness | Fix depends_on, recompute waves |
 | scope_sanity | Split into multiple plans |
@@ -381,7 +377,7 @@ Interface context: embed key types in `<interfaces>` block when plans depend on 
 ```markdown
 ## PLANNING COMPLETE
 
-**Phase:** {phase-name}
+**Target:** {capability or feature name}
 **Plans:** {N} plan(s) in {M} wave(s)
 
 ### Wave Structure
@@ -394,16 +390,16 @@ Interface context: embed key types in `<interfaces>` block when plans depend on 
 
 ### Justification
 
-**Ordering rationale:** {why waves/tasks are sequenced this way — cite dependency edges and REQ IDs}
-**Approach rationale:** {why this approach vs alternatives — cite RESEARCH.md findings and project constraints}
-**KISS rationale:** {why this is the simplest approach that satisfies requirements — cite specific trade-offs rejected}
+**Ordering rationale:** {why waves/tasks are sequenced this way}
+**Approach rationale:** {why this approach vs alternatives -- cite RESEARCH.md findings and project constraints}
+**KISS rationale:** {why this is the simplest approach that satisfies the contract/flow}
 
 ### Round 1 Fixes
 
 {If fixes applied, one entry per fix:}
 - **Context:** {what was wrong before the fix}
   **Decision:** {what changed}
-  **Consequence:** {REQ IDs affected, downstream impact}
+  **Consequence:** {contract sections or flow steps affected}
 
 {If no fixes:}
 No Round 1 fixes applied.
@@ -415,14 +411,14 @@ No Round 1 fixes applied.
 Execute: `/gsd:execute {cap/feat}`
 ```
 
-All Justification and Round 1 Fixes claims must reference specific REQ IDs, dependency edges, or file paths — generic statements fail the grounding check.
+All Justification and Round 1 Fixes claims must reference specific contract sections, flow steps, dependency edges, or file paths -- generic statements fail the grounding check.
 
 ### Gap Closure Plans Created
 
 ```markdown
 ## GAP CLOSURE PLANS CREATED
 
-**Phase:** {phase-name}
+**Target:** {capability or feature name}
 **Closing:** {N} gaps from {VERIFICATION|UAT}.md
 
 ### Plans
