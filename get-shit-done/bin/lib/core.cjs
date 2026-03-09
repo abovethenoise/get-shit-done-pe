@@ -431,6 +431,8 @@ function resolveSlugInternal(cwd, input, typeHint) {
 
 /** List all features. Returns [{feature_slug, composes}] */
 function listAllFeaturesInternal(cwd) {
+  // Inline require to avoid circular dependency: frontmatter.cjs requires core.cjs
+  const { extractFrontmatter } = require('./frontmatter.cjs');
   const results = [];
   const featuresDir = path.join(cwd, '.planning', 'features');
   try {
@@ -439,8 +441,12 @@ function listAllFeaturesInternal(cwd) {
       .map(e => e.name)
       .sort();
     for (const slug of entries) {
-      if (fs.existsSync(path.join(featuresDir, slug, 'FEATURE.md'))) {
-        results.push({ feature_slug: slug });
+      const featurePath = path.join(featuresDir, slug, 'FEATURE.md');
+      if (fs.existsSync(featurePath)) {
+        const content = safeReadFile(featurePath);
+        const fm = content ? extractFrontmatter(content) : {};
+        const composes = Array.isArray(fm.composes) ? fm.composes : [];
+        results.push({ feature_slug: slug, composes });
       }
     }
   } catch { /* no features dir */ }

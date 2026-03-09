@@ -53,6 +53,22 @@ ls .planning/features/*/.continue-here*.md 2>/dev/null
 Flag findings: mid-plan checkpoint, incomplete execution, interrupted agent.
 </step>
 
+<step name="load_sequence_context">
+Load sequence data for structural context:
+
+```bash
+STALE=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" graph-query sequence-stale)
+```
+
+If stale and `.planning/` exists: rebuild SEQUENCE.md inline via `@{GSD_ROOT}/get-shit-done/workflows/sequence.md`.
+
+```bash
+SEQUENCE=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" graph-query sequence)
+```
+
+Parse JSON for `executable`, `blocked`, `critical_path`. Store for display in present_status.
+</step>
+
 <step name="present_status">
 ```
 +--------------------------------------------------------------+
@@ -63,6 +79,8 @@ Flag findings: mid-plan checkpoint, incomplete execution, interrupted agent.
 |  Active Feature: {cap}/{feat} - {pipeline stage}              |
 |  Focus Group: {group_name}                                    |
 |  Progress: [======----] XX%                                   |
+|  Sequence: {N} executable, {N} blocked                        |
+|  Critical path: {top blocker cap}                             |
 |                                                               |
 |  Last activity: [date] - [what happened]                      |
 +--------------------------------------------------------------+

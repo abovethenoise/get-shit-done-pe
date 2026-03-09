@@ -1,10 +1,24 @@
 <purpose>
-Create a focus group -- a bundle of capabilities and features for a sprint/work session. Replaces milestones with lightweight sequencing. Includes dependency tracing (explicit from CAPABILITY.md + implicit from shared file paths via mgrep), overlap detection against existing active groups, and ROADMAP.md/STATE.md updates.
+Create a focus group -- a bundle of capabilities and features for a sprint/work session. Uses SEQUENCE.md for structural ordering via composes[] edges. mgrep runs as a gap detector — shared file paths with no corresponding composes[] overlap surface as signals for possible undeclared capabilities, not as dependency edges. Includes overlap detection against existing active groups and ROADMAP.md/STATE.md updates.
 </purpose>
 
 <process>
 
 ## 1. Initialize
+
+Check SEQUENCE.md staleness:
+
+```bash
+STALE=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" graph-query sequence-stale)
+```
+
+Parse JSON. If `stale` is true: invoke the sequence workflow inline:
+
+```
+@{GSD_ROOT}/get-shit-done/workflows/sequence.md
+```
+
+Load SEQUENCE.md content. Also load project context:
 
 ```bash
 PROGRESS=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" init feature-progress)
@@ -28,6 +42,11 @@ Validate: name does not collide with existing focus groups in ROADMAP.md.
 
 ## 3. Q&A: Scope
 
+Before asking, show the user sequence context from SEQUENCE.md:
+- Executable features: {N} ready now
+- Blocked features: {N} waiting on capability verification
+- Orphans: {N} caps not composed, {N} features with empty composes[]
+
 Use AskUserQuestion:
 - header: "Scope"
 - question: "Which capabilities or features are in scope? List them in rough priority order. (Use names, slugs, or natural language -- I'll resolve them.)"
@@ -45,50 +64,47 @@ RESOLVED=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" slug-resolve "$I
   - options: [top 3 candidates by match quality]
 - **If no_match:** Ask user: create new capability/feature, re-describe, or skip.
 
+**If user names a blocked feature:** Show critical path from SEQUENCE.md, offer to include the blocking capabilities' prerequisites in scope.
+
 Build the final `resolved_items` list.
 
-## 4. Dependency Trace
+## 4. Dependency Ordering
 
-For each resolved item, trace dependencies to build the focus group's DAG.
+Query the graph for wave ordering of the scoped features:
 
-### 4a. Explicit Dependencies (from metadata)
+```bash
+WAVES=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" graph-query waves --scope "$FEATURE_CSV")
+```
 
-For each feature in scope:
-- Read FEATURE.md frontmatter `composes[]` and `depends_on` fields
-- Build edges from composes[]: features sharing composed capabilities have implicit ordering
-- Build edges from depends_on: `feature_a -> depends_on -> [feature_b, feature_c]`
+Parse JSON for `wave_1`, `blocked`, `coordinate_flags`.
+
+- Wave 1: features whose composed caps are all verified
+- Blocked: features with unverified caps (list blockers)
+- Coordinate flags: features in wave 1 sharing a composed cap
 
 For each capability in scope:
 - Expand to features that compose it (search `.planning/features/*/FEATURE.md` for composes[] containing this cap)
 
-### 4b. Implicit Dependencies (from code overlap)
+## 4b. mgrep Gap Scan
 
-For each feature in scope:
-- Read FEATURE.md Context section for file paths mentioned in handoff contracts
-- Collect all referenced file paths per feature
+Run mgrep against the Context sections of all in-scope features to detect shared file paths:
 
-Cross-reference: find file paths that appear in multiple features' requirements.
+For each pair of in-scope features:
+- Check if their Context sections reference overlapping file paths
+- Cross-reference against `composes[]` overlap:
+  - **Shared paths explained by shared composes[]:** Both features compose at least one common capability. No signal — skip.
+  - **Shared paths NOT explained by any composes[] overlap:** Surface as "possible undeclared capability"
 
-**If shared files found:**
-- Surface to user: "Features {X} and {Y} both reference `{file}`. This suggests a dependency or shared concern."
+For each unexplained signal:
 - Use AskUserQuestion:
-  - header: "Implicit Dependency"
-  - question: "Should I add a dependency edge between these features?"
-  - options: "Yes, {X} depends on {Y}", "Yes, {Y} depends on {X}", "No, they're independent"
+  - header: "Undeclared Capability Signal"
+  - question: "Features '{feat_a}' and '{feat_b}' both reference {shared_path} but share no composed capabilities. This may indicate an undeclared capability."
+  - options:
+    - "Create a new capability" → route to `/gsd:discuss-capability`
+    - "Add to an existing capability's scope"
+    - "Ignore"
 
-### 4c. DAG Construction
-
-Combine explicit + confirmed implicit edges into a directed acyclic graph.
-
-**Cycle detection:**
-If cycle found:
-- Display: "Circular dependency detected: {cycle path}"
-- Use AskUserQuestion: "Which dependency should be removed to break the cycle?"
-- User picks; remove edge and re-validate.
-
-**Topological sort into waves:**
-- Wave 1: items with no dependencies (or all deps already complete/outside scope)
-- Wave 2+: items whose in-scope deps are all in earlier waves
+Track count of signals found as `undeclared_cap_signals`. Display only when > 0.
 
 ## 5. Overlap Detection
 
@@ -108,59 +124,51 @@ For each overlapping item:
     - "Remove from new group"
 - Apply user's choice per overlapping item.
 
-**If merge selected:** Modify existing focus group to include new items. Re-run dependency ordering for the merged group.
+**If merge selected:** Modify existing focus group to include new items. Re-query waves for the merged group.
 
 **If no overlap:** Proceed to ordering.
 
-## 6. Priority Ordering
+## 6. Priority Ordering + Readiness
 
 Present the final priority order based on:
-1. User's original ordering from Q&A step 3
-2. Adjusted by DAG constraints (if user put X before Y but X depends on Y, flag the conflict)
+1. Wave ordering from graph query
+2. User's original ordering from Q&A step 3 (for within-wave ordering)
 
-Display proposed order with wave groupings:
-
-```
-Proposed execution order:
-
-Wave 1 (no dependencies):
-  1. coaching/mistake-detection
-
-Wave 2 (depends on Wave 1):
-  2. coaching/grading -> depends: mistake-detection
-  3. coaching/session-analysis -> depends: mistake-detection
-
-Wave 3:
-  4. coaching/session-summary -> depends: grading, session-analysis
-```
+Display proposed order with wave groupings.
 
 **Wave readiness validation:**
 
-For Wave 1 items:
-- Confirm each feature has been discussed (FEATURE.md exists with Goal/Flow/composes[] sections populated)
-- If not discussed: flag as gap — "Feature '{feat}' in Wave 1 has no spec yet. Run `/gsd:discuss-feature {feat}` first."
+For each feature in wave 1:
+- Run `gate-check` to validate composed capabilities are ready:
+  ```bash
+  GATE=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" gate-check "$FEAT_SLUG")
+  ```
+- Confirm FEATURE.md exists with Goal/Flow/composes[] sections populated
+- If not discussed: flag as gap
 
-For Wave 2+ items:
-- Confirm upstream dependencies (in earlier waves) are at least planned (have PLAN.md files)
-- If upstream not planned: flag as gap — "Feature '{feat}' depends on '{dep}' which hasn't been planned yet."
+**If gate-check fails for a feature:**
+Use AskUserQuestion:
+- header: "Blocked Feature"
+- question: "Feature '{feat}' gate-check failed: {blockers}. What should I do?"
+- options:
+  - "Add blocking capability to focus scope"
+  - "Include anyway (I'll address blockers manually)"
+  - "Remove from focus group"
+  - "Run /gsd:refine to address blockers"
 
-Surface all gaps before writing to ROADMAP.md:
+**If user selects "Run /gsd:refine":**
+1. Write ROADMAP.md and STATE.md first (steps 7-8) so refine can read active-focus
+2. Invoke `/gsd:refine`
+3. After refine returns, resume at step 9 (commit) — ROADMAP.md/STATE.md already written
 
-If gaps found:
-```
-⚠️ Readiness gaps detected:
-
-{list of gaps}
-
-These don't block focus group creation, but should be addressed before execution.
-```
+Surface all gaps before writing to ROADMAP.md.
 
 Use AskUserQuestion:
 - header: "Priority Order"
 - question: "Does this order look right? You can reorder within waves (cross-wave reordering would break dependencies)."
 - options: "Looks good", "I want to adjust"
 
-If adjust: take user's new order, validate against DAG, re-present.
+If adjust: take user's new order, validate against wave constraints, re-present.
 
 ## 7. Write to ROADMAP.md
 
@@ -170,11 +178,11 @@ Add focus group section to ROADMAP.md:
 ### Focus: {focus_group_name}
 **Goal:** {focus_group_goal}
 **Priority Order:**
-1. {cap}/{feat} -> depends: none
-2. {cap}/{feat} -> depends: {dep}
+1. {feat} -> depends: none
+2. {feat} -> depends: {dep}
 **Status:**
-- [ ] {cap}/{feat} (not started)
-- [ ] {cap}/{feat} (not started)
+- [ ] {feat} (not started)
+- [ ] {feat} (not started)
 ```
 
 Write updated ROADMAP.md.
@@ -201,7 +209,8 @@ Display completion:
 Name: {focus_group_name}
 Goal: {focus_group_goal}
 Items: {count} ({wave_count} waves)
-Dependencies: {explicit_count} explicit, {implicit_count} implicit
+Dependencies: {dep_count} from composes[]
+{if undeclared_cap_signals > 0: "Undeclared capability signals: {undeclared_cap_signals}"}
 
 Next: Run `/gsd:plan {first_item}` to start planning the first item.
 ```
@@ -211,11 +220,12 @@ Next: Run `/gsd:plan {first_item}` to start planning the first item.
 <success_criteria>
 - [ ] Focus group name and goal captured via Q&A
 - [ ] All scope items resolved via slug-resolve
-- [ ] Explicit dependencies traced from FEATURE.md composes[] and depends_on
-- [ ] Implicit dependencies detected via shared file path analysis
-- [ ] Cycles detected and resolved with user input
+- [ ] Sequence context shown before scope Q&A (executable/blocked counts)
+- [ ] Wave ordering from graph-query waves replaces inline DAG construction
+- [ ] mgrep gap scan complete — undeclared capability signals surfaced (if any)
+- [ ] Gate-check routes blocked items with user choice
 - [ ] Overlap with existing focus groups detected and resolved (merge/parallel/remove)
-- [ ] Priority order respects DAG constraints
+- [ ] Priority order respects wave constraints
 - [ ] ROADMAP.md updated with focus group section
 - [ ] STATE.md updated with active focus reference
 - [ ] Commit created with focus group changes

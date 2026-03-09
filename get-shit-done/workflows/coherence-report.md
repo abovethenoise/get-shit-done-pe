@@ -53,8 +53,20 @@ Read project context files:
    ```
    Handle @file: prefix for large output.
 5. For each capability slug: read `.planning/capabilities/{slug}/CAPABILITY.md`
+6. Check SEQUENCE.md staleness and rebuild if needed:
+   ```bash
+   STALE=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" graph-query sequence-stale)
+   ```
+   If stale: invoke `@{GSD_ROOT}/get-shit-done/workflows/sequence.md` inline.
+7. Read `.planning/SEQUENCE.md` (if exists)
+8. Determine scope mode:
+   ```bash
+   FOCUS=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" state get active-focus)
+   ```
+   Parse for active focus group name, goal, and feature list.
+   Set `SCOPE_MODE` = "focus" if active focus exists, else "project-wide".
 
-Log: "Loaded project context + {N} capability definitions"
+Log: "Loaded project context + {N} capability definitions + SEQUENCE.md + scope:{SCOPE_MODE}"
 </step>
 
 <step name="assemble_agent_prompt">
@@ -76,8 +88,8 @@ Build the full prompt with XML context blocks:
 ## Relationship Matrix
 {matrix_content}
 
-## Dependency Graph
-{dependency_graph_content or "No dependency graph produced."}
+## Capability Coupling
+{dependency_graph_content or "No capability coupling graph produced."}
 </scan_artifacts>
 
 <findings>
@@ -88,6 +100,15 @@ Build the full prompt with XML context blocks:
 <capabilities>
 {for each capability: ## {slug}\n{capability_md_content}}
 </capabilities>
+
+<execution_sequence>
+{SEQUENCE.md content or "No SEQUENCE.md available."}
+</execution_sequence>
+
+<scope mode="{SCOPE_MODE}">
+{if focus: "Focus group: {name}\nGoal: {goal}\nFeatures: {feature_list}\nIn-scope capabilities: {cap_list}"}
+{if project-wide: "Project-wide refinement — no focus scope filter."}
+</scope>
 
 <mode>{MODE}</mode>
 ```

@@ -35,6 +35,22 @@ node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" summary-extract <path> --fi
 ```
 </step>
 
+<step name="load_sequence">
+Load sequence data for structural context:
+
+```bash
+STALE=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" graph-query sequence-stale)
+```
+
+If stale: rebuild by invoking `@{GSD_ROOT}/get-shit-done/workflows/sequence.md` inline.
+
+```bash
+SEQUENCE=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" graph-query sequence)
+```
+
+Parse JSON for `executable`, `blocked`, `critical_path`.
+</step>
+
 <step name="report">
 ```bash
 PROGRESS_BAR=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" progress bar --raw)
@@ -60,6 +76,11 @@ git log --oneline --grep="\[task [0-9]*/[0-9]*\]" --grep="{cap_slug}/{feat_slug}
 ```
 
 Display in Status column as: "In progress (3/5 tasks committed)" instead of just "In progress".
+
+## Sequence
+
+Executable: {N} features ready | Blocked: {N} waiting on caps
+Critical path: {top blocker cap} -> unblocks {N} features
 
 ## Focus Groups
 
@@ -102,16 +123,19 @@ Parse ROADMAP.md directly for focus groups. Do NOT use `focus_groups` from init 
 
 1. Read ROADMAP.md and identify any focus group sections with feature lists
 2. For each active focus group: identify its features and determine pipeline state using artifact detection above
-3. Check dependency edges (`-> depends:` entries in ROADMAP.md focus group section):
-   - For the candidate next feature, walk its dependency edges
-   - If any dependency is incomplete, warn and redirect:
+3. Use graph data for dependency checking:
+   - Query waves for the focus group's features:
+     ```bash
+     WAVES=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" graph-query waves --scope "$FEATURE_CSV")
      ```
-     Warning: {next-feature} depends on {dep-feature} which is {dep-status}.
-     Suggested: Complete {dep-feature} first.
-       `/gsd:execute {dep-cap}/{dep-feature}`
+   - Use `wave_1` for features ready to execute
+   - Use `blocked` for features waiting on capability verification:
+     ```
+     Warning: {next-feature} blocked by cap:{cap_slug} (status: {status}).
+     Suggested: Complete cap:{cap_slug} verification first.
      ```
    - If all dependencies satisfied, proceed with routing
-4. Detect parallel-safe work: features in different focus groups, or independent features within the same group (no dependency edges between them)
+4. Detect parallel-safe work from disjoint branches in sequence data (features in different branches can run in parallel)
 5. If multiple parallel-safe paths exist: present all options and use AskUserQuestion to ask which to advance
 6. If single clear next step: present concrete command
 

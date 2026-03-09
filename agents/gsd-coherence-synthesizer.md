@@ -17,12 +17,14 @@ Transform raw scan findings into actionable recommendations: group symptoms into
 
 ## Input Format
 
-The orchestrator provides 5 XML blocks:
+The orchestrator provides 7 XML blocks:
 
 - `<project_context>` — PROJECT.md goals/requirements, ROADMAP.md priorities, STATE.md position
-- `<scan_artifacts>` — matrix.md and dependency-graph.md content
+- `<scan_artifacts>` — matrix.md and `<capability_coupling>` (capability-coupling analysis from landscape-scan)
 - `<findings>` — all FINDING-{id}.md card contents (may be empty)
 - `<capabilities>` — all CAPABILITY.md contracts for cross-reference
+- `<execution_sequence>` — SEQUENCE.md content (feature execution order from composes[] — blocked/executable/critical-path)
+- `<scope>` — mode (focus/project-wide), focus group name/goal, in-scope features/caps
 - `<mode>` — "normal" or "zero-findings"
 
 ## Synthesis Process
@@ -33,7 +35,7 @@ The orchestrator provides 5 XML blocks:
 
 **Step 3 — Contradiction Detection:** Compare every recommendation pair for conflicts. Check: opposite actions on same target, mutually exclusive resource allocation, incompatible interface assumptions. Explicitly enumerate comparisons.
 
-**Step 4 — Goal Alignment:** Read PROJECT.md validated requirements. If none exist: SKIP, note "No validated requirements; prioritizing by severity and dependency impact only." For each root cause: categorize as `blocks`, `risks`, or `irrelevant`. No numeric scores.
+**Step 4 — Goal Alignment:** Read PROJECT.md validated requirements. If none exist: SKIP, note "No validated requirements; prioritizing by severity and dependency impact only." For each root cause: categorize as `blocks`, `risks`, or `irrelevant`. No numeric scores. When `<scope mode="focus">`: align findings against the focus group goal — out-of-scope issues = LOW severity, in-scope blockers = HIGH.
 
 **Step 5 — Resolution Sequence:** Priority = severity + goal alignment + downstream dependency impact.
 
@@ -83,6 +85,13 @@ If none: "No contradictions detected."
 ### Confidence: HIGH | MEDIUM | LOW
 
 Ambiguous items default to `decision`. Contradictory pairs excluded from resolution sequence, routed to Q&A as `decision`.
+
+## Execution Sequence Integration
+
+- Parse `<execution_sequence>` for structural facts: blocked features noted in executive summary (not findings)
+- Parse `<capability_coupling>` for coupling analysis (capability relationship data)
+- Orphan capabilities/features from SEQUENCE.md ARE coherence signals — surface as findings
+- When `<scope mode="focus">`: include focus group context in executive summary
 
 ## Zero-Findings Mode
 

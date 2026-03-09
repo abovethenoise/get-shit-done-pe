@@ -61,6 +61,30 @@ Goal: Surface mistakes and grade decisions for a single user session.
 
 Read ROADMAP.md to extract active focus group sections and display their status checklists.
 
+**Add sequence context:**
+
+```bash
+STALE=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" graph-query sequence-stale)
+```
+
+If stale: rebuild SEQUENCE.md inline via `@{GSD_ROOT}/get-shit-done/workflows/sequence.md`.
+
+```bash
+SEQUENCE=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" graph-query sequence)
+```
+
+Parse JSON and display:
+
+```
+## Sequence
+
+Executable now: {feat1}, {feat2} (all composed caps verified)
+Blocked: {feat3} -> cap:{cap_slug} ({status})
+Critical path: cap:{top_blocker} -> unblocks {N} features
+
+Run `/gsd:sequence` for full structural map.
+```
+
 ## 3. Detail Mode
 
 ```bash

@@ -674,6 +674,71 @@ function cmdStateJson(cwd, raw) {
   output(fm, raw, JSON.stringify(fm, null, 2));
 }
 
+function cmdStateGetActiveFocus(cwd, raw) {
+  const statePath = path.join(cwd, '.planning', 'STATE.md');
+  const roadmapPath = path.join(cwd, '.planning', 'ROADMAP.md');
+
+  // Read STATE.md for active focus group name
+  let focusName = null;
+  try {
+    const stateContent = fs.readFileSync(statePath, 'utf-8');
+    const sectionMatch = stateContent.match(/##\s*Active Focus Groups?[ \t]*\n([\s\S]*?)(?=\n##|$)/i);
+    if (sectionMatch) {
+      const sectionBody = sectionMatch[1].trim();
+      // First non-empty line that isn't a placeholder
+      const lines = sectionBody.split('\n').map(l => l.trim()).filter(l => l && !l.match(/^none/i));
+      if (lines.length > 0) {
+        // Strip list markers and checkbox markers
+        let rawName = lines[0].replace(/^[-*]\s*(\[.\]\s*)?/, '').trim();
+        // Strip trailing ": feature-list" if present (STATE.md may list features inline)
+        const colonIdx = rawName.indexOf(':');
+        if (colonIdx > 0) rawName = rawName.substring(0, colonIdx).trim();
+        focusName = rawName;
+      }
+    }
+  } catch { /* STATE.md not found */ }
+
+  if (!focusName) {
+    output({ active_focus: null }, raw, '');
+    return;
+  }
+
+  // Parse ROADMAP.md for focus group detail
+  let goal = null;
+  const features = [];
+  try {
+    const roadmapContent = fs.readFileSync(roadmapPath, 'utf-8');
+    const focusEscaped = focusName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const focusPattern = new RegExp(`###\\s*Focus:\\s*${focusEscaped}\\s*\\n([\\s\\S]*?)(?=\\n###|\\n##[^#]|$)`, 'i');
+    const focusMatch = roadmapContent.match(focusPattern);
+    if (focusMatch) {
+      const body = focusMatch[1];
+      const goalMatch = body.match(/\*\*Goal:\*\*\s*(.+)/i);
+      if (goalMatch) goal = goalMatch[1].trim();
+
+      // Extract feature slugs from priority order or status checklist
+      const listItems = body.match(/^[-*\d.]+\s*\[?\s*[x ]?\s*\]?\s*(.+)$/gim) || [];
+      for (const item of listItems) {
+        // Skip bold field patterns like **Goal:**, **Status:**, **Priority Order:**
+        if (/\*\*\w+.*:\*\*/.test(item)) continue;
+        // Extract the slug part (before -> depends: or parenthetical)
+        const cleaned = item.replace(/^[-*\d.]+\s*\[?\s*[x ]?\s*\]?\s*/, '').split(/\s*->\s*|\s*\(/)[0].trim();
+        if (cleaned && !cleaned.startsWith('**') && !features.includes(cleaned)) {
+          features.push(cleaned);
+        }
+      }
+    }
+  } catch { /* ROADMAP.md not found */ }
+
+  output({
+    active_focus: {
+      name: focusName,
+      goal,
+      features,
+    },
+  }, raw);
+}
+
 module.exports = {
   stateExtractField,
   stateReplaceField,
@@ -690,4 +755,5 @@ module.exports = {
   cmdStateRecordSession,
   cmdStateSnapshot,
   cmdStateJson,
+  cmdStateGetActiveFocus,
 };

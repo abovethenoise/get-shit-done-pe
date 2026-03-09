@@ -1154,5 +1154,126 @@ describe('cmdStateRecordSession (state record-session)', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// cmdStateGetActiveFocus (state get active-focus)
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('cmdStateGetActiveFocus (state get active-focus)', () => {
+  let tmpDir;
+
+  beforeEach(() => {
+    tmpDir = createTempProject();
+  });
+
+  afterEach(() => {
+    cleanup(tmpDir);
+  });
+
+  test('returns null when STATE.md does not exist', () => {
+    const result = runGsdTools(['state', 'get', 'active-focus'], tmpDir);
+    assert.ok(result.success, `Command failed: ${result.error}`);
+    const output = JSON.parse(result.output);
+    assert.strictEqual(output.active_focus, null);
+  });
+
+  test('returns null when STATE.md has no Active Focus Groups section', () => {
+    fs.writeFileSync(
+      path.join(tmpDir, '.planning', 'STATE.md'),
+      '# State\n\n**Status:** Active\n'
+    );
+    const result = runGsdTools(['state', 'get', 'active-focus'], tmpDir);
+    assert.ok(result.success, `Command failed: ${result.error}`);
+    const output = JSON.parse(result.output);
+    assert.strictEqual(output.active_focus, null);
+  });
+
+  test('returns null when Active Focus Groups section is empty', () => {
+    fs.writeFileSync(
+      path.join(tmpDir, '.planning', 'STATE.md'),
+      '# State\n\n## Active Focus Groups\n\n## Other Section\n'
+    );
+    const result = runGsdTools(['state', 'get', 'active-focus'], tmpDir);
+    assert.ok(result.success, `Command failed: ${result.error}`);
+    const output = JSON.parse(result.output);
+    assert.strictEqual(output.active_focus, null);
+  });
+
+  test('strips inline feature list from focus name (colon format)', () => {
+    fs.writeFileSync(
+      path.join(tmpDir, '.planning', 'STATE.md'),
+      '## Active Focus Groups\n- my-focus: feat-a, feat-b\n'
+    );
+    fs.writeFileSync(
+      path.join(tmpDir, '.planning', 'ROADMAP.md'),
+      '### Focus: my-focus\n**Goal:** Test goal\n1. feat-a\n2. feat-b\n'
+    );
+    const result = runGsdTools(['state', 'get', 'active-focus'], tmpDir);
+    assert.ok(result.success, `Command failed: ${result.error}`);
+    const output = JSON.parse(result.output);
+    assert.strictEqual(output.active_focus.name, 'my-focus');
+    assert.strictEqual(output.active_focus.goal, 'Test goal');
+  });
+
+  test('extracts features from ROADMAP.md without duplicates', () => {
+    fs.writeFileSync(
+      path.join(tmpDir, '.planning', 'STATE.md'),
+      '## Active Focus Groups\n- alpha-group\n'
+    );
+    fs.writeFileSync(
+      path.join(tmpDir, '.planning', 'ROADMAP.md'),
+      [
+        '### Focus: alpha-group',
+        '**Goal:** Validate alpha',
+        '**Priority Order:**',
+        '1. feat-one -> depends: none',
+        '2. feat-two -> depends: none',
+        '**Status:**',
+        '- [ ] feat-one (not started)',
+        '- [ ] feat-two (not started)',
+      ].join('\n')
+    );
+    const result = runGsdTools(['state', 'get', 'active-focus'], tmpDir);
+    assert.ok(result.success, `Command failed: ${result.error}`);
+    const output = JSON.parse(result.output);
+    assert.deepStrictEqual(output.active_focus.features, ['feat-one', 'feat-two']);
+  });
+
+  test('skips bold field patterns in feature extraction', () => {
+    fs.writeFileSync(
+      path.join(tmpDir, '.planning', 'STATE.md'),
+      '## Active Focus Groups\n- test-group\n'
+    );
+    fs.writeFileSync(
+      path.join(tmpDir, '.planning', 'ROADMAP.md'),
+      [
+        '### Focus: test-group',
+        '**Goal:** Some goal',
+        '**Priority Order:**',
+        '1. feat-x',
+        '**Status:**',
+        '- [x] feat-x (complete)',
+      ].join('\n')
+    );
+    const result = runGsdTools(['state', 'get', 'active-focus'], tmpDir);
+    assert.ok(result.success, `Command failed: ${result.error}`);
+    const output = JSON.parse(result.output);
+    // Should only contain feat-x, not **Goal:** or **Priority Order:** or **Status:**
+    assert.deepStrictEqual(output.active_focus.features, ['feat-x']);
+  });
+
+  test('returns null goal and empty features when ROADMAP.md missing', () => {
+    fs.writeFileSync(
+      path.join(tmpDir, '.planning', 'STATE.md'),
+      '## Active Focus Groups\n- orphan-group\n'
+    );
+    const result = runGsdTools(['state', 'get', 'active-focus'], tmpDir);
+    assert.ok(result.success, `Command failed: ${result.error}`);
+    const output = JSON.parse(result.output);
+    assert.strictEqual(output.active_focus.name, 'orphan-group');
+    assert.strictEqual(output.active_focus.goal, null);
+    assert.deepStrictEqual(output.active_focus.features, []);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 // summary-extract command
 // ─────────────────────────────────────────────────────────────────────────────

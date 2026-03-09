@@ -14,11 +14,11 @@ allowed-tools:
 ---
 
 <objective>
-Run the full requirements-refinement pipeline: scan all capabilities for coherence issues, synthesize findings into recommendations, walk the user through Q&A, apply confirmed changes, and generate the refinement report with delta.
+Run the requirements-refinement pipeline: scan capabilities for coherence issues, synthesize findings into recommendations, walk the user through Q&A, apply confirmed changes, and generate the refinement report with delta.
 
-No arguments required — operates on the entire project.
+When a focus group is active, scopes to its capabilities. Otherwise operates project-wide.
 
-**Pipeline:** refinement-init → landscape-scan → coherence-report → refinement-qa → change-application → refinement-report + delta
+**Pipeline:** scope-resolution → refinement-init → landscape-scan → coherence-report → refinement-qa → change-application → refinement-report + delta
 </objective>
 
 <execution_context>
@@ -29,9 +29,10 @@ No arguments required — operates on the entire project.
 </execution_context>
 
 <context>
-**User reference:** $ARGUMENTS (optional — ignored, refinement always operates project-wide)
+**User reference:** $ARGUMENTS (optional — ignored, scope determined by active focus group)
 
 Operates on `.planning/capabilities/` and writes to `.planning/refinement/`.
+When focus-scoped: only capabilities composed by the focus group's features are scanned.
 </context>
 
 <process>
@@ -49,6 +50,31 @@ Parse JSON result. If `capabilities` array is empty:
 - Stop.
 
 Log: "Found {N} capabilities. Starting refinement pipeline."
+
+## 1b. Scope Resolution
+
+```bash
+FOCUS=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" state get active-focus)
+```
+
+Parse JSON result.
+
+**If `active_focus` is not null:**
+- Extract the focus group's feature list
+- For each feature, read its `composes[]` from frontmatter
+- Build `SCOPED_CAPS` = union of all composed capability slugs
+- Log: "Focus-scoped refinement: {N} capabilities from focus group '{name}'"
+- Pass `SCOPED_CAPS` to landscape-scan (set as environment context)
+
+**If `active_focus` is null:**
+- Use AskUserQuestion:
+  - header: "Refinement Scope"
+  - question: "No active focus group found. How should I scope this refinement?"
+  - options:
+    - "Project-wide (scan all capabilities)"
+    - "Run /gsd:focus first to set a focus group"
+- If user picks focus first: stop and suggest `/gsd:focus`
+- If project-wide: proceed without scope filter (`SCOPED_CAPS` = null)
 
 ## 2. Initialize Refinement Directory
 

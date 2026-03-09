@@ -25,6 +25,7 @@ const {
   findPhaseInternal,
   findCapabilityInternal,
   findFeatureInternal,
+  listAllFeaturesInternal,
 } = require('../get-shit-done/bin/lib/core.cjs');
 
 // ─── loadConfig ────────────────────────────────────────────────────────────────
@@ -715,5 +716,98 @@ describe('findFeatureInternal', () => {
     const result = findFeatureInternal(tmpDir, 'User Login');
     assert.strictEqual(result.found, true);
     assert.strictEqual(result.slug, 'user-login');
+  });
+});
+
+// ─── listAllFeaturesInternal ──────────────────────────────────────────────────
+
+describe('listAllFeaturesInternal', () => {
+  let tmpDir;
+
+  beforeEach(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-core-test-'));
+    fs.mkdirSync(path.join(tmpDir, '.planning', 'features'), { recursive: true });
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  test('returns empty array when features dir is empty', () => {
+    const result = listAllFeaturesInternal(tmpDir);
+    assert.deepStrictEqual(result, []);
+  });
+
+  test('returns empty array when no .planning dir', () => {
+    const emptyDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-core-test-'));
+    const result = listAllFeaturesInternal(emptyDir);
+    assert.deepStrictEqual(result, []);
+    fs.rmSync(emptyDir, { recursive: true, force: true });
+  });
+
+  test('excludes feature dirs without FEATURE.md', () => {
+    fs.mkdirSync(path.join(tmpDir, '.planning', 'features', 'orphan-dir'), { recursive: true });
+    // No FEATURE.md inside
+    const result = listAllFeaturesInternal(tmpDir);
+    assert.deepStrictEqual(result, []);
+  });
+
+  test('returns composes from frontmatter', () => {
+    const featDir = path.join(tmpDir, '.planning', 'features', 'login');
+    fs.mkdirSync(featDir, { recursive: true });
+    fs.writeFileSync(path.join(featDir, 'FEATURE.md'), [
+      '---',
+      'name: Login',
+      'composes:',
+      '  - auth',
+      '  - database',
+      '---',
+      '# Login Feature',
+    ].join('\n'));
+    const result = listAllFeaturesInternal(tmpDir);
+    assert.strictEqual(result.length, 1);
+    assert.strictEqual(result[0].feature_slug, 'login');
+    assert.deepStrictEqual(result[0].composes, ['auth', 'database']);
+  });
+
+  test('returns empty composes when field missing', () => {
+    const featDir = path.join(tmpDir, '.planning', 'features', 'signup');
+    fs.mkdirSync(featDir, { recursive: true });
+    fs.writeFileSync(path.join(featDir, 'FEATURE.md'), [
+      '---',
+      'name: Signup',
+      '---',
+      '# Signup',
+    ].join('\n'));
+    const result = listAllFeaturesInternal(tmpDir);
+    assert.strictEqual(result.length, 1);
+    assert.deepStrictEqual(result[0].composes, []);
+  });
+
+  test('returns empty composes when composes is empty list', () => {
+    const featDir = path.join(tmpDir, '.planning', 'features', 'profile');
+    fs.mkdirSync(featDir, { recursive: true });
+    fs.writeFileSync(path.join(featDir, 'FEATURE.md'), [
+      '---',
+      'name: Profile',
+      'composes: []',
+      '---',
+      '# Profile',
+    ].join('\n'));
+    const result = listAllFeaturesInternal(tmpDir);
+    assert.strictEqual(result.length, 1);
+    assert.deepStrictEqual(result[0].composes, []);
+  });
+
+  test('returns multiple features sorted by slug', () => {
+    for (const slug of ['beta', 'alpha']) {
+      const featDir = path.join(tmpDir, '.planning', 'features', slug);
+      fs.mkdirSync(featDir, { recursive: true });
+      fs.writeFileSync(path.join(featDir, 'FEATURE.md'), `---\nname: ${slug}\n---\n# ${slug}`);
+    }
+    const result = listAllFeaturesInternal(tmpDir);
+    assert.strictEqual(result.length, 2);
+    assert.strictEqual(result[0].feature_slug, 'alpha');
+    assert.strictEqual(result[1].feature_slug, 'beta');
   });
 });

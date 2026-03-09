@@ -136,7 +136,7 @@ async function main() {
   const command = args[0];
 
   if (!command) {
-    error('Usage: gsd-tools <command> [args] [--raw] [--cwd <path>]\nCommands: state, commit, verify, frontmatter, template, config-get, config-set, init, plan-validate, progress, roadmap, requirements, summary-extract, state-snapshot, slug-resolve, capability-create, capability-list, capability-status, capability-validate, feature-create, feature-list, feature-status, feature-validate, gate-check');
+    error('Usage: gsd-tools <command> [args] [--raw] [--cwd <path>]\nCommands: state, commit, verify, frontmatter, template, config-get, config-set, init, plan-validate, progress, roadmap, requirements, summary-extract, state-snapshot, slug-resolve, capability-create, capability-list, capability-status, capability-validate, feature-create, feature-list, feature-status, feature-validate, gate-check, graph-build, graph-query');
   }
 
   switch (command) {
@@ -146,6 +146,8 @@ async function main() {
         state.cmdStateJson(cwd, raw);
       } else if (subcommand === 'update') {
         state.cmdStateUpdate(cwd, args[2], args[3]);
+      } else if (subcommand === 'get' && args[2] === 'active-focus') {
+        state.cmdStateGetActiveFocus(cwd, raw);
       } else if (subcommand === 'get') {
         state.cmdStateGet(cwd, args[2], raw);
       } else if (subcommand === 'patch') {
@@ -478,6 +480,18 @@ async function main() {
     case 'changeset-parse': {
       const { cmdChangesetParse } = require('./lib/refinement.cjs');
       cmdChangesetParse(cwd, raw);
+      break;
+    }
+
+    // ─── Graph commands ──────────────────────────────────────────────────────
+    case 'graph-build': {
+      const { cmdGraphBuild } = require('./lib/graph.cjs');
+      cmdGraphBuild(cwd, raw);
+      break;
+    }
+    case 'graph-query': {
+      const { cmdGraphQuery } = require('./lib/graph.cjs');
+      cmdGraphQuery(cwd, args.slice(1), raw);
       break;
     }
 

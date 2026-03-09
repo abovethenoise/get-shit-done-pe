@@ -8,7 +8,7 @@ Read STATE.md before any operation to load project context.
 </required_reading>
 
 <inputs>
-None — operates on the current project's .planning/capabilities/ directory.
+- `SCOPED_CAPS` (optional) — comma-separated capability slugs from the invoking refine command's scope resolution. When set, only these capabilities are scanned. When null/absent, operates on all capabilities.
 </inputs>
 
 <process>
@@ -37,6 +37,11 @@ fi
 
 Parse the JSON result. Extract `capabilities` array and `gap_findings` array.
 
+**If `SCOPED_CAPS` is set:**
+- Filter `capabilities` to only slugs present in SCOPED_CAPS
+- Log: "Scope filter applied: {N} of {total} capabilities in scope"
+- Load SEQUENCE.md orphan data as additional gap_findings (orphan caps within scope)
+
 If `gap_findings` is non-empty:
 - Initialize a finding counter from the highest existing FINDING-{NNN}.md + 1 (default 1)
 - For each gap finding:
@@ -56,6 +61,9 @@ COMPLETED=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" scan-checkpoint
 Parse both JSON results.
 
 Filter out pairs where `{a}__{b}` appears in the completed_pairs list.
+
+**If `SCOPED_CAPS` is set:**
+- Filter pairs to only those where both capabilities are in SCOPED_CAPS
 
 Initialize the finding ID counter from the highest existing FINDING-{NNN}.md in `.planning/refinement/findings/` + 1.
 
