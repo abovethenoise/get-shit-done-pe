@@ -255,18 +255,6 @@ Update the existing CAPABILITY.md (created by `capability-create`). Do NOT overw
 If killed or deferred, update the status in frontmatter and add a row to the Decisions table with the reasoning.
 
 If exploration surfaced a suggested framing lens, add it to the Decisions table.
-
-**Scaffold feature directories and stubs:**
-
-After updating the capability file, create feature directories and FEATURE.md stubs for each feature identified during discussion. For each feature:
-
-```bash
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" feature-create "{feature-name}"
-```
-
-This creates `.planning/features/{feat-slug}/FEATURE.md` using the standard template with Goal/Flow/Scope/composes[] placeholder sections. These placeholders get filled during discuss-feature.
-
-Skip this step if the capability was killed or deferred.
 </step>
 
 <step name="summarize_and_next">

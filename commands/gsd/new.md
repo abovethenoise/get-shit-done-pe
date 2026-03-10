@@ -77,64 +77,36 @@ If $ARGUMENTS is empty: treat as no_match (skip resolution, go to Step 2 no_matc
   - options: "New capability", "New feature"
 - **If new capability:**
   - Invoke discuss-capability workflow
-  - After discuss-capability completes, use the capability slug it created as CAPABILITY_SLUG
-  - Proceed to Step 3 (feature stub auto-creation), then Step 4 (fan-out offer)
+  - After discuss-capability completes, stop. The capability is defined.
+  - Display next steps: "Create features that compose this capability with `/gsd:new {feature-name}`, then use `/gsd:discuss-feature` to explore each one."
 - **If new feature:**
   - Use the user's original input as the feature name
   - Create the feature: `node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" feature-create "{name}"`
   - Invoke framing-discovery.md with LENS=new and FEATURE_SLUG (from the created feature)
   - Stop after framing-discovery completes
 
-## 3. Feature Stub Auto-Creation (capability path only)
+## 3. Framing-Pipeline Invocation (capability path only)
 
-Before invoking framing-pipeline, ensure feature directories exist for all features listed in CAPABILITY.md.
+Reached from Step 2 "resolved as capability" path.
 
-Scan `.planning/features/*/FEATURE.md` for features whose `composes[]` includes capabilities related to CAPABILITY_SLUG. Also check if discuss-capability created feature stubs.
+Scan `.planning/features/*/FEATURE.md` for features whose `composes[]` includes CAPABILITY_SLUG.
 
 **If no features found that compose this capability:**
 - Display error: "No features found composing '{CAPABILITY_SLUG}'."
-- Suggest: "Run /gsd:discuss-capability {CAPABILITY_SLUG} to define features first."
+- Suggest: "Create features first with `/gsd:new {feature-name}`, then `/gsd:discuss-feature` to explore each one."
 - Stop.
-
-**For each feature slug that needs stub creation:**
-- Check if `.planning/features/{feature_slug}/` directory exists
-- **If it does not exist:**
-  ```bash
-  node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" feature-create "{feature_slug}"
-  ```
-  After creation, open the created FEATURE.md at `.planning/features/{feature_slug}/FEATURE.md` and change `status: planning` to `status: exploring` in the YAML frontmatter.
-  Log: "Created feature stub: {feature_slug}"
-- **If it already exists:** Skip silently (no log, no error)
-
-After the loop completes, proceed to Step 4 (framing-pipeline invocation — direct path, no fan-out offer).
-
-## 4. Framing-Pipeline Invocation
 
 ```
 @{GSD_ROOT}/get-shit-done/workflows/framing-pipeline.md
 ```
 Pass: CAPABILITY_SLUG, LENS=new
 
-**Note:** Step 4 is reached either from:
-- Step 2 "resolved as capability" path (after Step 3 stub creation) — invoke pipeline directly, no fan-out offer
-- Step 2 "no_match → new capability" path (after Step 3 stub creation) — present fan-out offer first
-
-**Fan-out offer (only when arriving from discuss-capability path):**
-Before invoking pipeline, use AskUserQuestion:
-- header: "Pipeline Ready"
-- question: "Capability and features defined. Continue to pipeline for all features now?"
-- options: "Continue (run pipeline for all features)", "I'll run them individually"
-- If "I'll run them individually": display next steps ("Run /gsd:new {feature_slug} for each feature") and stop
-- If "Continue": invoke framing-pipeline
-
-**Direct path (arriving from Step 2 resolved-as-capability):**
-Invoke framing-pipeline directly without fan-out offer.
+Invoke framing-pipeline directly — it fans out to all features that compose this capability.
 </process>
 
 <success_criteria>
-- Slug resolved; capability -> stub creation + framing-pipeline, feature -> framing-discovery
-- Unknown slug asks capability-or-feature; routes correctly to discuss-capability or framing-discovery
-- Feature stubs created for missing features; existing features skipped; empty table errors
-- Post-discuss-capability fan-out offer presented before framing-pipeline invocation
+- Slug resolved; capability -> framing-pipeline (if composing features exist), feature -> framing-discovery
+- Unknown slug asks capability-or-feature; capability routes to discuss-capability then stops, feature creates and routes to framing-discovery
+- No features composing capability -> error with guidance to create features first
 - Feature-level framing-discovery invocation preserved (no regression from original behavior)
 </success_criteria>
