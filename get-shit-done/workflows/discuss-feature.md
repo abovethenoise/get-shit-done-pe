@@ -143,7 +143,14 @@ After EVERY AskUserQuestion return, write results to feature working state befor
 4. **Composed capabilities** — Which capabilities does this feature compose (if known)? Are they contracted? (Optional during discovery — composes[] is a planning artifact, not a discovery gate.)
 5. **User-facing failures** — What does the user see when a composed capability fails?
 6. **Context** — What flows between the composed capabilities (handoff contracts)?
-7. **Design references** — If any composed capability has `ui_facing: true`, which feature-level design patterns apply? (Auto-detected from composed caps — not a gate question. Surface naturally during discussion: "This feature composes {cap} which is UI-facing. Which layout/interaction patterns from the design system apply at the feature level?" Inject `## Design References` table into FEATURE.md only when relevant.)
+7. **UI surface** — Does this feature have a visual/interactive element? Two detection paths:
+   - **From composed capabilities:** If any composed capability has `ui_facing: true`, auto-detect and surface: "This feature composes {cap} which is UI-facing. Which layout/interaction patterns from the design system apply at the feature level?"
+   - **Direct probe:** If no composed capabilities are ui_facing (or composes[] is empty) and `.docs/design-system.md` exists, ask via AskUserQuestion:
+     - header: "UI Surface"
+     - question: "Does this feature involve any UI that users see or interact with?"
+     - options: "Yes — has a visual/interactive element" | "No — no UI"
+   - If yes (either path): Read `.docs/design-system.md`, surface applicable tokens/components/patterns. Inject `## Design References` table into FEATURE.md.
+   - If `.docs/design-system.md` does not exist, skip this probe entirely.
 
 **Round loop:**
 

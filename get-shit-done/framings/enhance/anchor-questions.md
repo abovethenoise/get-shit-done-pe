@@ -50,3 +50,12 @@
 - If no conflicts -> good; note this in the brief
 - If potential conflicts -> flag them; the enhancement may need sequencing
 - If this enhancement enables future work -> note it; this affects priority
+
+## Question 6: Does this enhancement touch anything the user sees?
+
+**Purpose:** If the enhancement changes visual or interactive elements, the design system should inform the change. Only ask if `.docs/design-system.md` exists in the project — skip entirely otherwise.
+
+**Branching hints:**
+- If yes -> read `.docs/design-system.md`, check whether the change aligns with existing tokens/components/patterns. Note applicable design references in the brief.
+- If the enhancement changes layout, spacing, colors, or interaction patterns -> surface the relevant design system entries; the delta should stay within the system
+- If no visual changes -> skip; no design references needed

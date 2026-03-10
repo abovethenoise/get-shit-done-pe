@@ -59,3 +59,12 @@
 - If user has strong opinions on shape -> capture them as constraints, not requirements
 - If user defers to you -> propose 2-3 shape options with tradeoffs; user picks direction
 - If shape is unclear -> this is fine at discovery stage; flag as open question, pipeline stages will resolve
+
+## Question 7: Does this have a visual or interactive element?
+
+**Purpose:** Surface UI/UX needs early so design system context informs the rest of discovery. Only ask if `.docs/design-system.md` exists in the project — skip entirely otherwise.
+
+**Branching hints:**
+- If yes -> read `.docs/design-system.md`, surface applicable tokens/components/patterns. Note which design system entries apply in the brief. Set `ui_facing: true` on the capability.
+- If partially (e.g., has a settings UI but core logic is backend) -> same as yes; note which parts are UI-facing
+- If no -> set `ui_facing: false`; no design references needed

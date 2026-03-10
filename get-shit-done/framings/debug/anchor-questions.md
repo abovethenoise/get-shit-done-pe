@@ -50,3 +50,12 @@
 - If clearly in our code -> narrow to module/component
 - If unclear -> the brief should flag isolation as an open question
 - If external dependency -> the brief should note this; fix strategy differs (workaround vs upstream report)
+
+## Question 6: Is the bug visible to the user?
+
+**Purpose:** If the symptom manifests visually (wrong layout, broken interaction, missing element), the design system provides the expected baseline. Only ask if the capability/feature has `ui_facing: true` or if `.docs/design-system.md` exists — skip otherwise.
+
+**Branching hints:**
+- If yes -> read `.docs/design-system.md`; the design system defines what "correct" looks like. Document the expected visual state from design tokens/components and compare against the symptom.
+- If the symptom is visual but intermittent -> note which design system entries define the expected rendering; helps narrow reproduction to rendering-specific conditions
+- If not a visual bug -> skip; no design references needed

@@ -51,3 +51,12 @@
 - If contract is well-defined (types, tests, API specs) -> the refactor has a safety net
 - If contract is implicit -> documenting it IS part of the refactor; add to scope
 - If some behavior should change -> this is not a pure refactor; it is refactor + enhance; flag for compound lens
+
+## Question 6: Does this refactor touch any visual or interactive elements?
+
+**Purpose:** If the refactor restructures UI code, verify that visual output remains identical. Only ask if the capability/feature has `ui_facing: true` or if `.docs/design-system.md` exists — skip otherwise.
+
+**Branching hints:**
+- If yes -> read `.docs/design-system.md`; the visual contract is part of the behavioral contract. Document which design tokens, components, or patterns must render identically after refactoring.
+- If the refactor changes component structure but not visual output -> note as visual invariant; verify with before/after comparison
+- If no visual elements involved -> skip; no design references needed
