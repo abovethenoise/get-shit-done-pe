@@ -162,26 +162,38 @@ After EVERY AskUserQuestion return, write results to feature working state befor
 
 **Background checklist (not sequential stages — use to assess gaps):**
 
-1. **Goal** — What is the one verifiable sentence describing what this feature achieves?
-2. **Flow** — What capabilities execute in what order? What's the happy path? Failure paths?
-3. **Scope** — What's in (only these capabilities), what's out (no new logic here)?
-4. **Composed capabilities** — Which capabilities does this feature compose (if known)? Are they contracted? (Optional during discovery — composes[] is a planning artifact, not a discovery gate.)
-5. **User-facing failures** — What does the user see when a composed capability fails?
-6. **Context** — What flows between the composed capabilities (handoff contracts)?
-7. **UI surface** — Does this feature have a visual/interactive element? Two detection paths:
-   - **From composed capabilities:** If any composed capability has `ui_facing: true`, auto-detect and surface: "This feature composes {cap} which is UI-facing. Which layout/interaction patterns from the design system apply at the feature level?"
-   - **Direct probe:** If no composed capabilities are ui_facing (or composes[] is empty) and `.docs/design-system.md` exists, ask via AskUserQuestion:
-     - header: "UI Surface"
-     - question: "Does this feature involve any UI that users see or interact with?"
-     - options: "Yes — has a visual/interactive element" | "No — no UI"
-   - If yes (either path): Read `.docs/design-system.md`, surface applicable tokens/components/patterns. Inject `## Design References` table into FEATURE.md.
-   - If `.docs/design-system.md` does not exist, skip this probe entirely.
+Phase 1 — Identity (what does this feature achieve?):
+1. **Goal** — One verifiable sentence: what the user gets when this is done. Must be testable.
+2. **Composed capabilities** — Which capabilities does this feature compose (if known)? (Optional during discovery — composes[] is a planning artifact, not a discovery gate.)
+
+Phase 2 — Flow (how does it work step by step?):
+3. **Happy path** — Numbered steps: which capability executes, what it does in this context, what it passes to the next step. Push for concrete step-by-step, not vague "capabilities execute in order."
+4. **Failure paths** — For each step, what happens on failure? Indented bullets under the step that fails.
+5. **Branch logic** — Where does the flow fork based on conditions? What determines which branch?
+
+Phase 3 — Boundaries:
+6. **Scope: In** — Only these capabilities, only this orchestration.
+7. **Scope: Out** — No new implementation logic. No changes to capability internals. Be explicit.
+
+Phase 4 — Data and failures:
+8. **User-Facing Failures** — For each composed capability: what failure mode, what does the user see? Push for the table format: Composed Capability | Failure Mode | User Sees.
+9. **Context / Handoff contracts** — What data flows between composed capabilities? Push for the table format: From | To | Data | Format. Get concrete types/shapes, not just "passes data."
+
+Phase 5 — Surface:
+10. **UI surface** — Does this feature have a visual/interactive element? Two detection paths:
+    - **From composed capabilities:** If any composed capability has `ui_facing: true`, auto-detect and surface: "This feature composes {cap} which is UI-facing. Which layout/interaction patterns from the design system apply at the feature level?"
+    - **Direct probe:** If no composed capabilities are ui_facing (or composes[] is empty) and `.docs/design-system.md` exists, ask via AskUserQuestion:
+      - header: "UI Surface"
+      - question: "Does this feature involve any UI that users see or interact with?"
+      - options: "Yes — has a visual/interactive element" | "No — no UI"
+    - If yes (either path): Read `.docs/design-system.md`, surface applicable tokens/components/patterns. Inject `## Design References` table into FEATURE.md.
+    - If `.docs/design-system.md` does not exist, skip this probe entirely.
 
 **Round loop:**
 
 1. Call AskUserQuestion (1-4 questions informed by what's unknown from the checklist)
 2. Write answers to feature working notes (in the FEATURE.md Decisions section)
-4. Assess: do I have enough to fill out Goal, Flow, Scope, and composes[] in FEATURE.md?
+3. Assess: do I have enough to fill the FEATURE.md template sections?
    - YES → AskUserQuestion: "I think I have what I need for this feature. Anything else?"
      - User says done → proceed to update_feature_notes
      - User has more → back to step 1
@@ -189,7 +201,12 @@ After EVERY AskUserQuestion return, write results to feature working state befor
 
 No round limit — model self-assesses against done threshold.
 
-**Done threshold:** enough clarity to fill out Goal (verifiable sentence), Flow (capability sequence + branches), Scope (in/out), composes[] (capability list), and User-Facing Failures.
+**Done threshold:** enough clarity to fill Goal (verifiable sentence), Flow (numbered steps with failure branches), Scope (in/out lists), User-Facing Failures (table with capability/mode/user-sees), and Context (table with from/to/data/format). composes[] is desirable but not blocking.
+
+**Progression guidance:**
+- Start with Phase 1 — don't ask about failure modes before the happy path is clear
+- Phase 2 is the heart — spend the most time here. Push for numbered steps referencing specific capabilities, not abstract sequences.
+- Phase 4 may partially fill from Phase 2 answers — extract failure and data flow info rather than re-asking
 
 **Grounding in capability contracts:**
 Reference the composed capabilities' contracts during discussion. "Capability {X} returns {output} — does this feature need to transform that before passing to {Y}?"
@@ -256,33 +273,39 @@ After exploration is complete (or kill/defer/backward-route decided), update fea
 
 **If kill/defer:** Update the feature file status and add reasoning. Skip spec generation.
 
-**If exploration complete:** Write Goal, Flow, Scope, and User-Facing Failures into FEATURE.md. Write composes[] if the user provided composition during discussion; do not prompt for it as required.
-
-The template at `get-shit-done/templates/feature.md` has the right structure. Fill the sections from discussion:
+**If exploration complete:** Fill all FEATURE.md template sections from discussion data. Write composes[] if the user provided composition during discussion; do not prompt for it as required.
 
 **Goal:**
 - One verifiable sentence describing what this feature achieves
 
 **Flow:**
-- Ordered sequence: which capabilities execute in what order
-- Branch logic, happy path + failure paths
+- Numbered steps: `1. {capability-slug}: {what it does in this context}`
+- Indented failure branches: `   - On failure: {what happens}`
+- Branch logic as conditional steps
 
 **Scope:**
-- What's in (only these capabilities)
-- What's out (no new logic here)
+- **In:** bullet list — only these capabilities, only this orchestration
+- **Out:** bullet list — no new implementation logic, no changes to capability internals
 
 **composes[] (frontmatter):**
 - List of capability slugs this feature composes
 
-**User-Facing Failures:**
-- What the user sees when each composed capability fails
+**User-Facing Failures (table format):**
 
-**Context:**
-- What flows between the composed capabilities (handoff contracts)
+| Composed Capability | Failure Mode | User Sees |
+|---------------------|-------------|-----------|
+
+**Context (table format):**
+
+| From | To | Data | Format |
+|------|----|------|--------|
+
+**Decisions:**
+- Notes, open questions, and decisions captured during discussion
 
 **Feature file location:** `.planning/features/{feat-slug}/FEATURE.md`
 
-Update status to `specified` if spec was written.
+Update status to `specified` if Goal, Flow, Scope, User-Facing Failures, and Context are filled.
 </step>
 
 <step name="summarize_and_next">
@@ -335,9 +358,11 @@ node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs(feature): upda
 <success_criteria>
 - Feature resolved from fuzzy reference (confirmed with user)
 - Status checked (killed/deferred shows reasoning, offers override)
-- Guided exploration covered goal, flow, scope, and composed capabilities
+- Guided exploration covered Goal, Flow (numbered steps + failure branches), Scope (in/out), User-Facing Failures (table), and Context (table) at minimum
+- Capability scan surfaced composition suggestions when composes[] empty/incomplete
 - Backward routing detected and handled when capability-level issues surface
-- Feature notes updated with exploration results
+- Feature notes updated with structured template sections filled
+- Status set to `specified` when all required sections filled
 - Kill/defer handled with reasoning persisted
 - User knows next steps
 </success_criteria>
