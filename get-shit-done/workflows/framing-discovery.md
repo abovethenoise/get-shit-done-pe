@@ -166,8 +166,9 @@ Present the question using AskUserQuestion:
 
 After each answer:
 1. **Extract MVU slot data** -- Analyze the answer against the MVU slot definitions. If the answer fills or partially fills a slot, update `mvu_state[slot]`.
-2. **Check branching hints** -- Based on the answer, determine if adaptive follow-up questions are needed before moving to the next anchor question.
-3. **Run adaptive follow-ups** if branching hints indicate (max 2 follow-ups per anchor question to prevent over-discovery).
+2. **Write to Discovery Brief progressively** -- Fill the corresponding brief section (Problem Statement, Specification fields, Context, Scope Boundary) directly in the brief file at `brief_path`. Do NOT accumulate in memory and dump later — write after each answer so the brief is always current. Partial fills are fine; they get refined as more answers come in.
+3. **Check branching hints** -- Based on the answer, determine if adaptive follow-up questions are needed before moving to the next anchor question.
+4. **Run adaptive follow-ups** if branching hints indicate (max 2 follow-ups per anchor question to prevent over-discovery).
 
 **After anchor question 3 (mid-discovery), run misclassification check:**
 Review accumulated answers. If answers consistently describe a different lens's domain:
@@ -197,13 +198,19 @@ Check all three exit signals:
 
 This step is NOT optional. It must execute before any transition to the pipeline.
 
-Fill the Discovery Brief with all gathered information:
-- Meta: capability, primary_lens, secondary_lens (if compound), completion signal
-- Problem Statement: synthesized from Q&A
-- Context: existing state, relevant modules, prior exploration
-- Specification: uncomment the active lens variant, fill fields from MVU state
-- Unknowns: assumptions from unfilled slots, open questions surfaced during Q&A
-- Scope Boundary: in/out/follow-ups from Q&A
+Brief sections were filled progressively during the Q&A loop. This step is a final verification pass:
+
+1. **Read the brief** at `brief_path` and verify all sections are filled:
+   - Meta: capability, primary_lens, secondary_lens (if compound), completion signal
+   - Problem Statement: synthesized (not raw Q&A transcript)
+   - Context: existing state, relevant modules, prior exploration
+   - Specification: active lens variant uncommented, fields filled from MVU state
+   - Unknowns: assumptions from unfilled slots, open questions surfaced during Q&A
+   - Scope Boundary: in/out/follow-ups
+
+2. **Clean up** — ensure no raw Q&A answers leaked outside brief sections. Synthesize any remaining rough notes into proper section content.
+
+3. **Fill gaps** — if any section is still a template placeholder, fill it from `mvu_state` or flag as explicit unknown.
 
 Present the completed brief to the user:
 

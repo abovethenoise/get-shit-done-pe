@@ -280,7 +280,7 @@ node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" capability-create "[capabil
 
 This creates `.planning/capabilities/{slug}/CAPABILITY.md` with the standard template.
 
-Update each CAPABILITY.md with exploration notes from the Q&A.
+Update each CAPABILITY.md Goal section from the Q&A context. Contract sections stay as template placeholders — they get filled during `/gsd:discuss-capability`.
 
 **Incremental write -- update init-state.json** with `completed_sections: ["goals", "capabilities", "tech_stack", "architecture", "design_style", "project_md", "capability_map"]`.
 
@@ -492,7 +492,7 @@ Derive capabilities from the validated scan:
 node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" capability-create "[capability-name]"
 ```
 
-Update each CAPABILITY.md with validated scan findings.
+Update each CAPABILITY.md Goal section with validated scan findings. Contract sections stay as template placeholders — they get filled during `/gsd:discuss-capability`.
 
 **Incremental write -- update init-state.json** with `completed_sections: ["scan", "validation", "gap_fill", "design_style", "project_md", "capability_map"]`.
 
@@ -617,17 +617,13 @@ Mode: [New / Existing]
 | Design System      | .docs/design-system.md (UI only)  |
 | Memory Ledger      | .claude/memory-ledger.md          |
 
-Project initialized with [N] capabilities and [M] feature stubs.
+Project initialized with [N] capabilities.
 
-Next step:
-- Run /gsd:discuss-capability <name> to flesh out a capability stub
-  (this creates feature stubs within the capability)
-
-Later, once you have features:
-- Run /gsd:discuss-feature <cap/feat> to detail a specific feature
-- Run /gsd:focus to create a focus group and prioritize what to build
-
-(The capabilities above are stubs -- discuss them to discover features before planning.)
+Next steps:
+- `/gsd:discuss-capability <name>` — fill out a capability's contract (Receives/Returns/Rules)
+- `/gsd:new <feature-name>` — create a feature that composes capabilities
+- `/gsd:discuss-feature <feat>` — explore how a feature works
+- `/gsd:focus` — create a focus group and prioritize what to build
 ```
 
 </process>
