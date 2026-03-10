@@ -257,7 +257,7 @@ Feature: checkout-flow                 Feature: order-history
   cap:payments  cap:inventory            cap:payments  cap:reporting
 ```
 
-The graph engine answers six types of queries:
+The graph engine answers eight types of queries:
 
 | Query | What It Returns | Used By |
 |-------|----------------|---------|
@@ -265,8 +265,10 @@ The graph engine answers six types of queries:
 | **coupling** | Features sharing a composed capability (change one, affect all) | Coherence report |
 | **waves** `--scope <csv>` | Wave 1 (ready), blocked (waiting), coordinate flags (shared caps in wave) | Focus groups, progress routing |
 | **downstream** `<cap-slug>` | Features that compose this capability (blast radius) | Planner, reviewer, research agents |
-| **upstream** `<feat-slug>` | Capabilities this feature depends on + status + contract completeness | Readiness validation |
-| **upstream-gaps** `<feat-slug>` | Only the upstream caps with status or contract gaps | Progress routing, focus validation, refine scope |
+| **upstream** `<slug>` | Capabilities this node depends on + status + contract completeness | Readiness validation |
+| **upstream-gaps** `<slug>` | Only the upstream caps with status or contract gaps | Progress routing, focus validation, refine scope |
+| **route-check** `[--scope <csv>]` | Complexity (simple/complex), signals, topologically sorted work chain, suggested scope | `/gsd:progress` Tier 2 routing |
+| **execute-preflight** `<slug>` | Ready/not-ready with reason (no_plan, stale_plan, upstream_gaps) and route | `/gsd:execute`, `execute-plan.md` pre-flight |
 
 ### Sequence Output
 
@@ -282,6 +284,34 @@ The graph engine answers six types of queries:
 ### Contract Completeness
 
 A capability's contract has three required sections: `### Receives`, `### Returns`, `### Rules`. The `upstream-gaps` query checks both status readiness (verified/complete) and contract completeness independently — a capability can be "verified" but still have a thin contract that will trip up planners.
+
+### Route-Check: Complexity-Aware Routing
+
+The `route-check` query classifies project state and produces an ordered work chain:
+
+```
+Simple (all true)              Complex (any one triggers)
+─────────────────              ────────────────────────────
+1 executable path              2+ disjoint branches sharing a cap
+0-2 unready upstream caps      3+ unready upstream caps (transitive)
+No shared cap contention       2+ features competing for same
+                                 unverified cap
+Any depth if linear            Depth 3+ AND branches > 1
+```
+
+**Simple projects** get a topologically sorted chain — step 1 is the next action, each subsequent step follows in dependency order. **Complex projects** get signal explanations and a suggested scope for `/gsd:focus`.
+
+### Execute Pre-Flight
+
+Before execution starts, `execute-preflight` validates three conditions:
+
+| Check | Failure | Route |
+|-------|---------|-------|
+| Plan exists | `no_plan` | `/gsd:plan <slug>` |
+| Plan newer than spec | `stale_plan` | `/gsd:plan <slug>` (or override) |
+| Upstream caps ready + contract complete | `upstream_gaps` | `/gsd:plan <slug>` |
+
+Pre-flight runs in both `/gsd:execute` (before workflow invocation) and `execute-plan.md` (before loading plan). Stale plans offer an override option — the other failures block execution.
 
 ---
 
