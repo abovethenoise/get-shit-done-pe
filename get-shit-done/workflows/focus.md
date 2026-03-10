@@ -162,6 +162,14 @@ GAPS=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" graph-query upstream
 ```
 Parse JSON. If `has_gaps` is true, surface before the focus group is committed.
 
+For each capability in the scoped set:
+```bash
+GAPS=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" graph-query upstream-gaps "$CAP_SLUG")
+```
+Parse JSON. If `has_gaps` is true, surface before the focus group is committed.
+Capabilities with `depends_on[]` have upstream capabilities that must be ready
+before planning makes sense — same principle as feature→cap readiness.
+
 Gate-check catches status mismatches (cap not verified). `upstream-gaps` catches
 the subtler case: a capability is verified but its contract has thin or missing
 sections (Receives/Returns/Rules). A feature composing it will pass gate-check

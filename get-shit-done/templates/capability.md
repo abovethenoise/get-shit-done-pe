@@ -1,8 +1,9 @@
 ---
 type: capability
 name: "{name}"
-status: planning
+status: exploring
 ui_facing: false
+depends_on: []
 created: "{date}"
 ---
 

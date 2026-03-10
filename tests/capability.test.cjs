@@ -82,7 +82,7 @@ describe('cmdCapabilityCreate', () => {
       path.join(tmp, '.planning', 'capabilities', 'auth-system', 'CAPABILITY.md'), 'utf-8'
     );
     assert.ok(content.includes('type: capability'), 'has type');
-    assert.ok(content.includes('status: planning'), 'has status');
+    assert.ok(content.includes('status: exploring'), 'has status');
     assert.ok(content.includes('# Auth System'), 'has title');
   });
 
@@ -156,7 +156,7 @@ describe('cmdCapabilityStatus', () => {
     const res = captureOutput(() => cmdCapabilityStatus(tmp, 'auth', false));
     assert.strictEqual(res.error, false);
     assert.strictEqual(res.data.slug, 'auth');
-    assert.strictEqual(res.data.status, 'planning');
+    assert.strictEqual(res.data.status, 'exploring');
   });
 
   test('errors on non-existent capability', () => {

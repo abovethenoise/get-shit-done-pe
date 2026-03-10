@@ -16,7 +16,20 @@ Execute a single plan (PLAN.md) and create outcome summary (SUMMARY.md).
 
 <process>
 
-<step name="init_context" priority="first">
+<step name="preflight" priority="first">
+```bash
+PREFLIGHT=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" graph-query execute-preflight "$TARGET_SLUG" --raw)
+```
+
+Parse JSON. If `ready` is false:
+- `no_plan` → "No plan found for {TARGET_SLUG}. Run {route} first." Stop.
+- `stale_plan` → Use AskUserQuestion: header "Stale Plan", question "Plan is older than spec for {TARGET_SLUG}. Re-plan with {route} or execute anyway?", options "Re-plan", "Execute anyway". If re-plan: stop and surface route. If execute anyway: continue.
+- `upstream_gaps` → "Upstream not ready for {TARGET_SLUG}: {gaps}. Run {route} first." Stop.
+
+If `ready` is true or user chose "Execute anyway": continue to init_context.
+</step>
+
+<step name="init_context">
 ```bash
 INIT=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" init execute-feature "$TARGET_SLUG")
 ```

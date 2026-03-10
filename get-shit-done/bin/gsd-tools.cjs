@@ -127,7 +127,7 @@ async function main() {
   const command = args[0];
 
   if (!command) {
-    error('Usage: gsd-tools <command> [args] [--raw] [--cwd <path>]\nCommands: state, commit, verify, frontmatter, template, config-get, config-set, init, plan-validate, progress, summary-extract, state-snapshot, slug-resolve, capability-create, capability-list, capability-status, capability-validate, feature-create, feature-list, feature-status, feature-validate, gate-check, graph-build, graph-query');
+    error('Usage: gsd-tools <command> [args] [--raw] [--cwd <path>]\nCommands: state, commit, verify, frontmatter, template, config-get, config-set, init, plan-validate, progress, summary-extract, state-snapshot, slug-resolve, capability-create, capability-list, capability-status, capability-validate, feature-create, feature-list, feature-status, feature-validate, gate-check, graph-build, graph-query\nGraph queries: sequence, coupling, waves, downstream, upstream, upstream-gaps, sequence-stale, route-check, execute-preflight');
   }
 
   switch (command) {

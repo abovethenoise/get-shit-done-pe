@@ -1,7 +1,7 @@
 ---
 type: feature
 composes: []
-status: planning
+status: exploring
 created: "{date}"
 ---
 

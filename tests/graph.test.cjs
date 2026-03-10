@@ -22,10 +22,15 @@ function setupProject(tmpDir) {
 function writeCap(tmpDir, slug, fields = {}) {
   const dir = path.join(tmpDir, '.planning', 'capabilities', slug);
   fs.mkdirSync(dir, { recursive: true });
-  const fm = { name: fields.name || slug, status: fields.status || 'exploring', ...fields };
+  const { depends_on, ...rest } = fields;
+  const fm = { name: rest.name || slug, status: rest.status || 'exploring', ...rest };
   const lines = ['---'];
   for (const [k, v] of Object.entries(fm)) {
     lines.push(`${k}: ${v}`);
+  }
+  if (depends_on) {
+    lines.push('depends_on:');
+    for (const d of depends_on) lines.push(`  - ${d}`);
   }
   lines.push('---', `# ${slug}`);
   fs.writeFileSync(path.join(dir, 'CAPABILITY.md'), lines.join('\n'));
@@ -351,10 +356,18 @@ describe('graph-query upstream', () => {
     assert.strictEqual(payments.ready, true);
   });
 
-  test('returns error for unknown feature slug', () => {
+  test('returns error for unknown slug', () => {
     const result = runQuery(tmpDir, ['upstream', 'nonexistent']);
     assert.strictEqual(result.upstream_capabilities.length, 0);
     assert.ok(result.error);
+  });
+
+  test('returns type field for feature upstream', () => {
+    writeFullCap(tmpDir, 'auth', 'verified');
+    writeFeat(tmpDir, 'login', ['auth']);
+
+    const result = runQuery(tmpDir, ['upstream', 'login']);
+    assert.strictEqual(result.type, 'feature');
   });
 });
 
@@ -605,5 +618,428 @@ describe('validateCapContract with ui_facing', () => {
     assert.strictEqual(result.gaps.length, 1);
     assert.strictEqual(result.gaps[0].cap, 'button');
     assert.ok(result.gaps[0].missing.includes('## Design References'));
+  });
+});
+
+// ─── cap-to-cap depends_on ────────────────────────────────────────────────────
+
+describe('cap-to-cap depends_on', () => {
+  let tmpDir;
+
+  beforeEach(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-graph-test-'));
+    setupProject(tmpDir);
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  test('buildGraph creates cap→cap edges from depends_on[]', () => {
+    writeCap(tmpDir, 'database', { status: 'verified' });
+    writeCap(tmpDir, 'auth', { status: 'verified', depends_on: ['database'] });
+
+    const graph = buildGraph(tmpDir);
+    const depEdges = graph.edges.filter(e => e.type === 'depends_on');
+    assert.strictEqual(depEdges.length, 1);
+    assert.strictEqual(depEdges[0].from, 'cap:auth');
+    assert.strictEqual(depEdges[0].to, 'cap:database');
+  });
+
+  test('buildGraph stores depends_on on capability nodes', () => {
+    writeCap(tmpDir, 'database', { status: 'verified' });
+    writeCap(tmpDir, 'auth', { status: 'verified', depends_on: ['database'] });
+
+    const graph = buildGraph(tmpDir);
+    const authNode = graph.nodes.find(n => n.slug === 'auth');
+    assert.deepStrictEqual(authNode.depends_on, ['database']);
+    const dbNode = graph.nodes.find(n => n.slug === 'database');
+    assert.deepStrictEqual(dbNode.depends_on, []);
+  });
+
+  test('queryUpstream for a capability returns upstream caps with status/readiness/contract', () => {
+    writeFullCap(tmpDir, 'database', 'verified');
+    writeCap(tmpDir, 'cache', { status: 'exploring' });
+    writeCap(tmpDir, 'auth', { status: 'specified', depends_on: ['database', 'cache'] });
+
+    const result = runQuery(tmpDir, ['upstream', 'auth']);
+    assert.strictEqual(result.type, 'capability');
+    assert.strictEqual(result.upstream_capabilities.length, 2);
+
+    const db = result.upstream_capabilities.find(c => c.cap === 'database');
+    assert.strictEqual(db.ready, true);
+    assert.strictEqual(db.contract_complete, true);
+
+    const cache = result.upstream_capabilities.find(c => c.cap === 'cache');
+    assert.strictEqual(cache.ready, false);
+    assert.strictEqual(cache.contract_complete, false);
+  });
+
+  test('queryUpstream for a capability with no depends_on returns empty upstream', () => {
+    writeCap(tmpDir, 'standalone', { status: 'verified' });
+
+    const result = runQuery(tmpDir, ['upstream', 'standalone']);
+    assert.strictEqual(result.type, 'capability');
+    assert.strictEqual(result.upstream_capabilities.length, 0);
+  });
+
+  test('queryUpstreamGaps for a capability with unready upstream returns gaps', () => {
+    writeFullCap(tmpDir, 'database', 'verified');
+    writeFullCap(tmpDir, 'cache', 'in-progress');
+    writeCap(tmpDir, 'auth', { status: 'specified', depends_on: ['database', 'cache'] });
+
+    const result = runQuery(tmpDir, ['upstream-gaps', 'auth']);
+    assert.strictEqual(result.has_gaps, true);
+    assert.strictEqual(result.gaps.length, 1);
+    assert.strictEqual(result.gaps[0].cap, 'cache');
+    assert.strictEqual(result.gaps[0].ready, false);
+  });
+
+  test('orphan detection still works — caps with no downstream features are orphans', () => {
+    writeCap(tmpDir, 'database', { status: 'verified' });
+    writeCap(tmpDir, 'auth', { status: 'verified', depends_on: ['database'] });
+    writeFeat(tmpDir, 'login', ['auth']);
+
+    const result = runQuery(tmpDir, ['sequence']);
+    // database is composed by nothing directly (only depended on by auth)
+    assert.ok(result.orphans.capabilities.includes('database'));
+    // auth is composed by login — not orphan
+    assert.ok(!result.orphans.capabilities.includes('auth'));
+  });
+});
+
+// ─── Test helper: write feature artifacts ──────────────────────────────────────
+
+function writeFeatureArtifacts(tmpDir, slug, artifacts = {}) {
+  const dir = path.join(tmpDir, '.planning', 'features', slug);
+  fs.mkdirSync(dir, { recursive: true });
+  if (artifacts.plan) {
+    fs.writeFileSync(path.join(dir, '01-PLAN.md'), '# Plan');
+  }
+  if (artifacts.summary) {
+    fs.writeFileSync(path.join(dir, '01-SUMMARY.md'), '# Summary');
+  }
+  if (artifacts.review) {
+    fs.mkdirSync(path.join(dir, 'review'), { recursive: true });
+    fs.writeFileSync(path.join(dir, 'review', 'review.md'), '# Review');
+  }
+  if (artifacts.doc) {
+    fs.mkdirSync(path.join(dir, 'review'), { recursive: true });
+    fs.writeFileSync(path.join(dir, 'doc-report.md'), '# Doc Report');
+  }
+}
+
+// ─── queryRouteCheck ──────────────────────────────────────────────────────────
+
+describe('graph-query route-check', () => {
+  let tmpDir;
+
+  beforeEach(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-graph-test-'));
+    setupProject(tmpDir);
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  test('simple: linear chain (cap exploring → cap specified → feat)', () => {
+    writeCap(tmpDir, 'database', { status: 'exploring' });
+    writeCap(tmpDir, 'auth', { status: 'specified', depends_on: ['database'] });
+    writeFeat(tmpDir, 'login', ['auth']);
+
+    const result = runQuery(tmpDir, ['route-check']);
+    assert.strictEqual(result.complexity, 'simple');
+    assert.ok(result.chain.length >= 2);
+    // Topo order: database before auth (database is upstream)
+    const dbIdx = result.chain.findIndex(c => c.slug === 'database');
+    const authIdx = result.chain.findIndex(c => c.slug === 'auth');
+    assert.ok(dbIdx < authIdx || dbIdx === -1 || authIdx === -1);
+  });
+
+  test('simple: all ready, feat has PLAN', () => {
+    writeFullCap(tmpDir, 'auth', 'verified');
+    writeFeat(tmpDir, 'login', ['auth']);
+    writeFeatureArtifacts(tmpDir, 'login', { plan: true });
+
+    const result = runQuery(tmpDir, ['route-check']);
+    assert.strictEqual(result.complexity, 'simple');
+    const loginItem = result.chain.find(c => c.slug === 'login');
+    assert.ok(loginItem);
+    assert.strictEqual(loginItem.stage, 'execute');
+  });
+
+  test('simple: nothing to do (all complete)', () => {
+    writeFullCap(tmpDir, 'auth', 'verified');
+    writeFeat(tmpDir, 'login', ['auth']);
+    writeFeatureArtifacts(tmpDir, 'login', { plan: true, summary: true, review: true, doc: true });
+
+    const result = runQuery(tmpDir, ['route-check']);
+    assert.strictEqual(result.complexity, 'simple');
+    assert.deepStrictEqual(result.chain, []);
+  });
+
+  test('complex: shared contention (2 feats, 1 unverified cap)', () => {
+    writeCap(tmpDir, 'auth', { status: 'exploring' });
+    writeFeat(tmpDir, 'login', ['auth']);
+    writeFeat(tmpDir, 'signup', ['auth']);
+
+    const result = runQuery(tmpDir, ['route-check']);
+    assert.ok(result.signals.includes('shared_cap_contention'));
+  });
+
+  test('complex: 3+ unready upstream', () => {
+    writeCap(tmpDir, 'database', { status: 'exploring' });
+    writeCap(tmpDir, 'cache', { status: 'exploring' });
+    writeCap(tmpDir, 'auth', { status: 'exploring', depends_on: ['database', 'cache'] });
+    writeFeat(tmpDir, 'login', ['auth']);
+
+    const result = runQuery(tmpDir, ['route-check']);
+    assert.ok(result.signals.includes('high_unready_upstream'));
+  });
+
+  test('complex: deep + branching', () => {
+    // Create a deep chain: d→c→b→a, plus a separate branch e→f
+    writeCap(tmpDir, 'cap-d', { status: 'exploring' });
+    writeCap(tmpDir, 'cap-c', { status: 'exploring', depends_on: ['cap-d'] });
+    writeCap(tmpDir, 'cap-b', { status: 'exploring', depends_on: ['cap-c'] });
+    writeCap(tmpDir, 'cap-a', { status: 'exploring', depends_on: ['cap-b'] });
+    writeCap(tmpDir, 'cap-e', { status: 'exploring' });
+    writeFeat(tmpDir, 'feat-main', ['cap-a']);
+    writeFeat(tmpDir, 'feat-side', ['cap-e']);
+
+    const result = runQuery(tmpDir, ['route-check']);
+    assert.ok(result.signals.includes('deep_branching'));
+  });
+
+  test('complex: branching shared caps', () => {
+    writeCap(tmpDir, 'shared', { status: 'exploring' });
+    writeCap(tmpDir, 'isolated', { status: 'exploring' });
+    writeFeat(tmpDir, 'feat-a', ['shared']);
+    writeFeat(tmpDir, 'feat-b', ['shared']);
+    writeFeat(tmpDir, 'feat-c', ['isolated']); // disjoint branch
+
+    const result = runQuery(tmpDir, ['route-check']);
+    assert.ok(result.signals.includes('branching_shared_caps'));
+  });
+
+  test('feature stage: plan/execute/review/doc/complete', () => {
+    writeFullCap(tmpDir, 'auth', 'verified');
+
+    // plan stage (no PLAN yet)
+    writeFeat(tmpDir, 'feat-plan', ['auth'], { status: 'specified' });
+
+    // execute stage (has PLAN, no SUMMARY)
+    writeFeat(tmpDir, 'feat-exec', ['auth'], { status: 'specified' });
+    writeFeatureArtifacts(tmpDir, 'feat-exec', { plan: true });
+
+    // review stage (has SUMMARY, no review/)
+    writeFeat(tmpDir, 'feat-review', ['auth'], { status: 'specified' });
+    writeFeatureArtifacts(tmpDir, 'feat-review', { plan: true, summary: true });
+
+    // doc stage (has review/, no doc-report)
+    writeFeat(tmpDir, 'feat-doc', ['auth'], { status: 'specified' });
+    writeFeatureArtifacts(tmpDir, 'feat-doc', { plan: true, summary: true, review: true });
+
+    // complete stage
+    writeFeat(tmpDir, 'feat-done', ['auth'], { status: 'specified' });
+    writeFeatureArtifacts(tmpDir, 'feat-done', { plan: true, summary: true, review: true, doc: true });
+
+    const result = runQuery(tmpDir, ['route-check']);
+    const findStage = (slug) => {
+      const item = result.chain.find(c => c.slug === slug);
+      return item ? item.stage : null;
+    };
+
+    assert.strictEqual(findStage('feat-plan'), 'plan');
+    assert.strictEqual(findStage('feat-exec'), 'execute');
+    assert.strictEqual(findStage('feat-review'), 'review');
+    assert.strictEqual(findStage('feat-doc'), 'doc');
+    // feat-done should not appear in chain (complete)
+    assert.strictEqual(findStage('feat-done'), null);
+  });
+
+  test('cap stage: exploring/specified/verified', () => {
+    writeCap(tmpDir, 'cap-exp', { status: 'exploring' });
+    writeCap(tmpDir, 'cap-spec', { status: 'specified' });
+    writeFullCap(tmpDir, 'cap-ver', 'verified');
+    writeFeat(tmpDir, 'feat', ['cap-exp', 'cap-spec', 'cap-ver']);
+
+    const result = runQuery(tmpDir, ['route-check']);
+    const findStage = (slug) => {
+      const item = result.chain.find(c => c.slug === slug);
+      return item ? item.stage : null;
+    };
+
+    assert.strictEqual(findStage('cap-exp'), 'discuss');
+    assert.strictEqual(findStage('cap-spec'), 'plan');
+    // cap-ver is complete, not in chain
+    assert.strictEqual(findStage('cap-ver'), null);
+  });
+
+  test('scoped query filters to scope + upstream', () => {
+    writeFullCap(tmpDir, 'auth', 'verified');
+    writeCap(tmpDir, 'payments', { status: 'exploring' });
+    writeFeat(tmpDir, 'login', ['auth']);
+    writeFeat(tmpDir, 'checkout', ['payments']);
+
+    const result = runQuery(tmpDir, ['route-check', '--scope', 'login']);
+    // Should only include login and its upstream (auth — but auth is complete)
+    // checkout and payments should be excluded
+    const slugs = result.chain.map(c => c.slug);
+    assert.ok(!slugs.includes('checkout'));
+    assert.ok(!slugs.includes('payments'));
+  });
+
+  test('suggested_scope non-empty on complex', () => {
+    writeCap(tmpDir, 'auth', { status: 'exploring' });
+    writeFeat(tmpDir, 'login', ['auth']);
+    writeFeat(tmpDir, 'signup', ['auth']);
+
+    const result = runQuery(tmpDir, ['route-check']);
+    if (result.complexity === 'complex') {
+      assert.ok(result.suggested_scope.length > 0);
+    }
+  });
+
+  test('suggested_scope empty on simple', () => {
+    writeCap(tmpDir, 'auth', { status: 'exploring' });
+    writeFeat(tmpDir, 'login', ['auth']);
+
+    const result = runQuery(tmpDir, ['route-check']);
+    assert.strictEqual(result.complexity, 'simple');
+    assert.deepStrictEqual(result.suggested_scope, []);
+  });
+
+  test('transitive unready (feat→cap→cap chain)', () => {
+    writeCap(tmpDir, 'database', { status: 'exploring' });
+    writeCap(tmpDir, 'cache', { status: 'exploring' });
+    writeCap(tmpDir, 'auth', { status: 'exploring', depends_on: ['database', 'cache'] });
+    writeFeat(tmpDir, 'login', ['auth']);
+
+    const result = runQuery(tmpDir, ['route-check']);
+    // All 3 caps should be in chain (all unready, all reachable)
+    const slugs = result.chain.map(c => c.slug);
+    assert.ok(slugs.includes('database'));
+    assert.ok(slugs.includes('cache'));
+    assert.ok(slugs.includes('auth'));
+  });
+
+  test('cycle detection', () => {
+    // Create a cycle: a depends on b, b depends on a
+    writeCap(tmpDir, 'cap-a', { status: 'exploring', depends_on: ['cap-b'] });
+    writeCap(tmpDir, 'cap-b', { status: 'exploring', depends_on: ['cap-a'] });
+    writeFeat(tmpDir, 'feat', ['cap-a']);
+
+    const result = runQuery(tmpDir, ['route-check']);
+    assert.ok(result.signals.includes('cycle'));
+  });
+});
+
+// ─── queryExecutePreflight ────────────────────────────────────────────────────
+
+describe('graph-query execute-preflight', () => {
+  let tmpDir;
+
+  beforeEach(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-graph-test-'));
+    setupProject(tmpDir);
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  test('feature with no plan', () => {
+    writeFullCap(tmpDir, 'auth', 'verified');
+    writeFeat(tmpDir, 'login', ['auth']);
+
+    const result = runQuery(tmpDir, ['execute-preflight', 'login']);
+    assert.strictEqual(result.ready, false);
+    assert.strictEqual(result.reason, 'no_plan');
+    assert.ok(result.route);
+  });
+
+  test('feature with stale plan', () => {
+    writeFullCap(tmpDir, 'auth', 'verified');
+    writeFeat(tmpDir, 'login', ['auth']);
+
+    // Create plan first (older)
+    const featDir = path.join(tmpDir, '.planning', 'features', 'login');
+    const planPath = path.join(featDir, '01-PLAN.md');
+    const earlier = new Date(Date.now() - 5000);
+    fs.writeFileSync(planPath, '# Plan');
+    fs.utimesSync(planPath, earlier, earlier);
+
+    // Touch FEATURE.md to make it newer
+    const featPath = path.join(featDir, 'FEATURE.md');
+    const now = new Date();
+    fs.utimesSync(featPath, now, now);
+
+    const result = runQuery(tmpDir, ['execute-preflight', 'login']);
+    assert.strictEqual(result.ready, false);
+    assert.strictEqual(result.reason, 'stale_plan');
+  });
+
+  test('feature with upstream gaps', () => {
+    writeCap(tmpDir, 'auth', { status: 'exploring' });
+    writeFeat(tmpDir, 'login', ['auth']);
+    writeFeatureArtifacts(tmpDir, 'login', { plan: true });
+
+    // Make plan newer than FEATURE.md
+    const featDir = path.join(tmpDir, '.planning', 'features', 'login');
+    const planPath = path.join(featDir, '01-PLAN.md');
+    const later = new Date(Date.now() + 5000);
+    fs.utimesSync(planPath, later, later);
+
+    const result = runQuery(tmpDir, ['execute-preflight', 'login']);
+    assert.strictEqual(result.ready, false);
+    assert.strictEqual(result.reason, 'upstream_gaps');
+    assert.ok(result.gaps.length > 0);
+  });
+
+  test('feature ready (plan exists, fresh, upstream clear)', () => {
+    writeFullCap(tmpDir, 'auth', 'verified');
+    writeFeat(tmpDir, 'login', ['auth']);
+    writeFeatureArtifacts(tmpDir, 'login', { plan: true });
+
+    // Make plan newer than FEATURE.md
+    const featDir = path.join(tmpDir, '.planning', 'features', 'login');
+    const planPath = path.join(featDir, '01-PLAN.md');
+    const later = new Date(Date.now() + 5000);
+    fs.utimesSync(planPath, later, later);
+
+    const result = runQuery(tmpDir, ['execute-preflight', 'login']);
+    assert.strictEqual(result.ready, true);
+  });
+
+  test('capability preflight aggregates features', () => {
+    writeFullCap(tmpDir, 'auth', 'verified');
+    writeFeat(tmpDir, 'login', ['auth']);
+    writeFeat(tmpDir, 'signup', ['auth']);
+    writeFeatureArtifacts(tmpDir, 'login', { plan: true });
+    // signup has no plan
+
+    // Make login plan newer
+    const loginDir = path.join(tmpDir, '.planning', 'features', 'login');
+    const planPath = path.join(loginDir, '01-PLAN.md');
+    const later = new Date(Date.now() + 5000);
+    fs.utimesSync(planPath, later, later);
+
+    const result = runQuery(tmpDir, ['execute-preflight', 'auth']);
+    assert.strictEqual(result.ready, false);
+    assert.ok(result.features);
+    assert.strictEqual(result.features.length, 2);
+    const loginResult = result.features.find(f => f.slug === 'login');
+    const signupResult = result.features.find(f => f.slug === 'signup');
+    assert.strictEqual(loginResult.ready, true);
+    assert.strictEqual(signupResult.ready, false);
+    assert.strictEqual(signupResult.reason, 'no_plan');
+  });
+
+  test('unknown slug', () => {
+    const result = runQuery(tmpDir, ['execute-preflight', 'nonexistent']);
+    assert.strictEqual(result.ready, false);
+    assert.strictEqual(result.reason, 'not_found');
   });
 });

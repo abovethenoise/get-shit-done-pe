@@ -157,29 +157,37 @@ If no focus groups found in ROADMAP.md, fall through to Tier 2.
 
 ---
 
-**Tier 2 -- Recent Work Continuation (fallback)**
+**Tier 2 -- Graph-Aware Routing (fallback)**
 
-When no focus groups exist:
+When no focus groups exist, use route-check for intelligent routing:
 
-1. Read STATE.md Session Continuity section
-2. Identify last active capability/feature from "Stopped at" and "Resume" fields
-3. Determine its pipeline state using artifact detection above
-4. Present concrete command to continue
+```bash
+ROUTE=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" graph-query route-check --raw)
+```
 
-If STATE.md has no session continuity or the referenced feature is complete, fall through to Tier 3.
+Parse JSON for `complexity`, `signals`, `chain`, `suggested_scope`.
 
----
+**If complexity is `simple` AND chain is non-empty:**
+Show full chain as ordered steps:
+```
+Step 1 (now): {command} {slug}  ← {status}
+Step 2:       {command} {slug}  ← {status}
+...
+```
+Route to step 1.
 
-**Tier 3 -- State Scan (final fallback)**
+**If complexity is `simple` AND chain is empty:**
+Project complete. No remaining work items.
 
-When neither focus groups nor session continuity provide a next step:
+**If complexity is `complex`:**
+Explain signals (one line per signal):
+- `branching_shared_caps` → "Multiple branches share unverified capabilities — coordination needed"
+- `high_unready_upstream` → "3+ upstream capabilities not ready — foundational work needed first"
+- `shared_cap_contention` → "Multiple features compete for the same unverified capability"
+- `deep_branching` → "Deep dependency chain with multiple branches"
+- `cycle` → "Dependency cycle detected — review composes[]/depends_on[] edges"
 
-1. Scan all feature directories under `.planning/features/`
-2. For each, determine pipeline state using artifact detection above
-3. Collect all features with incomplete pipeline stages
-4. Present prioritized list with concrete commands (execution > review > planning order)
-
-If no incomplete features found, report project complete.
+Suggest: `/gsd:focus` with `suggested_scope` to create a focus group for structured execution.
 
 ---
 

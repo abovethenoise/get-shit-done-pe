@@ -46,6 +46,36 @@ If gate fails (unverified capabilities): surface blocker list, offer "Plan capab
 
 **If capability:** Extract contract sections (Receives/Returns/Rules).
 
+## 2b. Sequence Check
+
+Refresh sequence if stale:
+```bash
+STALE=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" graph-query sequence-stale)
+```
+If stale: invoke sequence workflow inline (@get-shit-done/workflows/sequence.md).
+
+Query upstream readiness:
+```bash
+UPSTREAM=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" graph-query upstream "$TARGET_SLUG" --raw)
+```
+
+Classify each upstream item by status:
+- `exploring` or missing → needs-discussion
+- `specified` / `contracted` → needs-planning
+- `planning` / `in-progress` → in-progress
+- `verified` / `complete` → ready
+
+If all ready → proceed.
+
+If issues exist, AskUserQuestion:
+- header: "Upstream"
+- question: "{target} depends on:\n\n{list: slug | status | action}\n\nRecommended: {best next step}"
+- options: contextual — "Discuss {slug}" | "Plan {slug} first" | "Create focus group" | "Override"
+
+If no active focus group in STATE.md and unready count > 1, include focus group option with suggested scope.
+
+Pass SEQUENCE.md path to research gatherers and planner as `<sequence_context>`.
+
 ## 3. Load Context
 
 Context assembly per @get-shit-done/references/context-assembly.md:
@@ -207,4 +237,5 @@ Verification: {Passed | Passed with override | Skipped}
 - CLI validation passed
 - User explicitly confirmed "Finalize this plan?" with focus alignment check
 - Plan-checker passed (or user override)
+- Sequence freshness checked — upstream readiness surfaced with actionable routing
 </success_criteria>

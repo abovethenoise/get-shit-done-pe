@@ -66,6 +66,22 @@ Parse JSON result for: `resolved`, `tier`, `type`, `capability_slug`, `feature_s
 - If create: route to `/gsd:new`
 - If retry: ask for new name, re-resolve
 
+## 2b. Pre-flight
+
+```bash
+PREFLIGHT=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" graph-query execute-preflight "$SLUG" --raw)
+```
+
+Parse JSON. If `ready` is false:
+- `no_plan` → "No plan found for {SLUG}. Run {route} first." Do not invoke workflow.
+- `stale_plan` → Use AskUserQuestion: header "Stale Plan", question "Plan is older than spec. Re-plan or execute anyway?", options "Re-plan", "Execute anyway". If re-plan: surface route, stop. If execute anyway: continue.
+- `upstream_gaps` → "Upstream not ready: {gaps}. Run {route} first." Do not invoke workflow.
+- `not_found` → "Slug '{SLUG}' not found in project graph." Do not invoke workflow.
+
+Where `$SLUG` is the resolved `feature_slug` or `capability_slug` from step 2.
+
+If `ready` is true or user chose "Execute anyway": continue to workflow invocation.
+
 ## 3. Workflow Invocation
 
 For **feature-level execution:**

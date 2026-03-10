@@ -83,7 +83,7 @@ describe('cmdFeatureCreate', () => {
     );
     assert.ok(content.includes('type: feature'), 'has type');
     assert.ok(content.includes('composes:'), 'has composes');
-    assert.ok(content.includes('status: planning'), 'has status');
+    assert.ok(content.includes('status: exploring'), 'has status');
     assert.ok(content.includes('# Login'), 'has title');
   });
 
@@ -143,7 +143,7 @@ describe('cmdFeatureStatus', () => {
     const res = captureOutput(() => cmdFeatureStatus(tmp, 'login', false));
     assert.strictEqual(res.error, false);
     assert.strictEqual(res.data.slug, 'login');
-    assert.strictEqual(res.data.status, 'planning');
+    assert.strictEqual(res.data.status, 'exploring');
     assert.ok(Array.isArray(res.data.composes), 'has composes array');
   });
 

@@ -300,6 +300,7 @@ Template sections were filled progressively during the round loop. This step is 
 3. **Update frontmatter:**
    - `status:` → set to `specified` if Goal + Contract (Receives/Returns/Rules) + Failure Behavior are filled; otherwise `exploring`
    - `ui_facing:` → update based on UI surface probe
+   - `depends_on:` → update from Dependencies table "Consumes" entries (capability slugs this capability depends on)
 
 4. **Decisions table** — should contain only actual decisions (date/decision/context/tradeoffs rows), not Q&A transcripts. Add suggested lens if one surfaced.
 
