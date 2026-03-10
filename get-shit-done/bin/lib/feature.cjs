@@ -117,10 +117,6 @@ function cmdFeatureValidate(cwd, featureSlug, raw) {
   const errors = [];
   const warnings = [];
 
-  if (composes.length === 0) {
-    warnings.push({ type: 'empty_composes', message: 'Feature composes no capabilities' });
-  }
-
   for (const capSlug of composes) {
     const capResult = findCapabilityInternal(cwd, capSlug);
     if (!capResult.found) {
@@ -171,6 +167,10 @@ function cmdGateCheck(cwd, featureSlug, raw) {
 
   const blockers = [];
   const ready = [];
+
+  if (composes.length === 0) {
+    blockers.push({ slug: '_self', reason: 'composes[] is empty — assign capabilities before planning' });
+  }
 
   for (const capSlug of composes) {
     const capResult = findCapabilityInternal(cwd, capSlug);

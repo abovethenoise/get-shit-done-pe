@@ -60,9 +60,10 @@ Read the feature file content. Extract:
 - **status**: exploring | specified | in-progress | complete | killed | deferred
 - **composes[]**: list of capability slugs from frontmatter
 
-**Load composed capabilities:**
-For each capability in composes[], read `.planning/capabilities/{cap-slug}/CAPABILITY.md` for contract context.
+**Load composed capabilities (if any):**
+If composes[] is non-empty, for each capability in composes[], read `.planning/capabilities/{cap-slug}/CAPABILITY.md` for contract context.
 Parse `ui_facing` from each composed capability's frontmatter. If any are `true` and `.docs/design-system.md` exists, flag this feature as design-aware and load `.docs/design-system.md` into context.
+If composes[] is empty, skip capability loading — proceed without capability context. Discovery does not require composition.
 
 **Load project context for grounding (if files exist):**
 - `.docs/architecture.md` — system architecture context
@@ -139,7 +140,7 @@ After EVERY AskUserQuestion return, write results to feature working state befor
 1. **Goal** — What is the one verifiable sentence describing what this feature achieves?
 2. **Flow** — What capabilities execute in what order? What's the happy path? Failure paths?
 3. **Scope** — What's in (only these capabilities), what's out (no new logic here)?
-4. **Composed capabilities** — Which capabilities does this feature compose? Are they all contracted?
+4. **Composed capabilities** — Which capabilities does this feature compose (if known)? Are they contracted? (Optional during discovery — composes[] is a planning artifact, not a discovery gate.)
 5. **User-facing failures** — What does the user see when a composed capability fails?
 6. **Context** — What flows between the composed capabilities (handoff contracts)?
 7. **Design references** — If any composed capability has `ui_facing: true`, which feature-level design patterns apply? (Auto-detected from composed caps — not a gate question. Surface naturally during discussion: "This feature composes {cap} which is UI-facing. Which layout/interaction patterns from the design system apply at the feature level?" Inject `## Design References` table into FEATURE.md only when relevant.)
@@ -223,7 +224,7 @@ After exploration is complete (or kill/defer/backward-route decided), update fea
 
 **If kill/defer:** Update the feature file status and add reasoning. Skip spec generation.
 
-**If exploration complete:** Write Goal, Flow, Scope, composes[], and User-Facing Failures into FEATURE.md.
+**If exploration complete:** Write Goal, Flow, Scope, and User-Facing Failures into FEATURE.md. Write composes[] if the user provided composition during discussion; do not prompt for it as required.
 
 The template at `get-shit-done/templates/feature.md` has the right structure. Fill the sections from discussion:
 

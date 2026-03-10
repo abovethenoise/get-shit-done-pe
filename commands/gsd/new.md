@@ -58,8 +58,9 @@ If $ARGUMENTS is empty: treat as no_match (skip resolution, go to Step 2 no_matc
 - Proceed to Step 3 (feature stub auto-creation)
 
 **If resolved and type is "feature":**
-- Invoke framing-discovery.md with LENS=new and CAPABILITY_SLUG (derived from feature path)
-- Preserve all workflow gates (fuzzy resolution confirmation, capability status check, MVU tracking, misclassification detection, mandatory summary playback)
+- Invoke framing-discovery.md with LENS=new and FEATURE_SLUG from result
+- Capability context comes from the feature's composes[] if populated, not forced
+- Preserve all workflow gates (fuzzy resolution confirmation, MVU tracking, misclassification detection, mandatory summary playback)
 - Stop after framing-discovery completes
 
 **If not resolved and reason is "ambiguous":**
@@ -73,17 +74,15 @@ If $ARGUMENTS is empty: treat as no_match (skip resolution, go to Step 2 no_matc
 - Use AskUserQuestion:
   - header: "New Work"
   - question: "What kind of new work is this?"
-  - options: "New capability", "New feature under an existing capability"
+  - options: "New capability", "New feature"
 - **If new capability:**
   - Invoke discuss-capability workflow
   - After discuss-capability completes, use the capability slug it created as CAPABILITY_SLUG
   - Proceed to Step 3 (feature stub auto-creation), then Step 4 (fan-out offer)
 - **If new feature:**
-  - Use AskUserQuestion:
-    - header: "Which Capability?"
-    - question: "Which capability does this feature belong to? Enter the capability slug."
-  - Run slug-resolve on the user's input; if not resolved as a capability, ask again
-  - Invoke framing-discovery.md with LENS=new and CAPABILITY_SLUG
+  - Use the user's original input as the feature name
+  - Create the feature: `node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" feature-create "{name}"`
+  - Invoke framing-discovery.md with LENS=new and FEATURE_SLUG (from the created feature)
   - Stop after framing-discovery completes
 
 ## 3. Feature Stub Auto-Creation (capability path only)

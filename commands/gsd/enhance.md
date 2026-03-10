@@ -52,8 +52,9 @@ Parse JSON result for: `resolved`, `tier`, `type`, `capability_slug`, `feature_s
 ## 2. Handle Resolution Result
 
 **If resolved and type is "feature":**
-- Invoke framing-discovery.md with LENS=enhance and CAPABILITY_SLUG (derived from feature path)
-- Preserve all workflow gates (fuzzy resolution confirmation, capability status check, MVU tracking, misclassification detection, mandatory summary playback)
+- Invoke framing-discovery.md with LENS=enhance and FEATURE_SLUG from result
+- Capability context comes from the feature's composes[] if populated, not forced
+- Preserve all workflow gates (fuzzy resolution confirmation, MVU tracking, misclassification detection, mandatory summary playback)
 
 **If resolved and type is "capability":**
 - Invoke framing-pipeline.md with CAPABILITY_SLUG and LENS=enhance

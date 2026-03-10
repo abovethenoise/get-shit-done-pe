@@ -53,8 +53,9 @@ Parse JSON result for: `resolved`, `tier`, `type`, `capability_slug`, `feature_s
   - Set CAPABILITY_SLUG from result
 
 **If type is "feature":** Feature-level discovery.
-  - Set both CAPABILITY_SLUG and FEATURE_SLUG from result
-  - Load parent capability passively (for context, not as primary anchor)
+  - Set FEATURE_SLUG from result
+  - If the feature's composes[] is non-empty, load composed capabilities passively (for context, not as primary anchor). Set CAPABILITY_SLUG from the first composed capability if available.
+  - If composes[] is empty, proceed without capability context — discovery does not require it.
   - Scope anchor Q&A to the specific feature — questions target feature-level understanding, not capability-level
 
 **If not resolved and reason is "ambiguous":**
@@ -77,6 +78,8 @@ Use AskUserQuestion:
   - "No, let me clarify" -- return to fuzzy input
 
 ## 3. Capability Status Check
+
+**Skip this step if CAPABILITY_SLUG is not set (feature-only discovery).**
 
 Read the resolved capability's status from init output or CAPABILITY.md.
 
@@ -102,7 +105,7 @@ If cancel -> exit workflow.
 If no brief exists at `brief_path`, scaffold one:
 
 ```bash
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" template fill discovery-brief --fields '{"capability":"${CAPABILITY_NAME}","lens":"${LENS}","date":"${TODAY}"}'
+node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" template fill discovery-brief --fields '{"capability":"${CAPABILITY_NAME:-}","lens":"${LENS}","date":"${TODAY}"}'
 ```
 
 Read the scaffolded brief to get current state. If a brief already exists, read it to check for prior discovery data.
@@ -263,8 +266,8 @@ Pass the following context to framing-pipeline:
 - `BRIEF_PATH`: The path where the brief was written (from Step 9)
 - `LENS`: The active lens (may have changed from pivot in Step 5a)
 - `SECONDARY_LENS`: Secondary lens if compound work was detected (from Step 5)
-- `CAPABILITY_SLUG`: The resolved capability slug (from Step 2)
-- `CAPABILITY_NAME`: The resolved capability name (from Step 2)
+- `CAPABILITY_SLUG`: The resolved capability slug (from Step 2), or null if feature-only discovery
+- `CAPABILITY_NAME`: The resolved capability name (from Step 2), or null if feature-only discovery
 - `FEATURE_SLUG`: The resolved feature slug (null if capability-level)
 - `FEATURE_DIR`: The feature directory path (null if capability-level)
 

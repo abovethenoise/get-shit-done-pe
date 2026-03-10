@@ -56,6 +56,8 @@ const {
   cmdFeatureCreate,
   cmdFeatureList,
   cmdFeatureStatus,
+  cmdFeatureValidate,
+  cmdGateCheck,
 } = require('../get-shit-done/bin/lib/feature.cjs');
 
 describe('cmdFeatureCreate', () => {
@@ -148,5 +150,36 @@ describe('cmdFeatureStatus', () => {
   test('errors on non-existent feature', () => {
     const res = captureOutput(() => cmdFeatureStatus(tmp, 'nonexistent', false));
     assert.strictEqual(res.error, true);
+  });
+});
+
+describe('cmdFeatureValidate', () => {
+  let tmp;
+  beforeEach(() => { tmp = createTmpDir(); });
+  afterEach(() => { cleanup(tmp); });
+
+  test('empty composes[] passes validation with no warnings', () => {
+    captureOutput(() => cmdFeatureCreate(tmp, 'Standalone', false));
+    const res = captureOutput(() => cmdFeatureValidate(tmp, 'standalone', false));
+    assert.strictEqual(res.error, false);
+    assert.strictEqual(res.data.passed, true);
+    const emptyComposesWarnings = res.data.warnings.filter(w => w.type === 'empty_composes');
+    assert.strictEqual(emptyComposesWarnings.length, 0, 'no empty_composes warning');
+  });
+});
+
+describe('cmdGateCheck', () => {
+  let tmp;
+  beforeEach(() => { tmp = createTmpDir(); });
+  afterEach(() => { cleanup(tmp); });
+
+  test('empty composes[] blocks gate with clear message', () => {
+    captureOutput(() => cmdFeatureCreate(tmp, 'Standalone', false));
+    const res = captureOutput(() => cmdGateCheck(tmp, 'standalone', false));
+    assert.strictEqual(res.error, false);
+    assert.strictEqual(res.data.gate_passed, false);
+    assert.strictEqual(res.data.blockers.length, 1);
+    assert.strictEqual(res.data.blockers[0].slug, '_self');
+    assert.ok(res.data.blockers[0].reason.includes('composes[]'), 'blocker mentions composes[]');
   });
 });
