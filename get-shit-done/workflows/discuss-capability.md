@@ -203,7 +203,7 @@ Phase 5 — Meta:
 **Round loop:**
 
 1. Call AskUserQuestion (1-4 questions informed by what's unknown from the checklist)
-2. Write answers to capability working notes (in the capability file's Exploration section)
+2. Write answers directly into the corresponding CAPABILITY.md template sections (Goal, Contract tables, Failure Behavior table, etc.). Do NOT write to a scratch "Exploration" or "Notes" section — fill the real template sections progressively as answers come in. Partial fills are fine; they get refined in subsequent rounds.
 3. Assess: do I have enough to fill the CAPABILITY.md template sections?
    - YES → AskUserQuestion: "I think I have what I need for this capability. Anything else?"
      - User says done → proceed to feature_powerability_probe
@@ -287,26 +287,24 @@ After exploration is complete (or kill/defer decided), update the capability fil
 
 **Capability file location:** `.planning/capabilities/{slug}/CAPABILITY.md`
 
-Update the existing CAPABILITY.md (created by `capability-create`). Do NOT overwrite the entire file — update these sections from exploration data:
+Template sections were filled progressively during the round loop. This step is a final pass:
 
-- **Frontmatter `status:`** — update to reflect current state (set to `specified` if contract is filled)
-- **Frontmatter `ui_facing:`** — update based on UI surface probe
-- **Goal** — one sentence from Phase 1
-- **Contract: Receives** — Input/Type/Required/Description table from Phase 2
-- **Contract: Returns** — Output/Type/Description table from Phase 2
-- **Contract: Rules** — numbered invariants (violating = bug) from Phase 2
-- **Contract: Sample Payload** — concrete I/O example from Phase 2
-- **Failure Behavior** — Condition/Behavior/Propagates? table from Phase 3
-- **Atomic Boundaries** — from Phase 3 (leave template placeholder if unfilled)
-- **Side Effects** — from Phase 3 (leave template placeholder if unfilled)
-- **Constraints** — from Phase 3
-- **Context** — Inputs From / Outputs To / Must Not Propagate from Phase 3-4
-- **Dependencies** — Direction/Capability/What/Notes table from Phase 4
-- **Decisions table** — add exploration decisions with date, context, tradeoffs
+1. **Verify template compliance** — read CAPABILITY.md and check each section matches the template format:
+   - Goal: one sentence (not a paragraph)
+   - Contract: Receives/Returns as tables (not prose), Rules as numbered invariants, Sample Payload as code block
+   - Failure Behavior as table (Condition/Behavior/Propagates?)
+   - Dependencies as table (Direction/Capability/What/Notes)
+   - Unfilled sections: leave the template placeholder text — do NOT delete sections or leave them empty
 
-If killed or deferred, update the status in frontmatter and add a row to the Decisions table with the reasoning. Skip contract sections.
+2. **Clean up** — remove any raw Q&A notes that leaked outside template sections. Every piece of content should live in its template section.
 
-If exploration surfaced a suggested framing lens, add it to the Decisions table.
+3. **Update frontmatter:**
+   - `status:` → set to `specified` if Goal + Contract (Receives/Returns/Rules) + Failure Behavior are filled; otherwise `exploring`
+   - `ui_facing:` → update based on UI surface probe
+
+4. **Decisions table** — should contain only actual decisions (date/decision/context/tradeoffs rows), not Q&A transcripts. Add suggested lens if one surfaced.
+
+If killed or deferred, update the status in frontmatter and add a row to the Decisions table with the reasoning.
 </step>
 
 <step name="summarize_and_next">

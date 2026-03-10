@@ -192,7 +192,7 @@ Phase 5 — Surface:
 **Round loop:**
 
 1. Call AskUserQuestion (1-4 questions informed by what's unknown from the checklist)
-2. Write answers to feature working notes (in the FEATURE.md Decisions section)
+2. Write answers directly into the corresponding FEATURE.md template sections (Goal, Flow steps, Scope lists, User-Facing Failures table, Context table). Do NOT dump raw Q&A into the Decisions section — fill the real template sections progressively as answers come in. Partial fills are fine; they get refined in subsequent rounds. Only write to Decisions for actual decisions made during discussion (tradeoffs, choices, rejected alternatives).
 3. Assess: do I have enough to fill the FEATURE.md template sections?
    - YES → AskUserQuestion: "I think I have what I need for this feature. Anything else?"
      - User says done → proceed to update_feature_notes
@@ -273,39 +273,23 @@ After exploration is complete (or kill/defer/backward-route decided), update fea
 
 **If kill/defer:** Update the feature file status and add reasoning. Skip spec generation.
 
-**If exploration complete:** Fill all FEATURE.md template sections from discussion data. Write composes[] if the user provided composition during discussion; do not prompt for it as required.
+Template sections were filled progressively during the round loop. This step is a final pass:
 
-**Goal:**
-- One verifiable sentence describing what this feature achieves
+1. **Verify template compliance** — read FEATURE.md and check each section matches the template format:
+   - Goal: one verifiable sentence (not a paragraph)
+   - Flow: numbered steps referencing capability slugs, with indented failure branches
+   - Scope: In/Out as bullet lists
+   - User-Facing Failures: table format (Composed Capability | Failure Mode | User Sees)
+   - Context: table format (From | To | Data | Format)
+   - Unfilled sections: leave the template placeholder text — do NOT delete sections or leave them empty
 
-**Flow:**
-- Numbered steps: `1. {capability-slug}: {what it does in this context}`
-- Indented failure branches: `   - On failure: {what happens}`
-- Branch logic as conditional steps
+2. **Clean up** — remove any raw Q&A notes that leaked outside template sections. Every piece of content should live in its template section.
 
-**Scope:**
-- **In:** bullet list — only these capabilities, only this orchestration
-- **Out:** bullet list — no new implementation logic, no changes to capability internals
+3. **Update frontmatter:**
+   - `composes:` → update if user provided composition during discussion; do not prompt for it as required
+   - `status:` → set to `specified` if Goal + Flow + Scope + User-Facing Failures + Context are filled; otherwise `exploring`
 
-**composes[] (frontmatter):**
-- List of capability slugs this feature composes
-
-**User-Facing Failures (table format):**
-
-| Composed Capability | Failure Mode | User Sees |
-|---------------------|-------------|-----------|
-
-**Context (table format):**
-
-| From | To | Data | Format |
-|------|----|------|--------|
-
-**Decisions:**
-- Notes, open questions, and decisions captured during discussion
-
-**Feature file location:** `.planning/features/{feat-slug}/FEATURE.md`
-
-Update status to `specified` if Goal, Flow, Scope, User-Facing Failures, and Context are filled.
+4. **Decisions section** — should contain only actual decisions (tradeoffs, choices, rejected alternatives), not Q&A transcripts.
 </step>
 
 <step name="summarize_and_next">
