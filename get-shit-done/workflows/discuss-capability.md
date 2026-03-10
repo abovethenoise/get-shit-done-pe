@@ -172,28 +172,53 @@ After EVERY AskUserQuestion return, write results to capability working state be
 
 **Background checklist (not sequential stages — use to assess gaps):**
 
-1. **Core idea** — What is this capability at its essence? One sentence.
+Phase 1 — Identity (what is this?):
+1. **Goal** — What does this primitive do? One sentence.
 2. **Why it matters** — What problem does it solve? Who benefits?
 3. **Boundaries** — What is explicitly in scope? What is explicitly out?
-4. **Open questions** — What is still unclear or undecided?
-5. **Suggested lens** — Based on the discussion, which framing lens fits? (debug/new/enhance/refactor)
-6. **Cross-capability concerns** — Surface insights from cross_capability_awareness when relevant
-7. **UI surface** — Is this capability user-facing? If yes, which design system entries apply?
-   (Only probe if `.docs/design-system.md` exists in the project)
+
+Phase 2 — Contract (what does it take and give?):
+4. **Receives** — What inputs does this accept? Type, required/optional, description for each.
+5. **Returns** — What outputs does this produce? Type, description for each.
+6. **Rules** — What invariants must hold? (Violating one = bug.) Push for deterministic, testable statements.
+7. **Sample Payload** — One concrete I/O example showing a realistic input and its expected output.
+
+Phase 3 — Behavior (what else happens?):
+8. **Failure Behavior** — What happens on bad input, missing data, downstream failure? Does it propagate?
+9. **Atomic Boundaries** — What succeeds or fails together as a unit?
+10. **Side Effects** — What always fires: logging, events, state mutations?
+11. **Constraints** — Hard limits: libs, patterns, performance, what not to touch.
+12. **Context: Must Not Propagate** — What stays encapsulated inside this capability?
+
+Phase 4 — Connections:
+13. **Dependencies** — What does this produce for / consume from other capabilities?
+14. **Cross-capability concerns** — Surface insights from cross_capability_awareness when relevant
+15. **UI surface** — Is this capability user-facing? If yes, which design system entries apply?
+    (Only probe if `.docs/design-system.md` exists in the project)
+
+Phase 5 — Meta:
+16. **Open questions** — What is still unclear or undecided?
+17. **Suggested lens** — Based on the discussion, which framing lens fits? (debug/new/enhance/refactor)
 
 **Round loop:**
 
 1. Call AskUserQuestion (1-4 questions informed by what's unknown from the checklist)
 2. Write answers to capability working notes (in the capability file's Exploration section)
-4. Assess: do I have enough to stub initial feature structure?
+3. Assess: do I have enough to fill the CAPABILITY.md template sections?
    - YES → AskUserQuestion: "I think I have what I need for this capability. Anything else?"
-     - User says done → proceed to update_capability_file
+     - User says done → proceed to feature_powerability_probe
      - User has more → back to step 1
    - NO → back to step 1 with questions targeting gaps
 
 No round limit — model self-assesses against done threshold.
 
-**Done threshold:** enough clarity to stub initial feature structure (feature names + one-line descriptions).
+**Done threshold:** enough clarity to fill Goal, Contract (Receives/Returns/Rules with at least one Sample Payload), Failure Behavior, and Constraints in CAPABILITY.md. Atomic Boundaries, Side Effects, and Context sections are desirable but not blocking — flag as open questions if unfilled.
+
+**Progression guidance:**
+- Start with Phase 1 (identity) — don't jump to contract details before the core idea is solid
+- Phase 2 (contract) is the heart — spend the most time here. Push for concrete types, not vague descriptions.
+- Phases 3-4 may partially fill from Phase 2 answers — extract and confirm rather than re-asking
+- Phase 5 wraps up — suggest lens only after the capability shape is clear
 
 **If previous exploration exists:**
 Embed the previous exploration summary IN the AskUserQuestion question field:
@@ -241,18 +266,45 @@ Use AskUserQuestion:
   - "Keep exploring" — Continue discussion, doubt was just thinking aloud
 </step>
 
+<step name="feature_powerability_probe">
+After exploration is complete, probe for what features this capability might power.
+
+**Skip if capability was killed or deferred.**
+
+Use AskUserQuestion:
+- header: "Features"
+- question: "Now that we've defined what this capability does — what kinds of features might it power? For example, what user-facing workflows or experiences would compose this capability? (This is exploratory — no features will be created.)"
+- options:
+  - "I have some ideas" — User describes feature concepts. Capture them in the Decisions table as "Feature concept: {description}" rows. If the user provides enough detail on a specific feature concept, continue exploring it conversationally (what would it compose, what's the user flow). Record insights but do NOT create feature stubs.
+  - "Not sure yet" — Fine. Note in Decisions: "Feature concepts: deferred to later exploration."
+  - "Skip" — Move on without recording.
+
+This is purely informational — it helps the user think about composition without committing to anything.
+</step>
+
 <step name="update_capability_file">
 After exploration is complete (or kill/defer decided), update the capability file.
 
 **Capability file location:** `.planning/capabilities/{slug}/CAPABILITY.md`
 
-Update the existing CAPABILITY.md (created by `capability-create`). Do NOT overwrite the entire file — update these sections:
+Update the existing CAPABILITY.md (created by `capability-create`). Do NOT overwrite the entire file — update these sections from exploration data:
 
-- **Frontmatter `status:`** — update to reflect current state
+- **Frontmatter `status:`** — update to reflect current state (set to `specified` if contract is filled)
+- **Frontmatter `ui_facing:`** — update based on UI surface probe
+- **Goal** — one sentence from Phase 1
+- **Contract: Receives** — Input/Type/Required/Description table from Phase 2
+- **Contract: Returns** — Output/Type/Description table from Phase 2
+- **Contract: Rules** — numbered invariants (violating = bug) from Phase 2
+- **Contract: Sample Payload** — concrete I/O example from Phase 2
+- **Failure Behavior** — Condition/Behavior/Propagates? table from Phase 3
+- **Atomic Boundaries** — from Phase 3 (leave template placeholder if unfilled)
+- **Side Effects** — from Phase 3 (leave template placeholder if unfilled)
+- **Constraints** — from Phase 3
+- **Context** — Inputs From / Outputs To / Must Not Propagate from Phase 3-4
+- **Dependencies** — Direction/Capability/What/Notes table from Phase 4
 - **Decisions table** — add exploration decisions with date, context, tradeoffs
-- **Goal / Why sections** — update if exploration refined the core idea
 
-If killed or deferred, update the status in frontmatter and add a row to the Decisions table with the reasoning.
+If killed or deferred, update the status in frontmatter and add a row to the Decisions table with the reasoning. Skip contract sections.
 
 If exploration surfaced a suggested framing lens, add it to the Decisions table.
 </step>
@@ -265,10 +317,12 @@ Present summary of what was captured and next steps.
 Status: {status}
 
 ### Exploration Summary
-- Core idea: {one sentence}
+- Goal: {one sentence}
+- Contract: {Receives: N inputs, Returns: N outputs, Rules: N invariants | "partial — see open questions"}
 - Suggested lens: {lens or "undecided"}
 - Open questions: {count}
 - Cross-capability concerns: {list or "none"}
+- Feature concepts: {list from powerability probe or "none explored"}
 
 {If killed or deferred:}
 ### Decision: {Killed | Deferred}
@@ -278,16 +332,15 @@ Reasoning: {reasoning}
 
 ## Next Steps
 
-{If exploring/specified — scan feature statuses in capability dir:}
+{If specified (contract filled):}
+- `/gsd:new {feature-name}` — Create features that compose this capability
+- `/gsd:discuss-feature {feat}` — Explore how a feature uses this capability
 
-  {List undiscussed features:}
-  - `/gsd:discuss-feature {feat}` — for each undiscussed feature
+{If exploring (contract incomplete):}
+- `/gsd:discuss-capability {slug}` — Continue exploring to fill contract gaps
 
-  {If related/cross-cutting capabilities surfaced during discussion:}
-  - `/gsd:discuss-capability {related-cap}` — Explore related capability
-
-  {Always:}
-  - "If you'd like me to assume specs for undiscussed features, just say so."
+{If related/cross-cutting capabilities surfaced during discussion:}
+- `/gsd:discuss-capability {related-cap}` — Explore related capability
 
 {If killed:}
 - Capability marked as killed. Can be overridden later via `/gsd:discuss-capability {slug}`.
@@ -310,9 +363,11 @@ node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs(capability): u
 <success_criteria>
 - Capability resolved from fuzzy reference (confirmed with user)
 - Status checked (killed/deferred shows reasoning, offers override)
-- Guided exploration covered core idea, boundaries, and suggested lens
+- Guided exploration covered Goal, Contract (Receives/Returns/Rules/Sample Payload), Failure Behavior, and Constraints at minimum
 - Cross-capability concerns surfaced when relevant
-- Capability file updated with exploration notes
+- Feature powerability probe offered (informational, no stubs created)
+- Capability file updated with all explored template sections
+- Status set to `specified` when contract is filled
 - Kill/defer handled with reasoning persisted
-- User knows next steps
+- User knows next steps (create features, not discuss features of auto-stubs)
 </success_criteria>

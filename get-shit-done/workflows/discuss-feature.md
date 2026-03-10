@@ -89,6 +89,31 @@ This feeds into backward_routing — if mgrep reveals a gap, the user
 can route back to /gsd:discuss-capability before committing to the feature spec.
 </step>
 
+<step name="capability_scan">
+Scan existing capabilities for potential composition matches.
+
+```bash
+CAP_LIST=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" capability-list)
+```
+
+Parse the capabilities array. For each capability, compare its Goal against the feature's Goal/Flow description. Look for capabilities whose contract (Receives/Returns) could serve as building blocks for this feature.
+
+**If matches found and composes[] is empty or incomplete:**
+
+Use AskUserQuestion:
+- header: "Composition"
+- question: "Based on existing capabilities, these look relevant to this feature:\n\n{list each match: slug — goal — how it might fit}\n\nWould any of these power this feature?"
+- options:
+  - "Yes, add to composes[]" — User selects which ones. Update composes[] in working state (written to FEATURE.md at update step).
+  - "Not quite" — Note in Decisions. May indicate a missing capability.
+  - "Skip" — Move on.
+
+**If no matches found and composes[] is empty:**
+Note this — the feature may need new capabilities created first. Surface during guided exploration: "This feature doesn't compose any existing capabilities. You may need to create capabilities first with `/gsd:discuss-capability`."
+
+**If composes[] is already populated:** Skip this step — the user already knows what this feature composes.
+</step>
+
 <step name="check_status">
 Check feature status before proceeding.
 
