@@ -100,6 +100,10 @@ If cancel -> exit workflow.
 
 **Otherwise (exploring, specified, in-progress, or new):** Proceed.
 
+## 3b. Load Existing State
+
+Read the resolved artifact (CAPABILITY.md or FEATURE.md). Scan all sections — classify each as **filled** (real content) or **placeholder** (template text). Store as `existing_state`. This baseline informs the Q&A loop — reference existing content instead of re-asking, surface gaps as findings.
+
 ## 4. Scaffold Discovery Brief
 
 If no brief exists at `brief_path`, scaffold one:
@@ -158,17 +162,28 @@ for each slot in mvu_slots:
   mvu_state[slot] = { filled: false, content: null }
 ```
 
+**Before the first question:** If `existing_state` has filled sections, present the baseline:
+
+Use AskUserQuestion:
+- header: "Current State"
+- question: "This {capability/feature} has existing content. Filled: {filled section names}. Gaps: {placeholder section names}. Is the existing content still accurate?"
+- options:
+  - "Yes, focus on gaps" — Pre-seed MVU slots from filled sections. Q&A targets placeholders and the lens-specific delta only.
+  - "Some needs updating" — User flags what's wrong, those get re-explored
+  - "Start fresh" — Treat all sections as unfilled
+
 **For each anchor question (1 through N):**
 
 Present the question using AskUserQuestion:
 - header: "Q{n}/{total}"
-- question: The anchor question text. If prior answers provide context, adapt the framing (the "adaptive muscles" on the fixed skeleton).
+- question: The anchor question text. **Delta-aware:** reference existing content instead of re-asking. Skip questions covered by confirmed filled sections.
 
 After each answer:
 1. **Extract MVU slot data** -- Analyze the answer against the MVU slot definitions. If the answer fills or partially fills a slot, update `mvu_state[slot]`.
-2. **Write to Discovery Brief progressively** -- Fill the corresponding brief section (Problem Statement, Specification fields, Context, Scope Boundary) directly in the brief file at `brief_path`. Do NOT accumulate in memory and dump later — write after each answer so the brief is always current. Partial fills are fine; they get refined as more answers come in.
-3. **Check branching hints** -- Based on the answer, determine if adaptive follow-up questions are needed before moving to the next anchor question.
-4. **Run adaptive follow-ups** if branching hints indicate (max 2 follow-ups per anchor question to prevent over-discovery).
+2. **Write to Discovery Brief progressively** -- Fill the corresponding brief section directly in the brief file at `brief_path`. Do NOT accumulate in memory and dump later. Partial fills are fine.
+3. **Surface gaps as findings** -- If Q&A reveals an existing section is incomplete or wrong, log it in the brief's Unknowns section. These are contract gaps, not new features.
+4. **Check branching hints** -- Based on the answer, determine if adaptive follow-up questions are needed before moving to the next anchor question.
+5. **Run adaptive follow-ups** if branching hints indicate (max 2 follow-ups per anchor question to prevent over-discovery).
 
 **After anchor question 3 (mid-discovery), run misclassification check:**
 Review accumulated answers. If answers consistently describe a different lens's domain:

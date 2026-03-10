@@ -79,15 +79,11 @@ Present findings before Q&A step so user can adjust scope based on what exists.
 </step>
 
 <step name="load_capability">
-Load the capability file and check its status.
+Load the capability file and assess its current state.
 
 **Capability file location:** `.planning/capabilities/{slug}/CAPABILITY.md`
 
-Read the capability file content. Extract:
-- **status**: exploring | specified | in-progress | complete | killed | deferred
-- **Exploration section**: core idea, open questions, suggested lens (if previously discussed)
-- **Brief section**: empty or populated
-- **Requirements section**: empty or populated
+Read the capability file content. Extract `status` from frontmatter. Scan all sections — classify each as **filled** (has real content) or **placeholder** (still has template text like `{input}`, `{type}`, etc.). Store as `existing_state`.
 
 **Load project context for grounding (if files exist):**
 - `.docs/architecture.md` — system architecture context
@@ -220,14 +216,17 @@ No round limit — model self-assesses against done threshold.
 - Phases 3-4 may partially fill from Phase 2 answers — extract and confirm rather than re-asking
 - Phase 5 wraps up — suggest lens only after the capability shape is clear
 
-**If previous exploration exists:**
-Embed the previous exploration summary IN the AskUserQuestion question field:
-- header: "Prior Notes"
-- question: "Previous exploration captured:\n\n{summary of prior exploration}\n\nHas anything changed?"
+**If existing_state has filled sections:**
+
+Use AskUserQuestion:
+- header: "Current State"
+- question: "This capability has existing content. Filled: {filled section names}. Gaps: {placeholder section names}. Is the existing content still accurate?"
 - options:
-  - "Still accurate" — Keep prior notes, continue exploring gaps
-  - "Something changed" — Let me update specific points
-Do NOT output the summary as separate plain text before the AskUserQuestion.
+  - "Yes, focus on gaps" — Skip filled sections, target placeholders only
+  - "Some needs updating" — User flags what's wrong, those sections get re-explored
+  - "Start fresh" — Re-explore everything
+
+**Delta-aware Q&A:** Reference existing content instead of re-asking. Skip confirmed sections.
 
 **UI surface gate (checklist item 7):**
 After core idea + boundaries are established (items 1-3), if `.docs/design-system.md` exists in the project:

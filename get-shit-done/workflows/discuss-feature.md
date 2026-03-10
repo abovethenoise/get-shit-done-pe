@@ -52,13 +52,11 @@ Use AskUserQuestion:
 </step>
 
 <step name="load_feature">
-Load the feature file and relevant capability context.
+Load the feature file and assess its current state.
 
 **Feature file location:** `.planning/features/{feat-slug}/FEATURE.md`
 
-Read the feature file content. Extract:
-- **status**: exploring | specified | in-progress | complete | killed | deferred
-- **composes[]**: list of capability slugs from frontmatter
+Read the feature file content. Extract `status` and `composes[]` from frontmatter. Scan all sections — classify each as **filled** (has real content) or **placeholder** (still has template text like `{capability}`, `{what it does}`, etc.). Store as `existing_state`.
 
 **Load composed capabilities (if any):**
 If composes[] is non-empty, for each capability in composes[], read `.planning/capabilities/{cap-slug}/CAPABILITY.md` for contract context.
@@ -159,6 +157,18 @@ Go DIRECTLY from one tool call to the next. The only text output allowed between
 AskUserQuestion calls is the stage banner or a brief (1-line) context note embedded
 in the next AskUserQuestion's question field.
 After EVERY AskUserQuestion return, write results to feature working state before the next question.
+
+**If existing_state has filled sections:**
+
+Use AskUserQuestion:
+- header: "Current State"
+- question: "This feature has existing content. Filled: {filled section names}. Gaps: {placeholder section names}. Is the existing content still accurate?"
+- options:
+  - "Yes, focus on gaps" — Skip filled sections, target placeholders only
+  - "Some needs updating" — User flags what's wrong, those sections get re-explored
+  - "Start fresh" — Re-explore everything
+
+**Delta-aware Q&A:** Reference existing content instead of re-asking. Skip confirmed sections.
 
 **Background checklist (not sequential stages — use to assess gaps):**
 
