@@ -44,6 +44,15 @@ Per @get-shit-done/references/context-assembly.md:
 - **Capability:** Reviewers verify contract satisfaction (Receives/Returns/Rules), constraint compliance, side effect accuracy
 - **Feature:** Reviewers verify goal achievement, user-facing failure handling, composes[] accuracy, flow execution
 
+## 2a. Review Focus
+
+AskUserQuestion:
+- header: "Review Focus"
+- question: "What should this review prioritize?"
+- options: "End-to-end flow" | "Logic consistency" | "Reusability" | "All equally" | "Let me specify"
+
+Store as `REVIEW_FOCUS`. Passed to synthesizer to weight findings.
+
 ## 2b. Downstream Blast Radius
 
 **If capability target:** Query downstream consumers for blast radius context:
@@ -99,7 +108,12 @@ Task(prompt=synth_prompt, subagent_type="gsd-review-synthesizer",
 
 Synthesizer reads all trace reports, writes `${target_dir}/review/synthesis.md`.
 
-Conflict priority: end-user > functional > technical > quality.
+**Conflict priority (lens-aware):**
+- debug: functional > technical > end-user > quality
+- new/enhance: end-user > functional > technical > quality
+- refactor: technical > quality > functional > end-user
+
+`REVIEW_FOCUS` overlays on top — e.g., "reusability" elevates quality/technical regardless of lens.
 
 ## 6. Parse Synthesis
 
@@ -155,7 +169,7 @@ Review artifacts: ${target_dir}/review/
 - Q&A happens HERE via AskUserQuestion — NOT inside agents
 - Reviewers spawned in parallel (prevents anchoring bias)
 - Synthesizer runs only after all reviewers complete (or abort if ≥2 fail)
-- Conflict priority: end-user > functional > technical > quality
+- Conflict priority: lens-aware (debug weights functional first, refactor weights technical first, new/enhance weight end-user first) + REVIEW_FOCUS overlay
 - Re-review is targeted: only affected reviewers + synthesizer
 - Max 2 re-review cycles
 - Review traces are ephemeral — cleaned up by doc.md after doc stage completes

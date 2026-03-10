@@ -54,6 +54,15 @@ Context assembly per @get-shit-done/references/context-assembly.md:
 - Layer 3: RESEARCH.md, BRIEF.md (if exist)
 - Layer 4: Lens-specific anchor questions
 
+## 3b. User Focus
+
+Present spec summary, then AskUserQuestion:
+- header: "Planning Focus"
+- question: "Here's what the spec requires:\n\n{spec summary}\n\nWhat matters most?"
+- options: "Simplicity" | "Correctness" | "Speed" | "Let me specify"
+
+Store as `USER_FOCUS`. Passed to research gatherers, planner, and deep-dive approval.
+
 ## 4. Handle Research
 
 ```bash
@@ -114,8 +123,18 @@ Planning prompt includes:
 - For capabilities: contract sections that must be covered
 - For features: flow steps + composed capability contracts
 - Downstream consumer: execute workflow needs frontmatter (wave, depends_on, files_modified, autonomous)
+- `USER_FOCUS` from Step 3b — planner uses this to justify approach choices and prioritize task ordering
 
 **ONE planner per target.** No parallel planner spawns.
+
+## 6b. Contract Coverage Check
+
+Map plan tasks back to spec sections (contract rules for capabilities, flow steps for features). Build a coverage table showing which spec sections are covered and which have gaps.
+
+If gaps exist, AskUserQuestion:
+- header: "Coverage"
+- question: "Plan covers {N}/{total} spec sections. Gaps:\n\n{gap list}"
+- options: "Fill gaps" | "Accept as follow-ups" | "Spec needs trimming"
 
 ## 7. Draft/Refine Loop
 
@@ -143,6 +162,8 @@ If guidance/edits given: re-spawn planner with feedback → back to 7.1. Max 3 i
 ### 7.5 Deep-Dive and Approval
 
 AskUserQuestion (multiSelect): Wave ordering, Approach vs alternatives, Coverage, Assumptions.
+
+Include alignment check against `USER_FOCUS` from Step 3b.
 
 Finalize: "Yes, finalize" | "I want changes" | "Abort"
 
@@ -179,9 +200,11 @@ Verification: {Passed | Passed with override | Skipped}
 - .planning/ directory validated
 - Target spec validated (CAPABILITY.md contract or FEATURE.md goal/flow)
 - For features: gate check passed (all composed caps verified) or user override
+- User focus captured (Step 3b) — shapes research and planner
 - Research completed or reused (lens match)
 - Plans created with self-critique resolved
+- Contract coverage mapped (Step 6b) — gaps surfaced before user review
 - CLI validation passed
-- User explicitly confirmed "Finalize this plan?"
+- User explicitly confirmed "Finalize this plan?" with focus alignment check
 - Plan-checker passed (or user override)
 </success_criteria>

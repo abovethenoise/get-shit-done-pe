@@ -46,6 +46,15 @@ Per @get-shit-done/references/context-assembly.md:
 
 Read SUMMARY.md files for key files list. Check for review synthesis. Supplement with git diff. Deduplicate.
 
+## 3b. Doc Focus
+
+AskUserQuestion:
+- header: "Doc Focus"
+- question: "Before I explore documentation needs — any friction points, lessons learned, or areas you want to make sure are well-documented?"
+- options: "Yes, let me share" | "No, explore everything" | "Focus on {spec section}"
+
+If user shares context, pass as `DOC_FOCUS` to explorers and synthesizer.
+
 ## 4. Spawn 6 Explorers in Parallel
 
 Assemble context payload embedding all layers + artifact list.
