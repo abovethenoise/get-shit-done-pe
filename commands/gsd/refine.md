@@ -175,6 +175,8 @@ Artifacts:
   .planning/refinement/findings/
 
 Next: Review changes with `/gsd:status`, or run `/gsd:refine` again after addressing RESEARCH_NEEDED items.
+{if active focus group detected from STATE.md:
+  "Focus group '{name}' is ready for planning: `/gsd:plan {focus-slug}`"}
 ```
 
 </process>

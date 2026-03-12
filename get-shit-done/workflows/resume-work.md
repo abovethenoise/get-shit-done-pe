@@ -51,6 +51,15 @@ ls .planning/features/*/.continue-here*.md 2>/dev/null
 ```
 
 Flag findings: mid-plan checkpoint, incomplete execution, interrupted agent.
+
+**Focus group resume check:**
+Scan `.planning/focus/*/FOCUS.md` for groups with `current_wave > 0` and `status` not `complete`.
+
+For each resumable focus group:
+- Read FOCUS.md frontmatter: name, current_wave, scope[]
+- Determine completed vs pending waves
+- Display: "Focus '{name}': wave {current_wave}/{total_waves} complete. {remaining} items pending."
+- Offer wave-level resume → `/gsd:execute {focus-slug}`
 </step>
 
 <step name="load_sequence_context">

@@ -1043,3 +1043,95 @@ describe('graph-query execute-preflight', () => {
     assert.strictEqual(result.reason, 'not_found');
   });
 });
+
+// ─── queryFocusWaves ──────────────────────────────────────────────────────────
+
+describe('graph-query focus-waves', () => {
+  let tmpDir;
+
+  beforeEach(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-graph-test-'));
+    setupProject(tmpDir);
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  test('mixed cap+feature scope: caps wave-ordered before features', () => {
+    writeCap(tmpDir, 'auth', { status: 'specified' });
+    writeCap(tmpDir, 'database', { status: 'exploring' });
+    writeFeat(tmpDir, 'login', ['auth', 'database']);
+
+    const result = runQuery(tmpDir, ['focus-waves', '--scope', 'auth,database,login']);
+    assert.ok(result.waves.length >= 1);
+
+    // Caps should appear before the feature that composes them
+    const allItems = result.waves.flatMap(w => w.items);
+    const authIdx = allItems.findIndex(i => i.slug === 'auth');
+    const dbIdx = allItems.findIndex(i => i.slug === 'database');
+    const loginIdx = allItems.findIndex(i => i.slug === 'login');
+    assert.ok(authIdx < loginIdx, 'auth should be before login');
+    assert.ok(dbIdx < loginIdx, 'database should be before login');
+  });
+
+  test('stage assignment uses capStatusToStage and detectFeatureStage', () => {
+    writeCap(tmpDir, 'auth', { status: 'exploring' });
+    writeFeat(tmpDir, 'login', ['auth']);
+
+    const result = runQuery(tmpDir, ['focus-waves', '--scope', 'auth,login']);
+    const allItems = result.waves.flatMap(w => w.items);
+
+    const auth = allItems.find(i => i.slug === 'auth');
+    assert.strictEqual(auth.stage, 'discuss');
+    assert.strictEqual(auth.type, 'capability');
+  });
+
+  test('transitive upstream expansion: features pull in required caps', () => {
+    writeCap(tmpDir, 'database', { status: 'exploring' });
+    writeCap(tmpDir, 'auth', { status: 'specified', depends_on: ['database'] });
+    writeFeat(tmpDir, 'login', ['auth']);
+
+    // Only specify login in scope — auth and database should be pulled in
+    const result = runQuery(tmpDir, ['focus-waves', '--scope', 'login']);
+    const allSlugs = result.waves.flatMap(w => w.items.map(i => i.slug));
+    assert.ok(allSlugs.includes('database'), 'transitive dep database should be included');
+    assert.ok(allSlugs.includes('auth'), 'direct dep auth should be included');
+    assert.ok(allSlugs.includes('login'), 'scoped feature login should be included');
+  });
+
+  test('cap-only scope: caps appear as standalone work items', () => {
+    writeCap(tmpDir, 'auth', { status: 'exploring' });
+    writeCap(tmpDir, 'database', { status: 'specified' });
+
+    const result = runQuery(tmpDir, ['focus-waves', '--scope', 'auth,database']);
+    const allItems = result.waves.flatMap(w => w.items);
+    assert.strictEqual(allItems.length, 2);
+    assert.ok(allItems.every(i => i.type === 'capability'));
+  });
+
+  test('all items complete: returns empty waves', () => {
+    writeFullCap(tmpDir, 'auth', 'verified');
+    writeFullCap(tmpDir, 'database', 'complete');
+    writeFeat(tmpDir, 'login', ['auth', 'database']);
+    writeFeatureArtifacts(tmpDir, 'login', { plan: true, summary: true, review: true, doc: true });
+
+    const result = runQuery(tmpDir, ['focus-waves', '--scope', 'auth,database,login']);
+    assert.deepStrictEqual(result.waves, []);
+  });
+
+  test('items grouped by wave number', () => {
+    // database (no deps, wave 1), auth depends on database (wave 2), login composes auth (wave 3)
+    writeCap(tmpDir, 'database', { status: 'exploring' });
+    writeCap(tmpDir, 'auth', { status: 'specified', depends_on: ['database'] });
+    writeFeat(tmpDir, 'login', ['auth']);
+
+    const result = runQuery(tmpDir, ['focus-waves', '--scope', 'database,auth,login']);
+    assert.ok(result.waves.length >= 2);
+    // Each wave has a wave number
+    for (const w of result.waves) {
+      assert.ok(typeof w.wave === 'number');
+      assert.ok(w.items.length > 0);
+    }
+  });
+});

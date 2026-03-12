@@ -19,6 +19,8 @@ const {
   pathExistsInternal,
   findCapabilityInternal,
   findFeatureInternal,
+  findFocusGroupInternal,
+  resolveSlugInternal,
   listAllFeaturesInternal,
 } = require('../get-shit-done/bin/lib/core.cjs');
 
@@ -498,5 +500,98 @@ describe('listAllFeaturesInternal', () => {
     assert.strictEqual(result.length, 2);
     assert.strictEqual(result[0].feature_slug, 'alpha');
     assert.strictEqual(result[1].feature_slug, 'beta');
+  });
+});
+
+// ─── findFocusGroupInternal ──────────────────────────────────────────────────
+
+describe('findFocusGroupInternal', () => {
+  let tmpDir;
+
+  beforeEach(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-core-test-'));
+    fs.mkdirSync(path.join(tmpDir, '.planning', 'focus'), { recursive: true });
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  test('returns found when FOCUS.md exists', () => {
+    const focusDir = path.join(tmpDir, '.planning', 'focus', 'sprint-1');
+    fs.mkdirSync(focusDir, { recursive: true });
+    fs.writeFileSync(path.join(focusDir, 'FOCUS.md'), '---\nname: Sprint 1\n---\n# Sprint 1');
+    const result = findFocusGroupInternal(tmpDir, 'sprint-1');
+    assert.strictEqual(result.found, true);
+    assert.strictEqual(result.slug, 'sprint-1');
+    assert.ok(result.focus_path.endsWith('FOCUS.md'));
+  });
+
+  test('returns not found for missing focus group', () => {
+    const result = findFocusGroupInternal(tmpDir, 'nonexistent');
+    assert.strictEqual(result.found, false);
+    assert.strictEqual(result.reason, 'not_found');
+  });
+
+  test('returns not found for empty input', () => {
+    const result = findFocusGroupInternal(tmpDir, '');
+    assert.strictEqual(result.found, false);
+    assert.strictEqual(result.reason, 'empty_slug');
+  });
+});
+
+// ─── resolveSlugInternal: focus-group resolution ────────────────────────────
+
+describe('resolveSlugInternal focus-group', () => {
+  let tmpDir;
+
+  beforeEach(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-core-test-'));
+    fs.mkdirSync(path.join(tmpDir, '.planning', 'capabilities'), { recursive: true });
+    fs.mkdirSync(path.join(tmpDir, '.planning', 'features'), { recursive: true });
+    fs.mkdirSync(path.join(tmpDir, '.planning', 'focus'), { recursive: true });
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  test('exact match resolves focus-group', () => {
+    const focusDir = path.join(tmpDir, '.planning', 'focus', 'sprint-1');
+    fs.mkdirSync(focusDir, { recursive: true });
+    fs.writeFileSync(path.join(focusDir, 'FOCUS.md'), '---\nname: Sprint 1\n---\n# Sprint 1');
+
+    const result = resolveSlugInternal(tmpDir, 'sprint-1');
+    assert.strictEqual(result.resolved, true);
+    assert.strictEqual(result.type, 'focus-group');
+    assert.strictEqual(result.slug, 'sprint-1');
+    assert.strictEqual(result.tier, 1);
+  });
+
+  test('fuzzy match resolves focus-group', () => {
+    const focusDir = path.join(tmpDir, '.planning', 'focus', 'mvp-sprint');
+    fs.mkdirSync(focusDir, { recursive: true });
+    fs.writeFileSync(path.join(focusDir, 'FOCUS.md'), '---\nname: MVP Sprint\n---\n# MVP Sprint');
+
+    const result = resolveSlugInternal(tmpDir, 'mvp');
+    assert.strictEqual(result.resolved, true);
+    assert.strictEqual(result.type, 'focus-group');
+    assert.strictEqual(result.slug, 'mvp-sprint');
+  });
+
+  test('cap/feature priority preserved over same-named focus group', () => {
+    // Create a capability with slug 'auth'
+    const capDir = path.join(tmpDir, '.planning', 'capabilities', 'auth');
+    fs.mkdirSync(capDir, { recursive: true });
+    fs.writeFileSync(path.join(capDir, 'CAPABILITY.md'), '---\nname: auth\n---\n# Auth');
+
+    // Create a focus group also named 'auth'
+    const focusDir = path.join(tmpDir, '.planning', 'focus', 'auth');
+    fs.mkdirSync(focusDir, { recursive: true });
+    fs.writeFileSync(path.join(focusDir, 'FOCUS.md'), '---\nname: auth\n---\n# Auth Focus');
+
+    const result = resolveSlugInternal(tmpDir, 'auth');
+    assert.strictEqual(result.resolved, true);
+    assert.strictEqual(result.type, 'capability'); // cap wins over focus-group
   });
 });

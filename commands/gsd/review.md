@@ -46,6 +46,12 @@ Parse JSON result for: `resolved`, `type`, `capability_slug`, `feature_slug`, `c
 - Set CAPABILITY_SLUG from resolution
 - Go to Step 4 (capability-level invocation)
 
+**If resolved and type is "focus-group":**
+- Read `.planning/focus/{slug}/FOCUS.md` to get scope[]
+- Collect all SUMMARY.md, CAPABILITY.md, FEATURE.md from all items in scope
+- Invoke review.md workflow with TARGET_TYPE='focus-group', TARGET_SLUG={slug}, and aggregated artifact paths as context
+- Review artifacts → `.planning/focus/{slug}/review/`
+
 **If not resolved and reason is "ambiguous":**
 - Present candidates to user (all matches)
 - Use AskUserQuestion to let user pick one

@@ -118,17 +118,22 @@ For each feature directory under `.planning/features/{feat}/`:
 
 **Tier 1 -- Focus Group Routing (primary)**
 
-Parse ROADMAP.md directly for focus groups. Do NOT use `focus_groups` from init (dead code -- never populated).
+Check for active focus groups: scan `.planning/focus/*/FOCUS.md` for groups with `status` not `complete`. Also parse ROADMAP.md for focus group sections.
 
-1. Read ROADMAP.md and identify any focus group sections with feature lists
-2. For each active focus group: identify its features and determine pipeline state using artifact detection above
-3. Use graph data for dependency checking:
-   - Query waves for the focus group's features:
-     ```bash
-     WAVES=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" graph-query waves --scope "$FEATURE_CSV")
-     ```
-   - Use `wave_1` for features ready to execute
-   - Use `blocked` for features waiting on capability verification:
+For each active focus group:
+
+1. Read FOCUS.md for scope[], current_wave, status
+2. Run focus-waves for unified cap+feature stages:
+   ```bash
+   SCOPE_CSV=$(echo "${SCOPE_ARRAY}" | paste -sd,)
+   WAVES=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" graph-query focus-waves --scope "$SCOPE_CSV")
+   ```
+3. Display focus-level progress: wave {current} of {total}, items by stage (caps before features)
+4. Route based on focus status:
+   - `created` → `/gsd:plan {focus-slug}`
+   - `planned` → `/gsd:execute {focus-slug}`
+   - `in-progress` → resume: `/gsd:execute {focus-slug}`
+5. For each routable item, check upstream readiness:
      ```
      Warning: {next-feature} blocked by cap:{cap_slug} (status: {status}).
      Suggested: Complete cap:{cap_slug} verification first.

@@ -213,6 +213,12 @@ function resolveSlugInternal(cwd, input, typeHint) {
     }
   }
 
+  // Try as focus-group (after cap/feature to preserve priority)
+  const focusResult = findFocusGroupInternal(cwd, trimmed);
+  if (focusResult.found) {
+    return { resolved: true, tier: 1, type: 'focus-group', slug: focusResult.slug, full_path: focusResult.slug, candidates: [], reason: 'exact' };
+  }
+
   // ── Tier 2: BM25 fuzzy match ──
   const tokenize = s => s.split('-').filter(Boolean);
   const tokenMatch = (qt, dt) => dt.startsWith(qt) || qt.startsWith(dt);
@@ -238,6 +244,17 @@ function resolveSlugInternal(cwd, input, typeHint) {
       corpus.push({ type: 'feature', slug: f.feature_slug, full_path: f.feature_slug, tokens: tokenize(f.feature_slug) });
     }
   }
+
+  // Focus groups
+  const focusDir = path.join(cwd, '.planning', 'focus');
+  try {
+    const focusEntries = fs.readdirSync(focusDir, { withFileTypes: true })
+      .filter(e => e.isDirectory() && fs.existsSync(path.join(focusDir, e.name, 'FOCUS.md')))
+      .map(e => e.name);
+    for (const slug of focusEntries) {
+      corpus.push({ type: 'focus-group', slug, full_path: slug, tokens: tokenize(slug) });
+    }
+  } catch { /* no focus dir */ }
 
   // BM25 scoring
   const N = corpus.length;
@@ -349,6 +366,18 @@ function findFeatureInternal(cwd, featureInput) {
   return { found: true, directory, slug: featureSlug, feature_path: featurePath };
 }
 
+function findFocusGroupInternal(cwd, focusInput) {
+  const slug = generateSlugInternal(focusInput);
+  if (!slug) return { found: false, reason: 'empty_slug' };
+
+  const focusPath = path.join(cwd, '.planning', 'focus', slug, 'FOCUS.md');
+  if (!fs.existsSync(focusPath)) {
+    return { found: false, slug, reason: 'not_found' };
+  }
+
+  return { found: true, slug, focus_path: focusPath };
+}
+
 module.exports = {
   output,
   error,
@@ -363,6 +392,7 @@ module.exports = {
   toPosixPath,
   findCapabilityInternal,
   findFeatureInternal,
+  findFocusGroupInternal,
   resolveSlugInternal,
   listAllFeaturesInternal,
 };

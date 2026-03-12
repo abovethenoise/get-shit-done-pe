@@ -23,6 +23,7 @@ Plan a capability or feature through the framing pipeline's plan stage. Resolves
 <execution_context>
 @{GSD_ROOT}/get-shit-done/workflows/plan.md
 @{GSD_ROOT}/get-shit-done/workflows/framing-pipeline.md
+@{GSD_ROOT}/get-shit-done/workflows/plan-focus.md
 </execution_context>
 
 <context>
@@ -47,8 +48,12 @@ Parse JSON result for: `resolved`, `tier`, `type`, `capability_slug`, `feature_s
 - Pass: `LENS=plan`, `FEATURE_SLUG`, `CAPABILITY_SLUG`
 
 **If resolved and type is "capability":**
-- Invoke framing-pipeline.md with CAPABILITY_SLUG and LENS=plan
-- The pipeline will plan all features in DAG wave order
+- Invoke framing-pipeline.md with CAPABILITY_SLUG, LENS=plan, and **STOP_AFTER=plan**
+- The pipeline will plan all features in DAG wave order, then stop (no execution)
+
+**If resolved and type is "focus-group":**
+- Invoke plan-focus.md workflow with FOCUS_SLUG
+- Pass: `FOCUS_SLUG={resolved slug}`
 
 **If not resolved and reason is "ambiguous":**
 - Present candidates to user:
@@ -77,7 +82,13 @@ For **capability-level planning:**
 ```
 @{GSD_ROOT}/get-shit-done/workflows/framing-pipeline.md
 ```
-Pass: CAPABILITY_SLUG, LENS=plan
+Pass: CAPABILITY_SLUG, LENS=plan, STOP_AFTER=plan
+
+For **focus-group planning:**
+```
+@{GSD_ROOT}/get-shit-done/workflows/plan-focus.md
+```
+Pass: FOCUS_SLUG
 
 </process>
 

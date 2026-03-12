@@ -9,10 +9,15 @@ Orchestrate documentation pipeline: spawn explorers, synthesize with inferabilit
 </required_reading>
 
 <inputs>
-- `TARGET_SLUG`: Capability or feature slug
-- `TARGET_TYPE`: "capability" or "feature"
+- `TARGET_SLUG`: Capability, feature, or focus-group slug
+- `TARGET_TYPE`: "capability" | "feature" | "focus-group"
 - `LENS`: Primary lens (debug | new | enhance | refactor)
+- `ARTIFACT_PATHS`: (focus-group only) List of artifact paths aggregated by the command layer
 </inputs>
+
+<focus_group_handling>
+When `TARGET_TYPE === 'focus-group'`: read artifacts from the provided `ARTIFACT_PATHS` list rather than inferring from a single slug's directory. The explorers/writers themselves don't change — they receive context and process it regardless of scope. Doc output goes to `.planning/focus/{TARGET_SLUG}/doc-report.md`.
+</focus_group_handling>
 
 <process>
 

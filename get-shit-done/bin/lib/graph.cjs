@@ -678,6 +678,104 @@ function queryExecutePreflight(graph, cwd, slug) {
   }
 }
 
+// ─── Focus-Waves Query ────────────────────────────────────────────────────────
+
+function queryFocusWaves(graph, cwd, scopeCSV) {
+  const { nodes, edges } = graph;
+  const scopeSlugs = scopeCSV.split(',').map(s => s.trim()).filter(Boolean);
+
+  // Classify scope items as cap or feature
+  const scopeCapSlugs = [];
+  const scopeFeatSlugs = [];
+  for (const s of scopeSlugs) {
+    if (nodes.find(n => n.id === `feat:${s}`)) scopeFeatSlugs.push(s);
+    else if (nodes.find(n => n.id === `cap:${s}`)) scopeCapSlugs.push(s);
+    // Unknown slugs silently ignored
+  }
+
+  // Expand features' transitive upstream caps
+  const upstreamCaps = collectTransitiveUpstream(nodes, scopeFeatSlugs);
+
+  // Merge all cap slugs (explicit scope + transitive), dedup
+  const allCapSlugs = new Set([...scopeCapSlugs, ...upstreamCaps]);
+  const allFeatSlugs = new Set(scopeFeatSlugs);
+
+  // Collect scoped nodes
+  const scopedNodes = nodes.filter(n =>
+    (n.type === 'capability' && allCapSlugs.has(n.slug)) ||
+    (n.type === 'feature' && allFeatSlugs.has(n.slug))
+  );
+
+  // Assign stage per item
+  const itemsWithStage = scopedNodes.map(n => {
+    const stageInfo = n.type === 'capability'
+      ? capStatusToStage(n.status)
+      : detectFeatureStage(cwd, n.slug);
+    return { ...n, ...stageInfo };
+  });
+
+  // Filter out complete items
+  const workItems = itemsWithStage.filter(n => n.stage !== 'complete');
+  if (workItems.length === 0) {
+    return { waves: [] };
+  }
+
+  // Kahn's topo sort with reversed edges (dependency before dependent)
+  const workIds = new Set(workItems.map(n => n.id));
+  const workEdges = edges.filter(e => workIds.has(e.from) && workIds.has(e.to));
+  const adj = {};
+  const inDeg = {};
+  for (const n of workItems) { adj[n.id] = []; inDeg[n.id] = 0; }
+  for (const e of workEdges) {
+    adj[e.to].push(e.from);  // reversed: dependency → dependent
+    inDeg[e.from]++;
+  }
+
+  // BFS depth layering (wave assignment)
+  const depth = {};
+  const queue = [];
+  for (const n of workItems) {
+    depth[n.id] = 0;
+    if (inDeg[n.id] === 0) queue.push(n.id);
+  }
+
+  const sorted = [];
+  while (queue.length > 0) {
+    const id = queue.shift();
+    sorted.push(id);
+    for (const neighbor of adj[id]) {
+      const newDepth = depth[id] + 1;
+      if (newDepth > depth[neighbor]) depth[neighbor] = newDepth;
+      inDeg[neighbor]--;
+      if (inDeg[neighbor] === 0) queue.push(neighbor);
+    }
+  }
+
+  // Group by wave (depth + 1)
+  const waveMap = {};
+  for (const id of sorted) {
+    const w = depth[id] + 1;
+    if (!waveMap[w]) waveMap[w] = [];
+    const n = workItems.find(n => n.id === id);
+    waveMap[w].push({ slug: n.slug, type: n.type, stage: n.stage, command: n.cmd });
+  }
+
+  // Items in cycles won't be in sorted — add them to last wave + 1
+  if (sorted.length < workItems.length) {
+    const sortedSet = new Set(sorted);
+    const cycleItems = workItems.filter(n => !sortedSet.has(n.id));
+    const maxWave = Math.max(0, ...Object.keys(waveMap).map(Number));
+    const cycleWave = maxWave + 1;
+    waveMap[cycleWave] = cycleItems.map(n => ({ slug: n.slug, type: n.type, stage: n.stage, command: n.cmd }));
+  }
+
+  const waves = Object.entries(waveMap)
+    .sort(([a], [b]) => Number(a) - Number(b))
+    .map(([wave, items]) => ({ wave: Number(wave), items }));
+
+  return { waves };
+}
+
 // ─── CLI Commands ─────────────────────────────────────────────────────────────
 
 function cmdGraphBuild(cwd, raw) {
@@ -689,7 +787,7 @@ function cmdGraphQuery(cwd, queryArgs, raw) {
   const queryType = queryArgs[0];
 
   if (!queryType) {
-    error('Usage: graph-query <sequence|coupling|waves|downstream|upstream|upstream-gaps|sequence-stale|route-check|execute-preflight> [args]');
+    error('Usage: graph-query <sequence|coupling|waves|focus-waves|downstream|upstream|upstream-gaps|sequence-stale|route-check|execute-preflight> [args]');
   }
 
   switch (queryType) {
@@ -712,6 +810,16 @@ function cmdGraphQuery(cwd, queryArgs, raw) {
       }
       const graph = buildGraph(cwd);
       const result = queryWaves(graph, queryArgs[scopeIdx + 1]);
+      output(result, raw);
+      break;
+    }
+    case 'focus-waves': {
+      const scopeIdx = queryArgs.indexOf('--scope');
+      if (scopeIdx === -1 || !queryArgs[scopeIdx + 1]) {
+        error('focus-waves requires --scope <csv>');
+      }
+      const graph = buildGraph(cwd);
+      const result = queryFocusWaves(graph, cwd, queryArgs[scopeIdx + 1]);
       output(result, raw);
       break;
     }
@@ -767,7 +875,7 @@ function cmdGraphQuery(cwd, queryArgs, raw) {
       break;
     }
     default:
-      error(`Unknown graph query: ${queryType}. Available: sequence, coupling, waves, downstream, upstream, upstream-gaps, sequence-stale, route-check, execute-preflight`);
+      error(`Unknown graph query: ${queryType}. Available: sequence, coupling, waves, focus-waves, downstream, upstream, upstream-gaps, sequence-stale, route-check, execute-preflight`);
   }
 }
 

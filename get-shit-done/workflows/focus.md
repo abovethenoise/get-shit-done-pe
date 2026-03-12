@@ -70,20 +70,16 @@ Build the final `resolved_items` list.
 
 ## 4. Dependency Ordering
 
-Query the graph for wave ordering of the scoped features:
+Query the graph for wave ordering of the mixed cap+feature scope:
 
 ```bash
-WAVES=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" graph-query waves --scope "$FEATURE_CSV")
+SCOPE_CSV=$(echo "$RESOLVED_ITEMS" | jq -r '.[].slug' | paste -sd,)
+WAVES=$(node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" graph-query focus-waves --scope "$SCOPE_CSV")
 ```
 
-Parse JSON for `wave_1`, `blocked`, `coordinate_flags`.
+Parse JSON for `waves[]` — each wave has `{ wave, items: [{ slug, type, stage, command }] }`.
 
-- Wave 1: features whose composed caps are all verified
-- Blocked: features with unverified caps (list blockers)
-- Coordinate flags: features in wave 1 sharing a composed cap
-
-For each capability in scope:
-- Expand to features that compose it (search `.planning/features/*/FEATURE.md` for composes[] containing this cap)
+Display unified wave plan showing caps and features ordered by dependency.
 
 ## 4b. mgrep Gap Scan
 
@@ -222,6 +218,33 @@ Add focus group section to ROADMAP.md:
 
 Write updated ROADMAP.md.
 
+## 7b. Create FOCUS.md
+
+Generate a focus-group slug from the name: `FOCUS_SLUG = slugify(focus_group_name)`.
+
+```bash
+mkdir -p .planning/focus/${FOCUS_SLUG}
+```
+
+Write `.planning/focus/${FOCUS_SLUG}/FOCUS.md`:
+
+```markdown
+---
+name: {focus_group_name}
+goal: {focus_group_goal}
+scope:
+  - {item_slug_1}
+  - {item_slug_2}
+current_wave: 0
+status: created
+---
+
+# Focus: {focus_group_name}
+
+## Wave Plan
+{wave plan from focus-waves query}
+```
+
 ## 8. Update STATE.md
 
 Update STATE.md to reference the new active focus group:
@@ -231,11 +254,36 @@ Update STATE.md to reference the new active focus group:
 ## 9. Commit
 
 ```bash
-node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs: create focus group '${FOCUS_GROUP_NAME}'" --files .planning/ROADMAP.md .planning/STATE.md
+node "$HOME/.claude/get-shit-done/bin/gsd-tools.cjs" commit "docs: create focus group '${FOCUS_GROUP_NAME}'" --files .planning/ROADMAP.md .planning/STATE.md .planning/focus/${FOCUS_SLUG}/FOCUS.md
 ```
 
-Display completion:
+## 10. Guard + Route
 
+**If scope has only 1 item:** Suggest item-level plan directly:
+```
+Focus group has a single item. Recommend planning directly:
+`/gsd:plan {item_slug}`
+```
+
+**If `undeclared_cap_signals >= 3`:** Route to refinement instead of planning:
+```
+-------------------------------------------------------
+ GSD > FOCUS GROUP CREATED — REFINEMENT RECOMMENDED
+-------------------------------------------------------
+
+Name: {focus_group_name}
+Goal: {focus_group_goal}
+Items: {count} ({wave_count} waves)
+
+{undeclared_cap_signals} undeclared capability signals detected.
+The capability structure has gaps that will cause problems during planning.
+Refining first.
+
+Next: `/gsd:refine`
+  Then: `/gsd:plan {FOCUS_SLUG}`
+```
+
+**Otherwise:** Route to focus-level planning:
 ```
 -------------------------------------------------------
  GSD > FOCUS GROUP CREATED
@@ -247,7 +295,7 @@ Items: {count} ({wave_count} waves)
 Dependencies: {dep_count} from composes[]
 {if undeclared_cap_signals > 0: "Undeclared capability signals: {undeclared_cap_signals}"}
 
-Next: Run `/gsd:plan {first_item}` to start planning the first item.
+Next: `/gsd:plan {FOCUS_SLUG}`
 ```
 
 </process>
@@ -256,7 +304,8 @@ Next: Run `/gsd:plan {first_item}` to start planning the first item.
 - [ ] Focus group name and goal captured via Q&A
 - [ ] All scope items resolved via slug-resolve
 - [ ] Sequence context shown before scope Q&A (executable/blocked counts)
-- [ ] Wave ordering from graph-query waves replaces inline DAG construction
+- [ ] Wave ordering from graph-query focus-waves replaces inline DAG construction
+- [ ] FOCUS.md created at .planning/focus/{slug}/FOCUS.md with frontmatter
 - [ ] mgrep gap scan complete — undeclared capability signals surfaced (if any)
 - [ ] Gate-check routes blocked items with user choice
 - [ ] Overlap with existing focus groups detected and resolved (merge/parallel/remove)

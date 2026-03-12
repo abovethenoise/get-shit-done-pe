@@ -52,6 +52,12 @@ Skip slug resolution. Go to Step 3 (no-arg path).
 - Set CAPABILITY_SLUG from resolution
 - Go to Step 4 (infer LENS) then Step 6 (capability-level invocation)
 
+**If resolved and type is "focus-group":**
+- Read `.planning/focus/{slug}/FOCUS.md` to get scope[]
+- Collect all SUMMARY.md, CAPABILITY.md, FEATURE.md, review synthesis from all items in scope
+- Invoke doc.md workflow with TARGET_TYPE='focus-group', TARGET_SLUG={slug}, and aggregated artifact paths as context
+- Output → `.planning/focus/{slug}/doc-report.md`
+
 **If not resolved and reason is "ambiguous":**
 - Present candidates to user:
   "Multiple matches found for '$ARGUMENTS':"

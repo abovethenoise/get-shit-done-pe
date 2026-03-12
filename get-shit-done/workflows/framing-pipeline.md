@@ -22,6 +22,7 @@ The invoking workflow passes these as context:
 - `CAPABILITY_NAME`: The resolved capability name
 - `FEATURE_SLUG`: The feature being processed (may be null for capability scope)
 - `FEATURE_DIR`: Absolute path to the feature directory (.planning/features/{feat})
+- `STOP_AFTER`: Stage to stop after: "plan" | "execute" | null. When set, pipeline halts after the named stage completes. Default: null (run all 4 stages). Passed by `/gsd:plan` (STOP_AFTER=plan) and `/gsd:execute` (STOP_AFTER=execute).
 
 Derived:
 - `SCOPE`: "capability" if FEATURE_SLUG is null/empty, "feature" if FEATURE_SLUG is provided
@@ -70,7 +71,7 @@ Feature: {FEATURE_SLUG or "all (capability scope)"}
 Lens: {LENS} {+ SECONDARY_LENS if compound}
 Brief: {BRIEF_PATH or "per-feature"}
 
-Running 4 stages: plan -> execute -> review -> doc
+Running stages: plan {-> execute -> review -> doc | stopped by STOP_AFTER}
 ```
 
 Initialize escalation state:
@@ -129,9 +130,11 @@ For each wave (in order), for each feature in the wave (sequentially):
    - Pass: LENS, CAPABILITY_SLUG, FEATURE_SLUG
 4. Set `BRIEF_PATH` to `${FEATURE_DIR}/DISCOVERY-BRIEF.md`
 4. Run **Stage 1 (Plan)** for this feature (see Section 4)
-5. Run **Stage 2 (Execute)** for this feature (see Section 5)
+5. **STOP_AFTER gate:** If `STOP_AFTER === "plan"`, skip Stage 2 and continue to next feature's plan. After all waves' plans complete, display "Planning complete for {CAPABILITY_SLUG}. Run `/gsd:execute {CAPABILITY_SLUG}` to continue." and exit.
+6. Run **Stage 2 (Execute)** for this feature (see Section 5)
 
 After ALL waves complete:
+- **STOP_AFTER gate:** If `STOP_AFTER === "execute"`, display "Execution complete for {CAPABILITY_SLUG}. Run `/gsd:review {CAPABILITY_SLUG}` to continue." and exit.
 - Collect artifact lists (SUMMARY.md, FEATURE.md) from ALL features in the capability
 - Run **Stage 3 (Review)** ONCE for the full capability scope (see Section 6)
 - Run **Stage 4 (Doc)** ONCE for the full capability scope (see Section 8)
@@ -140,7 +143,11 @@ After ALL waves complete:
 
 **When SCOPE is "feature":**
 
-Run Stage 1 (Plan) -> Stage 2 (Execute) -> Stage 3 (Review) -> Stage 4 (Doc) linearly for the single feature.
+Run Stage 1 (Plan). **STOP_AFTER gate:** If `STOP_AFTER === "plan"`, display "Planning complete for {FEATURE_SLUG}. Run `/gsd:execute {FEATURE_SLUG}` to continue." and exit.
+
+Run Stage 2 (Execute). **STOP_AFTER gate:** If `STOP_AFTER === "execute"`, display "Execution complete for {FEATURE_SLUG}. Run `/gsd:review {FEATURE_SLUG}` to continue." and exit.
+
+Run Stage 3 (Review) -> Stage 4 (Doc) linearly.
 
 ## 4. Stage 1 -- Plan (Lens-Shaped Risk Posture)
 

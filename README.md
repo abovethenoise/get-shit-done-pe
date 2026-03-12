@@ -22,6 +22,8 @@ npx get-shit-done-pe@latest
 
 ## Changelog
 
+**3.0.4** — Focus group orchestration: focus groups are now executable end-to-end — `/gsd:plan {focus}` runs cross-cutting research across all items in scope, plans each item in wave order with shared context, and surfaces post-planning recommendations for ambiguous or critical-path items. `/gsd:execute {focus}` executes waves with inter-wave checkpoints, then runs a single review + doc pass across the full scope. Refinement integrated as a hard gate: focus creation with 3+ undeclared capability signals routes to `/gsd:refine` before planning; focus planning halts on cross-cutting coherence issues and routes to `/gsd:refine`; refinement completion routes back to the focus group. Pipeline stage gating: `/gsd:plan` now only plans (does not auto-execute), `/gsd:execute` now only executes (does not auto-review/doc) when targeting capabilities. Focus-group slug resolution added to BM25 fuzzy matching. New `focus-waves` graph query handles mixed cap+feature scope with transitive upstream expansion.
+
 **3.0.2** — Execution-aware routing: new `route-check` graph query provides complexity-aware progress routing with topological ordering — classifies project state as simple (linear chain) or complex (branching, shared cap contention, deep dependencies, cycles) with actionable signals. New `execute-preflight` query catches missing plans, stale plans, and upstream gaps before execution starts — integrated into both `/gsd:execute` command and `execute-plan.md` workflow. Progress routing (`/gsd:progress`) Tier 2/3 replaced with single graph-aware `route-check` that outputs ordered work chains or suggests `/gsd:focus` for complex projects. Templates default to `exploring` status and capabilities include `depends_on: []`. Plan workflow adds sequence check with upstream readiness routing. Focus groups validate upstream gaps for scoped capabilities (not just features). Discussion workflows write `depends_on` from dependency tables.
 
 **3.0.0** — Architecture overhaul: capabilities and features decoupled into independent directories (`.planning/capabilities/` and `.planning/features/`). Capabilities are now primitives with formal contracts (Receives/Returns/Rules); features compose capabilities via `composes[]` frontmatter edges. New dependency graph layer builds a DAG from composes[] and powers sequence, coupling, waves, downstream (blast radius), upstream (readiness), and upstream-gaps (contract completeness) queries. New `/gsd:sequence` command generates SEQUENCE.md with executable/blocked ordering, parallel branches, coordinate points, critical path, and orphan detection. Focus groups now use graph-driven wave ordering with mgrep semantic gap detection for undeclared capabilities. External tool activation across the full pipeline: Context7 for live library docs (research agents, planner, executor, verifier, review-technical), WebSearch/WebFetch for ecosystem knowledge (research agents, executor, review-technical), mgrep semantic search for gap detection in focus, plan, review, and coherence workflows. Upstream-gaps checks integrated into progress routing, focus scope validation, and refine scope expansion. Downstream consumer awareness added to planner (contract-preserving tasks) and reviewer (blast radius context).
@@ -107,13 +109,13 @@ Document            →  Self-healing docs so the next session has full context
 
 The system is proactive about what it doesn't understand. Where are the ambiguities? What assumptions is it making? It enters Q&A mode for you to review and validate before moving forward.
 
-### Focus Groups Instead of Milestones
+### Focus Groups — Plan and Execute at Scale
 
-Project management still exists — but it's lightweight scaffolding, not the main automation mechanism.
+Focus groups are how you go from spec'd requirements to running code. Bundle capabilities and features into a sprint, and the system handles the rest: cross-cutting research across everything in scope, wave-ordered planning with shared context, parallel execution within waves, and a single review + doc pass at the end.
 
-**Focus groups** are a simple Q&A: "What capabilities and features do you want to focus on building?" The system queries the dependency graph for wave ordering, runs mgrep semantic search to detect undeclared capability signals, validates upstream contract completeness, and checks for overlap with existing groups. It might tell you: "You need to build these features first before you can tackle A, B, and C" — and it knows *why*, because it's reading the composes[] graph.
+**Creating a focus group** is a Q&A: "What do you want to build?" The system queries the dependency graph for wave ordering, runs semantic search to detect undeclared capability signals, validates upstream contract completeness, and checks for overlap with existing groups.
 
-Focus groups inform direction. They don't drive the autonomy.
+**Refinement gates** protect planning quality. If focus creation detects too many structural gaps, it routes to `/gsd:refine` before planning can begin. If planning discovers cross-cutting coherence issues, it halts and routes to `/gsd:refine`. After refinement resolves the issues, you return to planning with clean inputs.
 
 ### Four Framing Lenses
 
@@ -136,28 +138,21 @@ Not every piece of work is "build a new thing." PE recognizes four modes, each w
 /gsd:discuss-capability <cap>              Define capability scope + contract
 /gsd:discuss-feature <cap/feat>            Lock in feature preferences + composes[]
     ↓
-/gsd:refine                                (Optional) Cross-capability coherence audit
+/gsd:refine                                Cross-capability coherence audit (recommended)
     ↓
 /gsd:sequence                              Build dependency graph → SEQUENCE.md
-/gsd:focus <cap>                           Create focus group (graph-driven wave ordering)
+/gsd:focus                                 Create focus group (graph-driven wave ordering)
     ↓
-/gsd:new|enhance|refactor|debug <slug>     Frame the work
+/gsd:plan <focus-slug>                     Cross-cutting research → wave-ordered plans → approval
     ↓
-/gsd:plan <slug>                           6 parallel researchers → synthesizer → planner → checker
+/gsd:execute <focus-slug>                  Wave execution → single review → single doc
     ↓
-  (auto-executes)                          Parallel agents, fresh context per plan, atomic commits
-    ↓
-  (auto-reviews)                           4 reviewers → synthesizer → discuss → remediate
-    ↓
-  (auto-documents)                         6 doc explorers → synthesizer → approval → writers
-    ↓
-  Next feature? → Repeat from framing
-  All done? → Next capability
+  Next focus group? → Repeat from /gsd:focus
 ```
 
 Each stage uses multi-agent orchestration: a thin orchestrator spawns specialized agents, collects results, and routes to the next step. Your main context window stays clean — the heavy lifting happens in fresh subagent contexts.
 
-For full command reference, configuration, and usage examples, see the **[User Guide](docs/USER-GUIDE.md)**.
+For full command reference, recommended workflow, and configuration, see the **[User Guide](docs/USER-GUIDE.md)**.
 
 ---
 
